@@ -178,6 +178,12 @@ fn main() -> Result<(), String> {
                 if player1.state == game_logic::player::PlayerState::Standing {
                     player1.position = player1.position.offset(player1.direction * player1.speed, 0);
                 }
+
+                if player1.state == game_logic::player::PlayerState::DashingForward ||
+                    player1.state == game_logic::player::PlayerState::DashingBackward  {
+                    player1.position = player1.position.offset(player1.direction * player1.dash_speed, 0);
+                }
+
             }
 
         }
@@ -196,27 +202,34 @@ fn main() -> Result<(), String> {
             for i in 0..input_reset_timers.len() {
                 input_reset_timers[i] += 1;
                 if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    println!("delete input");
                     last_inputs.pop_front();
                 }
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+            println!("{:?}", last_inputs);
 
 
             player1.animation_index = (player1.animation_index + anim_speed) % player1.current_animation.len() as f32;
             player2.animation_index = (player2.animation_index + anim_speed) % player2.current_animation.len() as f32;
 
 
+            println!("{:?} {:?}", (player1.animation_index as f32 + anim_speed as f32) as usize, player1.current_animation.len());
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
             if (player1.animation_index as f32 + anim_speed as f32) as usize >= player1.current_animation.len() {
-                player1.isAttacking = false;
+                if player1.isAttacking {
+                    player1.isAttacking = false;
+                }
+                if player1.state == game_logic::player::PlayerState::DashingForward ||
+                    player1.state == game_logic::player::PlayerState::DashingBackward {
+                    player1.state = game_logic::player::PlayerState::Standing;
+                }
                 player1.animation_index = 0.0;
             }
 
-            println!("{:?}",player1.animation_index);
+
 
             if !player1.isAttacking {
-
+                println!("{:?}", player1.state);
                 if player1.state == game_logic::player::PlayerState::Standing {
                     player1.dir_related_of_other = (player2.position.x - player1.position.x).signum();
 
@@ -235,10 +248,8 @@ fn main() -> Result<(), String> {
                     player1.current_animation = player1.animations.get("crouching").unwrap();
                 } else if player1.state == game_logic::player::PlayerState::DashingForward {
                     player1.current_animation = player1.animations.get("dash").unwrap();
-                    player1.animation_index = 0.0;
                 } else if player1.state == game_logic::player::PlayerState::DashingBackward {
                     player1.current_animation = player1.animations.get("dash").unwrap();
-                    player1.animation_index = 0.0;
                 }
 
                 if player1.prev_direction != player1.direction {

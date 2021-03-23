@@ -37,13 +37,13 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                 player.last_directional_input_v = Some(GameInputs::UP);
             } else if v > 0 {
                 println!("Crouching");
-                player.state = PlayerState::Crouching;
+                player_state_change(player, PlayerState::Crouching);
                 player.last_directional_input_v = Some(GameInputs::DOWN);
                 player.animation_index = 0.0;
                 //player.current_animation = player1.animations.get("crouch").unwrap();
             } else {
                 println!("Standing");
-                player.state = PlayerState::Standing;
+                player_state_change(player, PlayerState::Standing);
                 player.last_directional_input_v = None;
             }
             merge_last_horizontal_and_vertical_inputs(player, last_inputs);
@@ -57,11 +57,11 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                     player.last_directional_input_h = Some(GameInputs::BACK);
                 }
                 println!("Moved to side");
-                check_for_dash_inputs(player, last_inputs);
             } else {
                 player.last_directional_input_h = None;
             }
             merge_last_horizontal_and_vertical_inputs(player, last_inputs);
+            check_for_dash_inputs(player, last_inputs);
         },
         GameInputs::LightPunch => {
 
@@ -97,15 +97,20 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
 
 fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInputs>) {
     let len = last_inputs.len();
-    println!("{:?}", last_inputs);
+    println!("checking for dash with {:?}", last_inputs);
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1]{
-        println!("{:?} {:?}", last_inputs[len - 2], last_inputs[len - 1]);
+        println!("last 2 inputs {:?} {:?}", last_inputs[len - 2], last_inputs[len - 1]);
         if last_inputs[len - 1] == GameInputs::BACK {
             println!("Dash");
-            player.state = PlayerState::DashingForward;
+
+            player_state_change(player, PlayerState::DashingForward);
+            player.animation_index = 0.0;
+            last_inputs.clear();
         } else if last_inputs[len - 1] == GameInputs::FWD {
             println!("Dash");
-            player.state = PlayerState::DashingForward;
+            player_state_change(player, PlayerState::DashingBackward);
+            player.animation_index = 0.0;
+            last_inputs.clear();
         }
     }
 }
@@ -209,3 +214,10 @@ fn player_attack(player: &mut Player, attack_animation: &str) {
     }
 }
 
+fn player_state_change(player: &mut Player, new_state: PlayerState){
+    if player.state != PlayerState::DashingForward &&
+        player.state != PlayerState::DashingBackward {
+
+        player.state = new_state;
+    }
+}
