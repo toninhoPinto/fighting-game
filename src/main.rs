@@ -43,7 +43,10 @@ fn main() -> Result<(), String> {
 
     let mut anims = game_logic::player::load_character_anims(&texture_creator, "ryu".to_string());
 
-    let mut texture_to_display: &Texture;
+    let mut texture_to_display_1: &Texture;
+    let mut texture_to_display_2: &Texture;
+
+    //TODO should vary per animation, some are faster others are slower because of less frames
     let anim_speed = 0.35;
 
     //TODO move this to game_logic::player:
@@ -59,6 +62,7 @@ fn main() -> Result<(), String> {
         animation_index: 0.0,
         current_animation: &anims.get(&"idle".to_string()).unwrap(),
         animations: &anims,
+        flipped: true,
     };
 
     let mut player2 = game_logic::player::Player {
@@ -73,6 +77,7 @@ fn main() -> Result<(), String> {
         animation_index: 0.0,
         current_animation: &anims.get(&"idle".to_string()).unwrap(),
         animations: &anims,
+        flipped: false,
     };
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
@@ -104,6 +109,7 @@ fn main() -> Result<(), String> {
 
         // Render
         player1.animation_index = (player1.animation_index + (1.0 * anim_speed)) % player1.current_animation.len() as f32;
+        player2.animation_index = (player2.animation_index + (1.0 * anim_speed)) % player2.current_animation.len() as f32;
 
         //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
         if (player1.animation_index as f32 + (1.0 * anim_speed)) as usize >= player1.current_animation.len() {
@@ -117,11 +123,17 @@ fn main() -> Result<(), String> {
                 player1.position = player1.position.offset(player1.direction * player1.speed, 0);
             }
 
-            println!("{ } state anim", player1.state.to_string());
+            //println!("{ } state anim", player1.state.to_string());
+
             if player1.state == game_logic::player::PlayerState::Standing {
-                if player1.direction < 0 {
+                let get_relative_pos_to_player_2 = (player2.position.x - player1.position.x).signum();
+
+                //TODO flip has a small animation i believe, also, have to take into account mixups
+                player1.flipped = get_relative_pos_to_player_2 > 0 ;
+
+                if player1.direction * -get_relative_pos_to_player_2 < 0 {
                     player1.current_animation = player1.animations.get("walk").unwrap();
-                } else if player1.direction > 0 {
+                } else if player1.direction * -get_relative_pos_to_player_2 > 0 {
                     player1.current_animation = player1.animations.get("walk_back").unwrap();
                 } else {
                     player1.current_animation = player1.animations.get("idle").unwrap();
@@ -139,8 +151,14 @@ fn main() -> Result<(), String> {
             player1.prev_direction = player1.direction;
         }
 
-        texture_to_display = &player1.current_animation[player1.animation_index as usize];
-        rendering::renderer::render(&mut canvas, Color::RGB(i, 64, 255 - i), texture_to_display, &player1, &player2)?;
+        //TODO fix array out of bounds, possibly due to a change of animation without resetting the index
+        texture_to_display_1 = &player1.current_animation[player1.animation_index as usize];
+
+        let get_relative_pos_to_player_1 = (player1.position.x - player2.position.x).signum();
+        player2.flipped = get_relative_pos_to_player_1 > 0 ;
+
+        texture_to_display_2 = &player2.current_animation[player2.animation_index as usize];
+        rendering::renderer::render(&mut canvas, Color::RGB(i, 64, 255 - i), texture_to_display_1, &player1, texture_to_display_2, &player2)?;
 
         // Time management!
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));

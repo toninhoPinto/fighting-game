@@ -33,6 +33,7 @@ pub struct Player<'a>{
     pub animation_index: f32,
     pub current_animation: &'a Vec<Texture<'a>>,
     pub animations: &'a HashMap<std::string::String, Vec<Texture<'a>>>,
+    pub flipped: bool
 }
 
 /*

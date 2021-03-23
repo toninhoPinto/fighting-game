@@ -9,7 +9,7 @@ use std::path::Path;
 
 use crate::game_logic::player::Player;
 
-pub fn render(canvas: &mut WindowCanvas, color: Color, texture: &Texture, player1: &Player, player2: &Player) -> Result<(), String> {
+pub fn render(canvas: &mut WindowCanvas, color: Color, texture_1: &Texture, player1: &Player,texture_2: &Texture, player2: &Player) -> Result<(), String> {
     canvas.set_draw_color(color);
     canvas.clear();
 
@@ -17,8 +17,11 @@ pub fn render(canvas: &mut WindowCanvas, color: Color, texture: &Texture, player
     let screen_position = player1.position + Point::new(width as i32 / 2, 4 * height as i32 / 5);
     let screen_rect = Rect::from_center(screen_position, player1.sprite.width(), player1.sprite.height());
 
-    let _flip_horizontally = false;
-    canvas.copy_ex(texture, player1.sprite, screen_rect, 0.0, None, _flip_horizontally, false)?;
+    canvas.copy_ex(texture_1, player1.sprite, screen_rect, 0.0, None, player1.flipped, false)?;
+
+    let screen_position_2 = player2.position + Point::new(width as i32 / 2, 4 * height as i32 / 5);
+    let screen_rect_2 = Rect::from_center(screen_position_2, player2.sprite.width(), player2.sprite.height());
+    canvas.copy_ex(texture_2, player2.sprite, screen_rect_2, 0.0, None, player2.flipped, false)?;
 
     canvas.present();
 
