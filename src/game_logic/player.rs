@@ -4,6 +4,7 @@ use sdl2::video::WindowContext;
 
 use std::fmt;
 use std::collections::HashMap;
+use super::game_input::GameInputs;
 
 use crate::rendering::renderer;
 
@@ -28,12 +29,14 @@ pub struct Player<'a>{
     pub dash_speed: i32,
     pub prev_direction: i32,
     pub direction: i32,
+    pub dir_related_of_other: i32,
     pub state: PlayerState,
     pub isAttacking: bool,
     pub animation_index: f32,
     pub current_animation: &'a Vec<Texture<'a>>,
     pub animations: &'a HashMap<std::string::String, Vec<Texture<'a>>>,
-    pub flipped: bool
+    pub flipped: bool,
+    pub input_combination_anims: &'a Vec<([GameInputs; 5], &'a str)>
 }
 
 /*

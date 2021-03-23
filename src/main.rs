@@ -8,6 +8,7 @@ use sdl2::render::{Texture};
 
 use std::time::Duration;
 use std::collections::HashMap;
+use std::vec::Vec;
 
 #[macro_use]
 extern crate serde_derive;
@@ -49,7 +50,9 @@ fn main() -> Result<(), String> {
     //TODO should vary per animation, some are faster others are slower because of less frames
     let anim_speed = 0.35;
 
-    //TODO move this to game_logic::player:
+    let inputs: Vec<([game_logic::game_input::GameInputs; 5], &str)> = Vec::new();
+
+    //TODO move this to game_logic::player::
     let mut player1 = game_logic::player::Player {
         position: Point::new(-200, 100),
         sprite: Rect::new(0, 0, 580, 356),
@@ -57,12 +60,14 @@ fn main() -> Result<(), String> {
         dash_speed: 10,
         prev_direction: 0,
         direction: 0,
+        dir_related_of_other: 0,
         state: game_logic::player::PlayerState::Standing,
         isAttacking: false,
         animation_index: 0.0,
         current_animation: &anims.get(&"idle".to_string()).unwrap(),
         animations: &anims,
         flipped: true,
+        input_combination_anims: &inputs
     };
 
     let mut player2 = game_logic::player::Player {
@@ -72,15 +77,18 @@ fn main() -> Result<(), String> {
         dash_speed: 10,
         prev_direction: 0,
         direction: 0,
+        dir_related_of_other: 0,
         state: game_logic::player::PlayerState::Standing,
         isAttacking: false,
         animation_index: 0.0,
         current_animation: &anims.get(&"idle".to_string()).unwrap(),
         animations: &anims,
         flipped: false,
+        input_combination_anims: &inputs
     };
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
+    let mut last_inputs: Vec<game_logic::game_input::GameInputs> = Vec::new();
 
     let mut i = 0;
     'running: loop {
@@ -100,7 +108,7 @@ fn main() -> Result<(), String> {
             }
 
             let input = input::input_handler::rcv_input(event, &mut controls);
-
+            record_input(&mut last_inputs, input);
             game_logic::game_input::apply_game_inputs(&mut player1, input);
         }
 
@@ -126,14 +134,14 @@ fn main() -> Result<(), String> {
             //println!("{ } state anim", player1.state.to_string());
 
             if player1.state == game_logic::player::PlayerState::Standing {
-                let get_relative_pos_to_player_2 = (player2.position.x - player1.position.x).signum();
+                player1.dir_related_of_other = (player2.position.x - player1.position.x).signum();
 
                 //TODO flip has a small animation i believe, also, have to take into account mixups
-                player1.flipped = get_relative_pos_to_player_2 > 0 ;
+                player1.flipped = player1.dir_related_of_other > 0 ;
 
-                if player1.direction * -get_relative_pos_to_player_2 < 0 {
+                if player1.direction * -player1.dir_related_of_other < 0 {
                     player1.current_animation = player1.animations.get("walk").unwrap();
-                } else if player1.direction * -get_relative_pos_to_player_2 > 0 {
+                } else if player1.direction * -player1.dir_related_of_other > 0 {
                     player1.current_animation = player1.animations.get("walk_back").unwrap();
                 } else {
                     player1.current_animation = player1.animations.get("idle").unwrap();
@@ -154,8 +162,8 @@ fn main() -> Result<(), String> {
         //TODO fix array out of bounds, possibly due to a change of animation without resetting the index
         texture_to_display_1 = &player1.current_animation[player1.animation_index as usize];
 
-        let get_relative_pos_to_player_1 = (player1.position.x - player2.position.x).signum();
-        player2.flipped = get_relative_pos_to_player_1 > 0 ;
+        player2.dir_related_of_other = (player1.position.x - player2.position.x).signum();
+        player2.flipped = player2.dir_related_of_other > 0 ;
 
         texture_to_display_2 = &player2.current_animation[player2.animation_index as usize];
         rendering::renderer::render(&mut canvas, Color::RGB(i, 64, 255 - i), texture_to_display_1, &player1, texture_to_display_2, &player2)?;
@@ -165,4 +173,11 @@ fn main() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+fn record_input(last_inputs: &mut Vec<game_logic::game_input::GameInputs>, input: game_logic::game_input::GameInputs){
+    last_inputs.push(input);
+    if last_inputs.len() > 5 {
+        last_inputs.pop();
+    }
 }
