@@ -40,6 +40,8 @@ pub struct Player<'a>{
     pub flipped: bool,
     pub input_combination_anims: &'a Vec<(Vec<GameInputs>, &'a str)>,
     pub directional_variation_anims: &'a Vec<(Vec<GameInputs>, &'a str)>,
+    pub last_directional_input_v: Option<GameInputs>,
+    pub last_directional_input_h: Option<GameInputs>,
     pub last_directional_input: Option<GameInputs>
 }
 

@@ -19,6 +19,15 @@ mod rendering;
 mod game_logic;
 mod controls;
 
+//TODO list
+//timers clean the past input list
+//Projectiles
+//Dashes (2 fast directional inputs)
+//Hold attacks
+//2 inputs at the same time (grabs)
+//attack animations that vary depending on distance
+
+
 fn main() -> Result<(), String> {
     println!("Starting Game");
 
@@ -83,7 +92,9 @@ fn main() -> Result<(), String> {
         flipped: true,
         input_combination_anims: &specials_inputs,
         directional_variation_anims: &directional_inputs,
-        last_directional_input: None
+        last_directional_input: None,
+        last_directional_input_v: None,
+        last_directional_input_h: None
     };
 
     let mut player2 = game_logic::player::Player {
@@ -102,7 +113,9 @@ fn main() -> Result<(), String> {
         flipped: false,
         input_combination_anims: &specials_inputs,
         directional_variation_anims: &directional_inputs,
-        last_directional_input: None
+        last_directional_input: None,
+        last_directional_input_v: None,
+        last_directional_input_h: None
     };
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
