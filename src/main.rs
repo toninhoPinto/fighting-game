@@ -2,11 +2,11 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
 use sdl2::pixels::Color;
-use sdl2::image::{self, LoadTexture, InitFlag};
+use sdl2::image::{self, InitFlag};
 use sdl2::rect::{Point, Rect};
 use sdl2::render::{Texture};
 
-use std::time::Duration;
+use std::time::{Instant};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
@@ -27,6 +27,8 @@ mod controls;
 //2 inputs at the same time (grabs)
 //attack animations that vary depending on distance
 
+const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
+
 
 fn main() -> Result<(), String> {
     println!("Starting Game");
@@ -40,7 +42,6 @@ fn main() -> Result<(), String> {
         .position_centered()
         .build()
         .expect("could not initialize video subsystem");
-
     let mut canvas = window.into_canvas().build()
         .expect("could not make a canvas");
 
@@ -53,14 +54,14 @@ fn main() -> Result<(), String> {
 
     let anims = game_logic::player::load_character_anims(&texture_creator, "ryu".to_string());
 
-    let mut texture_to_display_1: &Texture;
-    let mut texture_to_display_2: &Texture;
+    let mut texture_to_display_1: Option<&Texture> = None;
+    let mut texture_to_display_2: Option<&Texture> = None;
 
     //TODO should vary per animation, some are faster others are slower because of less frames
     let anim_speed = 0.35;
 
-
-    //TODO this should be deserialized from somwhere that has each information per character
+    //TODO this should be deserialized from somewhere that has each information per character
+    //or maybe from a specific factory like module
     let mut specials_inputs: Vec<(Vec<game_logic::game_input::GameInputs>, &str)> = Vec::new();
     let mut combo_string: Vec<game_logic::game_input::GameInputs> = Vec::new();
     combo_string.push(game_logic::game_input::GameInputs::DOWN);
@@ -121,12 +122,32 @@ fn main() -> Result<(), String> {
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
     let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
 
-    let mut i = 0;
+    let mut input_reset_timers: Vec<i32> = Vec::new();
+
+    let mut previous_time = Instant::now();
+    let logic_timestep: f64 = 0.016;
+    let mut logic_time_accumulated: f64 = 0.0;
+
+    let rendering_timestep: f64 = 0.016; // 60fps
+    let mut rendering_time_accumulated: f64 = 0.0;
+
     'running: loop {
+        let current_time = Instant::now();
+        let delta_time = current_time.duration_since(previous_time);
+        let delta_time_as_mili = delta_time.as_secs() as f64 + (delta_time.subsec_nanos() as f64 * 1e-9);
+
+        previous_time = current_time;
+
+        logic_time_accumulated += delta_time_as_mili;
+        rendering_time_accumulated += delta_time_as_mili;
+
+
+
+
         // Handle events
         for event in event_pump.poll_iter() {
             match event {
-                Event::JoyDeviceAdded {which, ..} => {
+                Event::JoyDeviceAdded { which, .. } => {
                     println!("added controller: {}", which);
                     let joy = joystick.open(which as u32).unwrap();
                     joys.insert(which, joy);
@@ -135,72 +156,116 @@ fn main() -> Result<(), String> {
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
                 },
-                _ => { }
+                _ => {}
             }
 
             let input = input::input_handler::rcv_input(event, &mut controls);
-            game_logic::game_input::apply_game_inputs(&mut player1, input, &mut last_inputs);
+            match input {
+                Some(input) => {
+
+                    input_reset_timers.push(0);
+                    game_logic::game_input::apply_game_inputs(&mut player1, input, &mut last_inputs);
+                },
+                None => {}
+            }
         }
 
-        // Update
-        i = (i + 1) % 255;
+
+
+
+        while logic_time_accumulated >= logic_timestep {
+            logic_time_accumulated -= logic_timestep;
+            //println!("===============1 frame====================");
+
+            //Number of frames to delete each input
+            for i in 0..input_reset_timers.len() {
+                input_reset_timers[i] += 1;
+                if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    last_inputs.pop_front();
+                }
+            }
+            //println!("{:?} timer", input_reset_timers);
+            input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+
+            //println!("{:?} inputs", last_inputs);
+
+            if !player1.isAttacking {
+                //TODO: this is also game engine, try and move it away somewhere else
+                if player1.state == game_logic::player::PlayerState::Standing {
+                    player1.position = player1.position.offset(player1.direction * player1.speed, 0);
+                }
+            }
+
+
+        }
+
+
+
+
 
         // Render
-        player1.animation_index = (player1.animation_index + (1.0 * anim_speed)) % player1.current_animation.len() as f32;
-        player2.animation_index = (player2.animation_index + (1.0 * anim_speed)) % player2.current_animation.len() as f32;
+        //println!("{:?} {:?}", rendering_time_accumulated, rendering_timestep);
+        if rendering_time_accumulated >= rendering_timestep {
+            //TODO ????? what is this for
+            let dt = rendering_time_accumulated * 0.001;
 
-        //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-        if (player1.animation_index as f32 + (1.0 * anim_speed)) as usize >= player1.current_animation.len() {
-            player1.isAttacking = false;
-            player1.animation_index = 0.0;
-        }
-        //TODO: animation logic, move somewhere else
-        if !player1.isAttacking {
-            //TODO: this is also game engine, try and move it away somewhere else
-            if player1.state == game_logic::player::PlayerState::Standing {
-                player1.position = player1.position.offset(player1.direction * player1.speed, 0);
+
+            player1.animation_index = (player1.animation_index + anim_speed) % player1.current_animation.len() as f32;
+            player2.animation_index = (player2.animation_index + anim_speed) % player2.current_animation.len() as f32;
+
+
+
+            //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
+            if (player1.animation_index as f32 + anim_speed as f32) as usize >= player1.current_animation.len() {
+                player1.isAttacking = false;
+                player1.animation_index = 0.0;
             }
 
-            //println!("{ } state anim", player1.state.to_string());
 
-            if player1.state == game_logic::player::PlayerState::Standing {
-                player1.dir_related_of_other = (player2.position.x - player1.position.x).signum();
+            if !player1.isAttacking {
 
-                //TODO flip has a small animation i believe, also, have to take into account mixups
-                //TODO needs to switch the FWD to BCK and vice versa
-                player1.flipped = player1.dir_related_of_other > 0 ;
+                if player1.state == game_logic::player::PlayerState::Standing {
+                    player1.dir_related_of_other = (player2.position.x - player1.position.x).signum();
 
-                if player1.direction * -player1.dir_related_of_other < 0 {
-                    player1.current_animation = player1.animations.get("walk").unwrap();
-                } else if player1.direction * -player1.dir_related_of_other > 0 {
-                    player1.current_animation = player1.animations.get("walk_back").unwrap();
-                } else {
-                    player1.current_animation = player1.animations.get("idle").unwrap();
+                    //TODO flip has a small animation i believe, also, have to take into account mixups
+                    //TODO needs to switch the FWD to BCK and vice versa
+                    player1.flipped = player1.dir_related_of_other > 0;
+
+                    if player1.direction * -player1.dir_related_of_other < 0 {
+                        player1.current_animation = player1.animations.get("walk").unwrap();
+                    } else if player1.direction * -player1.dir_related_of_other > 0 {
+                        player1.current_animation = player1.animations.get("walk_back").unwrap();
+                    } else {
+                        player1.current_animation = player1.animations.get("idle").unwrap();
+                    }
+                } else if player1.state == game_logic::player::PlayerState::Crouching {
+                    player1.current_animation = player1.animations.get("crouching").unwrap();
+                    player1.animation_index = 0.0;
                 }
-            } else if player1.state == game_logic::player::PlayerState::Crouching {
-                println!("crouch state anim");
-                player1.current_animation = player1.animations.get("crouching").unwrap();
-                player1.animation_index = 0.0;
+
+                if player1.prev_direction != player1.direction {
+                    player1.animation_index = 0.0;
+                }
+
+                player1.prev_direction = player1.direction;
             }
 
-            if player1.prev_direction != player1.direction {
-                player1.animation_index = 0.0;
-            }
 
-            player1.prev_direction = player1.direction;
+            //TODO fix array out of bounds, possibly due to a change of animation without resetting the index
+            texture_to_display_1 = Some(&player1.current_animation[player1.animation_index as usize]);
+
+            player2.dir_related_of_other = (player1.position.x - player2.position.x).signum();
+            player2.flipped = player2.dir_related_of_other > 0;
+
+            texture_to_display_2 = Some(&player2.current_animation[player2.animation_index as usize]);
+
+            println!("{:?} {:?}", player1.animation_index, player1.animation_index as usize);
+            println!("{:?}", player1.isAttacking);
+
+            rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ), texture_to_display_1, &player1, texture_to_display_2, &player2)?;
+            rendering_time_accumulated = 0.0;
         }
 
-        //TODO fix array out of bounds, possibly due to a change of animation without resetting the index
-        texture_to_display_1 = &player1.current_animation[player1.animation_index as usize];
-
-        player2.dir_related_of_other = (player1.position.x - player2.position.x).signum();
-        player2.flipped = player2.dir_related_of_other > 0 ;
-
-        texture_to_display_2 = &player2.current_animation[player2.animation_index as usize];
-        rendering::renderer::render(&mut canvas, Color::RGB(i, 64, 255 - i), texture_to_display_1, &player1, texture_to_display_2, &player2)?;
-
-        // Time management!
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 
     Ok(())

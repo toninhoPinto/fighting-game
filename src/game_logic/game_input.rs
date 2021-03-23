@@ -45,7 +45,6 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                 player.state = PlayerState::Standing;
                 player.last_directional_input_v = None;
             }
-            println!("pre-merge V {:?} {:?} {:?}", player.last_directional_input_h, player.last_directional_input_v, last_inputs);
             merge_last_horizontal_and_vertical_inputs(player, last_inputs);
         },
         GameInputs::Horizontal(h) => {
@@ -59,7 +58,6 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
             } else {
                 player.last_directional_input_h = None;
             }
-            println!("pre-merge H {:?} {:?} {:?}", player.last_directional_input_h, player.last_directional_input_v, last_inputs);
             merge_last_horizontal_and_vertical_inputs(player, last_inputs);
         },
         GameInputs::LightPunch => {
@@ -91,7 +89,7 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
         GameInputs::HeavyKick => { () },
         _ => { () }
     }
-    println!("{:?} {:?} {:?}", player.last_directional_input_h, player.last_directional_input_v, last_inputs);
+   // println!("{:?} {:?} {:?}", player.last_directional_input_h, player.last_directional_input_v, last_inputs);
 }
 
 fn merge_last_horizontal_and_vertical_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInputs>){
@@ -112,7 +110,9 @@ fn merge_last_horizontal_and_vertical_inputs(player: &mut Player, last_inputs: &
             player.last_directional_input = Some(GameInputs::BackUP);
             record_input(last_inputs, GameInputs::BackUP);
         },
-        (None, a) if a.is_none()=> { },
+        (None, a) if a.is_none()=> {
+            player.last_directional_input = None;
+        },
         (a, None) => {
             player.last_directional_input = a;
             record_input(last_inputs, a.unwrap());
@@ -132,7 +132,7 @@ fn check_for_last_directional_inputs_directional_attacks<'a>(current_input: Game
         let (moves, name) = possible_combo;
 
         match player.last_directional_input {
-            Some(v) => {  if moves[0] == player.last_directional_input.unwrap() && moves[1] == current_input {
+            Some(_v) => {  if moves[0] == player.last_directional_input.unwrap() && moves[1] == current_input {
                                 ability_name = name;
                                 break 'search_directionals;
                             }
@@ -143,7 +143,6 @@ fn check_for_last_directional_inputs_directional_attacks<'a>(current_input: Game
     ability_name
 }
 
-
 fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, player: &Player<'a>) -> &'a str {
     //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
@@ -151,8 +150,7 @@ fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, p
     // iterate over last inputs starting from the end -1
     //etc
     //if find match, play animation and remove that input from array
-    println!("{:?} {:?}", last_inputs, player.input_combination_anims);
-    let mut l = 0;
+    let mut l;
     let mut ability_name: &str = "";
     'search_combo: for possible_combo in player.input_combination_anims.iter() {
         for n in 0..last_inputs.len() {

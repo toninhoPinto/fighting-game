@@ -4,7 +4,6 @@ use sdl2::video::WindowContext;
 
 use std::fmt;
 use std::collections::HashMap;
-use std::collections::VecDeque;
 use super::game_input::GameInputs;
 
 use crate::rendering::renderer;
