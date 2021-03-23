@@ -14,12 +14,12 @@ pub fn render(canvas: &mut WindowCanvas, color: Color, texture_1: &Texture, play
     canvas.clear();
 
     let (width, height) = canvas.output_size()?;
-    let screen_position = player1.position + Point::new(width as i32 / 2, 4 * height as i32 / 5);
+    let screen_position = player1.position + Point::new(width as i32 / 2, height as i32 / 2);
     let screen_rect = Rect::from_center(screen_position, player1.sprite.width(), player1.sprite.height());
 
     canvas.copy_ex(texture_1, player1.sprite, screen_rect, 0.0, None, player1.flipped, false)?;
 
-    let screen_position_2 = player2.position + Point::new(width as i32 / 2, 4 * height as i32 / 5);
+    let screen_position_2 = player2.position + Point::new(width as i32 / 2, height as i32 / 2);
     let screen_rect_2 = Rect::from_center(screen_position_2, player2.sprite.width(), player2.sprite.height());
     canvas.copy_ex(texture_2, player2.sprite, screen_rect_2, 0.0, None, player2.flipped, false)?;
 

@@ -38,14 +38,9 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs){
             player.direction = h;
         },
         GameInputs::LightPunch => {
-            println!("Light Punch");
             //TODO add input buffering both on button down and button up
             //but only buffer on button up IF already attacking, dont normal attack
-            if !player.isAttacking {
-                player.isAttacking = true;
-                player.animation_index = 0.0;
-                player.current_animation = player.animations.get("light_punch").unwrap();
-            }
+            player_attack(player, "light_punch");
         },
         GameInputs::MediumPunch => { () },
         GameInputs::HeavyPunch => { () },
@@ -57,3 +52,12 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs){
         _ => { () }
     }
 }
+
+fn player_attack(player: &mut Player, attack_animation:  &str) {
+    if !player.isAttacking {
+        player.isAttacking = true;
+        player.animation_index = 0.0;
+        player.current_animation = player.animations.get(attack_animation).unwrap();
+    }
+}
+

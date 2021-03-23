@@ -62,14 +62,14 @@ pub fn load_character_anims(texture_creator: &TextureCreator<WindowContext>, cha
     let mut character_anims = HashMap::new();
 
     //TODO iterate through folders and use folder name as key for hashmap
-    let idle_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/idle_anim", character_name).to_string());
-    let walk_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/walk_anim", character_name).to_string());
-    let walk_back_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/walk_back_anim", character_name).to_string());
-    let crouch_start_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch", character_name).to_string());
-    let crouch_idle_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/crouching", character_name).to_string());
-    let light_punch_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/attacks/light_punch", character_name).to_string());
-    let special1_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/attacks/specials/directionals", character_name).to_string());
-    let dash_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/dash", character_name).to_string());
+    let idle_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/idle_anim", character_name).to_string());
+    let walk_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/walk_anim", character_name).to_string());
+    let walk_back_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/walk_back_anim", character_name).to_string());
+    let crouch_start_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch/crouched", character_name).to_string());
+    let crouch_idle_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch/crouching", character_name).to_string());
+    let light_punch_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/light_punch", character_name).to_string());
+    let special1_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/directionals", character_name).to_string());
+    let dash_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/dash", character_name).to_string());
 
     character_anims.insert("idle".to_string(), idle_anim);
     character_anims.insert("walk".to_string(), walk_anim);

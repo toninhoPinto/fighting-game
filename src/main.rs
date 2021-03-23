@@ -51,8 +51,8 @@ fn main() -> Result<(), String> {
 
     //TODO move this to game_logic::player:
     let mut player1 = game_logic::player::Player {
-        position: Point::new(-100, 0),
-        sprite: Rect::new(0, 0, 290, 178),
+        position: Point::new(-200, 100),
+        sprite: Rect::new(0, 0, 580, 356),
         speed: 5,
         dash_speed: 10,
         prev_direction: 0,
@@ -66,8 +66,8 @@ fn main() -> Result<(), String> {
     };
 
     let mut player2 = game_logic::player::Player {
-        position: Point::new(100, 0),
-        sprite: Rect::new(0, 0, 290, 178),
+        position: Point::new(200, 100),
+        sprite: Rect::new(0, 0, 580, 356),
         speed: 5,
         dash_speed: 10,
         prev_direction: 0,
