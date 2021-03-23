@@ -4,6 +4,7 @@ use sdl2::video::WindowContext;
 
 use std::fmt;
 use std::collections::HashMap;
+use std::collections::VecDeque;
 use super::game_input::GameInputs;
 
 use crate::rendering::renderer;
@@ -22,6 +23,7 @@ impl fmt::Display for PlayerState {
     }
 }
 
+//TODO might have redundant data
 pub struct Player<'a>{
     pub position: Point,
     pub sprite: Rect,
@@ -36,7 +38,9 @@ pub struct Player<'a>{
     pub current_animation: &'a Vec<Texture<'a>>,
     pub animations: &'a HashMap<std::string::String, Vec<Texture<'a>>>,
     pub flipped: bool,
-    pub input_combination_anims: &'a Vec<([GameInputs; 5], &'a str)>
+    pub input_combination_anims: &'a Vec<(Vec<GameInputs>, &'a str)>,
+    pub directional_variation_anims: &'a Vec<(Vec<GameInputs>, &'a str)>,
+    pub last_directional_input: Option<GameInputs>
 }
 
 /*
@@ -72,6 +76,7 @@ pub fn load_character_anims(texture_creator: &TextureCreator<WindowContext>, cha
     let crouch_idle_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch/crouching", character_name).to_string());
     let light_punch_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/light_punch", character_name).to_string());
     let special1_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/directionals", character_name).to_string());
+    let special2_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
     let dash_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/dash", character_name).to_string());
 
     character_anims.insert("idle".to_string(), idle_anim);
@@ -81,6 +86,7 @@ pub fn load_character_anims(texture_creator: &TextureCreator<WindowContext>, cha
     character_anims.insert("crouch".to_string(), crouch_start_anim);
     character_anims.insert("crouching".to_string(), crouch_idle_anim);
     character_anims.insert("directional_light_punch".to_string(), special1_anim);
+    character_anims.insert("special_attack".to_string(), special2_anim);
     character_anims.insert("dash".to_string(), dash_anim);
 
     character_anims

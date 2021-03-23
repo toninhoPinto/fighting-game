@@ -8,7 +8,7 @@ use sdl2::render::{Texture};
 
 use std::time::Duration;
 use std::collections::HashMap;
-use std::vec::Vec;
+use std::collections::VecDeque;
 
 #[macro_use]
 extern crate serde_derive;
@@ -42,7 +42,7 @@ fn main() -> Result<(), String> {
 
     let texture_creator = canvas.texture_creator();
 
-    let mut anims = game_logic::player::load_character_anims(&texture_creator, "ryu".to_string());
+    let anims = game_logic::player::load_character_anims(&texture_creator, "ryu".to_string());
 
     let mut texture_to_display_1: &Texture;
     let mut texture_to_display_2: &Texture;
@@ -50,7 +50,20 @@ fn main() -> Result<(), String> {
     //TODO should vary per animation, some are faster others are slower because of less frames
     let anim_speed = 0.35;
 
-    let inputs: Vec<([game_logic::game_input::GameInputs; 5], &str)> = Vec::new();
+
+    //TODO this should be deserialized from somwhere that has each information per character
+    let mut specials_inputs: Vec<(Vec<game_logic::game_input::GameInputs>, &str)> = Vec::new();
+    let mut combo_string: Vec<game_logic::game_input::GameInputs> = Vec::new();
+    combo_string.push(game_logic::game_input::GameInputs::DOWN);
+    combo_string.push(game_logic::game_input::GameInputs::FWD);
+    combo_string.push(game_logic::game_input::GameInputs::LightPunch);
+    specials_inputs.push((combo_string, "special_attack"));
+
+    let mut directional_inputs: Vec<(Vec<game_logic::game_input::GameInputs>, &str)> = Vec::new();
+    let mut directional_string: Vec<game_logic::game_input::GameInputs> = Vec::new();
+    directional_string.push(game_logic::game_input::GameInputs::FWD);
+    directional_string.push(game_logic::game_input::GameInputs::LightPunch);
+    directional_inputs.push((directional_string, "directional_light_punch"));
 
     //TODO move this to game_logic::player::
     let mut player1 = game_logic::player::Player {
@@ -67,7 +80,9 @@ fn main() -> Result<(), String> {
         current_animation: &anims.get(&"idle".to_string()).unwrap(),
         animations: &anims,
         flipped: true,
-        input_combination_anims: &inputs
+        input_combination_anims: &specials_inputs,
+        directional_variation_anims: &directional_inputs,
+        last_directional_input: None
     };
 
     let mut player2 = game_logic::player::Player {
@@ -84,11 +99,13 @@ fn main() -> Result<(), String> {
         current_animation: &anims.get(&"idle".to_string()).unwrap(),
         animations: &anims,
         flipped: false,
-        input_combination_anims: &inputs
+        input_combination_anims: &specials_inputs,
+        directional_variation_anims: &directional_inputs,
+        last_directional_input: None
     };
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
-    let mut last_inputs: Vec<game_logic::game_input::GameInputs> = Vec::new();
+    let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
 
     let mut i = 0;
     'running: loop {
@@ -108,8 +125,7 @@ fn main() -> Result<(), String> {
             }
 
             let input = input::input_handler::rcv_input(event, &mut controls);
-            record_input(&mut last_inputs, input);
-            game_logic::game_input::apply_game_inputs(&mut player1, input);
+            game_logic::game_input::apply_game_inputs(&mut player1, input, &mut last_inputs);
         }
 
         // Update
@@ -173,11 +189,4 @@ fn main() -> Result<(), String> {
     }
 
     Ok(())
-}
-
-fn record_input(last_inputs: &mut Vec<game_logic::game_input::GameInputs>, input: game_logic::game_input::GameInputs){
-    last_inputs.push(input);
-    if last_inputs.len() > 5 {
-        last_inputs.pop();
-    }
 }
