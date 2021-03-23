@@ -97,18 +97,15 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
 
 fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInputs>) {
     let len = last_inputs.len();
-    println!("checking for dash with {:?}", last_inputs);
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1]{
-        println!("last 2 inputs {:?} {:?}", last_inputs[len - 2], last_inputs[len - 1]);
         if last_inputs[len - 1] == GameInputs::BACK {
             println!("Dash");
-
-            player_state_change(player, PlayerState::DashingForward);
+            player_state_change(player, PlayerState::DashingBackward);
             player.animation_index = 0.0;
             last_inputs.clear();
         } else if last_inputs[len - 1] == GameInputs::FWD {
             println!("Dash");
-            player_state_change(player, PlayerState::DashingBackward);
+            player_state_change(player, PlayerState::DashingForward);
             player.animation_index = 0.0;
             last_inputs.clear();
         }

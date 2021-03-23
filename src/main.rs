@@ -21,10 +21,10 @@ mod controls;
 
 //TODO list
 //Projectiles
-//Dashes (2 fast directional inputs)
 //Hold attacks
 //2 inputs at the same time (grabs)
 //attack animations that vary depending on distance
+//Improve dash smoothing
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
 
@@ -80,6 +80,7 @@ fn main() -> Result<(), String> {
         sprite: Rect::new(0, 0, 580, 356),
         speed: 5,
         dash_speed: 10,
+        dash_back_speed: 7,
         prev_direction: 0,
         direction: 0,
         dir_related_of_other: 0,
@@ -101,6 +102,7 @@ fn main() -> Result<(), String> {
         sprite: Rect::new(0, 0, 580, 356),
         speed: 5,
         dash_speed: 10,
+        dash_back_speed: 7,
         prev_direction: 0,
         direction: 0,
         dir_related_of_other: 0,
@@ -162,13 +164,11 @@ fn main() -> Result<(), String> {
                 Some(input) => {
                     input_reset_timers.push(0);
                     game_logic::game_input::apply_game_inputs(&mut player1, input, &mut last_inputs);
+                    println!("-------------------------");
                 },
                 None => {}
             }
         }
-
-
-
 
         while logic_time_accumulated >= logic_timestep {
             logic_time_accumulated -= logic_timestep;
@@ -181,7 +181,11 @@ fn main() -> Result<(), String> {
 
                 if player1.state == game_logic::player::PlayerState::DashingForward ||
                     player1.state == game_logic::player::PlayerState::DashingBackward  {
-                    player1.position = player1.position.offset(player1.direction * player1.dash_speed, 0);
+                    if player1.state == game_logic::player::PlayerState::DashingForward {
+                        player1.position = player1.position.offset(player1.dir_related_of_other.signum() * player1.dash_speed, 0);
+                    } else {
+                        player1.position = player1.position.offset(-player1.dir_related_of_other.signum() * player1.dash_speed, 0);
+                    }
                 }
 
             }
@@ -206,14 +210,14 @@ fn main() -> Result<(), String> {
                 }
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
-            println!("{:?}", last_inputs);
 
 
             player1.animation_index = (player1.animation_index + anim_speed) % player1.current_animation.len() as f32;
             player2.animation_index = (player2.animation_index + anim_speed) % player2.current_animation.len() as f32;
 
 
-            println!("{:?} {:?}", (player1.animation_index as f32 + anim_speed as f32) as usize, player1.current_animation.len());
+            //println!("{:?}", player1.state);
+            //println!("{:?} {:?}", (player1.animation_index as f32 + anim_speed as f32) as usize, player1.current_animation.len());
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
             if (player1.animation_index as f32 + anim_speed as f32) as usize >= player1.current_animation.len() {
                 if player1.isAttacking {
@@ -226,10 +230,8 @@ fn main() -> Result<(), String> {
                 player1.animation_index = 0.0;
             }
 
-
-
             if !player1.isAttacking {
-                println!("{:?}", player1.state);
+
                 if player1.state == game_logic::player::PlayerState::Standing {
                     player1.dir_related_of_other = (player2.position.x - player1.position.x).signum();
 
@@ -249,12 +251,16 @@ fn main() -> Result<(), String> {
                 } else if player1.state == game_logic::player::PlayerState::DashingForward {
                     player1.current_animation = player1.animations.get("dash").unwrap();
                 } else if player1.state == game_logic::player::PlayerState::DashingBackward {
-                    player1.current_animation = player1.animations.get("dash").unwrap();
+                    player1.current_animation = player1.animations.get("dash_back").unwrap();
                 }
 
-                if player1.prev_direction != player1.direction {
-                    player1.animation_index = 0.0;
+                if player1.state != game_logic::player::PlayerState::DashingForward &&
+                    player1.state != game_logic::player::PlayerState::DashingBackward {
+                    if player1.prev_direction != player1.direction {
+                        player1.animation_index = 0.0;
+                    }
                 }
+
 
                 player1.prev_direction = player1.direction;
             }
