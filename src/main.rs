@@ -55,6 +55,7 @@ fn main() -> Result<(), String> {
     let mut specials_inputs: Vec<(Vec<game_logic::game_input::GameInputs>, &str)> = Vec::new();
     let mut combo_string: Vec<game_logic::game_input::GameInputs> = Vec::new();
     combo_string.push(game_logic::game_input::GameInputs::DOWN);
+    combo_string.push(game_logic::game_input::GameInputs::FwdDOWN);
     combo_string.push(game_logic::game_input::GameInputs::FWD);
     combo_string.push(game_logic::game_input::GameInputs::LightPunch);
     specials_inputs.push((combo_string, "special_attack"));
@@ -153,6 +154,7 @@ fn main() -> Result<(), String> {
                 player1.dir_related_of_other = (player2.position.x - player1.position.x).signum();
 
                 //TODO flip has a small animation i believe, also, have to take into account mixups
+                //TODO needs to switch the FWD to BCK and vice versa
                 player1.flipped = player1.dir_related_of_other > 0 ;
 
                 if player1.direction * -player1.dir_related_of_other < 0 {

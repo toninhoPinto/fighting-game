@@ -29,6 +29,7 @@ impl fmt::Display for GameInputs {
 }
 
 pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>){
+    //println!("{:?}", input);
     match input {
         GameInputs::Vertical(v) => {
             if v < 0 {
@@ -39,8 +40,21 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                 println!("Crouching");
                 player.state = PlayerState::Crouching;
                 //player.animation_index = 0.0;
-                player.last_directional_input = Some(GameInputs::DOWN);
                 record_input(last_inputs, GameInputs::DOWN);
+                match player.last_directional_input {
+                    Some(GameInputs::FWD) => {
+                        player.last_directional_input = Some(GameInputs::FwdDOWN);
+                        record_input(last_inputs, GameInputs::FwdDOWN);
+                    },
+                    Some(GameInputs::BACK) => {
+                        player.last_directional_input = Some(GameInputs::BackDOWN);
+                        record_input(last_inputs, GameInputs::BackDOWN);
+                    },
+                    _ => {
+                        player.last_directional_input = Some(GameInputs::DOWN);
+                        record_input(last_inputs, GameInputs::DOWN);
+                    }
+                }
                 //player.current_animation = player1.animations.get("crouch").unwrap();
             } else {
                 println!("Standing");
@@ -49,6 +63,22 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                 match player.last_directional_input {
                     Some(GameInputs::UP) => player.last_directional_input = None,
                     Some(GameInputs::DOWN) => player.last_directional_input = None,
+                    Some(GameInputs::FwdDOWN) => {
+                        player.last_directional_input = Some(GameInputs::FWD);
+                        record_input(last_inputs, GameInputs::FWD);
+                    },
+                    Some(GameInputs::FwdUP) => {
+                        player.last_directional_input = Some(GameInputs::FWD);
+                        record_input(last_inputs, GameInputs::FWD);
+                    },
+                    Some(GameInputs::BackDOWN) => {
+                        player.last_directional_input = Some(GameInputs::BACK);
+                        record_input(last_inputs, GameInputs::BACK);
+                    },
+                    Some(GameInputs::BackUP) => {
+                        player.last_directional_input = Some(GameInputs::BACK);
+                        record_input(last_inputs, GameInputs::BACK);
+                    },
                      _ => {}
                 }
             }
@@ -58,17 +88,68 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
             println!("walk {}", h);
             if h != 0 {
                 if player.direction * player.dir_related_of_other > 0 {
-                    record_input(last_inputs, GameInputs::FWD);
-                    player.last_directional_input = Some(GameInputs::FWD);
+
+                    match player.last_directional_input {
+                        Some(GameInputs::UP) => {
+                            player.last_directional_input = Some(GameInputs::FwdUP);
+                            record_input(last_inputs, GameInputs::FwdUP);
+                        },
+                        Some(GameInputs::DOWN) => {
+                            player.last_directional_input = Some(GameInputs::FwdDOWN);
+                            record_input(last_inputs, GameInputs::FwdDOWN);
+                        },
+                        Some(GameInputs::BackDOWN) => {
+                            player.last_directional_input = Some(GameInputs::FwdDOWN);
+                            record_input(last_inputs, GameInputs::FwdDOWN);
+                        },
+                        _ => {
+                            player.last_directional_input = Some(GameInputs::FWD);
+                            record_input(last_inputs, GameInputs::FWD);
+                        },
+                    }
                 } else {
-                    record_input(last_inputs, GameInputs::BACK);
-                    player.last_directional_input = Some(GameInputs::BACK);
+                    match player.last_directional_input {
+                        Some(GameInputs::UP) => {
+                            player.last_directional_input = Some(GameInputs::BackUP);
+                            record_input(last_inputs, GameInputs::BackUP);
+                        },
+                        Some(GameInputs::DOWN) => {
+                            player.last_directional_input = Some(GameInputs::BackDOWN);
+                            record_input(last_inputs, GameInputs::BackDOWN);
+                        },
+                        _ => {
+                            player.last_directional_input = Some(GameInputs::BACK);
+                            record_input(last_inputs, GameInputs::BACK);
+                        }
+                    }
                 }
             } else {
                 println!("Horizontal None");
                 match player.last_directional_input {
                     Some(GameInputs::FWD) => player.last_directional_input = None,
                     Some(GameInputs::BACK) => player.last_directional_input = None,
+                    _ => {}
+                }
+
+                match player.last_directional_input {
+                    Some(GameInputs::FWD) => player.last_directional_input = None,
+                    Some(GameInputs::BACK) => player.last_directional_input = None,
+                    Some(GameInputs::FwdDOWN) => {
+                        player.last_directional_input = Some(GameInputs::DOWN);
+                        record_input(last_inputs, GameInputs::DOWN);
+                    },
+                    Some(GameInputs::FwdUP) => {
+                        player.last_directional_input = Some(GameInputs::UP);
+                        record_input(last_inputs, GameInputs::UP);
+                    },
+                    Some(GameInputs::BackDOWN) => {
+                        player.last_directional_input = Some(GameInputs::DOWN);
+                        record_input(last_inputs, GameInputs::DOWN);
+                    },
+                    Some(GameInputs::BackUP) => {
+                        player.last_directional_input = Some(GameInputs::UP);
+                        record_input(last_inputs, GameInputs::UP);
+                    },
                     _ => {}
                 }
             }
@@ -132,6 +213,7 @@ fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, p
     // iterate over last inputs starting from the end -1
     //etc
     //if find match, play animation and remove that input from array
+    println!("{:?} {:?}", last_inputs, player.input_combination_anims);
     let mut l = 0;
     let mut ability_name: &str = "";
     'search_combo: for possible_combo in player.input_combination_anims.iter() {
