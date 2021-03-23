@@ -20,7 +20,6 @@ mod game_logic;
 mod controls;
 
 //TODO list
-//timers clean the past input list
 //Projectiles
 //Dashes (2 fast directional inputs)
 //Hold attacks
@@ -28,7 +27,6 @@ mod controls;
 //attack animations that vary depending on distance
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
-
 
 fn main() -> Result<(), String> {
     println!("Starting Game");
@@ -162,7 +160,6 @@ fn main() -> Result<(), String> {
             let input = input::input_handler::rcv_input(event, &mut controls);
             match input {
                 Some(input) => {
-
                     input_reset_timers.push(0);
                     game_logic::game_input::apply_game_inputs(&mut player1, input, &mut last_inputs);
                 },
@@ -175,19 +172,6 @@ fn main() -> Result<(), String> {
 
         while logic_time_accumulated >= logic_timestep {
             logic_time_accumulated -= logic_timestep;
-            //println!("===============1 frame====================");
-
-            //Number of frames to delete each input
-            for i in 0..input_reset_timers.len() {
-                input_reset_timers[i] += 1;
-                if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    last_inputs.pop_front();
-                }
-            }
-            //println!("{:?} timer", input_reset_timers);
-            input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
-
-            //println!("{:?} inputs", last_inputs);
 
             if !player1.isAttacking {
                 //TODO: this is also game engine, try and move it away somewhere else
@@ -195,7 +179,6 @@ fn main() -> Result<(), String> {
                     player1.position = player1.position.offset(player1.direction * player1.speed, 0);
                 }
             }
-
 
         }
 
@@ -209,10 +192,19 @@ fn main() -> Result<(), String> {
             //TODO ????? what is this for
             let dt = rendering_time_accumulated * 0.001;
 
+            //Number of frames to delete each input
+            for i in 0..input_reset_timers.len() {
+                input_reset_timers[i] += 1;
+                if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    println!("delete input");
+                    last_inputs.pop_front();
+                }
+            }
+            input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+
 
             player1.animation_index = (player1.animation_index + anim_speed) % player1.current_animation.len() as f32;
             player2.animation_index = (player2.animation_index + anim_speed) % player2.current_animation.len() as f32;
-
 
 
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
@@ -221,6 +213,7 @@ fn main() -> Result<(), String> {
                 player1.animation_index = 0.0;
             }
 
+            println!("{:?}",player1.animation_index);
 
             if !player1.isAttacking {
 
@@ -240,6 +233,11 @@ fn main() -> Result<(), String> {
                     }
                 } else if player1.state == game_logic::player::PlayerState::Crouching {
                     player1.current_animation = player1.animations.get("crouching").unwrap();
+                } else if player1.state == game_logic::player::PlayerState::DashingForward {
+                    player1.current_animation = player1.animations.get("dash").unwrap();
+                    player1.animation_index = 0.0;
+                } else if player1.state == game_logic::player::PlayerState::DashingBackward {
+                    player1.current_animation = player1.animations.get("dash").unwrap();
                     player1.animation_index = 0.0;
                 }
 
@@ -258,9 +256,6 @@ fn main() -> Result<(), String> {
             player2.flipped = player2.dir_related_of_other > 0;
 
             texture_to_display_2 = Some(&player2.current_animation[player2.animation_index as usize]);
-
-            println!("{:?} {:?}", player1.animation_index, player1.animation_index as usize);
-            println!("{:?}", player1.isAttacking);
 
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ), texture_to_display_1, &player1, texture_to_display_2, &player2)?;
             rendering_time_accumulated = 0.0;

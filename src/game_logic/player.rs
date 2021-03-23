@@ -14,7 +14,9 @@ pub enum PlayerState {
     Crouch,
     Crouching,
     UnCrouch,
-    Jumping
+    Jumping,
+    DashingForward,
+    DashingBackward,
 }
 impl fmt::Display for PlayerState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

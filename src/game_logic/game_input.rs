@@ -39,6 +39,7 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                 println!("Crouching");
                 player.state = PlayerState::Crouching;
                 player.last_directional_input_v = Some(GameInputs::DOWN);
+                player.animation_index = 0.0;
                 //player.current_animation = player1.animations.get("crouch").unwrap();
             } else {
                 println!("Standing");
@@ -55,6 +56,8 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                 } else {
                     player.last_directional_input_h = Some(GameInputs::BACK);
                 }
+                println!("Moved to side");
+                check_for_dash_inputs(player, last_inputs);
             } else {
                 player.last_directional_input_h = None;
             }
@@ -90,6 +93,21 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
         _ => { () }
     }
    // println!("{:?} {:?} {:?}", player.last_directional_input_h, player.last_directional_input_v, last_inputs);
+}
+
+fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInputs>) {
+    let len = last_inputs.len();
+    println!("{:?}", last_inputs);
+    if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1]{
+        println!("{:?} {:?}", last_inputs[len - 2], last_inputs[len - 1]);
+        if last_inputs[len - 1] == GameInputs::BACK {
+            println!("Dash");
+            player.state = PlayerState::DashingForward;
+        } else if last_inputs[len - 1] == GameInputs::FWD {
+            println!("Dash");
+            player.state = PlayerState::DashingForward;
+        }
+    }
 }
 
 fn merge_last_horizontal_and_vertical_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInputs>){
@@ -170,6 +188,7 @@ fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, p
                 }
             }
         }
+
     }
 
     ability_name
