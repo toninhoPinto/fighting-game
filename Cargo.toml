@@ -1,0 +1,20 @@
+[package]
+name = "fighting_game"
+version = "0.1.0"
+authors = ["Toninho <Antonio.m.pinto@ist.utl.pt>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[dependencies]
+rusttype = "0.9.2"
+serde = "0.9.10"
+serde_derive = "0.9.10"
+preferences = "1.1.0"
+
+#When you're shipping your game make sure to copy SDL2.dll to the same directory that your compiled exe is in, otherwise the game won't launch.
+[dependencies.sdl2]
+version = "0.34.3"
+default-features = false
+features = ["image"]
