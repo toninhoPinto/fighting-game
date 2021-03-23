@@ -29,7 +29,6 @@ impl fmt::Display for GameInputs {
 }
 
 pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>){
-    println!("{:?}", player.last_directional_input);
     match input {
         GameInputs::Vertical(v) => {
             if v < 0 {
@@ -39,7 +38,7 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
             } else if v > 0 {
                 println!("Crouching");
                 player.state = PlayerState::Crouching;
-                player.animation_index = 0.0;
+                //player.animation_index = 0.0;
                 player.last_directional_input = Some(GameInputs::DOWN);
                 record_input(last_inputs, GameInputs::DOWN);
                 //player.current_animation = player1.animations.get("crouch").unwrap();
@@ -109,6 +108,7 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
 
 fn check_for_last_directional_inputs_directional_attacks<'a>(current_input: GameInputs , player: &Player<'a>) -> &'a str {
     let mut ability_name: &str = "";
+
     'search_directionals: for possible_combo in player.directional_variation_anims.iter() {
         let (moves, name) = possible_combo;
 
@@ -136,16 +136,19 @@ fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, p
     let mut ability_name: &str = "";
     'search_combo: for possible_combo in player.input_combination_anims.iter() {
         for n in 0..last_inputs.len() {
-            for d in 0..(last_inputs.len()-n-1) {
+            l = 0;
+            for d in n..last_inputs.len() {
                 let (moves, name) = possible_combo;
-                if l == moves.len() {
-                    ability_name = name;
-
-                    last_inputs.clear();
-                    break 'search_combo;
-                }
                 if last_inputs[d] == moves[l] {
                     l+= 1;
+                } else {
+                    break;
+                }
+
+                if l == moves.len() {
+                    ability_name = name;
+                    last_inputs.clear();
+                    break 'search_combo;
                 }
             }
         }

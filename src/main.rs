@@ -165,7 +165,7 @@ fn main() -> Result<(), String> {
             } else if player1.state == game_logic::player::PlayerState::Crouching {
                 println!("crouch state anim");
                 player1.current_animation = player1.animations.get("crouching").unwrap();
-
+                player1.animation_index = 0.0;
             }
 
             if player1.prev_direction != player1.direction {
