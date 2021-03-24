@@ -1,6 +1,8 @@
 use std::fmt;
 use super::player::{Player, PlayerState};
+use super::character_factory::CharacterAnimationData;
 use std::collections::VecDeque;
+use std::string::String;
 
 #[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
 pub enum GameInputs {
@@ -29,7 +31,7 @@ impl fmt::Display for GameInputs {
 }
 
 //TODO This mess needs a refactor
-pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>){
+pub fn apply_game_inputs<'a>(character_anims: &'a CharacterAnimationData<'a>, player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>){
     match input {
         GameInputs::Vertical(v) => {
             if v < 0 {
@@ -40,7 +42,7 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
                 player_state_change(player, PlayerState::Crouching);
                 player.last_directional_input_v = Some(GameInputs::DOWN);
                 player.animation_index = 0.0;
-                //player.current_animation = player1.animations.get("crouch").unwrap();
+                //player.current_animation = character_anims.animations.get("crouch").unwrap();
             } else {
                 println!("Standing");
                 player_state_change(player, PlayerState::Standing);
@@ -70,15 +72,15 @@ pub fn apply_game_inputs(player: &mut Player, input: GameInputs, last_inputs: &m
             //TODO add input buffering both on button down and button up
             //but only buffer on button up IF already attacking, dont normal attack
 
-            let special_attack = check_for_history_string_inputs(last_inputs, player);
+            let special_attack = check_for_history_string_inputs(character_anims, last_inputs, player);
             if special_attack != "" {
-                player_attack(player, special_attack);
+                player_attack(character_anims, player, special_attack);
             } else { //check for directional inputs and if nothing then normal light punch
-                let directional_attack = check_for_last_directional_inputs_directional_attacks(GameInputs::LightPunch, &player);
+                let directional_attack = check_for_last_directional_inputs_directional_attacks(character_anims,GameInputs::LightPunch, &player);
                 if directional_attack != "" {
-                    player_attack(player, directional_attack);
+                    player_attack(character_anims, player, directional_attack);
                 } else {
-                    player_attack(player, "light_punch");
+                    player_attack(character_anims, player, "light_punch".to_string());
                 }
 
             }
@@ -145,10 +147,10 @@ fn merge_last_horizontal_and_vertical_inputs(player: &mut Player, last_inputs: &
     }
 }
 
-fn check_for_last_directional_inputs_directional_attacks<'a>(current_input: GameInputs , player: &Player<'a>) -> &'a str {
+fn check_for_last_directional_inputs_directional_attacks(character_anims: &CharacterAnimationData, current_input: GameInputs , player: &Player) -> String {
     let mut ability_name: &str = "";
 
-    'search_directionals: for possible_combo in player.directional_variation_anims.iter() {
+    'search_directionals: for possible_combo in character_anims.directional_variation_anims.iter() {
         let (moves, name) = possible_combo;
 
         match player.last_directional_input {
@@ -160,10 +162,11 @@ fn check_for_last_directional_inputs_directional_attacks<'a>(current_input: Game
             None => {},
         }
     }
-    ability_name
+
+    ability_name.to_string()
 }
 
-fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, player: &Player<'a>) -> &'a str {
+fn check_for_history_string_inputs(character_anims: &CharacterAnimationData, last_inputs: &mut VecDeque<GameInputs>, player: &Player) -> String {
     //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
     //if no match
@@ -172,7 +175,7 @@ fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, p
     //if find match, play animation and remove that input from array
     let mut l;
     let mut ability_name: &str = "";
-    'search_combo: for possible_combo in player.input_combination_anims.iter() {
+    'search_combo: for possible_combo in character_anims.input_combination_anims.iter() {
         for n in 0..last_inputs.len() {
             l = 0;
             for d in n..last_inputs.len() {
@@ -193,7 +196,7 @@ fn check_for_history_string_inputs<'a>(last_inputs: &mut VecDeque<GameInputs>, p
 
     }
 
-    ability_name
+    ability_name.to_string()
 }
 
 fn record_input(last_inputs: &mut VecDeque<GameInputs>, input: GameInputs){
@@ -203,11 +206,11 @@ fn record_input(last_inputs: &mut VecDeque<GameInputs>, input: GameInputs){
     }
 }
 
-fn player_attack(player: &mut Player, attack_animation: &str) {
+fn player_attack<'a>(character_anims: &'a CharacterAnimationData<'a>, player: &mut Player, attack_animation: String) {
     if !player.isAttacking {
         player.isAttacking = true;
         player.animation_index = 0.0;
-        player.current_animation = player.animations.get(attack_animation).unwrap();
+        player.current_animation = attack_animation;
     }
 }
 

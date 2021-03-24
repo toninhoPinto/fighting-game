@@ -50,7 +50,9 @@ fn main() -> Result<(), String> {
 
     let texture_creator = canvas.texture_creator();
 
-    let anims = game_logic::player::load_character_anims(&texture_creator, "ryu".to_string());
+    let p1_anims = game_logic::character_factory::load_character_anim_data(&texture_creator, "ryu".to_string());
+
+    let p2_anims = &p1_anims;
 
     let mut texture_to_display_1: Option<&Texture> = None;
     let mut texture_to_display_2: Option<&Texture> = None;
@@ -58,66 +60,9 @@ fn main() -> Result<(), String> {
     //TODO should vary per animation, some are faster others are slower because of less frames
     let anim_speed = 0.35;
 
-    //TODO this should be deserialized from somewhere that has each information per character
-    //or maybe from a specific factory like module
-    let mut specials_inputs: Vec<(Vec<game_logic::game_input::GameInputs>, &str)> = Vec::new();
-    let mut combo_string: Vec<game_logic::game_input::GameInputs> = Vec::new();
-    combo_string.push(game_logic::game_input::GameInputs::DOWN);
-    combo_string.push(game_logic::game_input::GameInputs::FwdDOWN);
-    combo_string.push(game_logic::game_input::GameInputs::FWD);
-    combo_string.push(game_logic::game_input::GameInputs::LightPunch);
-    specials_inputs.push((combo_string, "special_attack"));
-
-    let mut directional_inputs: Vec<(Vec<game_logic::game_input::GameInputs>, &str)> = Vec::new();
-    let mut directional_string: Vec<game_logic::game_input::GameInputs> = Vec::new();
-    directional_string.push(game_logic::game_input::GameInputs::FWD);
-    directional_string.push(game_logic::game_input::GameInputs::LightPunch);
-    directional_inputs.push((directional_string, "directional_light_punch"));
-
     //TODO move this to game_logic::player::
-    let mut player1 = game_logic::player::Player {
-        position: Point::new(-200, 100),
-        sprite: Rect::new(0, 0, 580, 356),
-        speed: 5,
-        dash_speed: 10,
-        dash_back_speed: 7,
-        prev_direction: 0,
-        direction: 0,
-        dir_related_of_other: 0,
-        state: game_logic::player::PlayerState::Standing,
-        isAttacking: false,
-        animation_index: 0.0,
-        current_animation: &anims.get(&"idle".to_string()).unwrap(),
-        animations: &anims,
-        flipped: true,
-        input_combination_anims: &specials_inputs,
-        directional_variation_anims: &directional_inputs,
-        last_directional_input: None,
-        last_directional_input_v: None,
-        last_directional_input_h: None
-    };
-
-    let mut player2 = game_logic::player::Player {
-        position: Point::new(200, 100),
-        sprite: Rect::new(0, 0, 580, 356),
-        speed: 5,
-        dash_speed: 10,
-        dash_back_speed: 7,
-        prev_direction: 0,
-        direction: 0,
-        dir_related_of_other: 0,
-        state: game_logic::player::PlayerState::Standing,
-        isAttacking: false,
-        animation_index: 0.0,
-        current_animation: &anims.get(&"idle".to_string()).unwrap(),
-        animations: &anims,
-        flipped: false,
-        input_combination_anims: &specials_inputs,
-        directional_variation_anims: &directional_inputs,
-        last_directional_input: None,
-        last_directional_input_v: None,
-        last_directional_input_h: None
-    };
+    let mut player1 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(-200, 100), true);
+    let mut player2 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(200, 100), false);
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
     let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
@@ -131,6 +76,9 @@ fn main() -> Result<(), String> {
     let rendering_timestep: f64 = 0.016; // 60fps
     let mut rendering_time_accumulated: f64 = 0.0;
 
+    let mut p1_curr_anim: &Vec<Texture> = p1_anims.animations.get(&player1.current_animation).unwrap();
+    let mut p2_curr_anim: &Vec<Texture> = p2_anims.animations.get(&player2.current_animation).unwrap();
+
     'running: loop {
         let current_time = Instant::now();
         let delta_time = current_time.duration_since(previous_time);
@@ -140,8 +88,6 @@ fn main() -> Result<(), String> {
 
         logic_time_accumulated += delta_time_as_mili;
         rendering_time_accumulated += delta_time_as_mili;
-
-
 
 
         // Handle events
@@ -163,8 +109,7 @@ fn main() -> Result<(), String> {
             match input {
                 Some(input) => {
                     input_reset_timers.push(0);
-                    game_logic::game_input::apply_game_inputs(&mut player1, input, &mut last_inputs);
-                    println!("-------------------------");
+                    game_logic::game_input::apply_game_inputs(&p1_anims ,&mut player1, input, &mut last_inputs);
                 },
                 None => {}
             }
@@ -212,14 +157,13 @@ fn main() -> Result<(), String> {
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
 
-            player1.animation_index = (player1.animation_index + anim_speed) % player1.current_animation.len() as f32;
-            player2.animation_index = (player2.animation_index + anim_speed) % player2.current_animation.len() as f32;
-
+            player1.animation_index = (player1.animation_index + anim_speed) % p1_curr_anim.len() as f32;
+            player2.animation_index = (player2.animation_index + anim_speed) % p2_curr_anim.len() as f32;
 
             //println!("{:?}", player1.state);
             //println!("{:?} {:?}", (player1.animation_index as f32 + anim_speed as f32) as usize, player1.current_animation.len());
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-            if (player1.animation_index as f32 + anim_speed as f32) as usize >= player1.current_animation.len() {
+            if (player1.animation_index as f32 + anim_speed as f32) as usize >= p1_curr_anim.len() {
                 if player1.isAttacking {
                     player1.isAttacking = false;
                 }
@@ -227,6 +171,7 @@ fn main() -> Result<(), String> {
                     player1.state == game_logic::player::PlayerState::DashingBackward {
                     player1.state = game_logic::player::PlayerState::Standing;
                 }
+                println!("reset");
                 player1.animation_index = 0.0;
             }
 
@@ -240,18 +185,18 @@ fn main() -> Result<(), String> {
                     player1.flipped = player1.dir_related_of_other > 0;
 
                     if player1.direction * -player1.dir_related_of_other < 0 {
-                        player1.current_animation = player1.animations.get("walk").unwrap();
+                        player1.current_animation = "walk".to_string();
                     } else if player1.direction * -player1.dir_related_of_other > 0 {
-                        player1.current_animation = player1.animations.get("walk_back").unwrap();
+                        player1.current_animation = "walk_back".to_string();
                     } else {
-                        player1.current_animation = player1.animations.get("idle").unwrap();
+                        player1.current_animation = "idle".to_string();
                     }
                 } else if player1.state == game_logic::player::PlayerState::Crouching {
-                    player1.current_animation = player1.animations.get("crouching").unwrap();
+                    player1.current_animation = "crouching".to_string();
                 } else if player1.state == game_logic::player::PlayerState::DashingForward {
-                    player1.current_animation = player1.animations.get("dash").unwrap();
+                    player1.current_animation = "dash".to_string();
                 } else if player1.state == game_logic::player::PlayerState::DashingBackward {
-                    player1.current_animation = player1.animations.get("dash_back").unwrap();
+                    player1.current_animation = "dash_back".to_string();
                 }
 
                 if player1.state != game_logic::player::PlayerState::DashingForward &&
@@ -265,14 +210,17 @@ fn main() -> Result<(), String> {
                 player1.prev_direction = player1.direction;
             }
 
+            p1_curr_anim = p1_anims.animations.get(&player1.current_animation).unwrap();
+            p2_curr_anim = p2_anims.animations.get(&player2.current_animation).unwrap();
 
+            //println!("{:?} {:?}", player1.current_animation, player1.animation_index);
             //TODO fix array out of bounds, possibly due to a change of animation without resetting the index
-            texture_to_display_1 = Some(&player1.current_animation[player1.animation_index as usize]);
+            texture_to_display_1 = Some(&p1_curr_anim[player1.animation_index as usize]);
 
             player2.dir_related_of_other = (player1.position.x - player2.position.x).signum();
             player2.flipped = player2.dir_related_of_other > 0;
 
-            texture_to_display_2 = Some(&player2.current_animation[player2.animation_index as usize]);
+            texture_to_display_2 = Some(&p2_curr_anim[player2.animation_index as usize]);
 
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ), texture_to_display_1, &player1, texture_to_display_2, &player2)?;
             rendering_time_accumulated = 0.0;
