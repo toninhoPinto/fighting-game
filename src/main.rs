@@ -174,7 +174,8 @@ fn main() -> Result<(), String> {
             //println!("{:?} {:?}", (player1.animation_index as f32 + anim_speed as f32) as usize, player1.current_animation.len());
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
             if (player1.animation_index as f32 + anim_speed as f32) as usize >= p1_curr_anim.len() {
-                //TODO temp location
+
+                //TODO temp location, currently it adds the projectile once at the end, but should add at specific key frames
                 if player1.isAttacking && p1_anims.effects.contains_key(&player1.current_animation) {
                     let mut projectile = (*p1_anims.effects.get(&player1.current_animation).unwrap()).clone();
                     projectile.position = projectile.position.offset(player1.position.x(), 0);
@@ -187,7 +188,6 @@ fn main() -> Result<(), String> {
                 if player1.isAttacking {
                     player1.isAttacking = false;
                 }
-
 
                 if player1.state == game_logic::player::PlayerState::DashingForward ||
                     player1.state == game_logic::player::PlayerState::DashingBackward {

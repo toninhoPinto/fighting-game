@@ -15,6 +15,8 @@ pub fn load_controls() -> HashMap<std::string::String, GameInputs> {
     let mut controls: PreferencesMap<String> = PreferencesMap::new();
 
     controls.insert(0.to_string(), GameInputs::LightPunch.to_string());
+    controls.insert(3.to_string(), GameInputs::MediumPunch.to_string());
+    controls.insert(5.to_string(), GameInputs::HeavyPunch.to_string());
     controls.insert(1.to_string(), GameInputs::LightKick.to_string());
 
     let save_result = controls.save(&APP_INFO, PREFS_KEY);

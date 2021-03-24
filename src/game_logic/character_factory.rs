@@ -78,7 +78,7 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
     let projectile_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, "assets/ryu/standing/attacks/projectiles".to_string());
 
     let light_projectile = Projectile {
-        position: Point::new(120, 105),
+        position: Point::new(120, 205),
         sprite: Rect::new(0, 0, 100, 110),
         speed: 10,
         direction: 0,
@@ -89,7 +89,7 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
         player_owner: 0,
     };
     let med_projectile = Projectile {
-        position: Point::new(-5, 0),
+        position: Point::new(120, 105),
         sprite: Rect::new(0, 0, 100, 110),
         speed: 10,
         direction: 0,
@@ -100,7 +100,7 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
         player_owner: 0,
     };
     let heavy_projectile = Projectile {
-        position: Point::new(-5, -5),
+        position: Point::new(120, 5),
         sprite: Rect::new(0, 0, 100, 110),
         speed: 10,
         direction: 0,
@@ -163,11 +163,14 @@ fn load_character_anims(texture_creator: &TextureCreator<WindowContext>, charact
     character_anims.insert("directional_jump".to_string(), directional_jump_anim);
     character_anims.insert("directional_light_punch".to_string(), special1_anim);
 
-    //TODO are these 3 attacks duplicating memory or just references to same textures?
-    character_anims.insert("light_special_attack".to_string(), special2_anim);
-    //character_anims.insert("med_special_attack".to_string(), special2_anim);
-    //character_anims.insert("heavy_special_attack".to_string(), special2_anim);
 
+    character_anims.insert("light_special_attack".to_string(), special2_anim);
+
+    //TODO DUPLICATED DATA, i think the only solution is to have a separate texture manager and character anims becomes a hashmap<string, id on texturemanager>
+    let special3_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
+    let special4_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
+    character_anims.insert("med_special_attack".to_string(), special3_anim);
+    character_anims.insert("heavy_special_attack".to_string(), special4_anim);
 
     character_anims
 }

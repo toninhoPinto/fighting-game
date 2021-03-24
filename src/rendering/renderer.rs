@@ -51,8 +51,6 @@ pub fn render(canvas: &mut WindowCanvas, color: Color,
         }
     }
 
-
-
     canvas.present();
 
     Ok(())
