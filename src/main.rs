@@ -5,6 +5,10 @@ use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
 use sdl2::rect::{Point, Rect};
 use sdl2::render::{Texture};
+use sdl2::render::BlendMode;
+
+use parry2d::bounding_volume::AABB;
+use parry2d::math::Point as aabbPoint;
 
 use std::time::{Instant};
 use std::collections::HashMap;
@@ -23,13 +27,13 @@ use game_logic::projectile::Projectile;
 use game_logic::character_factory::CharacterAnimationData;
 
 //TODO list
-//Projectiles
 //Hold attacks
 //2 inputs at the same time (grabs)
 //attack animations that vary depending on distance
 //dash attacks
 //add movement to each attack
 //add different animation speeds to each animation
+//specific projectile only live if keep holding button
 //Improve dash smoothing
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
@@ -48,6 +52,9 @@ fn main() -> Result<(), String> {
         .expect("could not initialize video subsystem");
     let mut canvas = window.into_canvas().build()
         .expect("could not make a canvas");
+
+    //blend mode was added specifically to see the colliders
+    canvas.set_blend_mode(BlendMode::Blend);
 
     let mut event_pump = sdl_context.event_pump()?;
 
@@ -86,6 +93,12 @@ fn main() -> Result<(), String> {
     let mut p2_curr_anim: &Vec<Texture> = p2_anims.animations.get(&player2.current_animation).unwrap();
 
     let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
+
+    let mut colliders: Vec<AABB> = Vec::new();
+
+    let min = aabbPoint::new(100.0, 100.0);
+    let max = aabbPoint::new(200.0, 200.0);
+    colliders.push(AABB::new(min, max));
 
     'running: loop {
         let current_time = Instant::now();
@@ -150,7 +163,6 @@ fn main() -> Result<(), String> {
             }
         }
 
-
         // Render
         //println!("{:?} {:?}", rendering_time_accumulated, rendering_timestep);
         if rendering_time_accumulated >= rendering_timestep {
@@ -193,7 +205,6 @@ fn main() -> Result<(), String> {
                     player1.state == game_logic::player::PlayerState::DashingBackward {
                     player1.state = game_logic::player::PlayerState::Standing;
                 }
-                println!("reset");
                 player1.animation_index = 0.0;
             }
 
@@ -249,7 +260,7 @@ fn main() -> Result<(), String> {
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
                                         texture_to_display_1, &player1, &p1_anims,
                                         texture_to_display_2, &player2, &p2_anims,
-                                        &projectiles)?;
+                                        &projectiles, &colliders)?;
 
             rendering_time_accumulated = 0.0;
         }
