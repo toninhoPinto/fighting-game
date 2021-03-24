@@ -22,6 +22,7 @@ impl fmt::Display for PlayerState {
 
 //TODO might have redundant data
 pub struct Player{
+    pub id: i32,
     pub position: Point,
     pub sprite: Rect,
     pub speed: i32,

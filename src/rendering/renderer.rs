@@ -7,8 +7,14 @@ use std::string::String;
 use std::fs;
 
 use crate::game_logic::player::Player;
+use crate::game_logic::projectile::Projectile;
+use crate::game_logic::character_factory::CharacterAnimationData;
 
-pub fn render(canvas: &mut WindowCanvas, color: Color, texture_1: Option<&Texture>, player1: &Player,texture_2: Option<&Texture>, player2: &Player) -> Result<(), String> {
+pub fn render(canvas: &mut WindowCanvas, color: Color,
+              texture_1: Option<&Texture>, player1: &Player, p1_anims: &CharacterAnimationData,
+              texture_2: Option<&Texture>, player2: &Player, p2_anims: &CharacterAnimationData,
+              projectiles: &Vec<Projectile>) -> Result<(), String> {
+
     canvas.set_draw_color(color);
     canvas.clear();
 
@@ -33,6 +39,17 @@ pub fn render(canvas: &mut WindowCanvas, color: Color, texture_1: Option<&Textur
 
     }
 
+    for projectile in projectiles.iter() {
+        let (width, height) = canvas.output_size()?;
+        let screen_position_2 = projectile.position + Point::new(width as i32 / 2, height as i32 / 2);
+        let screen_rect_2 = Rect::from_center(screen_position_2, projectile.sprite.width(), projectile.sprite.height());
+
+        if projectile.player_owner == 1 {
+            canvas.copy_ex(&p1_anims.projectile_animation.get(&projectile.animation_name).unwrap()[projectile.animation_index as usize], projectile.sprite, screen_rect_2, 0.0, None, projectile.flipped, false)?;
+        } else if  projectile.player_owner == 2 {
+            canvas.copy_ex(&p2_anims.projectile_animation.get(&projectile.animation_name).unwrap()[projectile.animation_index as usize], projectile.sprite, screen_rect_2, 0.0, None, projectile.flipped, false)?;
+        }
+    }
 
 
 
@@ -55,4 +72,8 @@ pub fn load_anim_from_dir(tex_creator: &TextureCreator<WindowContext>, dir: std:
         }
     }
     vec
+}
+
+pub fn load_single_sprite(tex_creator: &TextureCreator<WindowContext>, file_path: std::string::String) -> Texture {
+    tex_creator.load_texture(file_path).unwrap()
 }

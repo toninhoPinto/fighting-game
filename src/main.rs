@@ -19,11 +19,17 @@ mod rendering;
 mod game_logic;
 mod controls;
 
+use game_logic::projectile::Projectile;
+use game_logic::character_factory::CharacterAnimationData;
+
 //TODO list
 //Projectiles
 //Hold attacks
 //2 inputs at the same time (grabs)
 //attack animations that vary depending on distance
+//dash attacks
+//add movement to each attack
+//add different animation speeds to each animation
 //Improve dash smoothing
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
@@ -61,8 +67,8 @@ fn main() -> Result<(), String> {
     let anim_speed = 0.35;
 
     //TODO move this to game_logic::player::
-    let mut player1 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(-200, 100), true);
-    let mut player2 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(200, 100), false);
+    let mut player1 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(-200, 100), true, 1);
+    let mut player2 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(200, 100), false, 2);
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
     let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
@@ -78,6 +84,8 @@ fn main() -> Result<(), String> {
 
     let mut p1_curr_anim: &Vec<Texture> = p1_anims.animations.get(&player1.current_animation).unwrap();
     let mut p2_curr_anim: &Vec<Texture> = p2_anims.animations.get(&player2.current_animation).unwrap();
+
+    let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
 
     'running: loop {
         let current_time = Instant::now();
@@ -135,10 +143,12 @@ fn main() -> Result<(), String> {
 
             }
 
+            //Handle projectile movement
+            for i in 0..projectiles.len() {
+                //handle
+                projectiles[i].position = projectiles[i].position.offset(projectiles[i].speed, 0);
+            }
         }
-
-
-
 
 
         // Render
@@ -164,9 +174,21 @@ fn main() -> Result<(), String> {
             //println!("{:?} {:?}", (player1.animation_index as f32 + anim_speed as f32) as usize, player1.current_animation.len());
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
             if (player1.animation_index as f32 + anim_speed as f32) as usize >= p1_curr_anim.len() {
+                //TODO temp location
+                if player1.isAttacking && p1_anims.effects.contains_key(&player1.current_animation) {
+                    let mut projectile = (*p1_anims.effects.get(&player1.current_animation).unwrap()).clone();
+                    projectile.position = projectile.position.offset(player1.position.x(), 0);
+                    projectile.direction = (player2.position.x - player1.position.x).signum();
+                    projectile.flipped = player1.dir_related_of_other > 0;
+                    projectile.player_owner = player1.id;
+                    projectiles.push(projectile);
+                }
+
                 if player1.isAttacking {
                     player1.isAttacking = false;
                 }
+
+
                 if player1.state == game_logic::player::PlayerState::DashingForward ||
                     player1.state == game_logic::player::PlayerState::DashingBackward {
                     player1.state = game_logic::player::PlayerState::Standing;
@@ -210,6 +232,8 @@ fn main() -> Result<(), String> {
                 player1.prev_direction = player1.direction;
             }
 
+
+
             p1_curr_anim = p1_anims.animations.get(&player1.current_animation).unwrap();
             p2_curr_anim = p2_anims.animations.get(&player2.current_animation).unwrap();
 
@@ -222,7 +246,11 @@ fn main() -> Result<(), String> {
 
             texture_to_display_2 = Some(&p2_curr_anim[player2.animation_index as usize]);
 
-            rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ), texture_to_display_1, &player1, texture_to_display_2, &player2)?;
+            rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
+                                        texture_to_display_1, &player1, &p1_anims,
+                                        texture_to_display_2, &player2, &p2_anims,
+                                        &projectiles)?;
+
             rendering_time_accumulated = 0.0;
         }
 

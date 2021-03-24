@@ -71,30 +71,65 @@ pub fn apply_game_inputs<'a>(character_anims: &'a CharacterAnimationData<'a>, pl
 
             //TODO add input buffering both on button down and button up
             //but only buffer on button up IF already attacking, dont normal attack
-
-            let special_attack = check_for_history_string_inputs(character_anims, last_inputs, player);
-            if special_attack != "" {
-                player_attack(character_anims, player, special_attack);
-            } else { //check for directional inputs and if nothing then normal light punch
-                let directional_attack = check_for_last_directional_inputs_directional_attacks(character_anims,GameInputs::LightPunch, &player);
-                if directional_attack != "" {
-                    player_attack(character_anims, player, directional_attack);
-                } else {
-                    player_attack(character_anims, player, "light_punch".to_string());
-                }
-
-            }
+            handle_attack_input_for_possible_combos(character_anims,
+                                                    player,
+                                                    GameInputs::LightPunch,
+                                                    last_inputs,
+                                                    "light_punch".to_string());
         },
-        GameInputs::MediumPunch => { () },
-        GameInputs::HeavyPunch => { () },
+        GameInputs::MediumPunch => {
+            record_input(last_inputs, GameInputs::MediumPunch);
+
+            //TODO add input buffering both on button down and button up
+            //but only buffer on button up IF already attacking, dont normal attack
+            handle_attack_input_for_possible_combos(character_anims,
+                                                    player,
+                                                    GameInputs::MediumPunch,
+                                                    last_inputs,
+                                                    "med_punch".to_string());
+        },
+        GameInputs::HeavyPunch => {
+            record_input(last_inputs, GameInputs::HeavyPunch);
+
+            //TODO add input buffering both on button down and button up
+            //but only buffer on button up IF already attacking, dont normal attack
+            handle_attack_input_for_possible_combos(character_anims,
+                                                    player,
+                                                    GameInputs::HeavyPunch,
+                                                    last_inputs,
+                                                    "heavy_punch".to_string());
+        },
         GameInputs::LightKick => {
-            println!("Light Kick")
+            println!("Light Kick");
+            record_input(last_inputs, GameInputs::LightKick);
+
+            //TODO add input buffering both on button down and button up
+            //but only buffer on button up IF already attacking, dont normal attack
+            handle_attack_input_for_possible_combos(character_anims,
+                                                    player,
+                                                    GameInputs::LightKick,
+                                                    last_inputs,
+                                                    "light_kick".to_string());
         },
         GameInputs::MediumKick => { () },
         GameInputs::HeavyKick => { () },
         _ => { () }
     }
    // println!("{:?} {:?} {:?}", player.last_directional_input_h, player.last_directional_input_v, last_inputs);
+}
+
+fn handle_attack_input_for_possible_combos(character_anims: &CharacterAnimationData, player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>, animation_name: String) {
+    let special_attack = check_for_history_string_inputs(character_anims, last_inputs, player);
+    if special_attack != "" {
+        player_attack(character_anims, player, special_attack);
+    } else { //check for directional inputs and if nothing then normal light punch
+            let directional_attack = check_for_last_directional_inputs_directional_attacks(character_anims,input, &player);
+            if directional_attack != "" {
+                player_attack(character_anims, player, directional_attack);
+            } else {
+                player_attack(character_anims, player, animation_name);
+            }
+    }
 }
 
 fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInputs>) {
