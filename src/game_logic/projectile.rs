@@ -6,7 +6,8 @@ use std::string::String;
 pub struct Projectile{
     pub position: Point,
     pub sprite: Rect,
-    pub direction: i32,
+    pub direction: Point,
+    pub target_position: Option<Point>,
     pub speed: i32,
     pub damage: i32,
     pub flipped: bool,

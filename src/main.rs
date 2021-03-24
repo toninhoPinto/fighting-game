@@ -33,6 +33,7 @@ use game_logic::character_factory::CharacterAnimationData;
 //dash attacks
 //add movement to each attack
 //add different animation speeds to each animation
+//projectile with a specific target location
 //specific projectile only live if keep holding button
 //Improve dash smoothing
 
@@ -159,7 +160,17 @@ fn main() -> Result<(), String> {
             //Handle projectile movement
             for i in 0..projectiles.len() {
                 //handle
-                projectiles[i].position = projectiles[i].position.offset(projectiles[i].speed, 0);
+                match projectiles[i].target_position {
+                    Some(target) => {
+                        if projectiles[i].position.x <= projectiles[i].target_position.unwrap().x &&
+                            projectiles[i].position.y <= projectiles[i].target_position.unwrap().y
+                        {
+                            projectiles[i].position = projectiles[i].position.offset(projectiles[i].speed, 0);
+                        }
+                    }
+                    None => {projectiles[i].position = projectiles[i].position.offset(projectiles[i].speed, 0);}
+                }
+
             }
         }
 
@@ -191,9 +202,12 @@ fn main() -> Result<(), String> {
                 if player1.isAttacking && p1_anims.effects.contains_key(&player1.current_animation) {
                     let mut projectile = (*p1_anims.effects.get(&player1.current_animation).unwrap()).clone();
                     projectile.position = projectile.position.offset(player1.position.x(), 0);
-                    projectile.direction = (player2.position.x - player1.position.x).signum();
+                    projectile.direction.x = (player2.position.x - player1.position.x).signum();
                     projectile.flipped = player1.dir_related_of_other > 0;
                     projectile.player_owner = player1.id;
+
+                    let target_pos = Point::new(player2.position.x + (projectile.direction.x * 100), projectile.position.y);
+                    projectile.target_position = Some(target_pos);
                     projectiles.push(projectile);
                 }
 
