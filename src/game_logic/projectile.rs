@@ -13,10 +13,27 @@ pub struct Projectile{
     pub flipped: bool,
     pub animation_index: f32,
     pub animation_name: String,
-    pub player_owner: i32
+    pub player_owner: i32,
+    pub is_alive: bool
 }
 
 impl Projectile {
+    pub fn new(player_owner: i32, spawn_point: Point) -> Projectile{
+        Projectile {
+            position: spawn_point,
+            sprite: Rect::new(0, 0, 100, 110),
+            speed: 10,
+            direction: Point::new(0, 0),
+            target_position: None,
+            damage: 20,
+            flipped: false,
+            animation_index: 0.0,
+            animation_name: "note".to_string(),
+            player_owner,
+            is_alive: true,
+        }
+    }
+
     pub fn update(&mut self) {
         match self.target_position {
             Some(target) => {

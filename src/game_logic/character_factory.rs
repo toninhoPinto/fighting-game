@@ -19,26 +19,7 @@ pub struct CharacterAnimationData<'a> {
 
 pub fn load_character(character_name: std::string::String, spawnPos: Point, flipped: bool, id: i32) -> Player {
     //if character_name == "ryu".to_string()
-    let player = Player {
-        id,
-        position: spawnPos,
-        sprite: Rect::new(0, 0, 580, 356),
-        speed: 5,
-        dash_speed: 10,
-        dash_back_speed: 7,
-        prev_direction: 0,
-        direction: 0,
-        dir_related_of_other: 0,
-        state: PlayerState::Standing,
-        isAttacking: false,
-        animation_index: 0.0,
-        current_animation: "idle".to_string(),
-        flipped,
-        last_directional_input: None,
-        last_directional_input_v: None,
-        last_directional_input_h: None
-    };
-
+    let player = Player::new(id, spawnPos, flipped);
     player
 }
 
@@ -77,42 +58,9 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
 
     let projectile_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, "assets/ryu/standing/attacks/projectiles".to_string());
 
-    let light_projectile = Projectile {
-        position: Point::new(120, 205),
-        sprite: Rect::new(0, 0, 100, 110),
-        speed: 10,
-        direction: Point::new(0, 0),
-        target_position: None,
-        damage: 10,
-        flipped: false,
-        animation_index: 0.0,
-        animation_name: "note".to_string(),
-        player_owner: 0,
-    };
-    let med_projectile = Projectile {
-        position: Point::new(120, 105),
-        sprite: Rect::new(0, 0, 100, 110),
-        speed: 10,
-        direction: Point::new(0, 0),
-        target_position: None,
-        damage: 15,
-        flipped: false,
-        animation_index: 0.0,
-        animation_name: "note".to_string(),
-        player_owner: 0,
-    };
-    let heavy_projectile = Projectile {
-        position: Point::new(120, 5),
-        sprite: Rect::new(0, 0, 100, 110),
-        speed: 10,
-        direction: Point::new(0, 0),
-        target_position: None,
-        damage: 20,
-        flipped: false,
-        animation_index: 0.0,
-        animation_name: "note".to_string(),
-        player_owner: 0,
-    };
+    let light_projectile = Projectile::new(0, Point::new(120, 205));
+    let med_projectile = Projectile::new(0, Point::new(120, 105));
+    let heavy_projectile = Projectile::new(0, Point::new(120, 5));
 
     let mut effects_of_abilities = HashMap::new();
     effects_of_abilities.insert("light_special_attack".to_string(), light_projectile);
