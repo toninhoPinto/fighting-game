@@ -1,5 +1,4 @@
 use sdl2::rect::{Point, Rect};
-use sdl2::render::{Texture};
 use std::string::String;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -36,7 +35,7 @@ impl Projectile {
 
     pub fn update(&mut self) {
         match self.target_position {
-            Some(target) => {
+            Some(_) => {
                 if self.position.x <= self.target_position.unwrap().x &&
                     self.position.y <= self.target_position.unwrap().y
                 {

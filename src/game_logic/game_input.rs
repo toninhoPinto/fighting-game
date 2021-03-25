@@ -241,8 +241,8 @@ fn record_input(last_inputs: &mut VecDeque<GameInputs>, input: GameInputs){
 }
 
 fn player_attack<'a>(character_anims: &'a CharacterAnimationData<'a>, player: &mut Player, attack_animation: String) {
-    if !player.isAttacking {
-        player.isAttacking = true;
+    if !player.is_attacking {
+        player.is_attacking = true;
         player.animation_index = 0.0;
         player.current_animation = attack_animation;
     }

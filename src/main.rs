@@ -3,7 +3,7 @@ use sdl2::keyboard::Keycode;
 
 use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
-use sdl2::rect::{Point, Rect};
+use sdl2::rect::Point;
 use sdl2::render::{Texture};
 use sdl2::render::BlendMode;
 
@@ -22,9 +22,6 @@ mod input;
 mod rendering;
 mod game_logic;
 mod controls;
-
-use game_logic::projectile::Projectile;
-use game_logic::character_factory::CharacterAnimationData;
 
 //TODO list
 //Hold attacks
@@ -68,12 +65,6 @@ fn main() -> Result<(), String> {
 
     let p2_anims = &p1_anims;
 
-    let mut texture_to_display_1: Option<&Texture> = None;
-    let mut texture_to_display_2: Option<&Texture> = None;
-
-    //TODO should vary per animation, some are faster others are slower because of less frames
-    let anim_speed = 0.35;
-
     let mut player1 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(-200, 100), true, 1);
     let mut player2 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(200, 100), false, 2);
 
@@ -92,8 +83,7 @@ fn main() -> Result<(), String> {
     let rendering_timestep: f64 = 0.016; // 60fps
     let mut rendering_time_accumulated: f64 = 0.0;
 
-    let mut p1_curr_anim: &Vec<Texture> = p1_anims.animations.get(&player1.current_animation).unwrap();
-    let mut p2_curr_anim: &Vec<Texture> = p2_anims.animations.get(&player2.current_animation).unwrap();
+    let mut p1_curr_anim: &Vec<Texture>;
 
     let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
 
@@ -102,8 +92,6 @@ fn main() -> Result<(), String> {
     let min = aabbPoint::new(100.0, 100.0);
     let max = aabbPoint::new(200.0, 200.0);
     colliders.push(AABB::new(min, max));
-
-    let mut frame_blocked_after_dash: i32 = 0;
 
     'running: loop {
         let current_time = Instant::now();
@@ -141,12 +129,12 @@ fn main() -> Result<(), String> {
             }
         }
 
+        //Update
         while logic_time_accumulated >= logic_timestep {
             logic_time_accumulated -= logic_timestep;
 
-            if frame_blocked_after_dash <= 0 {
-                player1.update();
-            }
+            player1.update(&player2);
+            player2.update(&player1);
 
             //Handle projectile movement
             for i in 0..projectiles.len() {
@@ -168,14 +156,12 @@ fn main() -> Result<(), String> {
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
-            player1.animation_index = (player1.animation_index + anim_speed) % p1_curr_anim.len() as f32;
-            player2.animation_index = (player2.animation_index + anim_speed) % p2_curr_anim.len() as f32;
 
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-            if (player1.animation_index as f32 + anim_speed as f32) as usize >= p1_curr_anim.len() {
-
+            p1_curr_anim = p1_anims.animations.get(&player1.current_animation).unwrap();
+            if (player1.animation_index as f32 + 0.35 as f32) as usize >= p1_curr_anim.len() {
                 //TODO temp location, currently it adds the projectile once at the end, but should add at specific key frames
-                if player1.isAttacking && p1_anims.effects.contains_key(&player1.current_animation) {
+                if player1.is_attacking && p1_anims.effects.contains_key(&player1.current_animation) {
                     let mut projectile = (*p1_anims.effects.get(&player1.current_animation).unwrap()).clone();
                     projectile.position = projectile.position.offset(player1.position.x(), 0);
                     projectile.direction.x = (player2.position.x - player1.position.x).signum();
@@ -186,75 +172,12 @@ fn main() -> Result<(), String> {
                     projectile.target_position = Some(target_pos);
                     projectiles.push(projectile);
                 }
-
-                if player1.isAttacking {
-                    player1.isAttacking = false;
-                }
-
-                if player1.state == game_logic::player::PlayerState::DashingForward ||
-                    player1.state == game_logic::player::PlayerState::DashingBackward {
-                    player1.state = game_logic::player::PlayerState::Standing;
-                    frame_blocked_after_dash = 5;
-                }
-
-                player1.animation_index = 0.0;
             }
 
-            if frame_blocked_after_dash > 0 {
-                frame_blocked_after_dash -= 1;
-            }
-
-            if !player1.isAttacking {
-
-                if player1.state == game_logic::player::PlayerState::Standing {
-                    player1.dir_related_of_other = (player2.position.x - player1.position.x).signum();
-
-                    //TODO flip has a small animation i believe, also, have to take into account mixups
-                    //TODO needs to switch the FWD to BCK and vice versa
-                    player1.flipped = player1.dir_related_of_other > 0;
-
-                    if player1.direction * -player1.dir_related_of_other < 0 {
-                        player1.current_animation = "walk".to_string();
-                    } else if player1.direction * -player1.dir_related_of_other > 0 {
-                        player1.current_animation = "walk_back".to_string();
-                    } else {
-                        player1.current_animation = "idle".to_string();
-                    }
-                } else if player1.state == game_logic::player::PlayerState::Crouching {
-                    player1.current_animation = "crouching".to_string();
-                } else if player1.state == game_logic::player::PlayerState::DashingForward {
-                    player1.current_animation = "dash".to_string();
-                } else if player1.state == game_logic::player::PlayerState::DashingBackward {
-                    player1.current_animation = "dash_back".to_string();
-                }
-
-                if player1.state != game_logic::player::PlayerState::DashingForward &&
-                    player1.state != game_logic::player::PlayerState::DashingBackward {
-                    if player1.prev_direction != player1.direction {
-                        player1.animation_index = 0.0;
-                    }
-                }
-
-
-
-                player1.prev_direction = player1.direction;
-            }
-
-
-
-            p1_curr_anim = p1_anims.animations.get(&player1.current_animation).unwrap();
-            p2_curr_anim = p2_anims.animations.get(&player2.current_animation).unwrap();
-
-            texture_to_display_1 = Some(&p1_curr_anim[player1.animation_index as usize]);
-
-            player2.dir_related_of_other = (player1.position.x - player2.position.x).signum();
-            player2.flipped = player2.dir_related_of_other > 0;
-
-            texture_to_display_2 = Some(&p2_curr_anim[player2.animation_index as usize]);
 
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
-                                        texture_to_display_1, &player1, &p1_anims,
-                                        texture_to_display_2, &player2, &p2_anims,
+                                        &mut player1, &p1_anims,
+                                        &mut player2, &p2_anims,
                                         &projectiles, &colliders)?;
 
             rendering_time_accumulated = 0.0;

@@ -1,5 +1,5 @@
-use super::player::{Player, PlayerState};
-use sdl2::rect::{Point, Rect};
+use super::player::Player;
+use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
@@ -17,9 +17,9 @@ pub struct CharacterAnimationData<'a> {
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>
 }
 
-pub fn load_character(character_name: std::string::String, spawnPos: Point, flipped: bool, id: i32) -> Player {
+pub fn load_character(character_name: std::string::String, spawn_pos: Point, flipped: bool, id: i32) -> Player {
     //if character_name == "ryu".to_string()
-    let player = Player::new(id, spawnPos, flipped);
+    let player = Player::new(id, spawn_pos, flipped);
     player
 }
 
