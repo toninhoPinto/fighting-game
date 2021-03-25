@@ -7,7 +7,6 @@ use crate::game_logic::game_input::GameInputs;
 
 pub fn rcv_input(event: Event, game_controls: &mut HashMap<std::string::String, GameInputs>) -> Option<GameInputs> {
 
-    //TODO: GameInputs::HeavyKick is just a None, need to fix this when adding jump and proper inputs
     let mut m: Vec<u8>  = Vec::new();
     return match event {
         Event::JoyAxisMotion {which, axis_idx, value, ..} => {

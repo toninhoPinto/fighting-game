@@ -15,3 +15,7 @@ pub struct Projectile{
     pub animation_name: String,
     pub player_owner: i32
 }
+
+impl Projectile {
+
+}

@@ -1,0 +1,204 @@
+    let s1 = String::from("hello");
+    let s2 = s1;
+
+    println!("{}, world!", s1);
+
+2 |     let s1 = String::from("hello");
+  |         -- move occurs because `s1` has type `String`, which does not implement the `Copy` trait
+3 |     let s2 = s1;
+  |              -- value moved here
+4 |
+5 |     println!("{}, world!", s1);
+  |                            ^^ value borrowed here after move
+
+  because String is on the heap, it does a shallow copy from s1 to s2 (copies pointer and not the string itself)
+  but also releases the s1 pointer (if it didnt, then at the end of the scope both s1 and s2 would try to release the same memory)
+  So when println tries to access s1, it fails
+
+  For integers there is no problem because its size is known at compile time and its saved in the stack
+  let x = 5;
+  let y = x;
+
+  println!("x = {}, y = {}", x, y);
+
+  Rust never automatically does a deep copy, only shallow copies
+
+  for deep copies you need to explicitly use clone()
+
+      let s1 = String::from("hello");
+      let s2 = s1.clone(); <- EXPENSIVE since its a deep copy
+
+      println!("s1 = {}, s2 = {}", s1, s2);
+
+
+fn main() {
+    let s = String::from("hello");
+
+    takes_ownership(s);       <--- Since the s variable is on the heap, and its copied when passed as an argument
+                                    its the same as leaving the scope, and stops making sense inside main
+
+    let x = 5;
+
+    makes_copy(x);           <--- Its fine here because x is just holding an int, which is on the stack so its copied
+                                  and x keeps its value
+
+}
+
+fn takes_ownership(some_string: String) { <-- some_string was copied from s
+    println!("{}", some_string);
+} <--- some_string goes out of scope and `drop` is called. The backing memory is freed.
+
+fn makes_copy(some_integer: i32) { <-- some_integer was copied from x
+    println!("{}", some_integer);
+} <---some_integer goes out of scope. Nothing special happens.
+
+
+return functions also change give ownership
+
+fn main() {
+    let s1 = gives_ownership();         <- s1 gets ownership
+
+    let s2 = String::from("hello");     <-- s2 gets ownership
+
+    let s3 = takes_and_gives_back(s2);   <-- s2 is moved, so it becomes obsolete/loses data and s3 gets ownership of the function return
+}
+
+
+
+Solution to this ownership connundrum is the borrows with "&", this references the value without owning it
+
+fn main() {
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1); <- here calculate_length receives a read_only reference
+
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+fn calculate_length(s: &String) -> usize {   <--- receives reference to string
+    s.len()
+}                                               <---- here s is dropped, but because it didnt have ownership of the original hello string
+                                                nothing happens
+
+
+This is only a read only reference, to be able to change the data you need a "&mut"
+But you can only have a single mutable reference PER SCOPE to each piece of data or you get an error:
+
+ let mut s = String::from("hello");
+
+    let r1 = &mut s;
+    let r2 = &mut s;
+
+ println!("{}, {}", r1, r2);
+
+$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0499]: cannot borrow `s` as mutable more than once at a time
+ --> src/main.rs:5:14
+  |
+4 |     let r1 = &mut s;
+  |              ------ first mutable borrow occurs here
+5 |     let r2 = &mut s;
+  |              ^^^^^^ second mutable borrow occurs here
+6 |
+7 |     println!("{}, {}", r1, r2);
+  |                        -- first borrow later used here
+
+to avoid this you can use curly braces or functions
+
+let mut s = String::from("hello");
+
+{
+    let r1 = &mut s;
+} <---- r1 goes out of scope here, so we can make a new reference with no problems.
+
+let r2 = &mut s;
+
+
+You also cannot have a immutable reference and mutable at the same time
+
+    let mut s = String::from("hello");
+
+    let r1 = &s; // no problem
+    let r2 = &s; // no problem
+    let r3 = &mut s; // BIG PROBLEM
+
+    println!("{}, {}, and {}", r1, r2, r3);
+
+$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable
+ --> src/main.rs:6:14
+  |
+4 |     let r1 = &s; // no problem
+  |              -- immutable borrow occurs here
+5 |     let r2 = &s; // no problem
+6 |     let r3 = &mut s; // BIG PROBLEM
+  |              ^^^^^^ mutable borrow occurs here
+7 |
+8 |     println!("{}, {}, and {}", r1, r2, r3);
+  |                                -- immutable borrow later used here
+
+
+Scopes are also from the start of the declaration until the last usage, so if we split the println and move it up
+
+let mut s = String::from("hello");
+
+let r1 = &s; // no problem
+let r2 = &s; // no problem
+println!("{} and {}", r1, r2);
+// r1 and r2 are no longer used after this point
+
+let r3 = &mut s; // no problem
+println!("{}", r3);
+
+This is now fine.
+
+
+Another very normal error, is when Rust compiler stops you from having a dangling pointer
+
+fn main() {
+    let reference_to_nothing = dangle();  <--- dangling pointer
+}
+
+fn dangle() -> &String {
+    let s = String::from("hello");
+
+    &s   <--- return a pointer to variable s
+} <--- drop variable s
+
+$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:5:16
+  |
+5 | fn dangle() -> &String {
+  |                ^ expected named lifetime parameter
+  |
+  = help: this function's return type contains a borrowed value, but there is no value for it to be borrowed from
+help: consider using the `'static` lifetime
+  |
+5 | fn dangle() -> &'static String {
+  |                ^^^^^^^^
+
+
+Struct instance copy and update
+ let user2 = User {
+        email: String::from("another@example.com"),
+        username: String::from("anotherusername567"),
+        ..user1  <----- copy values from user1 except for email and username which are updated above
+    };
+
+
+    Tuple Structs
+
+struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+
+let black = Color(0, 0, 0);
+let origin = Point(0, 0, 0);
+
+doesn't have field names like a struct, but has a name/type unlike normal tuples
+
+
+

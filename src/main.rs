@@ -82,6 +82,8 @@ fn main() -> Result<(), String> {
     let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
 
     let mut input_reset_timers: Vec<i32> = Vec::new();
+    //input buffer, finish
+    let mut input_buffer: Vec<i32> = Vec::new();
 
     let mut previous_time = Instant::now();
     let logic_timestep: f64 = 0.016;
