@@ -182,23 +182,7 @@ help: consider using the `'static` lifetime
   |                ^^^^^^^^
 
 
-Struct instance copy and update
- let user2 = User {
-        email: String::from("another@example.com"),
-        username: String::from("anotherusername567"),
-        ..user1  <----- copy values from user1 except for email and username which are updated above
-    };
 
-
-    Tuple Structs
-
-struct Color(i32, i32, i32);
-struct Point(i32, i32, i32);
-
-let black = Color(0, 0, 0);
-let origin = Point(0, 0, 0);
-
-doesn't have field names like a struct, but has a name/type unlike normal tuples
 
 
 

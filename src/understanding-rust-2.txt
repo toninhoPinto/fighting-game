@@ -1,0 +1,48 @@
+Struct instance copy and update
+ let user2 = User {
+        email: String::from("another@example.com"),
+        username: String::from("anotherusername567"),
+        ..user1  <----- copy values from user1 except for email and username which are updated above
+    };
+
+
+    Tuple Structs
+
+struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+
+let black = Color(0, 0, 0);
+let origin = Point(0, 0, 0);
+
+doesn't have field names like a struct, but has a name/type unlike normal tuples
+
+just like with oop, you can have functions specific to structs, aka methods
+this is done with impl keyword and having the first argument as &self
+
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+
+rect1.area()
+
+outra opção, é fazer funcoes que estão namespaced pela estrutura, mas nao recebem &self
+
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle {
+            width: size,
+            height: size,
+        }
+    }
+}
+
+let sq = Rectangle::square(3); <--- em vez de . usa :: como sintaxe para chamar a funcao
+

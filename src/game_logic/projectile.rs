@@ -17,5 +17,19 @@ pub struct Projectile{
 }
 
 impl Projectile {
+    pub fn update(&mut self) {
+        match self.target_position {
+            Some(target) => {
+                if self.position.x <= self.target_position.unwrap().x &&
+                    self.position.y <= self.target_position.unwrap().y
+                {
+                    self.position = self.position.offset(self.speed, 0);
+                }
+            }
+            None => { self.position = self.position.offset(self.speed, 0); }
+        }
+    }
 
+    fn render(&self) {
+    }
 }

@@ -115,7 +115,6 @@ pub fn apply_game_inputs<'a>(character_anims: &'a CharacterAnimationData<'a>, pl
         GameInputs::HeavyKick => { () },
         _ => { () }
     }
-   // println!("{:?} {:?} {:?}", player.last_directional_input_h, player.last_directional_input_v, last_inputs);
 }
 
 fn handle_attack_input_for_possible_combos(character_anims: &CharacterAnimationData, player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>, animation_name: String) {

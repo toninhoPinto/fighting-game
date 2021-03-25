@@ -35,7 +35,7 @@ use game_logic::character_factory::CharacterAnimationData;
 //add different animation speeds to each animation
 //projectile with a specific target location
 //specific projectile only live if keep holding button
-//Improve dash smoothing
+//Improve dash smoothing <- add a small movement break after a dash
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
 
@@ -74,7 +74,6 @@ fn main() -> Result<(), String> {
     //TODO should vary per animation, some are faster others are slower because of less frames
     let anim_speed = 0.35;
 
-    //TODO move this to game_logic::player::
     let mut player1 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(-200, 100), true, 1);
     let mut player2 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(200, 100), false, 2);
 
@@ -82,7 +81,8 @@ fn main() -> Result<(), String> {
     let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
 
     let mut input_reset_timers: Vec<i32> = Vec::new();
-    //input buffer, finish
+
+    //TODO input buffer, finish
     let mut input_buffer: Vec<i32> = Vec::new();
 
     let mut previous_time = Instant::now();
@@ -102,6 +102,8 @@ fn main() -> Result<(), String> {
     let min = aabbPoint::new(100.0, 100.0);
     let max = aabbPoint::new(200.0, 200.0);
     colliders.push(AABB::new(min, max));
+
+    let mut frame_blocked_after_dash: i32 = 0;
 
     'running: loop {
         let current_time = Instant::now();
@@ -142,42 +144,17 @@ fn main() -> Result<(), String> {
         while logic_time_accumulated >= logic_timestep {
             logic_time_accumulated -= logic_timestep;
 
-            if !player1.isAttacking {
-                //TODO: this is also game engine, try and move it away somewhere else
-                if player1.state == game_logic::player::PlayerState::Standing {
-                    player1.position = player1.position.offset(player1.direction * player1.speed, 0);
-                }
-
-                if player1.state == game_logic::player::PlayerState::DashingForward ||
-                    player1.state == game_logic::player::PlayerState::DashingBackward  {
-                    if player1.state == game_logic::player::PlayerState::DashingForward {
-                        player1.position = player1.position.offset(player1.dir_related_of_other.signum() * player1.dash_speed, 0);
-                    } else {
-                        player1.position = player1.position.offset(-player1.dir_related_of_other.signum() * player1.dash_speed, 0);
-                    }
-                }
-
+            if frame_blocked_after_dash <= 0 {
+                player1.update();
             }
 
             //Handle projectile movement
             for i in 0..projectiles.len() {
-                //handle
-                match projectiles[i].target_position {
-                    Some(target) => {
-                        if projectiles[i].position.x <= projectiles[i].target_position.unwrap().x &&
-                            projectiles[i].position.y <= projectiles[i].target_position.unwrap().y
-                        {
-                            projectiles[i].position = projectiles[i].position.offset(projectiles[i].speed, 0);
-                        }
-                    }
-                    None => {projectiles[i].position = projectiles[i].position.offset(projectiles[i].speed, 0);}
-                }
-
+               projectiles[i].update();
             }
         }
 
         // Render
-        //println!("{:?} {:?}", rendering_time_accumulated, rendering_timestep);
         if rendering_time_accumulated >= rendering_timestep {
             //TODO ????? what is this for
             let dt = rendering_time_accumulated * 0.001;
@@ -191,12 +168,9 @@ fn main() -> Result<(), String> {
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
-
             player1.animation_index = (player1.animation_index + anim_speed) % p1_curr_anim.len() as f32;
             player2.animation_index = (player2.animation_index + anim_speed) % p2_curr_anim.len() as f32;
 
-            //println!("{:?}", player1.state);
-            //println!("{:?} {:?}", (player1.animation_index as f32 + anim_speed as f32) as usize, player1.current_animation.len());
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
             if (player1.animation_index as f32 + anim_speed as f32) as usize >= p1_curr_anim.len() {
 
@@ -220,8 +194,14 @@ fn main() -> Result<(), String> {
                 if player1.state == game_logic::player::PlayerState::DashingForward ||
                     player1.state == game_logic::player::PlayerState::DashingBackward {
                     player1.state = game_logic::player::PlayerState::Standing;
+                    frame_blocked_after_dash = 5;
                 }
+
                 player1.animation_index = 0.0;
+            }
+
+            if frame_blocked_after_dash > 0 {
+                frame_blocked_after_dash -= 1;
             }
 
             if !player1.isAttacking {
@@ -256,6 +236,7 @@ fn main() -> Result<(), String> {
                 }
 
 
+
                 player1.prev_direction = player1.direction;
             }
 
@@ -264,8 +245,6 @@ fn main() -> Result<(), String> {
             p1_curr_anim = p1_anims.animations.get(&player1.current_animation).unwrap();
             p2_curr_anim = p2_anims.animations.get(&player2.current_animation).unwrap();
 
-            //println!("{:?} {:?}", player1.current_animation, player1.animation_index);
-            //TODO fix array out of bounds, possibly due to a change of animation without resetting the index
             texture_to_display_1 = Some(&p1_curr_anim[player1.animation_index as usize]);
 
             player2.dir_related_of_other = (player1.position.x - player2.position.x).signum();

@@ -40,3 +40,30 @@ pub struct Player{
     pub last_directional_input_h: Option<GameInputs>,
     pub last_directional_input: Option<GameInputs>
 }
+
+
+impl Player {
+
+    pub fn update(&mut self) {
+
+        if !self.isAttacking {
+            if self.state == PlayerState::Standing {
+                self.position = self.position.offset(self.direction * self.speed, 0);
+            }
+
+            let isDashing = self.state == PlayerState::DashingForward || self.state == PlayerState::DashingBackward;
+            if  isDashing {
+                if self.state == PlayerState::DashingForward {
+                    self.position = self.position.offset(self.dir_related_of_other.signum() * self.dash_speed, 0);
+                } else {
+                    self.position = self.position.offset(-self.dir_related_of_other.signum() * self.dash_speed, 0);
+                }
+            }
+
+        }
+    }
+
+    fn render(&self) {
+
+    }
+}
