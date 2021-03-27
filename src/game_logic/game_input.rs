@@ -1,6 +1,6 @@
 use std::fmt;
 use super::player::{Player, PlayerState};
-use super::character_factory::CharacterAnimationData;
+use super::character_factory::CharacterAssets;
 use std::collections::VecDeque;
 use std::string::String;
 
@@ -31,21 +31,28 @@ impl fmt::Display for GameInputs {
 }
 
 //TODO This mess needs a refactor
-pub fn apply_game_inputs<'a>(character_anims: &'a CharacterAnimationData<'a>, player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>){
+pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>){
     match input {
         GameInputs::Vertical(v) => {
             if v < 0 {
                 println!("Jump");
+                player_state_change(player, PlayerState::Jumping);
                 player.last_directional_input_v = Some(GameInputs::UP);
+                player.animation_manager.animation_index = 0.0;
             } else if v > 0 {
-                println!("Crouching");
-                player_state_change(player, PlayerState::Crouching);
+
+                if player.state == PlayerState::Standing {
+                    println!("Crouch start");
+                    player_state_change(player, PlayerState::Crouch);
+                }
                 player.last_directional_input_v = Some(GameInputs::DOWN);
-                player.animation_index = 0.0;
-                //player.current_animation = character_anims.animations.get("crouch").unwrap();
             } else {
-                println!("Standing");
-                player_state_change(player, PlayerState::Standing);
+                println!("Standing {}", v);
+                if player.state == PlayerState::Crouch ||  player.state == PlayerState::Crouching {
+                    player_state_change(player, PlayerState::UnCrouch);
+                } else {
+                    player_state_change(player, PlayerState::Standing);
+                }
                 player.last_directional_input_v = None;
             }
             merge_last_horizontal_and_vertical_inputs(player, last_inputs);
@@ -117,8 +124,8 @@ pub fn apply_game_inputs<'a>(character_anims: &'a CharacterAnimationData<'a>, pl
     }
 }
 
-fn handle_attack_input_for_possible_combos(character_anims: &CharacterAnimationData, player: &mut Player, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>, animation_name: String) {
-    let special_attack = check_for_history_string_inputs(character_anims, last_inputs, player);
+fn handle_attack_input_for_possible_combos<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>, animation_name: String) {
+    let special_attack = check_for_history_string_inputs(character_anims, last_inputs);
     if special_attack != "" {
         player_attack(character_anims, player, special_attack);
     } else { //check for directional inputs and if nothing then normal light punch
@@ -135,14 +142,12 @@ fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInp
     let len = last_inputs.len();
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1]{
         if last_inputs[len - 1] == GameInputs::BACK {
-            println!("Dash");
             player_state_change(player, PlayerState::DashingBackward);
-            player.animation_index = 0.0;
+            player.animation_manager.animation_index = 0.0;
             last_inputs.clear();
         } else if last_inputs[len - 1] == GameInputs::FWD {
-            println!("Dash");
             player_state_change(player, PlayerState::DashingForward);
-            player.animation_index = 0.0;
+            player.animation_manager.animation_index = 0.0;
             last_inputs.clear();
         }
     }
@@ -181,7 +186,7 @@ fn merge_last_horizontal_and_vertical_inputs(player: &mut Player, last_inputs: &
     }
 }
 
-fn check_for_last_directional_inputs_directional_attacks(character_anims: &CharacterAnimationData, current_input: GameInputs , player: &Player) -> String {
+fn check_for_last_directional_inputs_directional_attacks(character_anims: &CharacterAssets, current_input: GameInputs, player: &Player) -> String {
     let mut ability_name: &str = "";
 
     'search_directionals: for possible_combo in character_anims.directional_variation_anims.iter() {
@@ -200,7 +205,7 @@ fn check_for_last_directional_inputs_directional_attacks(character_anims: &Chara
     ability_name.to_string()
 }
 
-fn check_for_history_string_inputs(character_anims: &CharacterAnimationData, last_inputs: &mut VecDeque<GameInputs>, player: &Player) -> String {
+fn check_for_history_string_inputs(character_anims: &CharacterAssets, last_inputs: &mut VecDeque<GameInputs>) -> String {
     //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
     //if no match
@@ -240,18 +245,16 @@ fn record_input(last_inputs: &mut VecDeque<GameInputs>, input: GameInputs){
     }
 }
 
-fn player_attack<'a>(character_anims: &'a CharacterAnimationData<'a>, player: &mut Player, attack_animation: String) {
+fn player_attack<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, attack_animation: String) {
     if !player.is_attacking {
         player.is_attacking = true;
-        player.animation_index = 0.0;
-        player.current_animation = attack_animation;
+        player.animation_manager.play_once(character_anims.animations.get(&attack_animation).unwrap(), false);
     }
 }
 
 fn player_state_change(player: &mut Player, new_state: PlayerState){
     if player.state != PlayerState::DashingForward &&
         player.state != PlayerState::DashingBackward {
-
         player.state = new_state;
     }
 }

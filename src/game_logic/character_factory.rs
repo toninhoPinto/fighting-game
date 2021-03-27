@@ -5,25 +5,26 @@ use sdl2::video::WindowContext;
 
 use std::collections::HashMap;
 use std::string::String;
-use crate::rendering::renderer;
 use super::game_input::GameInputs;
 use super::projectile::Projectile;
+use crate::asset_management::asset_loader;
+use crate::asset_management::animation::Animation;
 
-pub struct CharacterAnimationData<'a> {
-    pub animations: HashMap<std::string::String, Vec<Texture<'a>>>,
+pub struct CharacterAssets<'a> {
+    pub animations: HashMap<std::string::String, Animation<'a>>,
     pub input_combination_anims: Vec<(Vec<GameInputs>, String)>,
     pub directional_variation_anims: Vec<(Vec<GameInputs>, String)>,
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>
 }
 
-pub fn load_character(character_name: std::string::String, spawn_pos: Point, flipped: bool, id: i32) -> Player {
+pub fn load_character<'a>(_character_name: std::string::String, spawn_pos: Point, flipped: bool, id: i32) -> Player<'a> {
     //if character_name == "ryu".to_string()
     let player = Player::new(id, spawn_pos, flipped);
     player
 }
 
-pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>, character_name: std::string::String) -> CharacterAnimationData {
+pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>, character_name: std::string::String) -> CharacterAssets {
     let anims = load_character_anims(texture_creator, character_name);
 
     //TODO should this be deserialized or kep as code in this factory?
@@ -56,11 +57,11 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
 
-    let projectile_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, "assets/ryu/standing/attacks/projectiles".to_string());
+    let projectile_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, "assets/ryu/standing/attacks/projectiles".to_string());
 
-    let light_projectile = Projectile::new(0, Point::new(120, 205));
+    let light_projectile = Projectile::new(0, Point::new(120, 5));
     let med_projectile = Projectile::new(0, Point::new(120, 105));
-    let heavy_projectile = Projectile::new(0, Point::new(120, 5));
+    let heavy_projectile = Projectile::new(0, Point::new(120,205));
 
     let mut effects_of_abilities = HashMap::new();
     effects_of_abilities.insert("light_special_attack".to_string(), light_projectile);
@@ -70,7 +71,7 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
     let mut projectile_anims = HashMap::new();
     projectile_anims.insert("note".to_string(), projectile_anim);
 
-    CharacterAnimationData {
+    CharacterAssets {
         animations: anims,
         input_combination_anims: specials_inputs,
         directional_variation_anims: directional_inputs,
@@ -79,49 +80,49 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
     }
 }
 
-fn load_character_anims(texture_creator: &TextureCreator<WindowContext>, character_name: std::string::String) -> HashMap<std::string::String, Vec<Texture>>{
+fn load_character_anims(texture_creator: &TextureCreator<WindowContext>, character_name: std::string::String) -> HashMap<std::string::String, Animation>{
     let mut character_anims = HashMap::new();
 
     //TODO iterate through folders and use folder name as key for hashmap
-    let idle_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/idle", character_name).to_string());
-    let walk_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/walk", character_name).to_string());
-    let walk_back_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/walk_back", character_name).to_string());
-    let crouch_start_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch/crouched", character_name).to_string());
-    let crouch_idle_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch/crouching", character_name).to_string());
-    let light_punch_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/light_punch", character_name).to_string());
-    let medium_punch_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/medium_punch", character_name).to_string());
-    let heavy_punch_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/heavy_punch", character_name).to_string());
-    let light_kick_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/light_kick", character_name).to_string());
-    let special1_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/directionals", character_name).to_string());
-    let special2_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
-    let dash_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/dash", character_name).to_string());
-    let dash_back_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/back_dash", character_name).to_string());
-    let neutral_jump_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/neutral_jump", character_name).to_string());
-    let directional_jump_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/directional_jump", character_name).to_string());
+    let idle_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/idle", character_name).to_string());
+    let walk_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/walk", character_name).to_string());
+    let walk_back_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/walk_back", character_name).to_string());
+    let crouch_start_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch/crouched", character_name).to_string());
+    let crouch_idle_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/crouch/crouching", character_name).to_string());
+    let light_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/light_punch", character_name).to_string());
+    let medium_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/medium_punch", character_name).to_string());
+    let heavy_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/heavy_punch", character_name).to_string());
+    let light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/light_kick", character_name).to_string());
+    let special1_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/directionals", character_name).to_string());
+    let special2_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
+    let dash_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/dash", character_name).to_string());
+    let dash_back_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/back_dash", character_name).to_string());
+    let neutral_jump_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/neutral_jump", character_name).to_string());
+    let directional_jump_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/directional_jump", character_name).to_string());
 
-    character_anims.insert("idle".to_string(), idle_anim);
-    character_anims.insert("dash".to_string(), dash_anim);
-    character_anims.insert("dash_back".to_string(), dash_back_anim);
-    character_anims.insert("walk".to_string(), walk_anim);
-    character_anims.insert("walk_back".to_string(), walk_back_anim);
-    character_anims.insert("light_punch".to_string(), light_punch_anim);
-    character_anims.insert("med_punch".to_string(), medium_punch_anim);
-    character_anims.insert("heavy_punch".to_string(), heavy_punch_anim);
-    character_anims.insert("light_kick".to_string(), light_kick_anim);
-    character_anims.insert("crouch".to_string(), crouch_start_anim);
-    character_anims.insert("crouching".to_string(), crouch_idle_anim);
-    character_anims.insert("neutral_jump".to_string(), neutral_jump_anim);
-    character_anims.insert("directional_jump".to_string(), directional_jump_anim);
-    character_anims.insert("directional_light_punch".to_string(), special1_anim);
+    character_anims.insert("idle".to_string(), Animation::new(idle_anim, "idle".to_string(), 0.35));
+    character_anims.insert("dash".to_string(), Animation::new(dash_anim, "dash".to_string(), 0.35));
+    character_anims.insert("dash_back".to_string(), Animation::new(dash_back_anim, "dash_back".to_string(), 0.35));
+    character_anims.insert("walk".to_string(), Animation::new(walk_anim, "walk".to_string(), 0.35));
+    character_anims.insert("walk_back".to_string(), Animation::new(walk_back_anim, "walk_back".to_string(), 0.35));
+    character_anims.insert("light_punch".to_string(), Animation::new(light_punch_anim, "light_punch".to_string(), 0.35));
+    character_anims.insert("med_punch".to_string(), Animation::new(medium_punch_anim, "med_punch".to_string(), 0.35));
+    character_anims.insert("heavy_punch".to_string(), Animation::new(heavy_punch_anim, "heavy_punch".to_string(), 0.35));
+    character_anims.insert("light_kick".to_string(), Animation::new(light_kick_anim, "light_kick".to_string(), 0.35));
+    character_anims.insert("crouch".to_string(), Animation::new(crouch_start_anim, "crouch".to_string(), 0.35));
+    character_anims.insert("crouching".to_string(), Animation::new(crouch_idle_anim, "crouching".to_string(), 0.35));
+    character_anims.insert("neutral_jump".to_string(), Animation::new(neutral_jump_anim, "neutral_jump".to_string(), 0.35));
+    character_anims.insert("directional_jump".to_string(), Animation::new(directional_jump_anim, "directional_jump".to_string(), 0.35));
+    character_anims.insert("directional_light_punch".to_string(), Animation::new(special1_anim, "directional_light_punch".to_string(), 0.35));
 
 
-    character_anims.insert("light_special_attack".to_string(), special2_anim);
+    character_anims.insert("light_special_attack".to_string(), Animation::new(special2_anim, "light_special_attack".to_string(), 0.35));
 
     //TODO DUPLICATED DATA, i think the only solution is to have a separate texture manager and character anims becomes a hashmap<string, id on texturemanager>
-    let special3_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
-    let special4_anim: Vec<Texture> = renderer::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
-    character_anims.insert("med_special_attack".to_string(), special3_anim);
-    character_anims.insert("heavy_special_attack".to_string(), special4_anim);
+    let special3_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
+    let special4_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, format!("assets/{}/standing/attacks/specials/combinations", character_name).to_string());
+    character_anims.insert("med_special_attack".to_string(), Animation::new(special3_anim, "med_special_attack".to_string(), 0.35));
+    character_anims.insert("heavy_special_attack".to_string(), Animation::new(special4_anim, "heavy_special_attack".to_string(), 0.35));
 
     character_anims
 }

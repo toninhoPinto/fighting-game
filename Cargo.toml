@@ -11,6 +11,7 @@ edition = "2018"
 rusttype = "0.9.2"
 serde = "0.9.10"
 serde_derive = "0.9.10"
+serde_json = "0.9.10"
 preferences = "1.1.0"
 parry2d = "0.2.0"
 

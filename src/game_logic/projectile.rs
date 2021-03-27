@@ -17,8 +17,8 @@ pub struct Projectile{
 }
 
 impl Projectile {
-    pub fn new(player_owner: i32, spawn_point: Point) -> Projectile{
-        Projectile {
+    pub fn new(player_owner: i32, spawn_point: Point) -> Self{
+        Self {
             position: spawn_point,
             sprite: Rect::new(0, 0, 100, 110),
             speed: 10,

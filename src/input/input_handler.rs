@@ -32,7 +32,7 @@ pub fn rcv_input(event: Event, game_controls: &mut HashMap<std::string::String, 
             }
         },
         Event::JoyButtonUp {which, button_idx, ..} => {
-            //println!("joy#{} button#{} up", which, button_idx);
+            println!("joy#{} button#{} up", which, button_idx);
             None
         },
         _ => { None }

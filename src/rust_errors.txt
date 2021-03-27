@@ -1,0 +1,20 @@
+Structures with pointers inside
+will result in errors due to lifetimes if they are not well defined
+
+The solution is to have the struct with the same lifetime of the "ingredients"
+
+pub struct Recipe<'a> {
+    ingredient1: &'a ing,
+    ingredient2: &'a ing2
+}
+
+impl<'a> StrSplit<'a> {
+    pub fn new(ing1: &'a food, ing2 &'a food) -> Recipe {
+    }
+}
+
+This tells the compiler that the structure should live as long as the pointers
+to avoid having a structure with pointers pointing to nothing
+
+The impl<'a> is needed to declare the lifetime, very similar to how you need to declare <T> generics before using
+
