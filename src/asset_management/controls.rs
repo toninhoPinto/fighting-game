@@ -9,7 +9,6 @@ const PREFS_KEY: &str = "config_file";
 use crate::game_logic::game_input::GameInputs;
 
 pub fn load_controls() -> HashMap<std::string::String, GameInputs> {
-    println!("Stored control configs in {:?}\\FightingGame", preferences::prefs_base_dir());
     //TODO: read first, if no file, then write for the first time
 
     let mut controls: PreferencesMap<String> = PreferencesMap::new();

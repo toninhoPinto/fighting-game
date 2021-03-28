@@ -1,9 +1,10 @@
-use sdl2::rect::{Point, Rect};
+use sdl2::rect::Point;
 use sdl2::render::Texture;
 
 use std::fmt;
-use super::game_input::GameInputs;
-use super::character_factory::CharacterAssets;
+use crate::game_logic::game_input::GameInputs;
+use crate::game_logic::character_factory::CharacterAssets;
+use crate::game_logic::characters::Character;
 
 use crate::asset_management::animation::Animator;
 
@@ -31,14 +32,11 @@ impl fmt::Display for PlayerState {
 pub struct Player<'a>{
     pub id: i32,
     pub position: Point,
-    pub sprite: Rect,
     pub prev_direction: i32,
     pub direction: i32,
     pub dir_related_of_other: i32,
     pub state: PlayerState,
     pub is_attacking: bool,
-
-    hit_stunned_duration: i32,
 
     pub animator: Animator<'a>,
     pub flipped: bool,
@@ -46,56 +44,49 @@ pub struct Player<'a>{
     pub last_directional_input_h: Option<GameInputs>,
     pub last_directional_input: Option<GameInputs>,
 
-    pub hp: i32,
-    pub speed: i32,
-    pub dash_speed: i32,
-    pub dash_back_speed: i32,
+    pub character: Character
 }
 
 impl<'a> Player<'a> {
-    pub fn new(id: i32, spawn_position: Point, flipped: bool) -> Self {
+    pub fn new(id: i32, character: Character, spawn_position: Point, flipped: bool) -> Self {
         Self {
             id,
             position: spawn_position,
-            sprite: Rect::new(0, 0, 580, 356),
-            speed: 5,
-            dash_speed: 10,
-            dash_back_speed: 7,
             prev_direction: 0,
             direction: 0,
-            hp: 100,
             dir_related_of_other: 0,
             state: PlayerState::Standing,
             animator: Animator::new(),
             is_attacking: false,
-            hit_stunned_duration: 0,
             flipped,
             last_directional_input: None,
             last_directional_input_v: None,
-            last_directional_input_h: None
+            last_directional_input_h: None,
+            character,
         }
     }
 
     pub fn take_damage(&mut self, damage: i32) {
-        self.hp -= damage;
-        if self.hp <= 0 {
+        self.character.hp -= damage;
+        if self.character.hp <= 0 {
             self.state = PlayerState::Dead;
         }
     }
 
+    //noinspection ALL
     pub fn update(&mut self, opponent_position_x: i32) {
 
-        if !self.is_attacking && self.hit_stunned_duration <= 0 {
+        if !self.is_attacking && self.character.hit_stunned_duration <= 0 {
             if self.state == PlayerState::Standing {
-                self.position = self.position.offset(self.direction * self.speed, 0);
+                self.position = self.position.offset(self.direction * self.character.speed, 0);
             }
 
             let is_dashing = self.state == PlayerState::DashingForward || self.state == PlayerState::DashingBackward;
             if  is_dashing {
                 if self.state == PlayerState::DashingForward {
-                    self.position = self.position.offset(self.dir_related_of_other.signum() * self.dash_speed, 0);
+                    self.position = self.position.offset(self.dir_related_of_other.signum() * self.character.dash_speed, 0);
                 } else {
-                    self.position = self.position.offset(-self.dir_related_of_other.signum() * self.dash_speed, 0);
+                    self.position = self.position.offset(-self.dir_related_of_other.signum() * self.character.dash_speed, 0);
                 }
             }
         }
@@ -103,6 +94,7 @@ impl<'a> Player<'a> {
         self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
     }
 
+    //noinspection ALL
     pub fn render(&mut self, character_data: &'a CharacterAssets) -> &Texture {
         let curr_anim = self.animator.current_animation.unwrap();
         let character_animation = &character_data.animations;
@@ -128,13 +120,13 @@ impl<'a> Player<'a> {
 
             if self.state == PlayerState::DashingForward || self.state == PlayerState::DashingBackward {
                 self.state = PlayerState::Standing;
-                self.hit_stunned_duration = 5;
+                self.character.hit_stunned_duration = 5;
             }
             self.animator.animation_index = 0.0;
         }
 
-        if self.hit_stunned_duration > 0 {
-            self.hit_stunned_duration -= 1;
+        if self.character.hit_stunned_duration > 0 {
+            self.character.hit_stunned_duration -= 1;
         }
 
 
@@ -144,11 +136,15 @@ impl<'a> Player<'a> {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
                     if self.direction * -self.dir_related_of_other < 0 {
-                        self.animator.play(character_animation.get("walk").unwrap());
+                        self.animator.play(character_animation.get("walk").unwrap(), false);
                     } else if self.direction * -self.dir_related_of_other > 0 {
-                        self.animator.play(character_animation.get("walk_back").unwrap());
+                        if character_animation.contains_key("walk_back") {
+                            self.animator.play(character_animation.get("walk_back").unwrap(), false);
+                        } else {
+                            self.animator.play(character_animation.get("walk").unwrap(), true);
+                        }
                     } else {
-                        self.animator.play(character_animation.get("idle").unwrap());
+                        self.animator.play(character_animation.get("idle").unwrap(), false);
                     }
                 }
 
@@ -181,7 +177,7 @@ impl<'a> Player<'a> {
                 }
 
                 PlayerState::Crouching => {
-                    self.animator.play(character_animation.get("crouching").unwrap());
+                    self.animator.play(character_animation.get("crouching").unwrap(), false);
                 }
 
                 PlayerState::DashingForward => {
@@ -196,8 +192,9 @@ impl<'a> Player<'a> {
             self.prev_direction = self.direction;
         }
 
+        //println!("{:?} VS {:?}",  self.id, character_animation.keys());
         if self.id == 1 {
-            self.animator.render(true)
+            self.animator.render(false) //change this for debug
         } else {
             self.animator.render(false)
         }

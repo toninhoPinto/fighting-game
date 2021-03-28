@@ -1,5 +1,4 @@
 use sdl2::render::Texture;
-use std::cmp;
 
 pub struct Animation<'a>{
     pub name: String,
@@ -38,11 +37,15 @@ impl<'a> Animator<'a> {
         }
     }
 
-    pub fn play(&mut self, new_animation: &'a Animation<'a>){
+    pub fn play(&mut self, new_animation: &'a Animation<'a>, play_rewind: bool){
         if self.current_animation.is_none() ||
         (self.current_animation.unwrap().name != new_animation.name) {
             println!("play animation repeat {}", new_animation.name);
-            self.animation_index = 0.0;
+            if !play_rewind {
+                self.animation_index = 0.0;
+            } else {
+                self.animation_index = (new_animation.length - 1) as f64;
+            }
             self.current_animation = Some(new_animation);
             self.play_once = false;
             self.is_playing = true;

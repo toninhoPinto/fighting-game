@@ -6,7 +6,7 @@ use sdl2::rect::{Point, Rect};
 
 use parry2d::bounding_volume::AABB;
 
-use crate::game_logic::player::Player;
+use crate::game_logic::characters::player::Player;
 use crate::game_logic::projectile::Projectile;
 use crate::game_logic::character_factory::CharacterAssets;
 
@@ -36,8 +36,8 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
     canvas.clear();
     let screen_res = canvas.output_size()?;
 
-    let screen_rect = world_to_screen(player1.sprite, player1.position, screen_res);
-    let sprite = player1.sprite;
+    let screen_rect = world_to_screen(player1.character.sprite, player1.position, screen_res);
+    let sprite = player1.character.sprite;
     let is_flipped = player1.flipped;
     let texture = player1.render(p1_anims);
     canvas.copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)?;
@@ -46,8 +46,9 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
         canvas.set_draw_color(color);
     }
 
-    let screen_rect_2  = world_to_screen(player2.sprite, player2.position, screen_res);
-    let sprite_2 = player2.sprite;
+
+    let screen_rect_2  = world_to_screen(player2.character.sprite, player2.position, screen_res);
+    let sprite_2 = player2.character.sprite;
     let is_flipped_2 = player2.flipped;
     let texture_2 = player2.render(p2_anims);
     canvas.copy_ex(texture_2, sprite_2, screen_rect_2, 0.0, None, is_flipped_2, false)?;

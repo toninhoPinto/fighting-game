@@ -13,7 +13,7 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<AABB>, Vec<Vec<Point>>) 
     spriter_pro_collider_loader::load_hitboxes(file)
 }
 
-pub fn load_anim_from_dir(tex_creator: &TextureCreator<WindowContext>, dir: std::string::String) -> Vec<Texture> {
+pub fn load_anim_from_dir<'a>(tex_creator: &'a TextureCreator<WindowContext>, dir: &'_ str) -> Vec<Texture<'a>> {
     let paths = fs::read_dir(dir).unwrap();
 
     let mut vec: Vec<Texture> = Vec::new();

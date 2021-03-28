@@ -23,6 +23,7 @@ mod game_logic;
 mod asset_management;
 
 use crate::asset_management::{controls, asset_loader};
+use crate::game_logic::character_factory::{load_character, load_character_anim_data};
 
 //TODO list
 //Hold attacks
@@ -62,13 +63,16 @@ fn main() -> Result<(), String> {
 
     let texture_creator = canvas.texture_creator();
 
-    let p1_assets = game_logic::character_factory::load_character_anim_data(&texture_creator, "keetar".to_string());
-    let p2_assets = &p1_assets;
+    let player1_character = "keetar";
+    let player2_character = "foxgirl";
 
-    let mut player1 = game_logic::character_factory::load_character("keetar".to_string(), Point::new(0, 20), true, 1);
-    let mut player2 = game_logic::character_factory::load_character("keetar".to_string(), Point::new(800, 20), false, 2);
-    player1.animator.play(p1_assets.animations.get("idle").unwrap());
-    player2.animator.play(p1_assets.animations.get("idle").unwrap());
+    let p1_assets = load_character_anim_data(&texture_creator, player1_character);
+    let p2_assets = load_character_anim_data(&texture_creator, player2_character);
+
+    let mut player1 = load_character(player1_character, Point::new(0, 20), true, 1);
+    let mut player2 = load_character(player2_character, Point::new(800, -40), false, 2);
+    player1.animator.play(p1_assets.animations.get("idle").unwrap(), false);
+    player2.animator.play(p2_assets.animations.get("idle").unwrap(), false);
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
     let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();

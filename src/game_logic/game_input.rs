@@ -1,5 +1,5 @@
 use std::fmt;
-use super::player::{Player, PlayerState};
+use crate::game_logic::characters::player::{Player, PlayerState};
 use super::character_factory::CharacterAssets;
 use std::collections::VecDeque;
 use std::string::String;
