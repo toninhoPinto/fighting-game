@@ -1,10 +1,11 @@
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-
 use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
 use sdl2::rect::Point;
 use sdl2::render::BlendMode;
+
+//simply for exiting program
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
 
 use parry2d::bounding_volume::AABB;
 use parry2d::math::Point as aabbPoint;
@@ -15,15 +16,19 @@ use std::collections::VecDeque;
 
 #[macro_use]
 extern crate serde_derive;
-extern crate preferences;
+extern crate directories;
 
 mod input;
 mod rendering;
 mod game_logic;
 mod asset_management;
 
+use crate::input::controller_handler::Controller;
 use crate::asset_management::{controls, asset_loader};
 use crate::game_logic::character_factory::{load_character, load_character_anim_data};
+use crate::game_logic::inputs::game_inputs::GameInputs;
+use crate::game_logic::inputs::process_inputs::apply_game_inputs;
+
 
 //TODO list
 //Hold attacks
@@ -59,7 +64,8 @@ fn main() -> Result<(), String> {
     let mut event_pump = sdl_context.event_pump()?;
 
     let joystick = sdl_context.joystick()?;
-    let mut joys: HashMap<u32, sdl2::joystick::Joystick> = HashMap::new();
+    let controller = sdl_context.game_controller()?;
+    let mut joys: HashMap<u32, Controller> = HashMap::new();
 
     let texture_creator = canvas.texture_creator();
 
@@ -74,8 +80,8 @@ fn main() -> Result<(), String> {
     player1.animator.play(p1_assets.animations.get("idle").unwrap(), false);
     player2.animator.play(p2_assets.animations.get("idle").unwrap(), false);
 
-    let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
-    let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
+    let mut controls: HashMap<_, GameInputs> = controls::load_controls();
+    let mut last_inputs: VecDeque<GameInputs> = VecDeque::new();
 
     let mut input_reset_timers: Vec<i32> = Vec::new();
 
@@ -120,23 +126,19 @@ fn main() -> Result<(), String> {
         // Handle events
         for event in event_pump.poll_iter() {
             match event {
-                Event::JoyDeviceAdded { which, .. } => {
-                    println!("added controller: {}", which);
-                    let joy = joystick.open(which as u32).unwrap();
-                    joys.insert(which, joy);
-                },
                 Event::Quit { .. } |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
-                },
+                }
                 _ => {}
-            }
+            };
+            input::controller_handler::handle_new_controller(&controller, &joystick, &event, &mut joys);
 
-            let input = input::input_handler::rcv_input(event, &mut controls);
+            let input = input::input_handler::rcv_input(&event, &mut controls);
             match input {
                 Some(input) => {
                     input_reset_timers.push(0);
-                    game_logic::game_input::apply_game_inputs(&p1_assets, &mut player1, input, &mut last_inputs);
+                    apply_game_inputs(&p1_assets, &mut player1, input, &mut last_inputs);
                 },
                 None => {}
             }

@@ -3,6 +3,7 @@ use crate::game_logic::characters::player::{Player, PlayerState};
 use super::character_factory::CharacterAssets;
 use std::collections::VecDeque;
 use std::string::String;
+use serde::{Serialize, Serializer}; // 1.0.104
 
 #[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
 pub enum GameInputs {
@@ -30,7 +31,6 @@ impl fmt::Display for GameInputs {
     }
 }
 
-//TODO This mess needs a refactor
 pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input: GameInputs, last_inputs: &mut VecDeque<GameInputs>){
     match input {
         GameInputs::Vertical(v) => {

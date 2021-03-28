@@ -2,7 +2,7 @@ use sdl2::rect::Point;
 use sdl2::render::Texture;
 
 use std::fmt;
-use crate::game_logic::game_input::GameInputs;
+use crate::game_logic::inputs::game_inputs::GameInputs;
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::game_logic::characters::Character;
 

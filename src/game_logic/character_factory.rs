@@ -5,7 +5,7 @@ use sdl2::video::WindowContext;
 
 use std::collections::HashMap;
 use std::string::String;
-use super::game_input::GameInputs;
+use super::inputs::game_inputs::GameInputs;
 use super::projectile::Projectile;
 use super::characters::Character;
 use crate::asset_management::asset_loader;
@@ -39,8 +39,6 @@ pub fn load_character_anim_data<'a, 'b>(texture_creator: &'a TextureCreator<Wind
 
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_keetar_anims(texture_creator);
-
-    //TODO should this be deserialized or keep as code in this factory?
 
     let mut directional_inputs: Vec<(Vec<GameInputs>, String)> = Vec::new();
     let mut directional_string: Vec<GameInputs> = Vec::new();

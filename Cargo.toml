@@ -9,11 +9,11 @@ edition = "2018"
 
 [dependencies]
 rusttype = "0.9.2"
-serde = "0.9.10"
-serde_derive = "0.9.10"
-serde_json = "0.9.10"
-preferences = "1.1.0"
+serde = "1.0.125"
+serde_derive = "1.0.125"
+serde_json = "1.0.64"
 parry2d = "0.2.0"
+directories = "3.0.1"
 
 #When you're shipping your game make sure to copy SDL2.dll to the same directory that your compiled exe is in, otherwise the game won't launch.
 [dependencies.sdl2]
