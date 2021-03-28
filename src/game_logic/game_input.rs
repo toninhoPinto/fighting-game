@@ -38,7 +38,7 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
                 println!("Jump");
                 player_state_change(player, PlayerState::Jumping);
                 player.last_directional_input_v = Some(GameInputs::UP);
-                player.animation_manager.animation_index = 0.0;
+                player.animator.animation_index = 0.0;
             } else if v > 0 {
 
                 if player.state == PlayerState::Standing {
@@ -143,11 +143,11 @@ fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInp
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1]{
         if last_inputs[len - 1] == GameInputs::BACK {
             player_state_change(player, PlayerState::DashingBackward);
-            player.animation_manager.animation_index = 0.0;
+            player.animator.animation_index = 0.0;
             last_inputs.clear();
         } else if last_inputs[len - 1] == GameInputs::FWD {
             player_state_change(player, PlayerState::DashingForward);
-            player.animation_manager.animation_index = 0.0;
+            player.animator.animation_index = 0.0;
             last_inputs.clear();
         }
     }
@@ -248,7 +248,7 @@ fn record_input(last_inputs: &mut VecDeque<GameInputs>, input: GameInputs){
 fn player_attack<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, attack_animation: String) {
     if !player.is_attacking {
         player.is_attacking = true;
-        player.animation_manager.play_once(character_anims.animations.get(&attack_animation).unwrap(), false);
+        player.animator.play_once(character_anims.animations.get(&attack_animation).unwrap(), false);
     }
 }
 

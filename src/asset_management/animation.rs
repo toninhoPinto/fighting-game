@@ -19,7 +19,7 @@ impl<'a> Animation<'a> {
     }
 }
 
-pub struct AnimationPlayer<'a>{
+pub struct Animator<'a>{
     pub animation_index: f64,
     pub current_animation: Option<&'a Animation<'a>>,
     pub is_playing: bool,
@@ -27,7 +27,7 @@ pub struct AnimationPlayer<'a>{
     rewind: bool,
 }
 
-impl<'a> AnimationPlayer<'a> {
+impl<'a> Animator<'a> {
     pub fn new() -> Self {
         Self {
             animation_index: 0.0,

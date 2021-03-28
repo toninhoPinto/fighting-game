@@ -62,13 +62,13 @@ fn main() -> Result<(), String> {
 
     let texture_creator = canvas.texture_creator();
 
-    let p1_assets = game_logic::character_factory::load_character_anim_data(&texture_creator, "ryu".to_string());
+    let p1_assets = game_logic::character_factory::load_character_anim_data(&texture_creator, "keetar".to_string());
     let p2_assets = &p1_assets;
 
-    let mut player1 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(0, 20), true, 1);
-    let mut player2 = game_logic::character_factory::load_character("ryu".to_string(), Point::new(800, 20), false, 2);
-    player1.animation_manager.play(p1_assets.animations.get("idle").unwrap());
-    player2.animation_manager.play(p1_assets.animations.get("idle").unwrap());
+    let mut player1 = game_logic::character_factory::load_character("keetar".to_string(), Point::new(0, 20), true, 1);
+    let mut player2 = game_logic::character_factory::load_character("keetar".to_string(), Point::new(800, 20), false, 2);
+    player1.animator.play(p1_assets.animations.get("idle").unwrap());
+    player2.animator.play(p1_assets.animations.get("idle").unwrap());
 
     let mut controls: HashMap<_, game_logic::game_input::GameInputs> = controls::load_controls();
     let mut last_inputs: VecDeque<game_logic::game_input::GameInputs> = VecDeque::new();
@@ -89,7 +89,7 @@ fn main() -> Result<(), String> {
 
     let mut colliders: Vec<AABB> = Vec::new();
 
-    let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "ryu").to_string());
+    let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string());
     for i in 0..idle_hitboxes.0.len() {
         let mut aabb = idle_hitboxes.0[i];
         let offset_x = idle_hitboxes.1[0][i].x as f32 * 2.0;
@@ -177,9 +177,9 @@ fn main() -> Result<(), String> {
 
 
             //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-            let player_current_animation = player1.animation_manager.current_animation.unwrap();
+            let player_current_animation = player1.animator.current_animation.unwrap();
             let p1_curr_anim = player_current_animation.length;
-            if (player1.animation_manager.animation_index as f32 + 0.35 as f32) as usize >= p1_curr_anim as usize {
+            if (player1.animator.animation_index as f32 + 0.35 as f32) as usize >= p1_curr_anim as usize {
                 //TODO temp location, currently it adds the projectile once at the end, but should add at specific key frames
                 if player1.is_attacking && p1_assets.effects.contains_key(&player_current_animation.name) {
                     let mut projectile = (*p1_assets.effects.get(&player_current_animation.name).unwrap()).clone();

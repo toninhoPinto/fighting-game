@@ -57,7 +57,7 @@ pub fn load_character_anim_data(texture_creator: &TextureCreator<WindowContext>,
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
 
-    let projectile_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, "assets/ryu/standing/attacks/projectiles".to_string());
+    let projectile_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/attacks/projectiles".to_string());
 
     let light_projectile = Projectile::new(0, Point::new(120, 5));
     let med_projectile = Projectile::new(0, Point::new(120, 105));

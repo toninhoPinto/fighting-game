@@ -5,7 +5,7 @@ use std::fmt;
 use super::game_input::GameInputs;
 use super::character_factory::CharacterAssets;
 
-use crate::asset_management::animation::AnimationPlayer;
+use crate::asset_management::animation::Animator;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PlayerState {
@@ -40,7 +40,7 @@ pub struct Player<'a>{
 
     hit_stunned_duration: i32,
 
-    pub animation_manager: AnimationPlayer<'a>,
+    pub animator: Animator<'a>,
     pub flipped: bool,
     pub last_directional_input_v: Option<GameInputs>,
     pub last_directional_input_h: Option<GameInputs>,
@@ -66,7 +66,7 @@ impl<'a> Player<'a> {
             hp: 100,
             dir_related_of_other: 0,
             state: PlayerState::Standing,
-            animation_manager: AnimationPlayer::new(),
+            animator: Animator::new(),
             is_attacking: false,
             hit_stunned_duration: 0,
             flipped,
@@ -104,11 +104,11 @@ impl<'a> Player<'a> {
     }
 
     pub fn render(&mut self, character_data: &'a CharacterAssets) -> &Texture {
-        let curr_anim = self.animation_manager.current_animation.unwrap();
+        let curr_anim = self.animator.current_animation.unwrap();
         let character_animation = &character_data.animations;
 
         //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-        if !self.animation_manager.is_playing {
+        if !self.animator.is_playing {
 
             if self.state == PlayerState::Jump {
                 self.state == PlayerState::Jumping;
@@ -130,7 +130,7 @@ impl<'a> Player<'a> {
                 self.state = PlayerState::Standing;
                 self.hit_stunned_duration = 5;
             }
-            self.animation_manager.animation_index = 0.0;
+            self.animator.animation_index = 0.0;
         }
 
         if self.hit_stunned_duration > 0 {
@@ -144,11 +144,11 @@ impl<'a> Player<'a> {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
                     if self.direction * -self.dir_related_of_other < 0 {
-                        self.animation_manager.play(character_animation.get("walk").unwrap());
+                        self.animator.play(character_animation.get("walk").unwrap());
                     } else if self.direction * -self.dir_related_of_other > 0 {
-                        self.animation_manager.play(character_animation.get("walk_back").unwrap());
+                        self.animator.play(character_animation.get("walk_back").unwrap());
                     } else {
-                        self.animation_manager.play(character_animation.get("idle").unwrap());
+                        self.animator.play(character_animation.get("idle").unwrap());
                     }
                 }
 
@@ -165,31 +165,31 @@ impl<'a> Player<'a> {
                 }
 
                 PlayerState::Jumping => {
-                    self.animation_manager.play_once(character_animation.get("neutral_jump").unwrap(), false);
+                    self.animator.play_once(character_animation.get("neutral_jump").unwrap(), false);
                 }
 
                 PlayerState::Landing => {
-                    self.animation_manager.play_once(character_animation.get("crouch").unwrap(), false);
+                    self.animator.play_once(character_animation.get("crouch").unwrap(), false);
                 }
 
                 PlayerState::UnCrouch => {
-                    self.animation_manager.play_once(character_animation.get("crouch").unwrap(), true);
+                    self.animator.play_once(character_animation.get("crouch").unwrap(), true);
                 }
 
                 PlayerState::Crouch => {
-                    self.animation_manager.play_once(character_animation.get("crouch").unwrap(), false);
+                    self.animator.play_once(character_animation.get("crouch").unwrap(), false);
                 }
 
                 PlayerState::Crouching => {
-                    self.animation_manager.play(character_animation.get("crouching").unwrap());
+                    self.animator.play(character_animation.get("crouching").unwrap());
                 }
 
                 PlayerState::DashingForward => {
-                    self.animation_manager.play_once(character_animation.get("dash").unwrap(), false);
+                    self.animator.play_once(character_animation.get("dash").unwrap(), false);
                 }
 
                 PlayerState::DashingBackward => {
-                    self.animation_manager.play_once(character_animation.get("dash_back").unwrap(), false);
+                    self.animator.play_once(character_animation.get("dash_back").unwrap(), false);
                 }
             }
 
@@ -197,9 +197,9 @@ impl<'a> Player<'a> {
         }
 
         if self.id == 1 {
-            self.animation_manager.render(true)
+            self.animator.render(true)
         } else {
-            self.animation_manager.render(false)
+            self.animator.render(false)
         }
 
     }
