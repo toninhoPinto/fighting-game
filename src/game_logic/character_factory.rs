@@ -24,18 +24,16 @@ pub struct CharacterAssets<'a> {
 pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id: i32) -> Player {
     let fighter = match character_name {
         "foxgirl" => { 
-            let keys = vec![
-                Key::new(0, 0., Interpolation::Bezier(1.0)),
-                Key::new(5, 1., Interpolation::default()),
-              ];
-            Some(Character::new(character_name.to_string(), 800, 500, 7, 12, 10, 200, Spline::from_vec(keys)))
+            Some(Character::new(character_name.to_string(), 
+            406 * 2, 215 * 2,
+            200, 
+            450.0, 550.0,650.0, 700.0, 100.0))
         },
         "keetar" => { 
-            let keys = vec![
-                Key::new(0, 0., Interpolation::Bezier(1.0)),
-                Key::new(5, 1., Interpolation::default()),
-              ];
-            Some(Character::new(character_name.to_string(), 580, 356, 5, 10, 7, 100, Spline::from_vec(keys))) 
+            Some(Character::new(character_name.to_string(), 
+            580, 356, 
+            100,
+            350.0, 570.0, 600.0, 600.0, 100.0)) 
         } ,
         _ => {None},
     }.unwrap();

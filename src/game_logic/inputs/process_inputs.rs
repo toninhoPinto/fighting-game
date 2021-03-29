@@ -8,22 +8,19 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
     match input {
         GameInputs::Vertical(v) => {
             if v > 0 {
-                println!("Jump");
-                player_state_change(player, PlayerState::Jumping);
+                player.player_state_change(PlayerState::Jump);
                 player.last_directional_input_v = Some(GameInputs::UP);
                 player.animator.animation_index = 0.0;
             } else if v < 0 {
                 if player.state == PlayerState::Standing {
-                    println!("Crouch start");
-                    player_state_change(player, PlayerState::Crouch);
+                    player.player_state_change(PlayerState::Crouch);
                 }
                 player.last_directional_input_v = Some(GameInputs::DOWN);
             } else {
-                println!("Standing {}", v);
                 if player.state == PlayerState::Crouch ||  player.state == PlayerState::Crouching {
-                    player_state_change(player, PlayerState::UnCrouch);
+                    player.player_state_change(PlayerState::UnCrouch);
                 } else {
-                    player_state_change(player, PlayerState::Standing);
+                    player.player_state_change(PlayerState::Standing);
                 }
                 player.last_directional_input_v = None;
             }
@@ -114,11 +111,11 @@ fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInp
     let len = last_inputs.len();
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1]{
         if last_inputs[len - 1] == GameInputs::BACK {
-            player_state_change(player, PlayerState::DashingBackward);
+            player.player_state_change(PlayerState::DashingBackward);
             player.animator.animation_index = 0.0;
             last_inputs.clear();
         } else if last_inputs[len - 1] == GameInputs::FWD {
-            player_state_change(player, PlayerState::DashingForward);
+            player.player_state_change(PlayerState::DashingForward);
             player.animator.animation_index = 0.0;
             last_inputs.clear();
         }
@@ -221,12 +218,5 @@ fn player_attack<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut P
     if !player.is_attacking {
         player.is_attacking = true;
         player.animator.play_once(character_anims.animations.get(&attack_animation).unwrap(), false);
-    }
-}
-
-fn player_state_change(player: &mut Player, new_state: PlayerState){
-    if player.state != PlayerState::DashingForward &&
-        player.state != PlayerState::DashingBackward {
-        player.state = new_state;
     }
 }

@@ -76,15 +76,15 @@ fn main() -> Result<(), String> {
     let p1_assets = load_character_anim_data(&texture_creator, player1_character);
     let p2_assets = load_character_anim_data(&texture_creator, player2_character);
 
-    let mut player1 = load_character(player1_character, Point::new(0, 20), true, 1);
-    let mut player2 = load_character(player2_character, Point::new(800, -40), false, 2);
+    let mut player1 = load_character(player1_character, Point::new(0, 0), true, 1);
+    let mut player2 = load_character(player2_character, Point::new(800, -50), false, 2);
     player1.animator.play(p1_assets.animations.get("idle").unwrap(), false);
     player2.animator.play(p2_assets.animations.get("idle").unwrap(), false);
 
     let mut controls: HashMap<_, GameInputs> = controls::load_controls();
     let mut last_inputs: VecDeque<GameInputs> = VecDeque::new();
 
-    let mut current_inputs_state: [(GameInputs, bool); 8] = input_state();
+    let mut current_inputs_state: [(GameInputs, bool); 10] = input_state();
 
     let mut input_reset_timers: Vec<i32> = Vec::new();
 
@@ -125,7 +125,6 @@ fn main() -> Result<(), String> {
         logic_time_accumulated += delta_time_as_mili;
         rendering_time_accumulated += delta_time_as_mili;
 
-
         // Handle events
         for event in event_pump.poll_iter() {
             match event {
@@ -137,7 +136,9 @@ fn main() -> Result<(), String> {
             };
             input::controller_handler::handle_new_controller(&controller, &joystick, &event, &mut joys);
 
-            let input = input::input_handler::rcv_input(&event, &mut current_inputs_state,&mut controls);
+            //this actually needs to be x2 for both players
+            //&mut current_inputs_state
+            let input = input::input_handler::rcv_input(&event,&mut controls);
             match input {
                 Some(input) => {
                     input_reset_timers.push(0);
@@ -149,22 +150,22 @@ fn main() -> Result<(), String> {
 
         //Update
         while logic_time_accumulated >= logic_timestep {
-            logic_time_accumulated -= logic_timestep;
-
-            player1.update(player2.position.x);
-            player2.update(player1.position.x);
+            player1.update(logic_timestep, player2.position.x);
+            player2.update(logic_timestep, player1.position.x);
 
             //Handle projectile movement
             for i in 0..projectiles.len() {
                projectiles[i].update();
             }
+
+            logic_time_accumulated -= logic_timestep;
         }
+
 
         // Render
         if rendering_time_accumulated >= rendering_timestep {
             //TODO ????? what is this for
             let _dt = rendering_time_accumulated * 0.001;
-
 
             for i in 0..colliders.len() {
                 let mut aabb = colliders[i];

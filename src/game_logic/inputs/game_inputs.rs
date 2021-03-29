@@ -26,8 +26,8 @@ pub enum GameInputs {
     DOWN
 }
 
-pub fn input_state() -> [(GameInputs, bool); 8]{
-    let mut current_inputs_state: [(GameInputs, bool); 8] = [(GameInputs::LightPunch, false); 8];
+pub fn input_state() -> [(GameInputs, bool); 10]{
+    let mut current_inputs_state: [(GameInputs, bool); 10] = [(GameInputs::LightPunch, false); 10];
     current_inputs_state[0] = (GameInputs::LightPunch, false);
     current_inputs_state[1] = (GameInputs::MediumPunch, false);
     current_inputs_state[2] = (GameInputs::HeavyPunch, false);
@@ -36,9 +36,33 @@ pub fn input_state() -> [(GameInputs, bool); 8]{
     current_inputs_state[5] = (GameInputs::HeavyKick, false);
     current_inputs_state[6] = (GameInputs::Horizontal(1), false);
     current_inputs_state[7] = (GameInputs::Vertical(1), false);
-
+    current_inputs_state[8] = (GameInputs::Horizontal(-1), false);
+    current_inputs_state[9] = (GameInputs::Vertical(-1), false);
 
     current_inputs_state
+}
+
+fn handle_buttons(current_inputs_state: &mut [(GameInputs, bool); 10], input: GameInputs, is_pressed: bool) {
+    for i in 0..8 {
+        if current_inputs_state[i].0 == input {
+            current_inputs_state[i] = (current_inputs_state[i].0, is_pressed);
+            break;
+        }
+    }
+}
+
+fn handle_joystick(current_inputs_state: &mut [(GameInputs, bool); 10], axis_idx: u8, input: i32) {
+    let is_pressed;
+    if input == 0 {
+        is_pressed = false;
+    } else {
+        is_pressed = true;
+    }
+    if axis_idx == 0 {
+        current_inputs_state[6] = (GameInputs::Horizontal(1), is_pressed);
+    } else {
+        current_inputs_state[7] = (GameInputs::Vertical(1), is_pressed);
+    }
 }
 
 impl Display for GameInputs {
