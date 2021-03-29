@@ -27,8 +27,6 @@ impl fmt::Display for PlayerState {
         write!(f, "{:?}", self)
     }
 }
-
-//TODO might have redundant data
 pub struct Player<'a>{
     pub id: i32,
     pub position: Point,
@@ -76,6 +74,10 @@ impl<'a> Player<'a> {
     //noinspection ALL
     pub fn update(&mut self, opponent_position_x: i32) {
 
+        if self.state == PlayerState::Jumping {
+            self.position = self.position.offset(0, 1);
+        }
+
         if !self.is_attacking && self.character.hit_stunned_duration <= 0 {
             if self.state == PlayerState::Standing {
                 self.position = self.position.offset(self.direction * self.character.speed, 0);
@@ -103,7 +105,7 @@ impl<'a> Player<'a> {
         if !self.animator.is_playing {
 
             if self.state == PlayerState::Jump {
-                self.state == PlayerState::Jumping;
+                self.state = PlayerState::Jumping;
             }
 
             if self.state == PlayerState::Crouch {

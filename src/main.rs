@@ -17,6 +17,7 @@ use std::collections::VecDeque;
 #[macro_use]
 extern crate serde_derive;
 extern crate directories;
+extern crate splines;
 
 mod input;
 mod rendering;
@@ -26,7 +27,7 @@ mod asset_management;
 use crate::input::controller_handler::Controller;
 use crate::asset_management::{controls, asset_loader};
 use crate::game_logic::character_factory::{load_character, load_character_anim_data};
-use crate::game_logic::inputs::game_inputs::GameInputs;
+use crate::game_logic::inputs::game_inputs::{GameInputs, input_state};
 use crate::game_logic::inputs::process_inputs::apply_game_inputs;
 
 
@@ -83,6 +84,8 @@ fn main() -> Result<(), String> {
     let mut controls: HashMap<_, GameInputs> = controls::load_controls();
     let mut last_inputs: VecDeque<GameInputs> = VecDeque::new();
 
+    let mut current_inputs_state: [(GameInputs, bool); 8] = input_state();
+
     let mut input_reset_timers: Vec<i32> = Vec::new();
 
     //TODO input buffer, finish
@@ -134,7 +137,7 @@ fn main() -> Result<(), String> {
             };
             input::controller_handler::handle_new_controller(&controller, &joystick, &event, &mut joys);
 
-            let input = input::input_handler::rcv_input(&event, &mut controls);
+            let input = input::input_handler::rcv_input(&event, &mut current_inputs_state,&mut controls);
             match input {
                 Some(input) => {
                     input_reset_timers.push(0);

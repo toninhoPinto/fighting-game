@@ -3,6 +3,8 @@ use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
+use splines::{Interpolation, Key, Spline};
+
 use std::collections::HashMap;
 use std::string::String;
 use super::inputs::game_inputs::GameInputs;
@@ -21,8 +23,20 @@ pub struct CharacterAssets<'a> {
 
 pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id: i32) -> Player {
     let fighter = match character_name {
-        "foxgirl" => { Some(Character::new(character_name.to_string(), 800, 500, 7, 12, 10, 200)) },
-        "keetar" => { Some(Character::new(character_name.to_string(), 580, 356, 5, 10, 7, 100)) } ,
+        "foxgirl" => { 
+            let keys = vec![
+                Key::new(0, 0., Interpolation::Bezier(1.0)),
+                Key::new(5, 1., Interpolation::default()),
+              ];
+            Some(Character::new(character_name.to_string(), 800, 500, 7, 12, 10, 200, Spline::from_vec(keys)))
+        },
+        "keetar" => { 
+            let keys = vec![
+                Key::new(0, 0., Interpolation::Bezier(1.0)),
+                Key::new(5, 1., Interpolation::default()),
+              ];
+            Some(Character::new(character_name.to_string(), 580, 356, 5, 10, 7, 100, Spline::from_vec(keys))) 
+        } ,
         _ => {None},
     }.unwrap();
     let player = Player::new(id, fighter, spawn_pos, flipped);

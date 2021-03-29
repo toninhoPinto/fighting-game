@@ -1,5 +1,6 @@
 use sdl2::rect::Rect;
 use std::string::String;
+use splines::{Interpolation, Key, Spline};
 
 pub mod player;
 pub mod keetar;
@@ -19,10 +20,12 @@ pub struct Character {
     hit_stunned_duration: i32,
     // hit_stunned_duration was intended to give a small break on the dash animation
     // but actually ryu dash has 6 sprites that run over 26 frames and not spread equally, 11 of which have movement
+
+    pub jump: Spline<i32, f32>,
 }
 
 impl Character {
-    pub fn new(name: String, height: u32, width: u32, speed: i32, dash_speed: i32, dash_back_speed: i32, hp: i32) -> Self {
+    pub fn new(name: String, height: u32, width: u32, speed: i32, dash_speed: i32, dash_back_speed: i32, hp: i32, jump: Spline<i32, f32>) -> Self {
         Self {
             name,
             sprite: Rect::new(0, 0, height, width),
@@ -32,6 +35,7 @@ impl Character {
             hp,
 
             hit_stunned_duration: 5,
+            jump,
         }
     }
 }

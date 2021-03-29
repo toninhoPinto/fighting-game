@@ -1,9 +1,9 @@
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::game_logic::projectile::Projectile;
-use crate::game_logic::game::Game;
 
 //logic only module, no struct
 
+/*
 pub fn spawn_projectile(world_state: &Game, player: &Player, character_assets: &CharacterAssets) {
     let mut projectile = (*character_assets.effects.get(event_name).unwrap()).clone();
     projectile.position = projectile.position.offset(player.position.x() + 200, 0); //TODO have animations with spawn points
@@ -15,3 +15,4 @@ pub fn spawn_projectile(world_state: &Game, player: &Player, character_assets: &
     projectile.target_position = Some(target_pos);
     world_state.projectiles.push(projectile);
 }
+*/

@@ -4,7 +4,7 @@ use std::result::Result;
 use std::str::FromStr;
 use serde::{Deserialize, ser::{self, SerializeTupleVariant}};
 use serde::ser::{Serialize, Serializer};
-use serde::de::{Error, Visitor, value, Deserializer, IntoDeserializer};
+use serde::de::{Visitor, value, Deserializer, IntoDeserializer};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum GameInputs {
@@ -24,6 +24,21 @@ pub enum GameInputs {
     BackUP,
     UP,
     DOWN
+}
+
+pub fn input_state() -> [(GameInputs, bool); 8]{
+    let mut current_inputs_state: [(GameInputs, bool); 8] = [(GameInputs::LightPunch, false); 8];
+    current_inputs_state[0] = (GameInputs::LightPunch, false);
+    current_inputs_state[1] = (GameInputs::MediumPunch, false);
+    current_inputs_state[2] = (GameInputs::HeavyPunch, false);
+    current_inputs_state[3] = (GameInputs::LightKick, false);
+    current_inputs_state[4] = (GameInputs::MediumKick, false);
+    current_inputs_state[5] = (GameInputs::HeavyKick, false);
+    current_inputs_state[6] = (GameInputs::Horizontal(1), false);
+    current_inputs_state[7] = (GameInputs::Vertical(1), false);
+
+
+    current_inputs_state
 }
 
 impl Display for GameInputs {
