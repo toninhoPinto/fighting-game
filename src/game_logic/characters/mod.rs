@@ -2,6 +2,8 @@ use sdl2::rect::Rect;
 use std::string::String;
 
 pub mod player;
+pub mod keetar;
+pub mod foxgirl;
 
 #[derive(Debug)]
 pub struct Character {
