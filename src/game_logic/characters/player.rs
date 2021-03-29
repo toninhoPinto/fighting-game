@@ -30,14 +30,14 @@ impl fmt::Display for PlayerState {
 pub struct Player<'a>{
     pub id: i32,
     pub position: Point,
-    pub velocity: (f64, f64),
+    pub velocity_y: f64,
 
     pub direction_at_jump_time: i32,
     pub jump_initial_velocity: f64,
     pub extra_gravity: Option<f64>,
     
-    pub prev_direction: i32,
-    pub direction: i32,
+    pub prev_velocity_x: i32,
+    pub velocity_x: i32,
     pub dir_related_of_other: i32,
     pub state: PlayerState,
     pub is_attacking: bool,
@@ -48,7 +48,9 @@ pub struct Player<'a>{
     pub last_directional_input_h: Option<GameInputs>,
     pub last_directional_input: Option<GameInputs>,
 
-    pub character: Character
+    pub character: Character,
+
+    pub mid_jump_pos: f64,
 }
 
 impl<'a> Player<'a> {
@@ -56,12 +58,15 @@ impl<'a> Player<'a> {
         Self {
             id,
             position: spawn_position,
+
             direction_at_jump_time: 0,
             jump_initial_velocity: 2.0 * character.jump_height,
-            velocity: (0.0, 2.0 * character.jump_height),
+            mid_jump_pos: 0.0,
+            velocity_y: 0.0,
             extra_gravity: None,
-            prev_direction: 0,
-            direction: 0,
+
+            prev_velocity_x: 0,
+            velocity_x: 0,
             dir_related_of_other: 0,
             state: PlayerState::Standing,
             animator: Animator::new(),
@@ -93,64 +98,46 @@ impl<'a> Player<'a> {
     
 
     pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
-
-        println!("curr State {:?}", self.state);
-
+        
+            //start velocity = 2h  * walk speed / x position at peak
         if self.state == PlayerState::Jump {
-            self.direction_at_jump_time = self.direction;
-            self.velocity.1 = self.jump_initial_velocity / 0.5;
-            //self.velocity.1 = self.jump_initial_velocity / (self.position.x as f64 + self.character.jump_peak_distance);
+            self.velocity_y = self.jump_initial_velocity / 0.5; 
+            self.direction_at_jump_time = self.velocity_x;
             self.state = PlayerState::Jumping;
         }
 
         if self.state == PlayerState::Jumping {
-
             let gravity = match self.extra_gravity {
                 Some(extra_g) => {  
                     extra_g
                 } 
                 None => { 
                     - 2.0 * self.jump_initial_velocity / 0.25 
-                    //let distance_at_peak = (self.position.x as f64 + self.character.jump_peak_distance) * (self.position.x as f64 + self.character.jump_peak_distance);
-                    //- self.jump_initial_velocity * self.character.speed / distance_at_peak
                 }
             };
-
-            //time for jump peak needs to be defined
-            //starting velocity = 2 height / time to peak
-            //gravity =  - 2 height / time to peak squared
-
-            if self.position.y >= 0 {
-                self.velocity.1 += gravity * dt;
-                let position_offset = self.velocity.1 * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 acc * delta time * delta time
-                self.position = self.position.offset(0, position_offset as i32);
-            } 
             
-            //start velocity = 2h  * walk speed / x position at peak
-            //g = -2h * walk speed squared / x position squared at peak
-            /* 
+
+            //g = -2h * walk speed squared / x position squared at peak 
             if self.position.y >= 0 {
-                self.velocity.1 += gravity * dt;
-                println!("{}", self.direction_at_jump_time);
-                let position_offset_x = self.velocity.1 * dt + 0.5 * gravity * dt * dt; 
-                let position_offset_y = self.velocity.1 * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 acc * delta time * delta time
+                let position_offset_x = self.direction_at_jump_time as f64 * self.character.jump_distance * dt; //self.direction_at_jump_time as f64 * (self.velocity.0 * dt + 0.5 * hg * dt * dt); 
+
+                self.velocity_y += gravity * dt;
+                let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
                 self.position = self.position.offset(position_offset_x as i32, position_offset_y as i32);
             }
-            */
             
-
+            
             //reset position back to ground height
             if self.position.y < 0 {
                 self.position.y = 0;
-                self.velocity.1 = self.character.jump_height;
+                self.velocity_y = self.character.jump_height;
                 self.state = PlayerState::Landing;
             }
         }
 
         if !self.is_attacking && self.character.hit_stunned_duration <= 0 {
             if self.state == PlayerState::Standing {
-                //println!("{} {}", self.direction as f64 * self.character.speed as f64 * dt, (self.direction as f64 * self.character.speed as f64 * dt) as i32);
-                self.position = self.position.offset((self.direction as f64 * self.character.speed * dt) as i32, 0);
+                self.position = self.position.offset((self.velocity_x as f64 * self.character.speed * dt) as i32, 0);
             }
 
             let is_dashing = self.state == PlayerState::DashingForward || self.state == PlayerState::DashingBackward;
@@ -208,9 +195,9 @@ impl<'a> Player<'a> {
             match self.state {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
-                    if self.direction * -self.dir_related_of_other < 0 {
+                    if self.velocity_x * -self.dir_related_of_other < 0 {
                         self.animator.play(character_animation.get("walk").unwrap(), false);
-                    } else if self.direction * -self.dir_related_of_other > 0 {
+                    } else if self.velocity_x * -self.dir_related_of_other > 0 {
                         if character_animation.contains_key("walk_back") {
                             self.animator.play(character_animation.get("walk_back").unwrap(), false);
                         } else {
@@ -262,7 +249,7 @@ impl<'a> Player<'a> {
                 }
             }
 
-            self.prev_direction = self.direction;
+            self.prev_velocity_x = self.velocity_x;
         }
 
         //println!("{:?} VS {:?}",  self.id, character_animation.keys());

@@ -27,9 +27,9 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
             merge_last_horizontal_and_vertical_inputs(player, last_inputs);
         },
         GameInputs::Horizontal(h) => {
-            player.direction = h;
+            player.velocity_x = h;
             if h != 0 {
-                if player.direction * player.dir_related_of_other > 0 {
+                if player.velocity_x * player.dir_related_of_other > 0 {
                     player.last_directional_input_h = Some(GameInputs::FWD);
                 } else {
                     player.last_directional_input_h = Some(GameInputs::BACK);
