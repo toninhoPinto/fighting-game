@@ -43,7 +43,7 @@ use crate::game_logic::inputs::process_inputs::apply_game_inputs;
 //Improve dash smoothing <- add a small movement break after a dash
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
-
+    
 fn main() -> Result<(), String> {
     println!("Starting Game");
 

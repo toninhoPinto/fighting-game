@@ -96,14 +96,11 @@ impl<'a> Player<'a> {
         }
     }
     
-
     pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
         
-            //start velocity = 2h  * walk speed / x position at peak
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5; 
             self.direction_at_jump_time = self.velocity_x;
-            self.state = PlayerState::Jumping;
         }
 
         if self.state == PlayerState::Jumping {
@@ -116,16 +113,12 @@ impl<'a> Player<'a> {
                 }
             };
             
-
-            //g = -2h * walk speed squared / x position squared at peak 
             if self.position.y >= 0 {
-                let position_offset_x = self.direction_at_jump_time as f64 * self.character.jump_distance * dt; //self.direction_at_jump_time as f64 * (self.velocity.0 * dt + 0.5 * hg * dt * dt); 
-
+                let position_offset_x = self.direction_at_jump_time as f64 * self.character.jump_distance * dt; 
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
                 self.position = self.position.offset(position_offset_x as i32, position_offset_y as i32);
             }
-            
             
             //reset position back to ground height
             if self.position.y < 0 {
@@ -161,6 +154,10 @@ impl<'a> Player<'a> {
 
         //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
         if !self.animator.is_playing {
+
+            if self.state == PlayerState::Jump {
+                self.state = PlayerState::Jumping;
+            }
 
             if self.state == PlayerState::Crouch {
                 self.state = PlayerState::Crouching;
@@ -217,7 +214,7 @@ impl<'a> Player<'a> {
                 }
 
                 PlayerState::Jump => {
-                    //self.state = PlayerState::Jumping;
+                    self.animator.play_once(character_animation.get("crouch").unwrap(), true);
                 }
 
                 PlayerState::Jumping => {
