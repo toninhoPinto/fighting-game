@@ -10,7 +10,6 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
             if v > 0 {
                 player.player_state_change(PlayerState::Jump);
                 player.last_directional_input_v = Some(GameInputs::UP);
-                player.animator.animation_index = 0.0;
             } else if v < 0 {
                 if player.state == PlayerState::Standing {
                     player.player_state_change(PlayerState::Crouch);

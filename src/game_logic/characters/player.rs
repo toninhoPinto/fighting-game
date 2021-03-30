@@ -89,7 +89,8 @@ impl<'a> Player<'a> {
     pub fn player_state_change(&mut self, new_state: PlayerState){
         let is_interruptable = self.state != PlayerState::DashingForward &&
                                 self.state != PlayerState::DashingBackward &&
-                                self.state != PlayerState::Jumping;
+                                self.state != PlayerState::Jumping  &&
+                                self.state != PlayerState::Jump;
 
         if is_interruptable {
             self.state = new_state;
