@@ -49,8 +49,9 @@ fn main() -> Result<(), String> {
 
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
-
     let _image_context = image::init(InitFlag::PNG | InitFlag::JPG)?;
+    let joystick = sdl_context.joystick()?;
+    let controller = sdl_context.game_controller()?;
 
     let window = video_subsystem.window("game tutorial", 1280, 720)
         .position_centered()
@@ -58,17 +59,11 @@ fn main() -> Result<(), String> {
         .expect("could not initialize video subsystem");
     let mut canvas = window.into_canvas().build()
         .expect("could not make a canvas");
-
-    //blend mode was added specifically to see the colliders
-    canvas.set_blend_mode(BlendMode::Blend);
+    canvas.set_blend_mode(BlendMode::Blend); //blend mode was added specifically to see the colliders
+    let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_context.event_pump()?;
-
-    let joystick = sdl_context.joystick()?;
-    let controller = sdl_context.game_controller()?;
     let mut joys: HashMap<u32, Controller> = HashMap::new();
-
-    let texture_creator = canvas.texture_creator();
 
     let player1_character = "keetar";
     let player2_character = "foxgirl";
@@ -99,10 +94,9 @@ fn main() -> Result<(), String> {
     let mut rendering_time_accumulated: f64 = 0.0;
 
     let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
-
     let mut colliders: Vec<AABB> = Vec::new();
-
     let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string());
+
     for i in 0..idle_hitboxes.0.len() {
         let mut aabb = idle_hitboxes.0[i];
         let offset_x = idle_hitboxes.1[0][i].x as f32 * 2.0;
@@ -150,6 +144,15 @@ fn main() -> Result<(), String> {
 
         //Update
         while logic_time_accumulated >= logic_timestep {
+            //Number of frames to delete each input
+            for i in 0..input_reset_timers.len() {
+                input_reset_timers[i] += 1;
+                if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    last_inputs.pop_front();
+                }
+            }
+            input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+
             player1.update(logic_timestep, player2.position.x);
             player2.update(logic_timestep, player1.position.x);
 
@@ -164,46 +167,7 @@ fn main() -> Result<(), String> {
 
         // Render
         if rendering_time_accumulated >= rendering_timestep {
-            //TODO ????? what is this for
             let _dt = rendering_time_accumulated * 0.001;
-
-            for i in 0..colliders.len() {
-                let mut aabb = colliders[i];
-                let _offset = idle_hitboxes.1[0][i].x as f32;
-                aabb.mins = aabbPoint::new(aabb.mins.x * 2.0 + player1.position.x as f32, aabb.mins.y * 2.0 + player1.position.y as f32);
-                aabb.maxs = aabbPoint::new(aabb.maxs.x * 2.0 + player1.position.x as f32, aabb.maxs.y * 2.0 + player1.position.y as f32);
-                //aabb.mins = aabbPoint::new((aabb.mins.x + offset + player1.position.x as f32) * 2.0, (aabb.mins.y + offset + player1.position.y as f32 -player1.sprite.height()as f32 /2.0 ) * 2.0);
-                //aabb.maxs = aabbPoint::new((aabb.maxs.x + offset + player1.position.x as f32) * 2.0, (aabb.maxs.y  + offset + player1.position.y as f32 -player1.sprite.height()as f32 /2.0) * 2.0);
-            }
-
-            //Number of frames to delete each input
-            for i in 0..input_reset_timers.len() {
-                input_reset_timers[i] += 1;
-                if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    last_inputs.pop_front();
-                }
-            }
-            input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
-
-
-            //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-            let player_current_animation = player1.animator.current_animation.unwrap();
-            let p1_curr_anim = player_current_animation.length;
-            if (player1.animator.animation_index as f32 + 0.35 as f32) as usize >= p1_curr_anim as usize {
-                //TODO temp location, currently it adds the projectile once at the end, but should add at specific key frames
-                if player1.is_attacking && p1_assets.effects.contains_key(&player_current_animation.name) {
-                    let mut projectile = (*p1_assets.effects.get(&player_current_animation.name).unwrap()).clone();
-                    projectile.position = projectile.position.offset(player1.position.x(), 0);
-                    projectile.direction.x = (player2.position.x - player1.position.x).signum();
-                    projectile.flipped = player1.dir_related_of_other > 0;
-                    projectile.player_owner = player1.id;
-
-                    let target_pos = Point::new(player2.position.x + (projectile.direction.x * 100), projectile.position.y);
-                    projectile.target_position = Some(target_pos);
-                    projectiles.push(projectile);
-                }
-            }
-
 
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
                                         &mut player1, &p1_assets,
