@@ -86,6 +86,13 @@ impl<'a> Player<'a> {
         }
     }
 
+    pub fn player_can_attack(&self) -> bool{
+        !(self.is_attacking ||
+            self.state == PlayerState::DashingForward  ||
+            self.state == PlayerState::DashingBackward
+        )
+    }
+
     pub fn player_state_change(&mut self, new_state: PlayerState){
         let is_interruptable = self.state != PlayerState::DashingForward &&
                                 self.state != PlayerState::DashingBackward &&
@@ -102,7 +109,6 @@ impl<'a> Player<'a> {
     }
     
     pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
-        
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5; 
             self.direction_at_jump_time = self.velocity_x;

@@ -214,7 +214,7 @@ fn record_input(last_inputs: &mut VecDeque<GameInputs>, input: GameInputs){
 }
 
 fn player_attack<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, attack_animation: String) {
-    if !player.is_attacking {
+    if player.player_can_attack() {
         player.is_attacking = true;
         player.animator.play_once(character_anims.animations.get(&attack_animation).unwrap(), false);
     }
