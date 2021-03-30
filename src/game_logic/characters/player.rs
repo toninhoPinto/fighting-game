@@ -96,6 +96,10 @@ impl<'a> Player<'a> {
             self.state = new_state;
         }
     }
+
+    pub fn player_state_cancel(&mut self, new_state: PlayerState){
+        self.state = PlayerState::Standing;
+    }
     
     pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
         
