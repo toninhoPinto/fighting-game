@@ -6,12 +6,11 @@ use std::path::Path;
 
 use directories::ProjectDirs;
 
-use crate::game_logic::inputs::game_inputs::GameInputs;
-
+use crate::input::translated_inputs::TranslatedInput;
 
 //TODO: with controllers vs joysticks it might be needed to implement custom serialization 
 //TODO into strings and you cannot use them as hashes unless they are stringified
-pub fn load_controls() -> HashMap<String, GameInputs> {
+pub fn load_controls() -> HashMap<String, TranslatedInput> {
 
     let proj_dir = ProjectDirs::from("com", "FightingGame",  "fighting game").unwrap();
     let config_dir = proj_dir.config_dir();
@@ -27,25 +26,25 @@ pub fn load_controls() -> HashMap<String, GameInputs> {
     let json_string = fs::read_to_string(&path).unwrap();
 
     if json_string.len() > 0 {
-        let deserialized: HashMap<String, GameInputs> = serde_json::from_str(&json_string).unwrap();
+        let deserialized: HashMap<String, TranslatedInput> = serde_json::from_str(&json_string).unwrap();
             deserialized 
     } else {
-        let mut controls: HashMap<String, GameInputs> = HashMap::new();
+        let mut controls: HashMap<String, TranslatedInput> = HashMap::new();
     
-        controls.insert(0.to_string(), GameInputs::LightPunch);
-        controls.insert(3.to_string(), GameInputs::MediumPunch);
-        controls.insert(5.to_string(), GameInputs::HeavyPunch);
-        controls.insert(1.to_string(), GameInputs::LightKick);
+        controls.insert(0.to_string(), TranslatedInput::LightPunch);
+        controls.insert(3.to_string(), TranslatedInput::MediumPunch);
+        controls.insert(5.to_string(), TranslatedInput::HeavyPunch);
+        controls.insert(1.to_string(), TranslatedInput::LightKick);
     
-        controls.insert("U".to_string(), GameInputs::LightPunch);
-        controls.insert("I".to_string(), GameInputs::MediumPunch);
-        controls.insert("O".to_string(), GameInputs::HeavyPunch);
-        controls.insert("J".to_string(), GameInputs::LightKick);
+        controls.insert("U".to_string(), TranslatedInput::LightPunch);
+        controls.insert("I".to_string(), TranslatedInput::MediumPunch);
+        controls.insert("O".to_string(), TranslatedInput::HeavyPunch);
+        controls.insert("J".to_string(), TranslatedInput::LightKick);
         
-        controls.insert("W".to_string(), GameInputs::Vertical(1));
-        controls.insert("S".to_string(), GameInputs::Vertical(-1));
-        controls.insert("A".to_string(), GameInputs::Horizontal(-1));
-        controls.insert("D".to_string(), GameInputs::Horizontal(1));
+        controls.insert("W".to_string(), TranslatedInput::Vertical(1));
+        controls.insert("S".to_string(), TranslatedInput::Vertical(-1));
+        controls.insert("A".to_string(), TranslatedInput::Horizontal(-1));
+        controls.insert("D".to_string(), TranslatedInput::Horizontal(1));
     
         // let _save_result =  fs::write(dirs::config_dir().unwrap()).unwrap();
     

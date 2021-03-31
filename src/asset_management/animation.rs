@@ -40,7 +40,6 @@ impl<'a> Animator<'a> {
     pub fn play(&mut self, new_animation: &'a Animation<'a>, play_rewind: bool){
         if self.current_animation.is_none() ||
         (self.current_animation.unwrap().name != new_animation.name) {
-            println!("play animation repeat {}", new_animation.name);
             if !play_rewind {
                 self.animation_index = 0.0;
             } else {
@@ -56,7 +55,6 @@ impl<'a> Animator<'a> {
     pub fn play_once(&mut self, new_animation: &'a Animation<'a>, play_rewind: bool){
         if self.current_animation.is_none() ||
         (self.current_animation.unwrap().name != new_animation.name) {
-            println!("play animation once {} with rewind {}", new_animation.name, play_rewind);
             if !play_rewind {
                 self.animation_index = 0.0;
             } else {

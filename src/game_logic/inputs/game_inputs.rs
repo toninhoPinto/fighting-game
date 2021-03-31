@@ -1,150 +1,122 @@
 use std::fmt::{self, Display};
 
-use std::result::Result;
-use std::str::FromStr;
-use serde::{Deserialize, ser::{self, SerializeTupleVariant}};
-use serde::ser::{Serialize, Serializer};
-use serde::de::{Visitor, value, Deserializer, IntoDeserializer};
+use crate::input::translated_inputs::TranslatedInput;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum GameInputs {
+pub enum GameInput {
     LightPunch,
     MediumPunch,
     HeavyPunch,
     LightKick,
     MediumKick,
     HeavyKick,
-    Horizontal (i32),
-    Vertical (i32),
-    FWD,
-    FwdDOWN,
-    FwdUP,
-    BACK,
-    BackDOWN,
-    BackUP,
-    UP,
-    DOWN
+    Forward,
+    ForwardDown,
+    ForwardUp,
+    Backward,
+    BackwardDown,
+    BackwardUp,
+    Up,
+    Down
 }
 
-pub fn input_state() -> [(GameInputs, bool); 10]{
-    let mut current_inputs_state: [(GameInputs, bool); 10] = [(GameInputs::LightPunch, false); 10];
-    current_inputs_state[0] = (GameInputs::LightPunch, false);
-    current_inputs_state[1] = (GameInputs::MediumPunch, false);
-    current_inputs_state[2] = (GameInputs::HeavyPunch, false);
-    current_inputs_state[3] = (GameInputs::LightKick, false);
-    current_inputs_state[4] = (GameInputs::MediumKick, false);
-    current_inputs_state[5] = (GameInputs::HeavyKick, false);
-    current_inputs_state[6] = (GameInputs::Horizontal(1), false);
-    current_inputs_state[7] = (GameInputs::Vertical(1), false);
-    current_inputs_state[8] = (GameInputs::Horizontal(-1), false);
-    current_inputs_state[9] = (GameInputs::Vertical(-1), false);
-
-    current_inputs_state
-}
-
-fn handle_buttons(current_inputs_state: &mut [(GameInputs, bool); 10], input: GameInputs, is_pressed: bool) {
-    for i in 0..8 {
-        if current_inputs_state[i].0 == input {
-            current_inputs_state[i] = (current_inputs_state[i].0, is_pressed);
-            break;
-        }
-    }
-}
-
-fn handle_joystick(current_inputs_state: &mut [(GameInputs, bool); 10], axis_idx: u8, input: i32) {
-    let is_pressed;
-    if input == 0 {
-        is_pressed = false;
-    } else {
-        is_pressed = true;
-    }
-    if axis_idx == 0 {
-        current_inputs_state[6] = (GameInputs::Horizontal(1), is_pressed);
-    } else {
-        current_inputs_state[7] = (GameInputs::Vertical(1), is_pressed);
-    }
-}
-
-impl Display for GameInputs {
+impl Display for GameInput {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl Serialize for GameInputs {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match *self {
-            GameInputs::LightPunch => serializer.serialize_unit_variant("LightPunch", 0, "LightPunch"),
-            GameInputs::MediumPunch => serializer.serialize_unit_variant("MediumPunch", 0, "MediumPunch"),
-            GameInputs::HeavyPunch => serializer.serialize_unit_variant("HeavyPunch", 0, "HeavyPunch"),
-            GameInputs::LightKick => serializer.serialize_unit_variant("LightKick", 0, "LightKick"),
-            GameInputs::MediumKick => serializer.serialize_unit_variant("MediumKick", 0, "MediumKick"),
-            GameInputs::HeavyKick => serializer.serialize_unit_variant("HeavyKick", 0, "HeavyKick"),
-            GameInputs::Vertical (ref v) => {
-                let mut state =
-                    serializer.serialize_tuple_variant("Vertical", 1, "Vertical", 1)?;
-                state.serialize_field(v)?;
-                state.end()
-            },
-            GameInputs::Horizontal (ref h) => {
-                let mut state =
-                    serializer.serialize_tuple_variant("Horizontal", 1, "Horizontal", 1)?;
-                state.serialize_field(h)?;
-                state.end()
-            },
-            _ => { Err(ser::Error::custom("path contains invalid UTF-8 characters")) }
+impl GameInput {
+    pub fn init_input_state() -> [(GameInput, bool); 10]{
+        let mut current_inputs_state: [(GameInput, bool); 10] = [(GameInput::LightPunch, false); 10];
+        current_inputs_state[0] = (GameInput::LightPunch, false);
+        current_inputs_state[1] = (GameInput::MediumPunch, false);
+        current_inputs_state[2] = (GameInput::HeavyPunch, false);
+        current_inputs_state[3] = (GameInput::LightKick, false);
+        current_inputs_state[4] = (GameInput::MediumKick, false);
+        current_inputs_state[5] = (GameInput::HeavyKick, false);
+        current_inputs_state[6] = (GameInput::Forward, false);
+        current_inputs_state[7] = (GameInput::Up, false);
+        current_inputs_state[8] = (GameInput::Backward, false);
+        current_inputs_state[9] = (GameInput::Down, false);
+    
+        current_inputs_state
+    }
+
+    //TODO maybe return Result on these to avoid 0 being default
+    pub fn get_button_index(current_inputs_state: &mut [(GameInput, bool); 10], input: GameInput) -> usize {
+        let mut return_index: usize = 0;
+        for i in 0..6 {
+            if current_inputs_state[i].0 == input{
+                return_index = i;
+                break;
+            }
+        }
+        return_index
+    }
+
+    pub fn get_direction_index(input: GameInput) -> usize {
+        match input {
+            GameInput::Forward => { 6 },
+            GameInput::Backward => { 8 },
+            GameInput::Up => { 7 },
+            GameInput::Down => { 9 }
+            _ => { 0 }
         }
     }
-}
 
-impl FromStr for GameInputs {
-    type Err = value::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::deserialize(s.into_deserializer())
-    }
-}
-
-impl<'de> Deserialize<'de> for GameInputs {
-    fn deserialize<D>(deserializer: D) -> Result<GameInputs, D::Error>
-        where D: Deserializer<'de>
-    {
-        struct FieldVisitor {
-            min: usize,
-        };
-
-        impl<'de> Visitor<'de> for FieldVisitor {
-            type Value = GameInputs;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "a string containing at least {} bytes", self.min)
-            }
-
-            fn visit_str<E>(self, value: &str) -> Result<GameInputs, E>
-                where E: serde::de::Error
-            {
-                let kind = match value {
-                    "LightPunch" => GameInputs::LightPunch,
-                    "MediumPunch" => GameInputs::MediumPunch,
-                    "HeavyPunch" => GameInputs::HeavyPunch,
-                    "LightKick" => GameInputs::LightKick,
-                    "MediumKick" => GameInputs::MediumKick,
-                    "HeavyKick" => GameInputs::HeavyKick,
-                    "Horizontal(1)" => GameInputs::Horizontal(1),
-                    "Horizontal(-1)" => GameInputs::Horizontal(-1),
-                    "Vertical(1)" => GameInputs::Vertical(1),
-                    "Vertical(-1)" => GameInputs::Vertical(-1),
-                    s => {
-                        return Err(serde::de::Error::invalid_value(serde::de::Unexpected::Str(s),
-                                                                   &self));
+    pub fn from_translated_input(original_input: TranslatedInput, current_input_state: &[(GameInput, bool); 10], player_facing_dir: i32) -> Result<GameInput, String> {
+        
+        match original_input {
+            TranslatedInput::LightPunch => { Ok(GameInput::LightPunch) }
+            TranslatedInput::MediumPunch => { Ok(GameInput:: MediumPunch) }
+            TranslatedInput::HeavyPunch => { Ok(GameInput::HeavyPunch) }
+            TranslatedInput::LightKick => { Ok(GameInput::LightKick) }
+            TranslatedInput::MediumKick => { Ok(GameInput::MediumKick) }
+            TranslatedInput::HeavyKick => { Ok(GameInput::HeavyKick) }
+            TranslatedInput::Horizontal(h) => { 
+                if h != 0 {
+                    let right_dir = if h * player_facing_dir > 0 { 
+                        GameInput::Forward 
+                    } else { 
+                        GameInput::Backward 
+                    };
+                    Ok(right_dir) 
+                } else { 
+                    //Specifically for joysticks that do not inform what was once pressed and then released for the axis
+                    //so whatever was once pressed is the direction that was released (this works because joystick only lets you have 1 direction at a time)
+                    if current_input_state[6].1 { 
+                        Ok(current_input_state[6].0) 
+                    } else {
+                        Ok(current_input_state[8].0) 
                     }
-                };
-                Ok(kind)
+                }
             }
+            TranslatedInput::Vertical(v) if v > 0 => { Ok(GameInput::Up) }
+            TranslatedInput::Vertical(v) if v < 0 => { Ok(GameInput::Down) }
+
+            TranslatedInput::Vertical(v) if v == 0 => { 
+                if current_input_state[7].1 {
+                    Ok(GameInput::Up) 
+                } else {
+                    Ok(GameInput::Down) 
+                }
+            }
+            _ => { Err("cannot identify this input".to_string()) }
         }
-        deserializer.deserialize_str(FieldVisitor { min: 4 })
     }
+
+    pub fn merge_horizontal_vertical(input_1: GameInput, input_2: GameInput) -> Result<GameInput, &'static str>  {
+        if (input_1 == GameInput::Forward && input_2 == GameInput::Up ) || (input_2 == GameInput::Forward && input_1 == GameInput::Up ) {
+            Ok(GameInput::ForwardUp)
+        } else if (input_1 == GameInput::Backward && input_2 == GameInput::Up) || (input_2 == GameInput::Backward && input_1 == GameInput::Up) {
+            Ok(GameInput::BackwardUp)
+        } else if (input_1 == GameInput::Forward && input_2 == GameInput::Down ) || (input_2 == GameInput::Forward && input_1 == GameInput::Down ) {
+            Ok(GameInput::ForwardDown)
+        } else if (input_1 == GameInput::Backward && input_2 == GameInput::Down) || (input_2 == GameInput::Backward && input_1 == GameInput::Down) {
+            Ok(GameInput::BackwardDown)
+        } else {
+            Err("trying to merge two incorrect inputs")
+        }
+    } 
 }

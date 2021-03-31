@@ -13,16 +13,25 @@ use crate::game_logic::character_factory::CharacterAssets;
 fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32)) -> Rect {
     let (_, height) = screen_size;
     let mut inverted_pos = position;
+    //to make world coordinates Y increase as we go up
     inverted_pos.y = -1 * inverted_pos.y;
-    let screen_position = inverted_pos + Point::new(0, height as i32) + Point::new(rect.width() as i32 / 2, -(rect.height() as i32) / 2);
+    //first point is to make Y = 0 as the bottom of the screen
+    //Second point it to make the bottom center of a rect as the position                                                         
+    let screen_position = inverted_pos + Point::new(0, height as i32) + Point::new(0, -(rect.height() as i32) / 2);
     Rect::from_center(screen_position, rect.width(), rect.height())
 }
 
-fn debug_points(canvas: &mut WindowCanvas, rect: Rect) {
-    canvas.set_draw_color(Color::RGB(244, 100, 100));
-    let debug_rect = Rect::new(rect.bottom_left().x as i32, rect.bottom_left().y as i32, 4, 4);
+fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug: Rect) {
+    canvas.set_draw_color(Color::RGB(255, 100, 100));
+    let debug_rect = Rect::new(screen_position.x as i32, screen_position.y as i32, 4, 4);
+
     canvas.draw_rect(debug_rect);
     canvas.fill_rect(debug_rect);
+
+    canvas.draw_rect(rect_to_debug);
+    canvas.set_draw_color(Color::RGBA(100, 50, 50, 50));
+    canvas.fill_rect(rect_to_debug);
+
 
 }
 
@@ -42,7 +51,7 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
     let texture = player1.render(p1_anims);
     canvas.copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)?;
     if debug {
-        debug_points(canvas, screen_rect);
+        debug_points(canvas, screen_rect.center(), screen_rect);
         canvas.set_draw_color(color);
     }
 
@@ -53,7 +62,7 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
     let texture_2 = player2.render(p2_anims);
     canvas.copy_ex(texture_2, sprite_2, screen_rect_2, 0.0, None, is_flipped_2, false)?;
     if debug {
-        debug_points(canvas,screen_rect_2);
+        debug_points(canvas,screen_rect_2.center(), screen_rect_2);
         canvas.set_draw_color(color);
     }
 
@@ -65,8 +74,8 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
             canvas.copy_ex(&p2_anims.projectile_animation.get(&projectile.animation_name).unwrap()[projectile.animation_index as usize], projectile.sprite, screen_rect_2, 0.0, None, projectile.flipped, false)?;
         }
         if debug {
-            debug_points(canvas,screen_rect_2);
-            canvas.set_draw_color(color);
+            //debug_points(canvas,screen_rect_2.center(), screen_rect_2);
+            //canvas.set_draw_color(color);
         }
     }
 
@@ -80,8 +89,8 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
         canvas.fill_rect(screen_rect_2);
 
         if debug {
-            debug_points(canvas,screen_rect_2);
-            canvas.set_draw_color(color);
+            //debug_points(canvas,screen_rect_2.center(), screen_rect);
+            //canvas.set_draw_color(color);
         }
     }
 

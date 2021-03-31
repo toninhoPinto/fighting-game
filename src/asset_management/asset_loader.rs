@@ -27,7 +27,3 @@ pub fn load_anim_from_dir<'a>(tex_creator: &'a TextureCreator<WindowContext>, di
     }
     vec
 }
-
-pub fn load_single_sprite(tex_creator: &TextureCreator<WindowContext>, file_path: std::string::String) -> Texture {
-    tex_creator.load_texture(file_path).unwrap()
-}

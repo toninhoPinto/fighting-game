@@ -1,6 +1,5 @@
 use sdl2::rect::Rect;
 use std::string::String;
-use splines::{Interpolation, Key, Spline};
 
 pub mod player;
 pub mod keetar;

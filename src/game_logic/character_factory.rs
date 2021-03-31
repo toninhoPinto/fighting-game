@@ -3,11 +3,9 @@ use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
-use splines::{Interpolation, Key, Spline};
-
 use std::collections::HashMap;
 use std::string::String;
-use super::inputs::game_inputs::GameInputs;
+use super::inputs::game_inputs::GameInput;
 use super::projectile::Projectile;
 use super::characters::Character;
 use crate::asset_management::asset_loader;
@@ -15,8 +13,8 @@ use crate::asset_management::animation::Animation;
 
 pub struct CharacterAssets<'a> {
     pub animations: HashMap<std::string::String, Animation<'a>>,
-    pub input_combination_anims: Vec<(Vec<GameInputs>, String)>,
-    pub directional_variation_anims: Vec<(Vec<GameInputs>, String)>,
+    pub input_combination_anims: Vec<(Vec<GameInput>, String)>,
+    pub directional_variation_anims: Vec<(Vec<GameInput>, String)>,
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>
 }
@@ -52,34 +50,34 @@ pub fn load_character_anim_data<'a, 'b>(texture_creator: &'a TextureCreator<Wind
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_keetar_anims(texture_creator);
 
-    let mut directional_inputs: Vec<(Vec<GameInputs>, String)> = Vec::new();
-    let mut directional_string: Vec<GameInputs> = Vec::new();
-    directional_string.push(GameInputs::FWD);
-    directional_string.push(GameInputs::LightPunch);
+    let mut directional_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
+    let mut directional_string: Vec<GameInput> = Vec::new();
+    directional_string.push(GameInput::Forward);
+    directional_string.push(GameInput::LightPunch);
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
-    let mut specials_inputs: Vec<(Vec<GameInputs>, String)> = Vec::new();
-    let mut light_combo_string: Vec<GameInputs> = Vec::new();
-    light_combo_string.push(GameInputs::DOWN);
-    light_combo_string.push(GameInputs::FwdDOWN);
-    light_combo_string.push(GameInputs::FWD);
-    light_combo_string.push(GameInputs::LightPunch);
+    let mut specials_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
+    let mut light_combo_string: Vec<GameInput> = Vec::new();
+    light_combo_string.push(GameInput::Down);
+    light_combo_string.push(GameInput::ForwardDown);
+    light_combo_string.push(GameInput::Forward);
+    light_combo_string.push(GameInput::LightPunch);
     specials_inputs.push((light_combo_string, "light_special_attack".to_string()));
     let light_projectile = Projectile::new(0, Point::new(120, 5));
 
-    let mut med_combo_string: Vec<GameInputs> = Vec::new();
-    med_combo_string.push(GameInputs::DOWN);
-    med_combo_string.push(GameInputs::FwdDOWN);
-    med_combo_string.push(GameInputs::FWD);
-    med_combo_string.push(GameInputs::MediumPunch);
+    let mut med_combo_string: Vec<GameInput> = Vec::new();
+    med_combo_string.push(GameInput::Down);
+    med_combo_string.push(GameInput::ForwardDown);
+    med_combo_string.push(GameInput::Forward);
+    med_combo_string.push(GameInput::MediumPunch);
     specials_inputs.push((med_combo_string, "med_special_attack".to_string()));
     let med_projectile = Projectile::new(0, Point::new(120, 105));
 
-    let mut heavy_combo_string: Vec<GameInputs> = Vec::new();
-    heavy_combo_string.push(GameInputs::DOWN);
-    heavy_combo_string.push(GameInputs::FwdDOWN);
-    heavy_combo_string.push(GameInputs::FWD);
-    heavy_combo_string.push(GameInputs::HeavyPunch);
+    let mut heavy_combo_string: Vec<GameInput> = Vec::new();
+    heavy_combo_string.push(GameInput::Down);
+    heavy_combo_string.push(GameInput::ForwardDown);
+    heavy_combo_string.push(GameInput::Forward);
+    heavy_combo_string.push(GameInput::HeavyPunch);
     specials_inputs.push((heavy_combo_string, "heavy_special_attack".to_string()));
     let heavy_projectile = Projectile::new(0, Point::new(120,205));
 
@@ -151,20 +149,20 @@ fn load_keetar_anims(texture_creator: &TextureCreator<WindowContext>) -> HashMap
 fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_foxgirl_anims(texture_creator);
 
-    let mut directional_inputs: Vec<(Vec<GameInputs>, String)> = Vec::new();
+    let mut directional_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
 
-    let mut directional_string: Vec<GameInputs> = Vec::new();
-    directional_string.push(GameInputs::FWD);
-    directional_string.push(GameInputs::LightPunch);
+    let mut directional_string: Vec<GameInput> = Vec::new();
+    directional_string.push(GameInput::Forward);
+    directional_string.push(GameInput::LightPunch);
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
-    let mut directional_string_2: Vec<GameInputs> = Vec::new();
-    directional_string_2.push(GameInputs::FWD);
-    directional_string_2.push(GameInputs::HeavyPunch);
+    let mut directional_string_2: Vec<GameInput> = Vec::new();
+    directional_string_2.push(GameInput::Forward);
+    directional_string_2.push(GameInput::HeavyPunch);
     directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
 
     let mut effects_of_abilities = HashMap::new();
-    let mut specials_inputs: Vec<(Vec<GameInputs>, String)> = Vec::new();
+    let mut specials_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
     let mut projectile_anims = HashMap::new();
 
     CharacterAssets {

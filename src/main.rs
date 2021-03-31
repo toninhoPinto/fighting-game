@@ -1,3 +1,5 @@
+
+use game_logic::inputs::apply_inputs::apply_game_input_state;
 use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
 use sdl2::rect::Point;
@@ -27,9 +29,11 @@ mod asset_management;
 use crate::input::controller_handler::Controller;
 use crate::asset_management::{controls, asset_loader};
 use crate::game_logic::character_factory::{load_character, load_character_anim_data};
-use crate::game_logic::inputs::game_inputs::{GameInputs, input_state};
-use crate::game_logic::inputs::process_inputs::apply_game_inputs;
+use crate::game_logic::inputs::game_inputs::GameInput;
+use crate::game_logic::inputs::process_inputs::transform_input_state;
+use crate::game_logic::inputs::apply_inputs::apply_game_inputs;
 
+use input::translated_inputs::TranslatedInput;
 
 //TODO list
 //Hold attacks
@@ -41,6 +45,7 @@ use crate::game_logic::inputs::process_inputs::apply_game_inputs;
 //projectile with a specific target location
 //specific projectile only live if keep holding button
 //Improve dash smoothing <- add a small movement break after a dash
+//character should only flip once it hits the ground and not on the air
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
     
@@ -71,19 +76,19 @@ fn main() -> Result<(), String> {
     let p1_assets = load_character_anim_data(&texture_creator, player1_character);
     let p2_assets = load_character_anim_data(&texture_creator, player2_character);
 
-    let mut player1 = load_character(player1_character, Point::new(0, 0), true, 1);
-    let mut player2 = load_character(player2_character, Point::new(800, -50), false, 2);
+    let mut player1 = load_character(player1_character, Point::new(400, 0), false, 2);
+    let mut player2 = load_character(player2_character, Point::new(900, -50), true, 1);
     player1.animator.play(p1_assets.animations.get("idle").unwrap(), false);
     player2.animator.play(p2_assets.animations.get("idle").unwrap(), false);
 
-    let mut controls: HashMap<_, GameInputs> = controls::load_controls();
-    let mut last_inputs: VecDeque<GameInputs> = VecDeque::new();
+    //controllers
+    let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
-    let mut current_inputs_state: [(GameInputs, bool); 10] = input_state();
-
+    //inputs
     let mut input_reset_timers: Vec<i32> = Vec::new();
-
-    //TODO input buffer, finish
+    let mut last_inputs: VecDeque<GameInput> = VecDeque::new();
+    let mut current_state_input: [(GameInput, bool); 10] = GameInput::init_input_state();
+    let mut directional_state_input: [(TranslatedInput, bool); 4] = TranslatedInput::init_dir_input_state();
     let mut _input_buffer: Vec<i32> = Vec::new();
 
     let mut previous_time = Instant::now();
@@ -105,7 +110,6 @@ fn main() -> Result<(), String> {
         //aabb.maxs = aabbPoint::new(offset + aabb.maxs.x * 2.0 + player1.position.x as f32, offset + aabb.maxs.y * 2.0 + player1.position.y as f32);
         aabb.mins = aabbPoint::new(aabb.mins.x * 2.0 + offset_x + player1.position.x as f32, aabb.mins.y * 2.0 + offset_y + player1.position.y as f32);
         aabb.maxs = aabbPoint::new(aabb.maxs.x * 2.0 + offset_x + player1.position.x as f32, aabb.maxs.y * 2.0+ offset_y + player1.position.y as f32);
-        println!("{:?} {:?}", aabb.mins, aabb.maxs);
         colliders.push(aabb);
     }
 
@@ -130,13 +134,23 @@ fn main() -> Result<(), String> {
             };
             input::controller_handler::handle_new_controller(&controller, &joystick, &event, &mut joys);
 
+            //needs also to return which controller/ which player
+            let input = input::input_handler::rcv_input(&event,&mut controls);
             //this actually needs to be x2 for both players
             //&mut current_inputs_state
-            let input = input::input_handler::rcv_input(&event,&mut controls);
             match input {
-                Some(input) => {
+                Some((input, is_pressed)) => {
                     input_reset_timers.push(0);
-                    apply_game_inputs(&p1_assets, &mut player1, input, &mut last_inputs);
+                    //directional_state_input
+                    //current_state_input
+                    let game_input = transform_input_state(input , is_pressed, &mut current_state_input, &mut directional_state_input, &mut last_inputs, &player1);
+                    match game_input {
+                        Some(final_input) => {
+                            apply_game_inputs(&p1_assets, &mut player1, final_input, is_pressed, &current_state_input, &mut last_inputs);
+                        },
+                        None => {}
+                    }
+                    
                 },
                 None => {}
             }
@@ -144,6 +158,9 @@ fn main() -> Result<(), String> {
 
         //Update
         while logic_time_accumulated >= logic_timestep {
+
+            apply_game_input_state(&p1_assets, &mut player1, &current_state_input, &mut last_inputs);
+
             //Number of frames to delete each input
             for i in 0..input_reset_timers.len() {
                 input_reset_timers[i] += 1;
@@ -160,7 +177,6 @@ fn main() -> Result<(), String> {
             for i in 0..projectiles.len() {
                projectiles[i].update();
             }
-
             logic_time_accumulated -= logic_timestep;
         }
 

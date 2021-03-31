@@ -2,7 +2,7 @@ use sdl2::rect::Point;
 use sdl2::render::Texture;
 
 use std::fmt;
-use crate::game_logic::inputs::game_inputs::GameInputs;
+use crate::game_logic::inputs::game_inputs::GameInput;
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::game_logic::characters::Character;
 
@@ -30,6 +30,7 @@ impl fmt::Display for PlayerState {
 pub struct Player<'a>{
     pub id: i32,
     pub position: Point,
+    pub ground_height: i32,
     pub velocity_y: f64,
 
     pub direction_at_jump_time: i32,
@@ -44,9 +45,9 @@ pub struct Player<'a>{
 
     pub animator: Animator<'a>,
     pub flipped: bool,
-    pub last_directional_input_v: Option<GameInputs>,
-    pub last_directional_input_h: Option<GameInputs>,
-    pub last_directional_input: Option<GameInputs>,
+    pub last_directional_input_v: Option<GameInput>,
+    pub last_directional_input_h: Option<GameInput>,
+    pub last_directional_input: Option<GameInput>,
 
     pub character: Character,
 
@@ -58,6 +59,7 @@ impl<'a> Player<'a> {
         Self {
             id,
             position: spawn_position,
+            ground_height: spawn_position.y,
 
             direction_at_jump_time: 0,
             jump_initial_velocity: 2.0 * character.jump_height,
@@ -99,7 +101,10 @@ impl<'a> Player<'a> {
                                 self.state != PlayerState::Jumping  &&
                                 self.state != PlayerState::Jump;
 
-        if is_interruptable {
+        let already_crouching = (new_state == PlayerState::Crouch || new_state == PlayerState::Crouching) &&  
+                                    (self.state == PlayerState::Crouch || self.state == PlayerState::Crouching);
+
+        if is_interruptable && !already_crouching {
             self.state = new_state;
         }
     }
@@ -124,7 +129,7 @@ impl<'a> Player<'a> {
                 }
             };
             
-            if self.position.y >= 0 {
+            if self.position.y >= self.ground_height {
                 let position_offset_x = self.direction_at_jump_time as f64 * self.character.jump_distance * dt; 
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
@@ -132,7 +137,7 @@ impl<'a> Player<'a> {
             }
             
             //reset position back to ground height
-            if self.position.y < 0 {
+            if self.position.y < self.ground_height {
                 self.position.y = 0;
                 self.velocity_y = self.character.jump_height;
                 self.state = PlayerState::Landing;
@@ -155,7 +160,9 @@ impl<'a> Player<'a> {
             }
         }
 
-        self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
+        if opponent_position_x - self.position.x != 0 {
+            self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
+        }
     }
 
     //noinspection ALL
@@ -260,7 +267,6 @@ impl<'a> Player<'a> {
             self.prev_velocity_x = self.velocity_x;
         }
 
-        //println!("{:?} VS {:?}",  self.id, character_animation.keys());
         if self.id == 1 {
             self.animator.render(false) //change this for debug
         } else {
