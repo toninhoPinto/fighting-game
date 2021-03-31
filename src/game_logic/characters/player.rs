@@ -45,9 +45,6 @@ pub struct Player<'a>{
 
     pub animator: Animator<'a>,
     pub flipped: bool,
-    pub last_directional_input_v: Option<GameInput>,
-    pub last_directional_input_h: Option<GameInput>,
-    pub last_directional_input: Option<GameInput>,
 
     pub character: Character,
 
@@ -74,9 +71,6 @@ impl<'a> Player<'a> {
             animator: Animator::new(),
             is_attacking: false,
             flipped,
-            last_directional_input: None,
-            last_directional_input_v: None,
-            last_directional_input_h: None,
             character,
         }
     }
