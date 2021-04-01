@@ -17,7 +17,10 @@ pub enum GameInput {
     BackwardDown,
     BackwardUp,
     Up,
-    Down
+    Down,
+    DashForward,
+    DashBackward,
+    Grab
 }
 
 impl Display for GameInput {
@@ -41,6 +44,17 @@ impl GameInput {
         current_inputs_state[9] = (GameInput::Down, false);
     
         current_inputs_state
+    }
+
+    pub fn is_pressed(current_inputs_state: &[(GameInput, bool); 10], input: GameInput) -> bool {
+        let mut return_bool = false;
+        for i in 0..10 {
+            if current_inputs_state[i].0 == input {
+                return_bool = current_inputs_state[i].1;
+                break;
+            }
+        }
+        return_bool
     }
 
     //TODO maybe return Result on these to avoid 0 being default

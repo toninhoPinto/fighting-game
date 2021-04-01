@@ -36,6 +36,7 @@ use crate::game_logic::inputs::apply_inputs::apply_game_inputs;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//improve reset input timers
 //Hold attacks
 //2 inputs at the same time (grabs)
 //attack animations that vary depending on distance
@@ -161,13 +162,14 @@ fn main() -> Result<(), String> {
         //Update
         while logic_time_accumulated >= logic_timestep {
 
-            apply_game_input_state(&p1_assets, &mut player1, &current_state_input, &mut last_inputs);
+            apply_game_input_state(&p1_assets, &mut player1, &mut input_reset_timers, &current_state_input, &mut last_inputs);
 
             //Number of frames to delete each input
             for i in 0..input_reset_timers.len() {
                 input_reset_timers[i] += 1;
                 if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
                     last_inputs.pop_front();
+                    println!("pop {:?}", last_inputs);
                 }
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);

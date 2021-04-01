@@ -5,7 +5,7 @@ use super::process_inputs::record_input;
 use std::collections::VecDeque;
 use std::string::String;
 
-pub fn apply_game_input_state<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, 
+pub fn apply_game_input_state<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input_reset_timers: &mut Vec<i32>,
         current_input_state: &[(GameInput, bool); 10], last_inputs: &mut VecDeque<GameInput>) {
         let len = last_inputs.len();
         //if forward and backwards at the same time, keep priorizing forward
@@ -19,19 +19,23 @@ pub fn apply_game_input_state<'a, 'b>(character_anims: &'a CharacterAssets, play
 
         if current_input_state[6].1 && (len == 0 || (last_inputs[len - 1] != GameInput::Forward && last_inputs[len - 1] != GameInput::ForwardUp && last_inputs[len - 1] != GameInput::ForwardDown )) {
             record_input(last_inputs, current_input_state[6].0);
+            input_reset_timers.push(0);
         }
         if current_input_state[8].1 && (len == 0 || (last_inputs[len - 1] != GameInput::Backward && last_inputs[len - 1] != GameInput::BackwardDown && last_inputs[len - 1] != GameInput::BackwardUp )) {
             record_input(last_inputs, current_input_state[8].0);
+            input_reset_timers.push(0);
         }
         //up
         if current_input_state[7].1 {
             if len == 0 || (last_inputs[len - 1] != GameInput::Up && last_inputs[len - 1] != GameInput::ForwardUp && last_inputs[len - 1] != GameInput::BackwardUp ) {
                 record_input(last_inputs, current_input_state[7].0);
+                input_reset_timers.push(0);
             }
             player.player_state_change(PlayerState::Jump); 
         } else if current_input_state[9].1 { //down
             if len == 0 || (last_inputs[len - 1] != GameInput::Down && last_inputs[len - 1] != GameInput::ForwardDown && last_inputs[len - 1] != GameInput::BackwardDown ){
                 record_input(last_inputs, current_input_state[9].0);
+                input_reset_timers.push(0);
             }
             player.player_state_change(PlayerState::Crouch);
         }
@@ -43,7 +47,7 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
     recent_input: GameInput, is_pressed: bool, 
     current_input_state: &[(GameInput, bool); 10], last_inputs: &mut VecDeque<GameInput>) {
 
-    println!("{:?}", last_inputs);
+    println!("rcvd input {:?} last inputs {:?}", recent_input, last_inputs);
     match recent_input {
         GameInput::Forward => {
             player.velocity_x = 1;
@@ -135,17 +139,35 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
 }
 
 fn handle_attack_input_for_possible_combos<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input: GameInput, last_inputs: &mut VecDeque<GameInput>, animation_name: String) {
-    let special_attack = check_for_history_string_inputs(character_anims, last_inputs);
-    if special_attack != "" {
-        player_attack(character_anims, player, special_attack);
-    } else { //check for directional inputs and if nothing then normal light punch
+    let is_grab = check_for_grab_inputs(player, last_inputs);
+    if !is_grab {
+        let special_attack = check_for_history_string_inputs(character_anims, last_inputs);
+        if special_attack != "" {
+            player_attack(character_anims, player, special_attack);
+        } else { //check for directional inputs and if nothing then normal light punch
             let directional_attack = check_for_last_directional_inputs_directional_attacks(character_anims, last_inputs, &player);
             if directional_attack != "" {
                 player_attack(character_anims, player, directional_attack);
             } else {
                 player_attack(character_anims, player, animation_name);
             }
+        }
     }
+}
+
+fn check_for_grab_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInput>) -> bool {
+    let len = last_inputs.len();
+    if len >= 2 && last_inputs[len - 2] != last_inputs[len - 1]{
+        if (last_inputs[len - 1] == GameInput::LightPunch || last_inputs[len - 1] == GameInput::LightKick) && 
+        (last_inputs[len - 2] == GameInput::LightPunch || last_inputs[len - 2] == GameInput::LightKick) {
+            player.player_state_change(PlayerState::Grab);
+            player.is_attacking = false;
+            last_inputs.clear();
+            last_inputs.push_back(GameInput::Grab);
+            return true
+        } 
+    }
+    false
 }
 
 fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInput>) {
@@ -155,10 +177,12 @@ fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInp
             player.player_state_change(PlayerState::DashingBackward);
             player.animator.animation_index = 0.0;
             last_inputs.clear();
+            last_inputs.push_back(GameInput::DashBackward)
         } else if last_inputs[len - 1] == GameInput::Forward {
             player.player_state_change(PlayerState::DashingForward);
             player.animator.animation_index = 0.0;
             last_inputs.clear();
+            last_inputs.push_back(GameInput::DashForward)
         }
     }
 }

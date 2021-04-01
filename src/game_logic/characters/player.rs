@@ -19,6 +19,8 @@ pub enum PlayerState {
     Landing,
     DashingForward,
     DashingBackward,
+    Grab,
+    Grabbed,
     KnockedOut,
     Dead
 }
@@ -108,6 +110,7 @@ impl<'a> Player<'a> {
     }
     
     pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
+
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5; 
             self.direction_at_jump_time = self.velocity_x;
@@ -165,7 +168,7 @@ impl<'a> Player<'a> {
         let character_animation = &character_data.animations;
 
         //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-        if !self.animator.is_playing {
+        if self.animator.is_finished {
 
             if self.state == PlayerState::Jump {
                 self.state = PlayerState::Jumping;
@@ -187,6 +190,10 @@ impl<'a> Player<'a> {
                 self.is_attacking = false;
             }
 
+            if self.state == PlayerState::Grab {
+                self.state = PlayerState::Standing;
+            }
+
             if self.state == PlayerState::DashingForward || self.state == PlayerState::DashingBackward {
                 self.state = PlayerState::Standing;
                 self.character.hit_stunned_duration = 5;
@@ -197,7 +204,6 @@ impl<'a> Player<'a> {
         if self.character.hit_stunned_duration > 0 {
             self.character.hit_stunned_duration -= 1;
         }
-
 
         if !self.is_attacking {
 
@@ -256,6 +262,10 @@ impl<'a> Player<'a> {
                 PlayerState::DashingBackward => {
                     self.animator.play_once(character_animation.get("dash_back").unwrap(), false);
                 }
+                PlayerState::Grab => {
+                    self.animator.play_once(character_animation.get("grab").unwrap(), false);
+                }
+                PlayerState::Grabbed => {}
             }
 
             self.prev_velocity_x = self.velocity_x;

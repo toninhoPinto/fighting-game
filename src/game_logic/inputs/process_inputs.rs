@@ -9,16 +9,19 @@ pub fn transform_input_state(input: TranslatedInput, is_pressed: bool,
     directional_state_input : &mut [(TranslatedInput, bool); 4],
     last_inputs: &mut VecDeque<GameInput>,
      player: &Player) -> Option<GameInput>{
+
+
+    println!("========================={:?}{:?}, last inputs {:?}",input,is_pressed, last_inputs);
     if TranslatedInput::is_directional_input(input) {
         
         if input == TranslatedInput::Horizontal(0) {
             directional_state_input[0].1 = false;
             directional_state_input[1].1 = false;
-            update_current_state_and_consolidate_input(input, is_pressed, current_state_input,directional_state_input,last_inputs, player)
+            update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
         } else if input == TranslatedInput::Vertical(0) {
             directional_state_input[2].1 = false;
             directional_state_input[3].1 = false;
-            update_current_state_and_consolidate_input(input, is_pressed, current_state_input,directional_state_input,last_inputs, player)
+            update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
         } else {
             let index = TranslatedInput::get_button_index(directional_state_input, input);
             if directional_state_input[index.unwrap()].1 != is_pressed {
@@ -37,13 +40,13 @@ pub fn transform_input_state(input: TranslatedInput, is_pressed: bool,
                     },
                     _ => {}
                 }
-                update_current_state_and_consolidate_input(input, is_pressed, current_state_input,directional_state_input,last_inputs, player)
+                update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
             } else {
                 None
             }    
         }
     } else {
-        update_current_state_and_consolidate_input(input, is_pressed, current_state_input,directional_state_input,last_inputs, player)
+        update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
     }
 }
 
@@ -52,7 +55,7 @@ fn update_current_state_and_consolidate_input(input: TranslatedInput, is_pressed
     directional_state_input : &mut [(TranslatedInput, bool); 4],
     last_inputs: &mut VecDeque<GameInput>,
      player: &Player) -> Option<GameInput>{
-
+    println!("update_current_state_and_consolidate_input");
     let game_input = GameInput::from_translated_input(input, current_state_input,  player.dir_related_of_other).unwrap();
     let id = match game_input {
         GameInput::Forward | GameInput::Backward 
