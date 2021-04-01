@@ -38,7 +38,6 @@ use input::translated_inputs::TranslatedInput;
 //TODO list
 //improve reset input timers
 //Hold attacks
-//2 inputs at the same time (grabs)
 //attack animations that vary depending on distance
 //dash attacks
 //add movement to each attack
