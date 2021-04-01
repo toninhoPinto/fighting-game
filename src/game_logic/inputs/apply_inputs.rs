@@ -43,6 +43,7 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
     recent_input: GameInput, is_pressed: bool, 
     current_input_state: &[(GameInput, bool); 10], last_inputs: &mut VecDeque<GameInput>) {
 
+    println!("{:?}", last_inputs);
     match recent_input {
         GameInput::Forward => {
             player.velocity_x = 1;

@@ -140,13 +140,15 @@ fn main() -> Result<(), String> {
             //&mut current_inputs_state
             match input {
                 Some((input, is_pressed)) => {
-                    input_reset_timers.push(0);
                     //directional_state_input
                     //current_state_input
                     let game_input = transform_input_state(input , is_pressed, &mut current_state_input, &mut directional_state_input, &mut last_inputs, &player1);
                     match game_input {
                         Some(final_input) => {
                             apply_game_inputs(&p1_assets, &mut player1, final_input, is_pressed, &current_state_input, &mut last_inputs);
+                            if is_pressed {
+                                input_reset_timers.push(0);
+                            }  
                         },
                         None => {}
                     }
