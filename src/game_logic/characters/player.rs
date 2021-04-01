@@ -2,7 +2,7 @@ use sdl2::rect::Point;
 use sdl2::render::Texture;
 
 use std::fmt;
-use crate::game_logic::inputs::game_inputs::GameInput;
+
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::game_logic::characters::Character;
 
@@ -105,7 +105,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn player_state_cancel(&mut self, new_state: PlayerState){
+    pub fn player_state_cancel(&mut self, _new_state: PlayerState){
         self.state = PlayerState::Standing;
     }
     
@@ -164,7 +164,7 @@ impl<'a> Player<'a> {
 
     //noinspection ALL
     pub fn render(&mut self, character_data: &'a CharacterAssets) -> &Texture {
-        let curr_anim = self.animator.current_animation.unwrap();
+        let _curr_anim = self.animator.current_animation.unwrap();
         let character_animation = &character_data.animations;
 
         //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end

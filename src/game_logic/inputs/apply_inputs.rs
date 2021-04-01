@@ -5,7 +5,7 @@ use super::process_inputs::record_input;
 use std::collections::VecDeque;
 use std::string::String;
 
-pub fn apply_game_input_state<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input_reset_timers: &mut Vec<i32>,
+pub fn apply_game_input_state<'a, 'b>(_character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input_reset_timers: &mut Vec<i32>,
         current_input_state: &[(GameInput, bool); 10], last_inputs: &mut VecDeque<GameInput>) {
         let len = last_inputs.len();
         //if forward and backwards at the same time, keep priorizing forward
@@ -138,7 +138,7 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
     }
 }
 
-fn handle_attack_input_for_possible_combos<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input: GameInput, last_inputs: &mut VecDeque<GameInput>, animation_name: String) {
+fn handle_attack_input_for_possible_combos<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, _input: GameInput, last_inputs: &mut VecDeque<GameInput>, animation_name: String) {
     let is_grab = check_for_grab_inputs(player, last_inputs);
     if !is_grab {
         let special_attack = check_for_history_string_inputs(character_anims, last_inputs);
@@ -187,7 +187,7 @@ fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInp
     }
 }
 
-fn check_for_last_directional_inputs_directional_attacks(character_anims: &CharacterAssets, last_inputs: &mut VecDeque<GameInput>, player: &Player) -> String {
+fn check_for_last_directional_inputs_directional_attacks(character_anims: &CharacterAssets, last_inputs: &mut VecDeque<GameInput>, _player: &Player) -> String {
     let mut ability_name: &str = "";
 
     'search_directionals: for possible_combo in character_anims.directional_variation_anims.iter() {

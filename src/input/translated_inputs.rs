@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 
 use std::result::Result;
 use std::str::FromStr;
-use serde::{Deserialize, ser::{self, SerializeTupleVariant}};
+use serde::{Deserialize, ser::{SerializeTupleVariant}};
 use serde::ser::{Serialize, Serializer};
 use serde::de::{Visitor, value, Deserializer, IntoDeserializer};
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -42,8 +42,8 @@ impl TranslatedInput {
 
     pub fn is_directional_input(input: TranslatedInput) -> bool{
         match input {
-            TranslatedInput::Horizontal(h) => true,
-            TranslatedInput::Vertical(v) => true,
+            TranslatedInput::Horizontal(_h) => true,
+            TranslatedInput::Vertical(_v) => true,
             _ => false
         }
     }

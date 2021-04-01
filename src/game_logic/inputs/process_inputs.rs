@@ -10,7 +10,6 @@ pub fn transform_input_state(input: TranslatedInput, is_pressed: bool,
     last_inputs: &mut VecDeque<GameInput>,
      player: &Player) -> Option<GameInput>{
 
-
     println!("========================={:?}{:?}, last inputs {:?}",input,is_pressed, last_inputs);
     if TranslatedInput::is_directional_input(input) {
         
@@ -55,7 +54,7 @@ fn update_current_state_and_consolidate_input(input: TranslatedInput, is_pressed
     directional_state_input : &mut [(TranslatedInput, bool); 4],
     last_inputs: &mut VecDeque<GameInput>,
      player: &Player) -> Option<GameInput>{
-    println!("update_current_state_and_consolidate_input");
+
     let game_input = GameInput::from_translated_input(input, current_state_input,  player.dir_related_of_other).unwrap();
     let id = match game_input {
         GameInput::Forward | GameInput::Backward 
@@ -65,6 +64,7 @@ fn update_current_state_and_consolidate_input(input: TranslatedInput, is_pressed
         }
     };
 
+    let was_already_pressed = current_state_input[id].1;
     current_state_input[id] = (game_input, is_pressed);
     
     //specifically for the case where with keyboard
@@ -78,13 +78,18 @@ fn update_current_state_and_consolidate_input(input: TranslatedInput, is_pressed
     }
 
     let consolidated_input = consolidate_directional_inputs(game_input, is_pressed, current_state_input);
-    match consolidated_input {
-        Some(consolidated) => { 
-            record_input(last_inputs, consolidated);
-            Some(game_input)
-        }
-        None => {
-            Some(game_input)
+    if was_already_pressed && (game_input == GameInput::LightPunch || game_input == GameInput::MediumPunch || game_input == GameInput::HeavyPunch
+        || game_input == GameInput::LightKick || game_input == GameInput::MediumKick || game_input == GameInput::HeavyKick) {
+            None
+    } else {
+        match consolidated_input {
+            Some(consolidated) => { 
+                record_input(last_inputs, consolidated);
+                Some(game_input)
+            }
+            None => {
+                Some(game_input)
+            }
         }
     }
 }

@@ -163,9 +163,9 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
     directional_string_2.push(GameInput::HeavyPunch);
     directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
 
-    let mut effects_of_abilities = HashMap::new();
-    let mut specials_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
-    let mut projectile_anims = HashMap::new();
+    let effects_of_abilities = HashMap::new();
+    let specials_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
+    let projectile_anims = HashMap::new();
 
     CharacterAssets {
         animations: anims,
