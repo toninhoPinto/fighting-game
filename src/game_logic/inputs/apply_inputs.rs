@@ -1,13 +1,32 @@
-use crate::game_logic::characters::player::{Player, PlayerState};
+use crate::{game_logic::characters::player::{Player, PlayerState}, input::translated_inputs::TranslatedInput};
 use crate::game_logic::character_factory::CharacterAssets;
 use super::game_inputs::GameInput;
 use super::process_inputs::record_input;
 use std::collections::VecDeque;
 use std::string::String;
 
-pub fn apply_game_input_state<'a, 'b>(_character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, input_reset_timers: &mut Vec<i32>,
-        current_input_state: &[(GameInput, bool); 10], last_inputs: &mut VecDeque<GameInput>) {
+pub fn apply_game_input_state<'a, 'b>(_character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, 
+        input_reset_timers: &mut Vec<i32>,
+        current_directional_state: &[(TranslatedInput, bool); 4],
+        current_input_state: &mut [(GameInput, bool); 10], 
+        last_inputs: &mut VecDeque<GameInput>) {
+        
         let len = last_inputs.len();
+
+        //fix current_input_state based on current_directional_state
+        //horizontal right
+        let right_as_game_input = GameInput::from_translated_input(current_directional_state[0].0,
+            current_input_state, player.dir_related_of_other);
+
+        current_input_state[GameInput::get_direction_index(right_as_game_input.unwrap())].1 = current_directional_state[0].1;
+
+        //horizontal left
+        let right_as_game_input = GameInput::from_translated_input(current_directional_state[1].0,
+            current_input_state, player.dir_related_of_other);
+
+        current_input_state[GameInput::get_direction_index(right_as_game_input.unwrap())].1 = current_directional_state[1].1;
+
+
         //if forward and backwards at the same time, keep priorizing forward
         //this is needed for when character jumps and the "forward" changes
         if current_input_state[6].1 && current_input_state[8].1 {
@@ -175,12 +194,10 @@ fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInp
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1]{
         if last_inputs[len - 1] == GameInput::Backward {
             player.player_state_change(PlayerState::DashingBackward);
-            player.animator.animation_index = 0.0;
             last_inputs.clear();
             last_inputs.push_back(GameInput::DashBackward)
         } else if last_inputs[len - 1] == GameInput::Forward {
             player.player_state_change(PlayerState::DashingForward);
-            player.animator.animation_index = 0.0;
             last_inputs.clear();
             last_inputs.push_back(GameInput::DashForward)
         }

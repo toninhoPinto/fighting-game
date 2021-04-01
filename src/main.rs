@@ -1,5 +1,5 @@
 
-use game_logic::inputs::apply_inputs::apply_game_input_state;
+use game_logic::inputs::{apply_inputs::apply_game_input_state, process_inputs::update_directional_state};
 use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
 use sdl2::rect::Point;
@@ -30,12 +30,13 @@ use crate::input::controller_handler::Controller;
 use crate::asset_management::{controls, asset_loader};
 use crate::game_logic::character_factory::{load_character, load_character_anim_data};
 use crate::game_logic::inputs::game_inputs::GameInput;
-use crate::game_logic::inputs::process_inputs::transform_input_state;
+use crate::game_logic::inputs::process_inputs::{transform_input_state, filter_already_pressed_direction, released_joystick_reset_directional_state, filter_already_pressed_button};
 use crate::game_logic::inputs::apply_inputs::apply_game_inputs;
 
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//FIX GRAB, if you press light kick, and then halfway through the animation you press light punch, you can cancel the kick halfway and then grab
 //improve reset input timers
 //Hold attacks
 //attack animations that vary depending on distance
@@ -44,8 +45,6 @@ use input::translated_inputs::TranslatedInput;
 //projectile with a specific target location
 //specific projectile only live if keep holding button
 //Add startup, active and recovery per animation
-//press right (forward), jump over enemy, now also press left(backwards), it will dash because its two forwards technically
-    //
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
     
 fn main() -> Result<(), String> {
@@ -134,40 +133,63 @@ fn main() -> Result<(), String> {
             input::controller_handler::handle_new_controller(&controller, &joystick, &event, &mut joys);
 
             //needs also to return which controller/ which player
-            let input = input::input_handler::rcv_input(&event,&mut controls);
-            //this actually needs to be x2 for both players
-            //&mut current_inputs_state
-            match input {
-                Some((input, is_pressed)) => {
-                    //directional_state_input
-                    //current_state_input
-                    let game_input = transform_input_state(input , is_pressed, &mut current_state_input, &mut directional_state_input, &mut last_inputs, &player1);
-                    match game_input {
-                        Some(final_input) => {
+            let raw_input = input::input_handler::rcv_input(&event,&mut controls);
+
+            if raw_input.is_some() {
+                let (translated_input, is_pressed) = raw_input.unwrap();
+                //This is to make hitboxes and keyboards work more similarly to joystick events
+                let filtered_input;
+                if is_pressed && TranslatedInput::is_directional_input(translated_input) {
+                    filtered_input = filter_already_pressed_direction(translated_input, &mut directional_state_input, &player1);
+                } else {
+                    filtered_input = Some(translated_input);
+                }
+                
+                let is_directional_input = TranslatedInput::is_directional_input(translated_input);
+                if is_directional_input {
+                    if !is_pressed {
+                        released_joystick_reset_directional_state(translated_input ,&mut directional_state_input);
+                    }
+                    update_directional_state(translated_input, is_pressed, &mut directional_state_input) 
+                }
+
+                if filtered_input.is_some() {
+                    let non_direction_repeated_input = filtered_input.unwrap();
+                    let game_input = GameInput::from_translated_input(non_direction_repeated_input, &current_state_input,  player1.dir_related_of_other).unwrap();
+                    
+                    let filtered_buttons_input;
+                    if is_pressed && !is_directional_input {
+                        filtered_buttons_input = filter_already_pressed_button(game_input, &mut current_state_input);
+                    } else {
+                        filtered_buttons_input = Some(game_input);
+                    }
+                    
+                    if filtered_buttons_input.is_some() {
+                        let game_input = transform_input_state(filtered_buttons_input.unwrap(), is_pressed, &mut current_state_input, &mut directional_state_input, &mut last_inputs, &player1);
+                        if game_input.is_some() {
+                            let final_input = game_input.unwrap();
                             apply_game_inputs(&p1_assets, &mut player1, final_input, is_pressed, &current_state_input, &mut last_inputs);
                             if is_pressed {
                                 input_reset_timers.push(0);
                             }  
-                        },
-                        None => {}
-                    }
-                    
-                },
-                None => {}
-            }
+                        }  
+                    }  
+                }
+            } 
+            //end of input management
+
         }
 
         //Update
         while logic_time_accumulated >= logic_timestep {
 
-            apply_game_input_state(&p1_assets, &mut player1, &mut input_reset_timers, &current_state_input, &mut last_inputs);
+            apply_game_input_state(&p1_assets, &mut player1, &mut input_reset_timers, &directional_state_input, &mut current_state_input, &mut last_inputs);
 
             //Number of frames to delete each input
             for i in 0..input_reset_timers.len() {
                 input_reset_timers[i] += 1;
                 if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
                     last_inputs.pop_front();
-                    println!("pop {:?}", last_inputs);
                 }
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);

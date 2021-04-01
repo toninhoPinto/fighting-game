@@ -4,58 +4,73 @@ use crate::input::translated_inputs::TranslatedInput;
 use std::collections::VecDeque;
 
 
-pub fn transform_input_state(input: TranslatedInput, is_pressed: bool, 
-    current_state_input : &mut [(GameInput, bool); 10],
-    directional_state_input : &mut [(TranslatedInput, bool); 4],
-    last_inputs: &mut VecDeque<GameInput>,
-     player: &Player) -> Option<GameInput>{
-
-    println!("========================={:?}{:?}, last inputs {:?}",input,is_pressed, last_inputs);
-    if TranslatedInput::is_directional_input(input) {
-        
-        if input == TranslatedInput::Horizontal(0) {
-            directional_state_input[0].1 = false;
-            directional_state_input[1].1 = false;
-            update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
-        } else if input == TranslatedInput::Vertical(0) {
-            directional_state_input[2].1 = false;
-            directional_state_input[3].1 = false;
-            update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
-        } else {
-            let index = TranslatedInput::get_button_index(directional_state_input, input);
-            if directional_state_input[index.unwrap()].1 != is_pressed {
-                match input {
-                    TranslatedInput::Horizontal(h) if h > 0 => {
-                        directional_state_input[0].1 = is_pressed;
-                    },
-                    TranslatedInput::Horizontal(h) if h < 0 => {
-                        directional_state_input[1].1 = is_pressed;
-                    },
-                    TranslatedInput::Vertical(v) if v > 0 => {
-                        directional_state_input[2].1 = is_pressed;
-                    },
-                    TranslatedInput::Vertical(v) if v < 0 => {
-                        directional_state_input[3].1 = is_pressed;
-                    },
-                    _ => {}
-                }
-                update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
+pub fn filter_already_pressed_direction(input: TranslatedInput, directional_state_input : &mut [(TranslatedInput, bool); 4], player: &Player) -> Option<TranslatedInput> {
+    match input {
+        TranslatedInput::Horizontal(h) if h != 0=> { 
+            let index = TranslatedInput::get_button_index(directional_state_input, input).unwrap();
+            if !directional_state_input[index].1 {
+                Some(input)
             } else {
                 None
-            }    
+            }
+         }
+        TranslatedInput::Vertical(v) if v != 0 => {
+            let index = TranslatedInput::get_button_index(directional_state_input, input).unwrap();
+            if !directional_state_input[index].1 {
+                Some(input)
+            } else {
+                None
+            }
         }
-    } else {
-        update_current_state_and_consolidate_input(input, is_pressed, current_state_input, directional_state_input, last_inputs, player)
+        _ => { Some(input) }
     }
 }
 
-fn update_current_state_and_consolidate_input(input: TranslatedInput, is_pressed: bool, 
+pub fn released_joystick_reset_directional_state(input: TranslatedInput, directional_state_input : &mut [(TranslatedInput, bool); 4]) {
+    if input == TranslatedInput::Horizontal(0) {
+        directional_state_input[0].1 = false;
+        directional_state_input[1].1 = false;
+    } else if input == TranslatedInput::Vertical(0) {
+        directional_state_input[2].1 = false;
+        directional_state_input[3].1 = false;
+    }
+}
+
+pub fn update_directional_state(input: TranslatedInput, is_pressed: bool, directional_state_input : &mut [(TranslatedInput, bool); 4]) {
+    match input {
+        TranslatedInput::Horizontal(h) if h > 0 => {
+            directional_state_input[0].1 = is_pressed;
+        },
+        TranslatedInput::Horizontal(h) if h < 0 => {
+            directional_state_input[1].1 = is_pressed;
+        },
+        TranslatedInput::Vertical(v) if v > 0 => {
+            directional_state_input[2].1 = is_pressed;
+        },
+        TranslatedInput::Vertical(v) if v < 0 => {
+            directional_state_input[3].1 = is_pressed;
+        },
+        _ => {}
+    }
+}
+
+pub fn filter_already_pressed_button(input: GameInput, current_state_input : &mut [(GameInput, bool); 10]) -> Option<GameInput> {
+    let index = GameInput::get_button_index(current_state_input, input);
+
+    if !current_state_input[index].1 {
+        Some(input)
+    } else {
+        None
+    }
+}
+
+pub fn transform_input_state(game_input: GameInput, is_pressed: bool, 
     current_state_input : &mut [(GameInput, bool); 10],
     directional_state_input : &mut [(TranslatedInput, bool); 4],
     last_inputs: &mut VecDeque<GameInput>,
      player: &Player) -> Option<GameInput>{
-
-    let game_input = GameInput::from_translated_input(input, current_state_input,  player.dir_related_of_other).unwrap();
+    
+    //update current state
     let id = match game_input {
         GameInput::Forward | GameInput::Backward 
         | GameInput::Up | GameInput::Down => { GameInput::get_direction_index(game_input) }
@@ -63,33 +78,28 @@ fn update_current_state_and_consolidate_input(input: TranslatedInput, is_pressed
             GameInput::get_button_index(current_state_input, game_input)
         }
     };
-
-    let was_already_pressed = current_state_input[id].1;
     current_state_input[id] = (game_input, is_pressed);
     
+
     //specifically for the case where with keyboard
-    //you start walking left / forward
-    //you pass the opponent and still move left but now its backwards
-    //you release, it will change the flag for currently pressing left
+    //you start walking right / forward
+    //you pass the opponent and still move right but now its backwards
+    //you release, it will change the flag for currently pressing right
     //but it wont change the flag for currently pressing forward since it think it is now backwards
-    if !TranslatedInput::is_currently_any_directional_input(directional_state_input) {
+    if !is_pressed && !TranslatedInput::is_currently_any_directional_input(directional_state_input) {
         current_state_input[6].1 = false;
         current_state_input[8].1 = false;
     }
 
     let consolidated_input = consolidate_directional_inputs(game_input, is_pressed, current_state_input);
-    if was_already_pressed && (game_input == GameInput::LightPunch || game_input == GameInput::MediumPunch || game_input == GameInput::HeavyPunch
-        || game_input == GameInput::LightKick || game_input == GameInput::MediumKick || game_input == GameInput::HeavyKick) {
-            None
-    } else {
-        match consolidated_input {
-            Some(consolidated) => { 
-                record_input(last_inputs, consolidated);
-                Some(game_input)
-            }
-            None => {
-                Some(game_input)
-            }
+    
+    match consolidated_input {
+        Some(consolidated) => { 
+            record_input(last_inputs, consolidated);
+            Some(game_input)
+        }
+        None => {
+            Some(game_input)
         }
     }
 }
