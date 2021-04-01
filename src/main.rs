@@ -41,12 +41,11 @@ use input::translated_inputs::TranslatedInput;
 //attack animations that vary depending on distance
 //dash attacks
 //add movement to each attack
-//add different animation speeds to each animation
 //projectile with a specific target location
 //specific projectile only live if keep holding button
-//Improve dash smoothing <- add a small movement break after a dash
-//character should only flip once it hits the ground and not on the air
-
+//Add startup, active and recovery per animation
+//press right (forward), jump over enemy, now also press left(backwards), it will dash because its two forwards technically
+    //
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
     
 fn main() -> Result<(), String> {
