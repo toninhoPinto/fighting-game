@@ -119,6 +119,7 @@ fn load_keetar_anims(texture_creator: &TextureCreator<WindowContext>) -> HashMap
     let neutral_jump_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/neutral_jump");
     let directional_jump_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/directional_jump");
     let grab_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/attacks/grab");
+    let dead_anim: Vec<Texture> = asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/dead");
 
     character_anims.insert("idle".to_string(), Animation::new(idle_anim, "idle".to_string(), 0.35));
     character_anims.insert("dash".to_string(), Animation::new(dash_anim, "dash".to_string(), 0.35));
@@ -135,6 +136,7 @@ fn load_keetar_anims(texture_creator: &TextureCreator<WindowContext>) -> HashMap
     character_anims.insert("directional_jump".to_string(), Animation::new(directional_jump_anim, "directional_jump".to_string(), 0.35));
     character_anims.insert("directional_light_punch".to_string(), Animation::new(special1_anim, "directional_light_punch".to_string(), 0.35));
     character_anims.insert("grab".to_string(), Animation::new(grab_anim, "grab".to_string(), 0.15));
+    character_anims.insert("dead".to_string(), Animation::new(dead_anim, "dead".to_string(), 0.15));
 
 
     character_anims.insert("light_special_attack".to_string(), Animation::new(special2_anim, "light_special_attack".to_string(), 0.35));

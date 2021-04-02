@@ -78,7 +78,10 @@ impl<'a> Player<'a> {
     }
 
     pub fn take_damage(&mut self, damage: i32) {
-        self.character.hp -= damage;
+        if self.character.hp > 0 {
+            self.character.hp -= damage;
+        } 
+
         if self.character.hp <= 0 {
             self.state = PlayerState::Dead;
         }
@@ -87,7 +90,14 @@ impl<'a> Player<'a> {
     pub fn player_can_attack(&self) -> bool{
         !(self.is_attacking ||
             self.state == PlayerState::DashingForward  ||
-            self.state == PlayerState::DashingBackward
+            self.state == PlayerState::DashingBackward ||
+            self.state == PlayerState::Dead
+        )
+    }
+
+    pub fn player_can_move(&self) -> bool{
+        !(self.is_attacking ||
+            self.state == PlayerState::Dead
         )
     }
 
@@ -100,7 +110,7 @@ impl<'a> Player<'a> {
         let already_crouching = (new_state == PlayerState::Crouch || new_state == PlayerState::Crouching) &&  
                                     (self.state == PlayerState::Crouch || self.state == PlayerState::Crouching);
 
-        if is_interruptable && !already_crouching {
+        if is_interruptable && !already_crouching && self.state != PlayerState::Dead {
             self.state = new_state;
         }
     }
@@ -141,7 +151,7 @@ impl<'a> Player<'a> {
             }
         }
 
-        if !self.is_attacking && self.character.hit_stunned_duration <= 0 {
+        if self.player_can_move() && self.character.hit_stunned_duration <= 0 {
             if self.state == PlayerState::Standing {
                 self.position = self.position.offset((self.velocity_x as f64 * self.character.speed * dt) as i32, 0);
             }
@@ -168,7 +178,7 @@ impl<'a> Player<'a> {
         let character_animation = &character_data.animations;
 
         //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
-        if self.animator.is_finished {
+        if self.animator.is_finished && self.state != PlayerState::Dead {
 
             if self.state == PlayerState::Jump {
                 self.state = PlayerState::Jumping;
@@ -224,7 +234,7 @@ impl<'a> Player<'a> {
                 }
 
                 PlayerState::Dead => {
-
+                    self.animator.play_once(character_animation.get("dead").unwrap(), false);
                 }
 
                 PlayerState::KnockedOut => {
@@ -274,7 +284,7 @@ impl<'a> Player<'a> {
         if self.id == 1 {
             self.animator.render(false) //change this for debug
         } else {
-            self.animator.render(false)
+            self.animator.render(true)
         }
 
     }

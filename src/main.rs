@@ -11,6 +11,7 @@ use sdl2::keyboard::Keycode;
 
 use parry2d::bounding_volume::AABB;
 use parry2d::math::Point as aabbPoint;
+use ui::bar_ui::Bar;
 
 use std::time::{Instant};
 use std::collections::HashMap;
@@ -25,6 +26,7 @@ mod input;
 mod rendering;
 mod game_logic;
 mod asset_management;
+mod ui;
 
 use crate::input::controller_handler::Controller;
 use crate::asset_management::{controls, asset_loader};
@@ -78,6 +80,10 @@ fn main() -> Result<(), String> {
     let mut player2 = load_character(player2_character, Point::new(900, -50), true, 1);
     player1.animator.play(p1_assets.animations.get("idle").unwrap(), false);
     player2.animator.play(p2_assets.animations.get("idle").unwrap(), false);
+
+    let screen_res = canvas.output_size()?;
+    let mut p1_health_bar = Bar::new(10, 20, screen_res.0 / 2 - 20 , 50,player1.character.hp,   Some(Color::RGB(255, 100, 100)), None);
+    let mut p2_health_bar = Bar::new(screen_res.0 as i32 / 2 + 10, 20, screen_res.0 / 2 - 20, 50,player2.character.hp, Some(Color::RGB(255, 100, 100)), None);
 
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
@@ -194,6 +200,9 @@ fn main() -> Result<(), String> {
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
+            p1_health_bar.update(player1.character.hp);
+            p2_health_bar.update(player2.character.hp);
+
             player1.update(logic_timestep, player2.position.x);
             player2.update(logic_timestep, player1.position.x);
 
@@ -212,7 +221,8 @@ fn main() -> Result<(), String> {
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
                                         &mut player1, &p1_assets,
                                         &mut player2, &p2_assets,
-                                        &projectiles, &colliders, true)?;
+                                        &projectiles, &colliders, 
+                                        &p1_health_bar, &p2_health_bar, true)?;
 
             rendering_time_accumulated = 0.0;
         }

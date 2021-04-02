@@ -6,7 +6,7 @@ use sdl2::rect::{Point, Rect};
 
 use parry2d::bounding_volume::AABB;
 
-use crate::game_logic::characters::player::Player;
+use crate::{game_logic::characters::player::Player, ui::bar_ui::Bar};
 use crate::game_logic::projectile::Projectile;
 use crate::game_logic::character_factory::CharacterAssets;
 
@@ -38,7 +38,8 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
 pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
               player1: &'b mut Player<'a>, p1_anims: &'a CharacterAssets,
               player2: &'b mut Player<'a>, p2_anims: &'a CharacterAssets,
-              projectiles: &Vec<Projectile>, colliders: &Vec<AABB>, debug: bool)
+              projectiles: &Vec<Projectile>, colliders: &Vec<AABB>,
+              bar_ui_1: &Bar, bar_ui_2: &Bar, debug: bool)
     -> Result<(), String> {
 
     canvas.set_draw_color(color);
@@ -92,6 +93,20 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
             //debug_points(canvas,screen_rect_2.center(), screen_rect);
             //canvas.set_draw_color(color);
         }
+    }
+
+
+    //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
+    if bar_ui_1.fill_value > 0.0 {
+        canvas.draw_rect(bar_ui_1.rect);
+        canvas.set_draw_color(bar_ui_1.color.unwrap());
+        canvas.fill_rect(bar_ui_1.rect);
+    }
+
+    if bar_ui_2.fill_value > 0.0 {
+        canvas.draw_rect(bar_ui_2.rect);
+        canvas.set_draw_color(bar_ui_2.color.unwrap());
+        canvas.fill_rect(bar_ui_2.rect);
     }
 
     canvas.present();

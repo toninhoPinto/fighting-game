@@ -36,17 +36,19 @@ pub fn apply_game_input_state<'a, 'b>(_character_anims: &'a CharacterAssets, pla
             player.velocity_x = player.velocity_x * player.dir_related_of_other;
         }
 
-        if current_input_state[6].1 && (len == 0 || (last_inputs[len - 1] != GameInput::Forward && last_inputs[len - 1] != GameInput::ForwardUp && last_inputs[len - 1] != GameInput::ForwardDown )) {
+        if current_input_state[6].1 && (len == 0 || 
+            (last_inputs[len - 1] != GameInput::Forward && last_inputs[len - 1] != GameInput::ForwardUp && last_inputs[len - 1] != GameInput::ForwardDown )) {
             record_input(last_inputs, current_input_state[6].0);
             input_reset_timers.push(0);
         }
-        if current_input_state[8].1 && (len == 0 || (last_inputs[len - 1] != GameInput::Backward && last_inputs[len - 1] != GameInput::BackwardDown && last_inputs[len - 1] != GameInput::BackwardUp )) {
+        if current_input_state[8].1 && (len == 0 || 
+            (last_inputs[len - 1] != GameInput::Backward && last_inputs[len - 1] != GameInput::BackwardDown && last_inputs[len - 1] != GameInput::BackwardUp && last_inputs[len - 1] != GameInput::DashForward)) {
             record_input(last_inputs, current_input_state[8].0);
             input_reset_timers.push(0);
         }
         //up
         if current_input_state[7].1 {
-            if len == 0 || (last_inputs[len - 1] != GameInput::Up && last_inputs[len - 1] != GameInput::ForwardUp && last_inputs[len - 1] != GameInput::BackwardUp ) {
+            if len == 0 || (last_inputs[len - 1] != GameInput::Up && last_inputs[len - 1] != GameInput::ForwardUp && last_inputs[len - 1] != GameInput::BackwardUp && last_inputs[len - 1] != GameInput::DashBackward) {
                 record_input(last_inputs, current_input_state[7].0);
                 input_reset_timers.push(0);
             }
@@ -65,8 +67,7 @@ pub fn apply_game_input_state<'a, 'b>(_character_anims: &'a CharacterAssets, pla
 pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &'b mut Player<'a>, 
     recent_input: GameInput, is_pressed: bool, 
     current_input_state: &[(GameInput, bool); 10], last_inputs: &mut VecDeque<GameInput>) {
-
-    println!("rcvd input {:?} last inputs {:?}", recent_input, last_inputs);
+    
     match recent_input {
         GameInput::Forward => {
             player.velocity_x = 1;
@@ -100,6 +101,9 @@ pub fn apply_game_inputs<'a, 'b>(character_anims: &'a CharacterAssets, player: &
         }
         GameInput::Up => { 
             if is_pressed {
+                //TODO just for testing
+                player.take_damage(10);
+
                 player.player_state_change(PlayerState::Jump); 
             }
         }
