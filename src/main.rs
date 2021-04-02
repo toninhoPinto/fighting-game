@@ -11,7 +11,7 @@ use sdl2::keyboard::Keycode;
 
 use parry2d::bounding_volume::AABB;
 use parry2d::math::Point as aabbPoint;
-use ui::bar_ui::Bar;
+use ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar};
 
 use std::time::{Instant};
 use std::collections::HashMap;
@@ -82,8 +82,12 @@ fn main() -> Result<(), String> {
     player2.animator.play(p2_assets.animations.get("idle").unwrap(), false);
 
     let screen_res = canvas.output_size()?;
-    let mut p1_health_bar = Bar::new(10, 20, screen_res.0 / 2 - 20 , 50,player1.character.hp,   Some(Color::RGB(255, 100, 100)), None);
+    let mut p1_health_bar = Bar::new(10, 20, screen_res.0 / 2 - 20, 50,player1.character.hp,   Some(Color::RGB(255, 100, 100)), None);
     let mut p2_health_bar = Bar::new(screen_res.0 as i32 / 2 + 10, 20, screen_res.0 / 2 - 20, 50,player2.character.hp, Some(Color::RGB(255, 100, 100)), None);
+
+    let special_bar_width = 150;
+    let mut p1_special_bar = SegmentedBar::new(10, screen_res.1 as i32 - 30, special_bar_width, 10, player1.character.special_max, Some(Color::RGB(20, 250, 250)), None);
+    let mut p2_special_bar = SegmentedBar::new(screen_res.0 as i32 - 300 as i32, screen_res.1 as i32 - 30, special_bar_width, 10, player2.character.special_max, Some(Color::RGB(20, 250, 250)), None);
 
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
@@ -202,6 +206,9 @@ fn main() -> Result<(), String> {
 
             p1_health_bar.update(player1.character.hp);
             p2_health_bar.update(player2.character.hp);
+            
+            p1_special_bar.update(player1.character.special_curr);
+            p2_special_bar.update(player2.character.special_curr);
 
             player1.update(logic_timestep, player2.position.x);
             player2.update(logic_timestep, player1.position.x);
@@ -222,7 +229,9 @@ fn main() -> Result<(), String> {
                                         &mut player1, &p1_assets,
                                         &mut player2, &p2_assets,
                                         &projectiles, &colliders, 
-                                        &p1_health_bar, &p2_health_bar, true)?;
+                                        &p1_health_bar, &p2_health_bar,
+                                        &p1_special_bar, &p2_special_bar,
+                                        true)?;
 
             rendering_time_accumulated = 0.0;
         }

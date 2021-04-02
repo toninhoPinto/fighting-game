@@ -24,13 +24,15 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
         "foxgirl" => { 
             Some(Character::new(character_name.to_string(), 
             406 * 2, 215 * 2,
-            200, 
+            200,
+            4,
             450.0, 550.0,650.0, 700.0, 600.0))
         },
         "keetar" => { 
             Some(Character::new(character_name.to_string(), 
             580, 356, 
             100,
+            3, 
             350.0, 570.0, 600.0, 600.0, 500.0)) 
         } ,
         _ => {None},

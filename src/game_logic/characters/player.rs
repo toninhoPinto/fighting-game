@@ -89,6 +89,10 @@ impl<'a> Player<'a> {
         }
     }
 
+    pub fn change_special_meter(&mut self, special: f32) {
+        self.character.special_curr = ((self.character.special_curr + special).clamp(0.0, self.character.special_max as f32)* 10.0).round() / 10.0;
+    }
+
     pub fn player_can_attack(&self) -> bool{
         !(self.is_attacking ||
             self.state == PlayerState::DashingForward  ||

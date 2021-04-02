@@ -13,6 +13,8 @@ pub struct Character {
     //stats
     pub name: String,
     pub hp: i32,
+    pub special_max: i32,
+    pub special_curr: f32,
     pub speed: f64,
     pub dash_speed: f64,
     pub dash_back_speed: f64,
@@ -24,7 +26,7 @@ pub struct Character {
 }
 
 impl Character {
-    pub fn new(name: String, height: u32, width: u32, hp: i32, speed: f64, dash_speed: f64, dash_back_speed: f64, jump_height: f64, jump_distance: f64) -> Self {
+    pub fn new(name: String, height: u32, width: u32, hp: i32, special_max: i32, speed: f64, dash_speed: f64, dash_back_speed: f64, jump_height: f64, jump_distance: f64) -> Self {
         Self {
             name,
             sprite: Rect::new(0, 0, height, width),
@@ -32,6 +34,8 @@ impl Character {
             dash_speed,
             dash_back_speed,
             hp,
+            special_max,
+            special_curr: special_max as f32,
 
             hit_stunned_duration: 5,
             jump_height,

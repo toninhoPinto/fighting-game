@@ -6,7 +6,7 @@ use sdl2::rect::{Point, Rect};
 
 use parry2d::bounding_volume::AABB;
 
-use crate::{game_logic::characters::player::Player, ui::bar_ui::Bar};
+use crate::{game_logic::characters::player::Player, ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::game_logic::projectile::Projectile;
 use crate::game_logic::character_factory::CharacterAssets;
 
@@ -39,7 +39,9 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
               player1: &'b mut Player<'a>, p1_anims: &'a CharacterAssets,
               player2: &'b mut Player<'a>, p2_anims: &'a CharacterAssets,
               projectiles: &Vec<Projectile>, colliders: &Vec<AABB>,
-              bar_ui_1: &Bar, bar_ui_2: &Bar, debug: bool)
+              bar_ui_1: &Bar, bar_ui_2: &Bar,
+              bar_ui_3: &SegmentedBar, bar_ui_4: &SegmentedBar, 
+              debug: bool)
     -> Result<(), String> {
 
     canvas.set_draw_color(color);
@@ -107,6 +109,22 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
         canvas.draw_rect(bar_ui_2.rect);
         canvas.set_draw_color(bar_ui_2.color.unwrap());
         canvas.fill_rect(bar_ui_2.rect);
+    }
+
+    if bar_ui_3.curr_value > 0.0 {
+        for i in 0..bar_ui_3.render().len() {
+            canvas.draw_rect(bar_ui_3.rects[i]);
+            canvas.set_draw_color(bar_ui_3.color.unwrap());
+            canvas.fill_rect(bar_ui_3.rects[i]);
+        }
+    }
+
+    if bar_ui_4.curr_value > 0.0 {
+        for i in 0..bar_ui_4.render().len() {
+            canvas.draw_rect(bar_ui_4.rects[i]);
+            canvas.set_draw_color(bar_ui_4.color.unwrap());
+            canvas.fill_rect(bar_ui_4.rects[i]);
+        }
     }
 
     canvas.present();

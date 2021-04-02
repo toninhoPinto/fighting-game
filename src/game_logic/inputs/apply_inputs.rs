@@ -165,13 +165,15 @@ fn handle_attack_input_for_possible_combos<'a, 'b>(character_anims: &'a Characte
     let is_grab = check_for_grab_inputs(player, last_inputs);
     if !is_grab {
         let special_attack = check_for_history_string_inputs(character_anims, last_inputs);
-        if special_attack != "" {
+        if special_attack != "" && player.character.special_curr >= 1.0 {
+            player.change_special_meter(-1.0);
             player_attack(character_anims, player, special_attack);
         } else { //check for directional inputs and if nothing then normal light punch
             let directional_attack = check_for_last_directional_inputs_directional_attacks(character_anims, last_inputs, &player);
             if directional_attack != "" {
                 player_attack(character_anims, player, directional_attack);
             } else {
+                player.change_special_meter(0.1);
                 player_attack(character_anims, player, animation_name);
             }
         }
