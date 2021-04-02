@@ -87,7 +87,7 @@ fn main() -> Result<(), String> {
 
     let special_bar_width = 150;
     let mut p1_special_bar = SegmentedBar::new(10, screen_res.1 as i32 - 30, special_bar_width, 10, player1.character.special_max, Some(Color::RGB(20, 250, 250)), None);
-    let mut p2_special_bar = SegmentedBar::new(screen_res.0 as i32 - 300 as i32, screen_res.1 as i32 - 30, special_bar_width, 10, player2.character.special_max, Some(Color::RGB(20, 250, 250)), None);
+    let mut p2_special_bar = SegmentedBar::new(screen_res.0 as i32 - (special_bar_width as i32 + 10 * player2.character.special_max), screen_res.1 as i32 - 30, special_bar_width, 10, player2.character.special_max, Some(Color::RGB(20, 250, 250)), None);
 
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
