@@ -44,6 +44,7 @@ pub struct Player<'a>{
     pub dir_related_of_other: i32,
     pub state: PlayerState,
     pub is_attacking: bool,
+    pub is_airborne: bool,
 
     pub animator: Animator<'a>,
     pub flipped: bool,
@@ -72,6 +73,7 @@ impl<'a> Player<'a> {
             state: PlayerState::Standing,
             animator: Animator::new(),
             is_attacking: false,
+            is_airborne: false,
             flipped,
             character,
         }
@@ -96,7 +98,7 @@ impl<'a> Player<'a> {
     }
 
     pub fn player_can_move(&self) -> bool{
-        !(self.is_attacking ||
+        !(self.is_attacking || self.is_airborne ||
             self.state == PlayerState::Dead
         )
     }
@@ -127,6 +129,10 @@ impl<'a> Player<'a> {
         }
 
         if self.state == PlayerState::Jumping {
+           self.is_airborne = true;
+        }
+
+        if self.is_airborne {
             let gravity = match self.extra_gravity {
                 Some(extra_g) => {  
                     extra_g
@@ -147,7 +153,10 @@ impl<'a> Player<'a> {
             if self.position.y < self.ground_height {
                 self.position.y = 0;
                 self.velocity_y = self.character.jump_height;
-                self.state = PlayerState::Landing;
+                if self.state == PlayerState::Jumping {
+                    self.state = PlayerState::Landing;
+                }
+                self.is_airborne = false;
             }
         }
 
@@ -284,7 +293,7 @@ impl<'a> Player<'a> {
         if self.id == 1 {
             self.animator.render(false) //change this for debug
         } else {
-            self.animator.render(true)
+            self.animator.render(false)
         }
 
     }
