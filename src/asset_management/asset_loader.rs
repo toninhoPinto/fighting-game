@@ -8,6 +8,7 @@ use super::{collider::ColliderAnimation, spriter_pro_collider_loader};
 
 pub fn load_hitboxes(file: std::string::String) -> ColliderAnimation  {
     let colliders = spriter_pro_collider_loader::load_hitboxes(file);
+
     ColliderAnimation{
         colliders: colliders.0,
         pos_animations: colliders.1,

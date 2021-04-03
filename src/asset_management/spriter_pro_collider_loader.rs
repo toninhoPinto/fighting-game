@@ -5,6 +5,8 @@ use std::fs;
 
 use sdl2::rect::Point;
 
+use super::collider::{Collider, ColliderType};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BaseJson {
     pub animation: Vec<Animation>,
@@ -64,19 +66,33 @@ pub struct ObjectHitbox {
     pub y: f64
 }
 
-pub fn load_hitboxes(file: std::string::String) -> (Vec<AABB>, Vec<Vec<Point>>) {
+pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, Vec<Vec<Point>>) {
 
     let json_string = fs::read_to_string(file).unwrap();
     let v: BaseJson = serde_json::from_str(&json_string).unwrap();
     let timeline = &v.animation[0].timeline;
     let boxes = v.obj_info;
 
-    let mut colliders: Vec<AABB> = Vec::new();
+    let mut colliders: Vec<Collider> = Vec::new();
     for j in 0..boxes.len() {
         let min = aabbPoint::new(0.0, 0.0);
         let max = aabbPoint::new(boxes[j].w as f32, boxes[j].h as f32);
         println!("id {} min {} max{}", j, min, max);
-        colliders.push(AABB::new(min, max));
+
+        let collider_type = if boxes[j].name.contains("hit") {
+            ColliderType::Hitbox
+        } else if boxes[j].name.contains("push")  {
+            ColliderType::Pushbox
+        } else {
+            ColliderType::Hurtbox
+        };
+
+        let collider = Collider{
+            aabb: AABB::new(min, max),
+            collider_type: collider_type,
+            name: boxes[j].name.clone(),
+        };
+        colliders.push(collider);
     }
 
     let mut positions: Vec<Vec<Point>> = Vec::new();
@@ -84,6 +100,7 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<AABB>, Vec<Vec<Point>>) 
     for i in 0.. timeline[0].key.len() {
         let mut positions_per_frame: Vec<Point> = Vec::new();
         for j in 0..timeline.len() {
+            println!("{} {}", i, j);
             positions_per_frame.push(Point::new(timeline[j].key[i].object.x as i32, timeline[j].key[i].object.y as i32));
         }
         positions.push(positions_per_frame);

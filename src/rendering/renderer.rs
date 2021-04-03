@@ -36,9 +36,9 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
 }
 
 pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
-              player1: &'b mut Player<'a>, p1_anims: &'a CharacterAssets,
-              player2: &'b mut Player<'a>, p2_anims: &'a CharacterAssets,
-              projectiles: &Vec<Projectile>, colliders: &Vec<AABB>,
+              player1: &'b mut Player<'a>, p1_assets: &'a CharacterAssets,
+              player2: &'b mut Player<'a>, p2_assets: &'a CharacterAssets,
+              projectiles: &Vec<Projectile>, colliders: &mut Vec<AABB>,
               bar_ui_1: &Bar, bar_ui_2: &Bar,
               bar_ui_3: &SegmentedBar, bar_ui_4: &SegmentedBar, 
               debug: bool)
@@ -51,7 +51,7 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
     let screen_rect = world_to_screen(player1.character.sprite, player1.position, screen_res);
     let sprite = player1.character.sprite;
     let is_flipped = player1.flipped;
-    let texture = player1.render(p1_anims);
+    let texture = player1.render(p1_assets);
     canvas.copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)?;
     if debug {
         debug_points(canvas, screen_rect.center(), screen_rect);
@@ -62,7 +62,7 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
     let screen_rect_2  = world_to_screen(player2.character.sprite, player2.position, screen_res);
     let sprite_2 = player2.character.sprite;
     let is_flipped_2 = player2.flipped;
-    let texture_2 = player2.render(p2_anims);
+    let texture_2 = player2.render(p2_assets);
     canvas.copy_ex(texture_2, sprite_2, screen_rect_2, 0.0, None, is_flipped_2, false)?;
     if debug {
         debug_points(canvas,screen_rect_2.center(), screen_rect_2);
@@ -72,9 +72,9 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
     for projectile in projectiles.iter() {
         let screen_rect_2 = world_to_screen(projectile.sprite, projectile.position, screen_res);
         if projectile.player_owner == 1 {
-            canvas.copy_ex(&p1_anims.projectile_animation.get(&projectile.animation_name).unwrap()[projectile.animation_index as usize], projectile.sprite, screen_rect_2, 0.0, None, projectile.flipped, false)?;
+            canvas.copy_ex(&p1_assets.projectile_animation.get(&projectile.animation_name).unwrap()[projectile.animation_index as usize], projectile.sprite, screen_rect_2, 0.0, None, projectile.flipped, false)?;
         } else if  projectile.player_owner == 2 {
-            canvas.copy_ex(&p2_anims.projectile_animation.get(&projectile.animation_name).unwrap()[projectile.animation_index as usize], projectile.sprite, screen_rect_2, 0.0, None, projectile.flipped, false)?;
+            canvas.copy_ex(&p2_assets.projectile_animation.get(&projectile.animation_name).unwrap()[projectile.animation_index as usize], projectile.sprite, screen_rect_2, 0.0, None, projectile.flipped, false)?;
         }
         if debug {
             //debug_points(canvas,screen_rect_2.center(), screen_rect_2);
@@ -82,6 +82,12 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
         }
     }
 
+
+    let collider_animation = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
+    if collider_animation.is_some() {
+        collider_animation.unwrap().render(colliders, player1);
+    }
+    
     for collider in colliders.iter() {
         let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
         let collider_position = Point::new(collider.center().x as i32, collider.center().y as i32 - collider.half_extents().y as i32);

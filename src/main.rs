@@ -1,4 +1,5 @@
 
+use asset_management::collider::ColliderAnimation;
 use game_logic::inputs::{apply_inputs::apply_game_input_state, process_inputs::update_directional_state};
 use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
@@ -40,6 +41,7 @@ use input::translated_inputs::TranslatedInput;
 //add struct for collisions and add functionality like flipping, iterating over collider position animation, scaling collider based on f32
 //allow distinguishing between multiple hitboxes, hurtboxes, etc. add pushboxes
 //make characters pushable
+
 //FIX GRAB, if you press light kick, and then halfway through the animation you press light punch, you can cancel the kick halfway and then grab
 //improve reset input timers
 //Hold attacks
@@ -109,9 +111,11 @@ fn main() -> Result<(), String> {
     let mut rendering_time_accumulated: f64 = 0.0;
 
     let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
-    let mut p1_colliders: Vec<AABB> = Vec::new();
-    let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string());
 
+    let mut p1_colliders: Vec<AABB> = Vec::new();
+    let mut p2_colliders: Vec<AABB> = Vec::new();
+
+    let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string());
     idle_hitboxes.init(&mut p1_colliders, &player1);
 
     'running: loop {
@@ -212,10 +216,9 @@ fn main() -> Result<(), String> {
             }
             logic_time_accumulated -= logic_timestep;
 
-            let current_collider_animation = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
-            if current_collider_animation.is_some() {
-                current_collider_animation.unwrap().update(&mut p1_colliders, &player1);
-            }
+
+            ColliderAnimation::update(&mut p1_colliders, &player1);          
+        
         }
 
 
@@ -226,7 +229,7 @@ fn main() -> Result<(), String> {
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
                                         &mut player1, &p1_assets,
                                         &mut player2, &p2_assets,
-                                        &projectiles, &p1_colliders, 
+                                        &projectiles, &mut p1_colliders, 
                                         &p1_health_bar, &p2_health_bar,
                                         &p1_special_bar, &p2_special_bar,
                                         true)?;
