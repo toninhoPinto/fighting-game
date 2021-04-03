@@ -9,7 +9,7 @@ use std::string::String;
 use super::inputs::game_inputs::GameInput;
 use super::projectile::Projectile;
 use super::characters::Character;
-use crate::asset_management::asset_loader;
+use crate::asset_management::{asset_loader, collider::ColliderAnimation};
 use crate::asset_management::animation::Animation;
 
 pub struct CharacterAssets<'a> {
@@ -18,7 +18,7 @@ pub struct CharacterAssets<'a> {
     pub directional_variation_anims: Vec<(Vec<GameInput>, String)>,
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>,
-    pub collider_animations: HashMap<String,(Vec<AABB>, Vec<Vec<Point>>)>
+    pub collider_animations: HashMap<String, ColliderAnimation>
 }
 
 pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id: i32) -> Player {
@@ -51,7 +51,7 @@ pub fn load_character_anim_data<'a, 'b>(texture_creator: &'a TextureCreator<Wind
     }.unwrap()
 }
 
-fn load_keetar_colliders() -> HashMap<String,(Vec<AABB>, Vec<Vec<Point>>)> {
+fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
     let mut collider_animations = HashMap::new();
 
     collider_animations.insert("idle".to_string(), asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string()));   
@@ -164,7 +164,7 @@ fn load_keetar_anims(texture_creator: &TextureCreator<WindowContext>) -> HashMap
     character_anims
 }
 
-fn load_foxgirl_colliders() -> HashMap<String,(Vec<AABB>, Vec<Vec<Point>>)> {
+fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     let mut collider_animations = HashMap::new();
 
     collider_animations

@@ -10,7 +10,6 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
 use parry2d::bounding_volume::AABB;
-use parry2d::math::Point as aabbPoint;
 use ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar};
 
 use std::time::{Instant};
@@ -38,6 +37,9 @@ use crate::game_logic::inputs::apply_inputs::apply_game_inputs;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//add struct for collisions and add functionality like flipping, iterating over collider position animation, scaling collider based on f32
+//allow distinguishing between multiple hitboxes, hurtboxes, etc. add pushboxes
+//make characters pushable
 //FIX GRAB, if you press light kick, and then halfway through the animation you press light punch, you can cancel the kick halfway and then grab
 //improve reset input timers
 //Hold attacks
@@ -110,23 +112,7 @@ fn main() -> Result<(), String> {
     let mut p1_colliders: Vec<AABB> = Vec::new();
     let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string());
 
-    for i in 0..idle_hitboxes.0.len() {
-        let mut aabb = idle_hitboxes.0[i];
-        let offset_x = idle_hitboxes.1[0][i].x as f32 ;
-        let offset_y = idle_hitboxes.1[0][i].y as f32;
-
-        let left_player_pos = player1.position.x as f32 - player1.character.sprite.width() as f32 / 2.0;
-        //aabb.mins = aabbPoint::new(  left_player_pos + offset_x * 2.0,  offset_y * 2.0 + player1.position.y as f32);
-
-        aabb.mins.coords[0] = left_player_pos + offset_x * 2.0;
-        aabb.mins.coords[1] = offset_y * 2.0 + player1.position.y as f32;
-
-        //aabb.maxs = aabbPoint::new(left_player_pos + (aabb.maxs.x + offset_x) * 2.0, (aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32);
-        aabb.maxs.coords[0] = left_player_pos + (aabb.maxs.x + offset_x) * 2.0;
-        aabb.maxs.coords[1] = (aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32;
-
-        p1_colliders.push(aabb);
-    }
+    idle_hitboxes.init(&mut p1_colliders, &player1);
 
     'running: loop {
         let current_time = Instant::now();
@@ -226,16 +212,9 @@ fn main() -> Result<(), String> {
             }
             logic_time_accumulated -= logic_timestep;
 
-
-            for i in 0..p1_colliders.len() {
-                let mut aabb = &mut p1_colliders[i];
-                let original_aabb = idle_hitboxes.0[i];
-                let offset_x = idle_hitboxes.1[player1.animator.animation_index as usize][i].x as f32 ;
-                let offset_y = idle_hitboxes.1[player1.animator.animation_index as usize][i].y as f32;
-        
-                let left_player_pos = player1.position.x as f32 - player1.character.sprite.width() as f32 / 2.0;
-                aabb.mins = aabbPoint::new(  left_player_pos + offset_x * 2.0,  offset_y * 2.0 + player1.position.y as f32);
-                aabb.maxs = aabbPoint::new(left_player_pos + (original_aabb.maxs.x + offset_x) * 2.0, (original_aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32);
+            let current_collider_animation = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
+            if current_collider_animation.is_some() {
+                current_collider_animation.unwrap().update(&mut p1_colliders, &player1);
             }
         }
 
