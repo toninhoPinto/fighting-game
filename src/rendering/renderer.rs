@@ -84,8 +84,9 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
 
     for collider in colliders.iter() {
         let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
-        let collider_position = Point::new((collider.center().x + collider.half_extents().x)  as i32, (collider.center().y + collider.half_extents().y)  as i32);
-        let screen_rect_2 = world_to_screen(Rect::new(0,0,collider.extents().x as u32, collider.extents().y as u32), collider_position, screen_res);
+        let collider_position = Point::new(collider.center().x as i32, collider.center().y as i32 - collider.half_extents().y as i32);
+        let collider_rect_size = Rect::new(0,0,collider.extents().x as u32, collider.extents().y as u32);
+        let screen_rect_2 = world_to_screen(collider_rect_size, collider_position, screen_res);
 
         canvas.draw_rect(screen_rect_2);
         canvas.set_draw_color(semi_transparent_green);

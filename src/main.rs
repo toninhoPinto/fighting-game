@@ -112,12 +112,16 @@ fn main() -> Result<(), String> {
 
     for i in 0..idle_hitboxes.0.len() {
         let mut aabb = idle_hitboxes.0[i];
-        let offset_x = idle_hitboxes.1[0][i].x as f32 * 2.0;
-        let offset_y = idle_hitboxes.1[0][i].y as f32 * 2.0;
-        //aabb.mins = aabbPoint::new( aabb.mins.x * 2.0 + offset + player1.position.x as f32, aabb.mins.y * 2.0 + offset + player1.position.y as f32);
-        //aabb.maxs = aabbPoint::new(offset + aabb.maxs.x * 2.0 + player1.position.x as f32, offset + aabb.maxs.y * 2.0 + player1.position.y as f32);
-        aabb.mins = aabbPoint::new(aabb.mins.x * 2.0 + offset_x + player1.position.x as f32, aabb.mins.y * 2.0 + offset_y + player1.position.y as f32);
-        aabb.maxs = aabbPoint::new(aabb.maxs.x * 2.0 + offset_x + player1.position.x as f32, aabb.maxs.y * 2.0+ offset_y + player1.position.y as f32);
+        let offset_x = idle_hitboxes.1[0][i].x as f32 ;
+        let offset_y = idle_hitboxes.1[0][i].y as f32;
+        println!("{} {}", offset_x, offset_y);
+
+        aabb.mins = aabbPoint::new(  player1.position.x as f32 - aabb.maxs.x,  offset_y * 2.0 + player1.position.y as f32);
+        aabb.maxs = aabbPoint::new(aabb.maxs.x + player1.position.x as f32, (aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32);
+        
+       // aabb.mins = aabbPoint::new((aabb.mins.x + offset_x) * 2.0 + player1.position.x as f32, offset_y * 2.0 + player1.position.y as f32);
+       // aabb.maxs = aabbPoint::new((aabb.maxs.x + offset_x) * 2.0 + player1.position.x as f32, (aabb.maxs.y + offset_y) * 2.0 + player1.position.y as f32);
+
         colliders.push(aabb);
     }
 

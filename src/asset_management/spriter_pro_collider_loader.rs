@@ -50,6 +50,7 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<AABB>, Vec<Vec<Point>>) 
     for j in 0..boxes.len() {
         let min = aabbPoint::new(0.0, 0.0);
         let max = aabbPoint::new(boxes[j].w as f32, boxes[j].h as f32);
+        println!("id {} min {} max{}", j, min, max);
         colliders.push(AABB::new(min, max));
     }
 
