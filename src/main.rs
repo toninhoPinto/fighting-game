@@ -114,13 +114,16 @@ fn main() -> Result<(), String> {
         let mut aabb = idle_hitboxes.0[i];
         let offset_x = idle_hitboxes.1[0][i].x as f32 ;
         let offset_y = idle_hitboxes.1[0][i].y as f32;
-        println!("{} {}", offset_x, offset_y);
 
-        aabb.mins = aabbPoint::new(  player1.position.x as f32 - aabb.maxs.x,  offset_y * 2.0 + player1.position.y as f32);
-        aabb.maxs = aabbPoint::new(aabb.maxs.x + player1.position.x as f32, (aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32);
-        
-       // aabb.mins = aabbPoint::new((aabb.mins.x + offset_x) * 2.0 + player1.position.x as f32, offset_y * 2.0 + player1.position.y as f32);
-       // aabb.maxs = aabbPoint::new((aabb.maxs.x + offset_x) * 2.0 + player1.position.x as f32, (aabb.maxs.y + offset_y) * 2.0 + player1.position.y as f32);
+        let left_player_pos = player1.position.x as f32 - player1.character.sprite.width() as f32 / 2.0;
+        //aabb.mins = aabbPoint::new(  left_player_pos + offset_x * 2.0,  offset_y * 2.0 + player1.position.y as f32);
+
+        aabb.mins.coords[0] = left_player_pos + offset_x * 2.0;
+        aabb.mins.coords[1] = offset_y * 2.0 + player1.position.y as f32;
+
+        //aabb.maxs = aabbPoint::new(left_player_pos + (aabb.maxs.x + offset_x) * 2.0, (aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32);
+        aabb.maxs.coords[0] = left_player_pos + (aabb.maxs.x + offset_x) * 2.0;
+        aabb.maxs.coords[1] = (aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32;
 
         colliders.push(aabb);
     }
@@ -222,6 +225,19 @@ fn main() -> Result<(), String> {
                projectiles[i].update();
             }
             logic_time_accumulated -= logic_timestep;
+
+
+            for i in 0..colliders.len() {
+                let mut aabb = &mut colliders[i];
+                let original_aabb = idle_hitboxes.0[i];
+                let offset_x = idle_hitboxes.1[0][i].x as f32 ;
+                let offset_y = idle_hitboxes.1[0][i].y as f32;
+        
+                let left_player_pos = player1.position.x as f32 - player1.character.sprite.width() as f32 / 2.0;
+                println!("{:?}", left_player_pos);
+                aabb.mins = aabbPoint::new(  left_player_pos + offset_x * 2.0,  offset_y * 2.0 + player1.position.y as f32);
+                aabb.maxs = aabbPoint::new(left_player_pos + (original_aabb.maxs.x + offset_x) * 2.0, (original_aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32);
+            }
         }
 
 
