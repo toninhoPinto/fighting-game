@@ -107,7 +107,7 @@ fn main() -> Result<(), String> {
     let mut rendering_time_accumulated: f64 = 0.0;
 
     let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
-    let mut colliders: Vec<AABB> = Vec::new();
+    let mut p1_colliders: Vec<AABB> = Vec::new();
     let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string());
 
     for i in 0..idle_hitboxes.0.len() {
@@ -125,7 +125,7 @@ fn main() -> Result<(), String> {
         aabb.maxs.coords[0] = left_player_pos + (aabb.maxs.x + offset_x) * 2.0;
         aabb.maxs.coords[1] = (aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32;
 
-        colliders.push(aabb);
+        p1_colliders.push(aabb);
     }
 
     'running: loop {
@@ -227,14 +227,13 @@ fn main() -> Result<(), String> {
             logic_time_accumulated -= logic_timestep;
 
 
-            for i in 0..colliders.len() {
-                let mut aabb = &mut colliders[i];
+            for i in 0..p1_colliders.len() {
+                let mut aabb = &mut p1_colliders[i];
                 let original_aabb = idle_hitboxes.0[i];
-                let offset_x = idle_hitboxes.1[0][i].x as f32 ;
-                let offset_y = idle_hitboxes.1[0][i].y as f32;
+                let offset_x = idle_hitboxes.1[player1.animator.animation_index as usize][i].x as f32 ;
+                let offset_y = idle_hitboxes.1[player1.animator.animation_index as usize][i].y as f32;
         
                 let left_player_pos = player1.position.x as f32 - player1.character.sprite.width() as f32 / 2.0;
-                println!("{:?}", left_player_pos);
                 aabb.mins = aabbPoint::new(  left_player_pos + offset_x * 2.0,  offset_y * 2.0 + player1.position.y as f32);
                 aabb.maxs = aabbPoint::new(left_player_pos + (original_aabb.maxs.x + offset_x) * 2.0, (original_aabb.maxs.y + offset_y) * 2.0  + player1.position.y as f32);
             }
@@ -248,7 +247,7 @@ fn main() -> Result<(), String> {
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
                                         &mut player1, &p1_assets,
                                         &mut player2, &p2_assets,
-                                        &projectiles, &colliders, 
+                                        &projectiles, &p1_colliders, 
                                         &p1_health_bar, &p2_health_bar,
                                         &p1_special_bar, &p2_special_bar,
                                         true)?;

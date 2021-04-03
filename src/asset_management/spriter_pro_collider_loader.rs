@@ -7,12 +7,36 @@ use sdl2::rect::Point;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BaseJson {
-    pub timeline: Vec<HitboxKeyframes>,
-    pub obj_info: Vec<AnimationHitbox>
+    pub animation: Vec<Animation>,
+    pub obj_info: Vec<ObjectInfo>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AnimationHitbox {
+pub struct Animation {
+    pub mainline: Mainline,
+    pub timeline: Vec<HitboxKeyframes>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Mainline {
+    pub key: Vec<MainlineKey>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MainlineKey {
+    pub id: u8,
+    pub object_ref: Vec<ObjectRef>
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ObjectRef {
+    pub id: u8,
+    pub key: u8,
+    pub timeline: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ObjectInfo {
     pub h: f64,
     pub name: String,
     pub object_type: String,
@@ -24,6 +48,7 @@ pub struct HitboxKeyframes {
     pub id: u8,
     pub name: String,
     pub key: Vec<KeyframeHitbox>,
+    pub obj: u8,
     pub object_type: String
 }
 
@@ -43,7 +68,7 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<AABB>, Vec<Vec<Point>>) 
 
     let json_string = fs::read_to_string(file).unwrap();
     let v: BaseJson = serde_json::from_str(&json_string).unwrap();
-    let timeline = v.timeline;
+    let timeline = &v.animation[0].timeline;
     let boxes = v.obj_info;
 
     let mut colliders: Vec<AABB> = Vec::new();

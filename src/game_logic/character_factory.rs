@@ -1,4 +1,5 @@
 use super::characters::player::Player;
+use parry2d::bounding_volume::AABB;
 use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
@@ -12,11 +13,12 @@ use crate::asset_management::asset_loader;
 use crate::asset_management::animation::Animation;
 
 pub struct CharacterAssets<'a> {
-    pub animations: HashMap<std::string::String, Animation<'a>>,
+    pub animations: HashMap<String, Animation<'a>>,
     pub input_combination_anims: Vec<(Vec<GameInput>, String)>,
     pub directional_variation_anims: Vec<(Vec<GameInput>, String)>,
     pub effects: HashMap<String, Projectile>,
-    pub projectile_animation: HashMap<String, Vec<Texture<'a>>>
+    pub projectile_animation: HashMap<String, Vec<Texture<'a>>>,
+    pub collider_animations: HashMap<String,(Vec<AABB>, Vec<Vec<Point>>)>
 }
 
 pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id: i32) -> Player {
@@ -47,6 +49,14 @@ pub fn load_character_anim_data<'a, 'b>(texture_creator: &'a TextureCreator<Wind
         "keetar" => { Some(load_keetar_assets(texture_creator)) } ,
         _ => {None},
     }.unwrap()
+}
+
+fn load_keetar_colliders() -> HashMap<String,(Vec<AABB>, Vec<Vec<Point>>)> {
+    let mut collider_animations = HashMap::new();
+
+    collider_animations.insert("idle".to_string(), asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string()));   
+
+    collider_animations
 }
 
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
@@ -97,7 +107,8 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         input_combination_anims: specials_inputs,
         directional_variation_anims: directional_inputs,
         effects: effects_of_abilities,
-        projectile_animation: projectile_anims
+        projectile_animation: projectile_anims,
+        collider_animations: load_keetar_colliders()
     }
 }
 
@@ -152,6 +163,12 @@ fn load_keetar_anims(texture_creator: &TextureCreator<WindowContext>) -> HashMap
     character_anims
 }
 
+fn load_foxgirl_colliders() -> HashMap<String,(Vec<AABB>, Vec<Vec<Point>>)> {
+    let mut collider_animations = HashMap::new();
+
+    collider_animations
+}
+
 fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_foxgirl_anims(texture_creator);
 
@@ -176,7 +193,8 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
         input_combination_anims: specials_inputs,
         directional_variation_anims: directional_inputs,
         effects: effects_of_abilities,
-        projectile_animation: projectile_anims
+        projectile_animation: projectile_anims,
+        collider_animations: load_foxgirl_colliders()
     }
 }
 
