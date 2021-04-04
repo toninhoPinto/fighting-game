@@ -29,7 +29,7 @@ pub struct Mainline {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MainlineKey {
     pub id: u8,
-    pub time: i32,
+    pub time: Option<i32>,
     pub object_ref: Vec<ObjectRef>
 
 }
@@ -62,7 +62,7 @@ pub struct HitboxKeyframes {
 pub struct KeyframeHitbox {
     pub id: u8,
     pub object: ObjectHitbox,
-    pub time: i32
+    pub time: Option<i32>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -74,7 +74,7 @@ pub struct ObjectHitbox {
 pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<String, HashMap<i32, Point>>) {
 
     let json_string = fs::read_to_string(file).unwrap();
-    let v: BaseJson = serde_json::from_str(&json_string).unwrap();
+    let v = serde_json::from_str::<BaseJson>(&json_string).unwrap();
     let timeline = &v.animation[0].timeline;
     let mainline = &v.animation[0].mainline;
     let boxes = v.obj_info;
@@ -104,7 +104,8 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<Strin
 
     let mut time_keys = HashMap::new();
     for i in 0..mainline.key.len() {
-        time_keys.insert(mainline.key[i].time, i);
+        let time = if mainline.key[i].time.is_some() {mainline.key[i].time.unwrap()} else {0};
+        time_keys.insert(time, i);
     }
 
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
@@ -115,8 +116,10 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<Strin
 
         for j in 0..timeline[i].key.len() { //for each frame of the specific object
             let key_time = &timeline[i].key[j];
-            if time_keys.contains_key(&key_time.time) {
-                positions.insert(*time_keys.get(&key_time.time).unwrap() as i32, Point::new(timeline[i].key[j].object.x as i32, timeline[i].key[j].object.y as i32));
+            let time = if key_time.time.is_some() {key_time.time.unwrap()} else {0};
+
+            if time_keys.contains_key(&time) {
+                positions.insert(*time_keys.get(&time).unwrap() as i32, Point::new(timeline[i].key[j].object.x as i32, timeline[i].key[j].object.y as i32));
             }
         }
         if name == "arm" {println!("{:?}", positions)}
