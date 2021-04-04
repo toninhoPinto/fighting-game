@@ -112,10 +112,10 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<Strin
     }
 
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
-    let mut final_positions: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
+    let mut final_transformations: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
     for i in 0..timeline.len() { //for each  collider object
         let name = timeline[i].name.clone();
-        let mut positions: HashMap<i32, Transformation> = HashMap::new();
+        let mut transformations_of_frame: HashMap<i32, Transformation> = HashMap::new();
 
         for j in 0..timeline[i].key.len() { //for each frame of the specific object
             let key_time = &timeline[i].key[j];
@@ -128,12 +128,12 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<Strin
                 scale: (scale_x as f32, scale_y as f32),
             };
             if time_keys.contains_key(&time) {
-                positions.insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
+                transformations_of_frame.insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
             }
         }
 
-        final_positions.insert(name, positions);
+        final_transformations.insert(name, transformations_of_frame);
     }
 
-    (colliders, final_positions)
+    (colliders, final_transformations)
 }
