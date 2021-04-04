@@ -4,9 +4,11 @@ use parry2d::bounding_volume::AABB;
 use sdl2::rect::Point;
 
 use crate::game_logic::characters::player::Player;
+
+use super::transformation::Transformation;
 pub struct ColliderAnimation {
     pub colliders: Vec<Collider>,
-    pub pos_animations: HashMap<String, HashMap<i32, Point>> 
+    pub pos_animations: HashMap<String, HashMap<i32, Transformation>> 
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -70,22 +72,20 @@ impl ColliderAnimation {
             let position_at_frame = self.pos_animations.get(&self.colliders[i].name).unwrap();
 
             match position_at_frame.get(&(player.animator.animation_index as i32)) {
-                Some(pos) => {
-                    let offset_x = pos.x as f32 * 2.0;
-                    let offset_y = pos.y as f32 * 2.0;
+                Some(transformation) => {
+                    let offset_x = transformation.pos.x as f32 * 2.0;
+                    let offset_y = transformation.pos.y as f32 * 2.0;
                              
                     if player.flipped {
-                        aabb.mins.coords[0] = (player.position.x as f32 + player.character.sprite.width() as f32 / 2.0)  - (offset_x + original_aabb.maxs.x * 2.0);
+                        aabb.mins.coords[0] = (player.position.x as f32 + player.character.sprite.width() as f32 / 2.0)  - (offset_x + original_aabb.maxs.x * 2.0  * transformation.scale.0);
                         aabb.maxs.coords[0] = (player.position.x as f32 + player.character.sprite.width() as f32 / 2.0) - offset_x;
                     } else {
                         aabb.mins.coords[0] += offset_x;
-                        aabb.maxs.coords[0] += offset_x + original_aabb.maxs.x * 2.0;
+                        aabb.maxs.coords[0] += offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0;
                     }
-                    
-                    if collider.name == "arm" {println!("{}", offset_y)}
-                        
+                                            
                     aabb.mins.coords[1] += offset_y;
-                    aabb.maxs.coords[1] += offset_y + original_aabb.maxs.y * 2.0;
+                    aabb.maxs.coords[1] += offset_y + original_aabb.maxs.y * 2.0 * transformation.scale.1;
                 },
                  //collider doesnt exist at this frame
                 None => {}

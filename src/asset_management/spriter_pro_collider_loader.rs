@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs};
 
 use sdl2::rect::Point;
 
-use super::collider::{Collider, ColliderType};
+use super::{collider::{Collider, ColliderType}, transformation::Transformation};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BaseJson {
@@ -45,6 +45,7 @@ pub struct ObjectRef {
 pub struct ObjectInfo {
     pub h: f64,
     pub name: String,
+    #[serde(rename = "type")] 
     pub object_type: String,
     pub w: f64
 }
@@ -68,10 +69,12 @@ pub struct KeyframeHitbox {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ObjectHitbox {
     pub x: f64,
-    pub y: f64
+    pub y: f64,
+    pub scale_x: Option<f64>,
+    pub scale_y: Option<f64>,
 }
 
-pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<String, HashMap<i32, Point>>) {
+pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<String, HashMap<i32, Transformation>>) {
 
     let json_string = fs::read_to_string(file).unwrap();
     let v = serde_json::from_str::<BaseJson>(&json_string).unwrap();
@@ -109,20 +112,26 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<Strin
     }
 
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
-    let mut final_positions: HashMap<String, HashMap<i32, Point>> = HashMap::new();
+    let mut final_positions: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
     for i in 0..timeline.len() { //for each  collider object
         let name = timeline[i].name.clone();
-        let mut positions: HashMap<i32, Point> = HashMap::new();
+        let mut positions: HashMap<i32, Transformation> = HashMap::new();
 
         for j in 0..timeline[i].key.len() { //for each frame of the specific object
             let key_time = &timeline[i].key[j];
             let time = if key_time.time.is_some() {key_time.time.unwrap()} else {0};
 
+            let scale_x = if timeline[i].key[j].object.scale_x.is_some() {timeline[i].key[j].object.scale_x.unwrap()} else {1.0};
+            let scale_y = if timeline[i].key[j].object.scale_y.is_some() {timeline[i].key[j].object.scale_y.unwrap().abs()} else {1.0};
+            let transformation_frame = Transformation {
+                pos: Point::new(timeline[i].key[j].object.x as i32, timeline[i].key[j].object.y as i32),
+                scale: (scale_x as f32, scale_y as f32),
+            };
             if time_keys.contains_key(&time) {
-                positions.insert(*time_keys.get(&time).unwrap() as i32, Point::new(timeline[i].key[j].object.x as i32, timeline[i].key[j].object.y as i32));
+                positions.insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
             }
         }
-        if name == "arm" {println!("{:?}", positions)}
+
         final_positions.insert(name, positions);
     }
 
