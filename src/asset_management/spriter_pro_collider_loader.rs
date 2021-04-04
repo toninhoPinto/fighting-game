@@ -1,7 +1,7 @@
 use parry2d::bounding_volume::AABB;
 use parry2d::math::Point as aabbPoint;
 
-use std::fs;
+use std::{collections::HashMap, fs};
 
 use sdl2::rect::Point;
 
@@ -10,13 +10,15 @@ use super::collider::{Collider, ColliderType};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BaseJson {
     pub animation: Vec<Animation>,
-    pub obj_info: Vec<ObjectInfo>
+    pub obj_info: Vec<ObjectInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Animation {
     pub mainline: Mainline,
     pub timeline: Vec<HitboxKeyframes>,
+    pub interval: i32,
+    pub length: i32
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,7 +29,9 @@ pub struct Mainline {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MainlineKey {
     pub id: u8,
+    pub time: i32,
     pub object_ref: Vec<ObjectRef>
+
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -51,13 +55,14 @@ pub struct HitboxKeyframes {
     pub name: String,
     pub key: Vec<KeyframeHitbox>,
     pub obj: u8,
-    pub object_type: String
+    pub object_type: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct KeyframeHitbox {
     pub id: u8,
-    pub object: ObjectHitbox
+    pub object: ObjectHitbox,
+    pub time: i32
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -66,18 +71,18 @@ pub struct ObjectHitbox {
     pub y: f64
 }
 
-pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, Vec<Vec<Point>>) {
+pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<String, HashMap<i32, Point>>) {
 
     let json_string = fs::read_to_string(file).unwrap();
     let v: BaseJson = serde_json::from_str(&json_string).unwrap();
     let timeline = &v.animation[0].timeline;
+    let mainline = &v.animation[0].mainline;
     let boxes = v.obj_info;
 
     let mut colliders: Vec<Collider> = Vec::new();
     for j in 0..boxes.len() {
         let min = aabbPoint::new(0.0, 0.0);
         let max = aabbPoint::new(boxes[j].w as f32, boxes[j].h as f32);
-        println!("id {} min {} max{}", j, min, max);
 
         let collider_type = if boxes[j].name.contains("hit") {
             ColliderType::Hitbox
@@ -95,16 +100,28 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, Vec<Vec<Point
         colliders.push(collider);
     }
 
-    let mut positions: Vec<Vec<Point>> = Vec::new();
+    
 
-    for i in 0.. timeline[0].key.len() {
-        let mut positions_per_frame: Vec<Point> = Vec::new();
-        for j in 0..timeline.len() {
-            println!("{} {}", i, j);
-            positions_per_frame.push(Point::new(timeline[j].key[i].object.x as i32, timeline[j].key[i].object.y as i32));
-        }
-        positions.push(positions_per_frame);
+    let mut time_keys = HashMap::new();
+    for i in 0..mainline.key.len() {
+        time_keys.insert(mainline.key[i].time, i);
     }
 
-    (colliders, positions)
+    // for string - name of collider object -- hold a map of frame animation id and position at that frame
+    let mut final_positions: HashMap<String, HashMap<i32, Point>> = HashMap::new();
+    for i in 0..timeline.len() { //for each  collider object
+        let name = timeline[i].name.clone();
+        let mut positions: HashMap<i32, Point> = HashMap::new();
+
+        for j in 0..timeline[i].key.len() { //for each frame of the specific object
+            let key_time = &timeline[i].key[j];
+            if time_keys.contains_key(&key_time.time) {
+                positions.insert(*time_keys.get(&key_time.time).unwrap() as i32, Point::new(timeline[i].key[j].object.x as i32, timeline[i].key[j].object.y as i32));
+            }
+        }
+        if name == "arm" {println!("{:?}", positions)}
+        final_positions.insert(name, positions);
+    }
+
+    (colliders, final_positions)
 }

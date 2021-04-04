@@ -55,7 +55,9 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
     let mut collider_animations = HashMap::new();
 
     collider_animations.insert("idle".to_string(), asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string()));   
-    //collider_animations.insert("light_punch".to_string(), asset_loader::load_hitboxes(format!("assets/{}/standing/attacks/light_punch/light_punch.json", "keetar").to_string()));   
+    collider_animations.insert("light_punch".to_string(), asset_loader::load_hitboxes(format!("assets/{}/standing/attacks/light_punch/light_punch.json", "keetar").to_string()));   
+    collider_animations.insert("walk".to_string(), asset_loader::load_hitboxes(format!("assets/{}/standing/walk/walk.json", "keetar").to_string()));   
+
 
     collider_animations
 }

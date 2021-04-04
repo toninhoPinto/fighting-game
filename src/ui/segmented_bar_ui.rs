@@ -21,7 +21,6 @@ impl<'a> SegmentedBar<'a> {
         for i in 0..segmentations {
             rects.push(Rect::new( pos_x + (( gap as f32 + step) * i as f32) as i32, pos_y, step as u32, height));
         }
-        println!("{:?}", rects);
         Self {
             rects: rects,
             segmentations,
@@ -46,13 +45,11 @@ impl<'a> SegmentedBar<'a> {
 
         let new_width = min((decimal_only * self.step) as u32, self.step as u32);
 
-        //println!("index {} decimal {} new_width {}", index, rounded, new_width);
         self.rects[index].set_width(new_width);
     }
 
     pub fn render(&self) -> Vec<Rect> {
         let index = min(self.curr_value.ceil() as usize, self.segmentations as usize);
-        //println!("render {}, {:?}",self.curr_value, self.rects[0..index].to_vec());
         self.rects[0..index].to_vec()
     }
 

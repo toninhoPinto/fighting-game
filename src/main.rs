@@ -1,5 +1,5 @@
 
-use asset_management::collider::ColliderAnimation;
+use asset_management::collider::{Collider, ColliderAnimation};
 use game_logic::inputs::{apply_inputs::apply_game_input_state, process_inputs::update_directional_state};
 use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
@@ -112,10 +112,10 @@ fn main() -> Result<(), String> {
 
     let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
 
-    let mut p1_colliders: Vec<AABB> = Vec::new();
-    let mut p2_colliders: Vec<AABB> = Vec::new();
+    let mut p1_colliders: Vec<Collider> = Vec::new();
+    let mut p2_colliders: Vec<Collider> = Vec::new();
 
-    let idle_hitboxes = asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar").to_string());
+    let idle_hitboxes = p1_assets.collider_animations.get("idle").unwrap();
     idle_hitboxes.init(&mut p1_colliders, &player1);
 
     'running: loop {
@@ -215,10 +215,6 @@ fn main() -> Result<(), String> {
                projectiles[i].update();
             }
             logic_time_accumulated -= logic_timestep;
-
-
-            ColliderAnimation::update(&mut p1_colliders, &player1);          
-        
         }
 
 

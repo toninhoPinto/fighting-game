@@ -6,7 +6,7 @@ use sdl2::rect::{Point, Rect};
 
 use parry2d::bounding_volume::AABB;
 
-use crate::{game_logic::characters::player::Player, ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
+use crate::{asset_management::collider::{Collider, ColliderAnimation, ColliderType}, game_logic::characters::player::Player, ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::game_logic::projectile::Projectile;
 use crate::game_logic::character_factory::CharacterAssets;
 
@@ -38,7 +38,7 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
 pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
               player1: &'b mut Player<'a>, p1_assets: &'a CharacterAssets,
               player2: &'b mut Player<'a>, p2_assets: &'a CharacterAssets,
-              projectiles: &Vec<Projectile>, colliders: &mut Vec<AABB>,
+              projectiles: &Vec<Projectile>, colliders: &mut Vec<Collider>,
               bar_ui_1: &Bar, bar_ui_2: &Bar,
               bar_ui_3: &SegmentedBar, bar_ui_4: &SegmentedBar, 
               debug: bool)
@@ -82,20 +82,28 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
         }
     }
 
-
+    //TODO i dont like update and init being here
     let collider_animation = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
     if collider_animation.is_some() {
+        collider_animation.unwrap().init(colliders, &player1);
+        ColliderAnimation::update(colliders, &player1);       
         collider_animation.unwrap().render(colliders, player1);
     }
     
     for collider in colliders.iter() {
+        let aabb = collider.aabb;
         let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
-        let collider_position = Point::new(collider.center().x as i32, collider.center().y as i32 - collider.half_extents().y as i32);
-        let collider_rect_size = Rect::new(0,0,collider.extents().x as u32, collider.extents().y as u32);
+        let semi_transparent_red = Color::RGBA(200, 50, 100, 150);
+        let collider_position = Point::new(aabb.center().x as i32, aabb.center().y as i32 - aabb.half_extents().y as i32);
+        let collider_rect_size = Rect::new(0,0,aabb.extents().x as u32, aabb.extents().y as u32);
         let screen_rect_2 = world_to_screen(collider_rect_size, collider_position, screen_res);
 
         canvas.draw_rect(screen_rect_2);
-        canvas.set_draw_color(semi_transparent_green);
+        if collider.collider_type == ColliderType::Hurtbox {
+            canvas.set_draw_color(semi_transparent_green);
+        } else  {
+            canvas.set_draw_color(semi_transparent_red);
+        }
         canvas.fill_rect(screen_rect_2);
 
         if debug {
