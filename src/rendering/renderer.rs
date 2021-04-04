@@ -38,7 +38,8 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
 pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
               player1: &'b mut Player<'a>, p1_assets: &'a CharacterAssets,
               player2: &'b mut Player<'a>, p2_assets: &'a CharacterAssets,
-              projectiles: &Vec<Projectile>, colliders: &mut Vec<Collider>,
+              projectiles: &Vec<Projectile>, 
+              p1_colliders: &mut Vec<Collider>, p2_colliders: &mut Vec<Collider>,
               bar_ui_1: &Bar, bar_ui_2: &Bar,
               bar_ui_3: &SegmentedBar, bar_ui_4: &SegmentedBar, 
               debug: bool)
@@ -82,35 +83,8 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
         }
     }
 
-    //TODO i dont like update and init being here
-    let collider_animation = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
-    if collider_animation.is_some() {
-        collider_animation.unwrap().init(colliders, &player1);
-        ColliderAnimation::update(colliders, &player1);       
-        collider_animation.unwrap().render(colliders, player1);
-    }
-    
-    for collider in colliders.iter() {
-        let aabb = collider.aabb;
-        let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
-        let semi_transparent_red = Color::RGBA(200, 50, 100, 150);
-        let collider_position = Point::new(aabb.center().x as i32, aabb.center().y as i32 - aabb.half_extents().y as i32);
-        let collider_rect_size = Rect::new(0,0,aabb.extents().x as u32, aabb.extents().y as u32);
-        let screen_rect_2 = world_to_screen(collider_rect_size, collider_position, screen_res);
-
-        canvas.draw_rect(screen_rect_2);
-        if collider.collider_type == ColliderType::Hurtbox {
-            canvas.set_draw_color(semi_transparent_green);
-        } else  {
-            canvas.set_draw_color(semi_transparent_red);
-        }
-        canvas.fill_rect(screen_rect_2);
-
-        if debug {
-            //debug_points(canvas,screen_rect_2.center(), screen_rect);
-            //canvas.set_draw_color(color);
-        }
-    }
+    render_colliders(canvas, screen_res, p1_assets, player1, p1_colliders);
+    render_colliders(canvas, screen_res, p2_assets, player2, p2_colliders);
 
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
@@ -144,4 +118,32 @@ pub fn render<'a, 'b>(canvas: &mut WindowCanvas, color: Color,
 
     canvas.present();
     Ok(())
+}
+
+
+//TODO i dont like update and init being here
+fn render_colliders<'a, 'b>(canvas: &mut WindowCanvas, screen_res: (u32, u32), assets: &'a CharacterAssets, player: &'b mut Player<'a>, colliders: &mut Vec<Collider>){
+    let collider_animation = assets.collider_animations.get(&player.animator.current_animation.unwrap().name);
+    if collider_animation.is_some() {
+        collider_animation.unwrap().init(colliders, &player);
+        ColliderAnimation::update(colliders, &player);       
+        collider_animation.unwrap().render(colliders, player);
+    }
+    
+    for collider in colliders.iter() {
+        let aabb = collider.aabb;
+        let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
+        let semi_transparent_red = Color::RGBA(200, 50, 100, 150);
+        let collider_position = Point::new(aabb.center().x as i32, aabb.center().y as i32 - aabb.half_extents().y as i32);
+        let collider_rect_size = Rect::new(0,0,aabb.extents().x as u32, aabb.extents().y as u32);
+        let screen_rect_2 = world_to_screen(collider_rect_size, collider_position, screen_res);
+
+        canvas.draw_rect(screen_rect_2);
+        if collider.collider_type == ColliderType::Hurtbox {
+            canvas.set_draw_color(semi_transparent_green);
+        } else  {
+            canvas.set_draw_color(semi_transparent_red);
+        }
+        canvas.fill_rect(screen_rect_2);
+    }
 }

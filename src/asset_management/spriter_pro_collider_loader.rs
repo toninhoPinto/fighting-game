@@ -121,7 +121,7 @@ pub fn load_hitboxes(file: std::string::String) -> (Vec<Collider>, HashMap<Strin
             let key_time = &timeline[i].key[j];
             let time = if key_time.time.is_some() {key_time.time.unwrap()} else {0};
 
-            let scale_x = if timeline[i].key[j].object.scale_x.is_some() {timeline[i].key[j].object.scale_x.unwrap()} else {1.0};
+            let scale_x = if timeline[i].key[j].object.scale_x.is_some() {timeline[i].key[j].object.scale_x.unwrap().abs()} else {1.0};
             let scale_y = if timeline[i].key[j].object.scale_y.is_some() {timeline[i].key[j].object.scale_y.unwrap().abs()} else {1.0};
             let transformation_frame = Transformation {
                 pos: Point::new(timeline[i].key[j].object.x as i32, timeline[i].key[j].object.y as i32),

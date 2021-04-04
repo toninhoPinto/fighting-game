@@ -169,6 +169,8 @@ fn load_keetar_anims(texture_creator: &TextureCreator<WindowContext>) -> HashMap
 fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     let mut collider_animations = HashMap::new();
 
+    collider_animations.insert("idle".to_string(), asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "foxgirl").to_string()));   
+
     collider_animations
 }
 

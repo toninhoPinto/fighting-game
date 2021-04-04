@@ -1,5 +1,5 @@
 
-use asset_management::collider::{Collider, ColliderAnimation};
+use asset_management::collider::{Collider, ColliderAnimation, ColliderType};
 use game_logic::inputs::{apply_inputs::apply_game_input_state, process_inputs::update_directional_state};
 use sdl2::pixels::Color;
 use sdl2::image::{self, InitFlag};
@@ -10,7 +10,7 @@ use sdl2::render::BlendMode;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
-use parry2d::bounding_volume::AABB;
+use parry2d::bounding_volume::{AABB, BoundingVolume};
 use ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar};
 
 use std::time::{Instant};
@@ -210,6 +210,26 @@ fn main() -> Result<(), String> {
             player1.update(logic_timestep, player2.position.x);
             player2.update(logic_timestep, player1.position.x);
 
+            //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has one
+            //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
+            for collider in p1_colliders.iter().filter(|&c| c.collider_type == ColliderType::Hitbox) {
+                for collider_to_take_dmg in p2_colliders.iter().filter(|&c| c.collider_type == ColliderType::Hurtbox) {
+                    if collider.aabb.intersects(&collider_to_take_dmg.aabb) { 
+                        println!("DEAL DMG");
+                    }
+                }
+            }
+
+            for collider in p2_colliders.iter().filter(|&c| c.collider_type == ColliderType::Hitbox) {
+                for collider_to_take_dmg in p1_colliders.iter().filter(|&c| c.collider_type == ColliderType::Hurtbox) {
+                    if collider.aabb.intersects(&collider_to_take_dmg.aabb) { 
+                        println!("TAKE DMG");
+                    }
+                }
+            }
+            
+
+
             //Handle projectile movement
             for i in 0..projectiles.len() {
                projectiles[i].update();
@@ -225,7 +245,8 @@ fn main() -> Result<(), String> {
             rendering::renderer::render(&mut canvas, Color::RGB(60, 64, 255 ),
                                         &mut player1, &p1_assets,
                                         &mut player2, &p2_assets,
-                                        &projectiles, &mut p1_colliders, 
+                                        &projectiles, 
+                                        &mut p1_colliders, &mut p2_colliders, 
                                         &p1_health_bar, &p2_health_bar,
                                         &p1_special_bar, &p2_special_bar,
                                         true)?;
