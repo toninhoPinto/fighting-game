@@ -228,8 +228,6 @@ fn main() -> Result<(), String> {
                 }
             }
             
-
-
             //Handle projectile movement
             for i in 0..projectiles.len() {
                projectiles[i].update();
