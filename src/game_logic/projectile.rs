@@ -2,7 +2,7 @@ use sdl2::rect::{Point, Rect};
 use std::string::String;
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Projectile{
+pub struct Projectile {
     pub position: Point,
     pub sprite: Rect,
     pub direction: Point,
@@ -13,11 +13,11 @@ pub struct Projectile{
     pub animation_index: f32,
     pub animation_name: String,
     pub player_owner: i32,
-    pub is_alive: bool
+    pub is_alive: bool,
 }
 
 impl Projectile {
-    pub fn new(player_owner: i32, spawn_point: Point) -> Self{
+    pub fn new(player_owner: i32, spawn_point: Point) -> Self {
         Self {
             position: spawn_point,
             sprite: Rect::new(0, 0, 100, 110),
@@ -36,16 +36,17 @@ impl Projectile {
     pub fn update(&mut self) {
         match self.target_position {
             Some(_) => {
-                if self.position.x <= self.target_position.unwrap().x &&
-                    self.position.y <= self.target_position.unwrap().y
+                if self.position.x <= self.target_position.unwrap().x
+                    && self.position.y <= self.target_position.unwrap().y
                 {
                     self.position = self.position.offset(self.speed, 0);
                 }
             }
-            None => { self.position = self.position.offset(self.speed, 0); }
+            None => {
+                self.position = self.position.offset(self.speed, 0);
+            }
         }
     }
 
-    fn render(&self) {
-    }
+    fn render(&self) {}
 }

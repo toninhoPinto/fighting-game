@@ -22,14 +22,14 @@ pub enum PlayerState {
     Grab,
     Grabbed,
     KnockedOut,
-    Dead
+    Dead,
 }
 impl fmt::Display for PlayerState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
-pub struct Player<'a>{
+pub struct Player<'a> {
     pub id: i32,
     pub position: Point,
     pub ground_height: i32,
@@ -38,7 +38,7 @@ pub struct Player<'a>{
     pub direction_at_jump_time: i32,
     pub jump_initial_velocity: f64,
     pub extra_gravity: Option<f64>,
-    
+
     pub prev_velocity_x: i32,
     pub velocity_x: i32,
     pub dir_related_of_other: i32,
@@ -82,7 +82,7 @@ impl<'a> Player<'a> {
     pub fn take_damage(&mut self, damage: i32) {
         if self.character.hp > 0 {
             self.character.hp -= damage;
-        } 
+        }
 
         if self.character.hp <= 0 {
             self.state = PlayerState::Dead;
@@ -90,69 +90,69 @@ impl<'a> Player<'a> {
     }
 
     pub fn change_special_meter(&mut self, special: f32) {
-        self.character.special_curr = ((self.character.special_curr + special).clamp(0.0, self.character.special_max as f32)* 10.0).round() / 10.0;
+        self.character.special_curr = ((self.character.special_curr + special)
+            .clamp(0.0, self.character.special_max as f32)
+            * 10.0)
+            .round()
+            / 10.0;
     }
 
-    pub fn player_can_attack(&self) -> bool{
-        !(self.is_attacking ||
-            self.state == PlayerState::DashingForward  ||
-            self.state == PlayerState::DashingBackward ||
-            self.state == PlayerState::Dead
-        )
+    pub fn player_can_attack(&self) -> bool {
+        !(self.is_attacking
+            || self.state == PlayerState::DashingForward
+            || self.state == PlayerState::DashingBackward
+            || self.state == PlayerState::Dead)
     }
 
-    pub fn player_can_move(&self) -> bool{
-        !(self.is_attacking || self.is_airborne ||
-            self.state == PlayerState::Dead
-        )
+    pub fn player_can_move(&self) -> bool {
+        !(self.is_attacking || self.is_airborne || self.state == PlayerState::Dead)
     }
 
-    pub fn player_state_change(&mut self, new_state: PlayerState){
-        let is_interruptable = self.state != PlayerState::DashingForward &&
-                                self.state != PlayerState::DashingBackward &&
-                                self.state != PlayerState::Jumping  &&
-                                self.state != PlayerState::Jump;
+    pub fn player_state_change(&mut self, new_state: PlayerState) {
+        let is_interruptable = self.state != PlayerState::DashingForward
+            && self.state != PlayerState::DashingBackward
+            && self.state != PlayerState::Jumping
+            && self.state != PlayerState::Jump;
 
-        let already_crouching = (new_state == PlayerState::Crouch || new_state == PlayerState::Crouching) &&  
-                                    (self.state == PlayerState::Crouch || self.state == PlayerState::Crouching);
+        let already_crouching = (new_state == PlayerState::Crouch
+            || new_state == PlayerState::Crouching)
+            && (self.state == PlayerState::Crouch || self.state == PlayerState::Crouching);
 
         if is_interruptable && !already_crouching && self.state != PlayerState::Dead {
             self.state = new_state;
         }
     }
 
-    pub fn player_state_cancel(&mut self, _new_state: PlayerState){
+    pub fn player_state_cancel(&mut self, _new_state: PlayerState) {
         self.state = PlayerState::Standing;
     }
-    
-    pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
 
+    pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
         if self.state == PlayerState::Jump {
-            self.velocity_y = self.jump_initial_velocity / 0.5; 
+            self.velocity_y = self.jump_initial_velocity / 0.5;
             self.direction_at_jump_time = self.velocity_x;
         }
 
         if self.state == PlayerState::Jumping {
-           self.is_airborne = true;
+            self.is_airborne = true;
         }
 
         if self.is_airborne {
             let gravity = match self.extra_gravity {
-                Some(extra_g) => {  
-                    extra_g
-                } 
-                None => { 
-                    - 2.0 * self.jump_initial_velocity / 0.25 
-                }
+                Some(extra_g) => extra_g,
+                None => -2.0 * self.jump_initial_velocity / 0.25,
             };
-            
+
             if self.position.y >= self.ground_height {
-                let position_offset_x = self.direction_at_jump_time as f64 * self.character.jump_distance * dt; 
+                let position_offset_x =
+                    self.direction_at_jump_time as f64 * self.character.jump_distance * dt;
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
-                self.position = self.position.offset(position_offset_x as i32, position_offset_y as i32);
+                self.position = self
+                    .position
+                    .offset(position_offset_x as i32, position_offset_y as i32);
             }
-            
+
             //reset position back to ground height
             if self.position.y < self.ground_height {
                 self.position.y = 0;
@@ -166,12 +166,18 @@ impl<'a> Player<'a> {
 
         if self.player_can_move() && self.character.hit_stunned_duration <= 0 {
             if self.state == PlayerState::Standing {
-                self.position = self.position.offset((self.velocity_x as f64 * self.character.speed * dt) as i32, 0);
+                self.position = self.position.offset(
+                    (self.velocity_x as f64 * self.character.speed * dt) as i32,
+                    0,
+                );
             }
 
-            let is_dashing = self.state == PlayerState::DashingForward || self.state == PlayerState::DashingBackward;
-            if  is_dashing {
-                let dash_speed = (self.dir_related_of_other.signum() as f64 * self.character.dash_speed as f64 * dt) as i32;
+            let is_dashing = self.state == PlayerState::DashingForward
+                || self.state == PlayerState::DashingBackward;
+            if is_dashing {
+                let dash_speed = (self.dir_related_of_other.signum() as f64
+                    * self.character.dash_speed as f64
+                    * dt) as i32;
                 if self.state == PlayerState::DashingForward {
                     self.position = self.position.offset(dash_speed, 0);
                 } else {
@@ -192,7 +198,6 @@ impl<'a> Player<'a> {
 
         //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
         if self.animator.is_finished && self.state != PlayerState::Dead {
-
             if self.state == PlayerState::Jump {
                 self.state = PlayerState::Jumping;
             }
@@ -217,7 +222,9 @@ impl<'a> Player<'a> {
                 self.state = PlayerState::Standing;
             }
 
-            if self.state == PlayerState::DashingForward || self.state == PlayerState::DashingBackward {
+            if self.state == PlayerState::DashingForward
+                || self.state == PlayerState::DashingBackward
+            {
                 self.state = PlayerState::Standing;
                 self.character.hit_stunned_duration = 5;
             }
@@ -229,64 +236,75 @@ impl<'a> Player<'a> {
         }
 
         if !self.is_attacking {
-
             match self.state {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
                     if self.velocity_x * -self.dir_related_of_other < 0 {
-                        self.animator.play(character_animation.get("walk").unwrap(), false);
+                        self.animator
+                            .play(character_animation.get("walk").unwrap(), false);
                     } else if self.velocity_x * -self.dir_related_of_other > 0 {
                         if character_animation.contains_key("walk_back") {
-                            self.animator.play(character_animation.get("walk_back").unwrap(), false);
+                            self.animator
+                                .play(character_animation.get("walk_back").unwrap(), false);
                         } else {
-                            self.animator.play(character_animation.get("walk").unwrap(), true);
+                            self.animator
+                                .play(character_animation.get("walk").unwrap(), true);
                         }
                     } else {
-                        self.animator.play(character_animation.get("idle").unwrap(), false);
+                        self.animator
+                            .play(character_animation.get("idle").unwrap(), false);
                     }
                 }
 
                 PlayerState::Dead => {
-                    self.animator.play_once(character_animation.get("dead").unwrap(), false);
+                    self.animator
+                        .play_once(character_animation.get("dead").unwrap(), false);
                 }
 
-                PlayerState::KnockedOut => {
-
-                }
+                PlayerState::KnockedOut => {}
 
                 PlayerState::Jump => {
-                    self.animator.play_once(character_animation.get("crouch").unwrap(), true);
+                    self.animator
+                        .play_once(character_animation.get("crouch").unwrap(), true);
                 }
 
                 PlayerState::Jumping => {
-                    self.animator.play_once(character_animation.get("neutral_jump").unwrap(), false);
+                    self.animator
+                        .play_once(character_animation.get("neutral_jump").unwrap(), false);
                 }
 
                 PlayerState::Landing => {
-                    self.animator.play_once(character_animation.get("crouch").unwrap(), false);
+                    self.animator
+                        .play_once(character_animation.get("crouch").unwrap(), false);
                 }
 
                 PlayerState::UnCrouch => {
-                    self.animator.play_once(character_animation.get("crouch").unwrap(), true);
+                    self.animator
+                        .play_once(character_animation.get("crouch").unwrap(), true);
                 }
 
                 PlayerState::Crouch => {
-                    self.animator.play_once(character_animation.get("crouch").unwrap(), false);
+                    self.animator
+                        .play_once(character_animation.get("crouch").unwrap(), false);
                 }
 
                 PlayerState::Crouching => {
-                    self.animator.play(character_animation.get("crouching").unwrap(), false);
+                    self.animator
+                        .play(character_animation.get("crouching").unwrap(), false);
                 }
 
                 PlayerState::DashingForward => {
-                    self.animator.play_once(character_animation.get("dash").unwrap(), false);
+                    self.animator
+                        .play_once(character_animation.get("dash").unwrap(), false);
                 }
 
                 PlayerState::DashingBackward => {
-                    self.animator.play_once(character_animation.get("dash_back").unwrap(), false);
+                    self.animator
+                        .play_once(character_animation.get("dash_back").unwrap(), false);
                 }
                 PlayerState::Grab => {
-                    self.animator.play_once(character_animation.get("grab").unwrap(), false);
+                    self.animator
+                        .play_once(character_animation.get("grab").unwrap(), false);
                 }
                 PlayerState::Grabbed => {}
             }
@@ -299,7 +317,5 @@ impl<'a> Player<'a> {
         } else {
             self.animator.render(false)
         }
-
     }
-
 }

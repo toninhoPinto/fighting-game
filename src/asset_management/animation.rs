@@ -1,10 +1,10 @@
 use sdl2::render::Texture;
 
-pub struct Animation<'a>{
+pub struct Animation<'a> {
     pub name: String,
     pub speed: f64,
     pub length: i32,
-    sprites: Vec<Texture<'a>>
+    sprites: Vec<Texture<'a>>,
 }
 
 impl<'a> Animation<'a> {
@@ -13,12 +13,12 @@ impl<'a> Animation<'a> {
             name,
             speed,
             length: sprites.len() as i32,
-            sprites
+            sprites,
         }
     }
 }
 
-pub struct Animator<'a>{
+pub struct Animator<'a> {
     pub animation_index: f64,
     pub current_animation: Option<&'a Animation<'a>>,
     pub is_playing: bool,
@@ -39,9 +39,10 @@ impl<'a> Animator<'a> {
         }
     }
 
-    pub fn play(&mut self, new_animation: &'a Animation<'a>, play_rewind: bool){
-        if self.current_animation.is_none() ||
-        (self.current_animation.unwrap().name != new_animation.name) {
+    pub fn play(&mut self, new_animation: &'a Animation<'a>, play_rewind: bool) {
+        if self.current_animation.is_none()
+            || (self.current_animation.unwrap().name != new_animation.name)
+        {
             if !play_rewind {
                 self.animation_index = 0.0;
             } else {
@@ -55,9 +56,10 @@ impl<'a> Animator<'a> {
         }
     }
 
-    pub fn play_once(&mut self, new_animation: &'a Animation<'a>, play_rewind: bool){
-        if self.current_animation.is_none() ||
-        (self.current_animation.unwrap().name != new_animation.name) {
+    pub fn play_once(&mut self, new_animation: &'a Animation<'a>, play_rewind: bool) {
+        if self.current_animation.is_none()
+            || (self.current_animation.unwrap().name != new_animation.name)
+        {
             if !play_rewind {
                 self.animation_index = 0.0;
             } else {
@@ -71,20 +73,30 @@ impl<'a> Animator<'a> {
         }
     }
 
-    pub fn render(&mut self, debug: bool) -> &Texture{
+    pub fn render(&mut self, debug: bool) -> &Texture {
         let playing_animation = self.current_animation.unwrap();
         if debug {
-            println!("render start index {} for {} currently playing {}", self.animation_index, playing_animation.name, self.is_playing);
+            println!(
+                "render start index {} for {} currently playing {}",
+                self.animation_index, playing_animation.name, self.is_playing
+            );
         }
 
         if self.is_playing {
             if !self.rewind {
                 if debug {
-                    println!("start {} added {}", self.animation_index, self.animation_index + playing_animation.speed);
+                    println!(
+                        "start {} added {}",
+                        self.animation_index,
+                        self.animation_index + playing_animation.speed
+                    );
                 }
                 self.animation_index = self.animation_index + playing_animation.speed;
                 if debug {
-                    println!("render not rewind index {} for {}", self.animation_index, playing_animation.name);
+                    println!(
+                        "render not rewind index {} for {}",
+                        self.animation_index, playing_animation.name
+                    );
                 }
                 if self.play_once {
                     if self.animation_index >= (playing_animation.length - 1) as f64 {
@@ -98,7 +110,10 @@ impl<'a> Animator<'a> {
             } else {
                 self.animation_index = self.animation_index - playing_animation.speed;
                 if debug {
-                    println!("render with rewind index {} for {}", self.animation_index, playing_animation.name);
+                    println!(
+                        "render with rewind index {} for {}",
+                        self.animation_index, playing_animation.name
+                    );
                 }
                 if self.play_once {
                     if self.animation_index < 0.0 {
@@ -107,15 +122,18 @@ impl<'a> Animator<'a> {
                         self.is_finished = true;
                     }
                 } else {
-                    self.animation_index = self.animation_index.abs() % playing_animation.length as f64
+                    self.animation_index =
+                        self.animation_index.abs() % playing_animation.length as f64
                 }
             }
         }
-        
-         if debug {
-            println!("render with index {} for {}", self.animation_index, playing_animation.name);
+
+        if debug {
+            println!(
+                "render with index {} for {}",
+                self.animation_index, playing_animation.name
+            );
         }
         &playing_animation.sprites[self.animation_index as usize]
     }
-
 }

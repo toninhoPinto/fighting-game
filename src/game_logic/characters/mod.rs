@@ -1,9 +1,9 @@
 use sdl2::rect::Rect;
 use std::string::String;
 
-pub mod player;
-pub mod keetar;
 pub mod foxgirl;
+pub mod keetar;
+pub mod player;
 
 #[derive(Debug)]
 pub struct Character {
@@ -22,11 +22,22 @@ pub struct Character {
     // hit_stunned_duration was intended to give a small break on the dash animation
     // but actually ryu dash has 6 sprites that run over 26 frames and not spread equally, 11 of which have movement
     pub jump_height: f64,
-    pub jump_distance: f64
+    pub jump_distance: f64,
 }
 
 impl Character {
-    pub fn new(name: String, height: u32, width: u32, hp: i32, special_max: i32, speed: f64, dash_speed: f64, dash_back_speed: f64, jump_height: f64, jump_distance: f64) -> Self {
+    pub fn new(
+        name: String,
+        height: u32,
+        width: u32,
+        hp: i32,
+        special_max: i32,
+        speed: f64,
+        dash_speed: f64,
+        dash_back_speed: f64,
+        jump_height: f64,
+        jump_distance: f64,
+    ) -> Self {
         Self {
             name,
             sprite: Rect::new(0, 0, height, width),
