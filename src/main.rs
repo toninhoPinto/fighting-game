@@ -38,8 +38,7 @@ use crate::game_logic::inputs::apply_inputs::apply_game_inputs;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//add struct for collisions and add functionality like flipping, iterating over collider position animation, scaling collider based on f32
-//allow distinguishing between multiple hitboxes, hurtboxes, etc. add pushboxes
+//add pushboxes
 //make characters pushable
 
 //FIX GRAB, if you press light kick, and then halfway through the animation you press light punch, you can cancel the kick halfway and then grab
