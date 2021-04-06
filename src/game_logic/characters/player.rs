@@ -189,14 +189,15 @@ impl<'a> Player<'a> {
         if opponent_position_x - self.position.x != 0 {
             self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
         }
+    
+        if self.character.hit_stunned_duration > 0 {
+            self.character.hit_stunned_duration -= 1;
+        }
     }
 
-    //noinspection ALL
-    pub fn render(&mut self, character_data: &'a CharacterAssets) -> &Texture {
-        let _curr_anim = self.animator.current_animation.unwrap();
+    pub fn state_update(&mut self, character_data: &'a CharacterAssets) {
         let character_animation = &character_data.animations;
 
-        //TODO: trigger finished animation, instead make a function that can play an animation once and run callback at the end
         if self.animator.is_finished && self.state != PlayerState::Dead {
             if self.state == PlayerState::Jump {
                 self.state = PlayerState::Jumping;
@@ -228,17 +229,14 @@ impl<'a> Player<'a> {
                 self.state = PlayerState::Standing;
                 self.character.hit_stunned_duration = 5;
             }
-            self.animator.animation_index = 0.0;
         }
-
-        if self.character.hit_stunned_duration > 0 {
-            self.character.hit_stunned_duration -= 1;
-        }
-
+        
         if !self.is_attacking {
+
             match self.state {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
+                    
                     if self.velocity_x * -self.dir_related_of_other < 0 {
                         self.animator
                             .play(character_animation.get("walk").unwrap(), false);
@@ -312,10 +310,10 @@ impl<'a> Player<'a> {
             self.prev_velocity_x = self.velocity_x;
         }
 
-        if self.id == 1 {
-            self.animator.render(false) //change this for debug
-        } else {
-            self.animator.render(false)
-        }
+        self.animator.update();
+    }
+
+    pub fn render(&mut self) -> &Texture {
+        self.animator.render()
     }
 }

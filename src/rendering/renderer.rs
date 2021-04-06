@@ -4,8 +4,6 @@ use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::WindowCanvas;
 
-use parry2d::bounding_volume::AABB;
-
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::game_logic::projectile::Projectile;
 use crate::{
@@ -30,12 +28,12 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
     canvas.set_draw_color(Color::RGB(255, 100, 100));
     let debug_rect = Rect::new(screen_position.x as i32, screen_position.y as i32, 4, 4);
 
-    canvas.draw_rect(debug_rect);
-    canvas.fill_rect(debug_rect);
+    canvas.draw_rect(debug_rect).unwrap();
+    canvas.fill_rect(debug_rect).unwrap();
 
-    canvas.draw_rect(rect_to_debug);
+    canvas.draw_rect(rect_to_debug).unwrap();
     canvas.set_draw_color(Color::RGBA(100, 50, 50, 50));
-    canvas.fill_rect(rect_to_debug);
+    canvas.fill_rect(rect_to_debug).unwrap();
 }
 
 pub fn render<'a, 'b>(
@@ -61,7 +59,7 @@ pub fn render<'a, 'b>(
     let screen_rect = world_to_screen(player1.character.sprite, player1.position, screen_res);
     let sprite = player1.character.sprite;
     let is_flipped = player1.flipped;
-    let texture = player1.render(p1_assets);
+    let texture = player1.render();
     canvas.copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)?;
     if debug {
         debug_points(canvas, screen_rect.center(), screen_rect);
@@ -71,7 +69,7 @@ pub fn render<'a, 'b>(
     let screen_rect_2 = world_to_screen(player2.character.sprite, player2.position, screen_res);
     let sprite_2 = player2.character.sprite;
     let is_flipped_2 = player2.flipped;
-    let texture_2 = player2.render(p2_assets);
+    let texture_2 = player2.render();
     canvas.copy_ex(
         texture_2,
         sprite_2,
@@ -126,30 +124,30 @@ pub fn render<'a, 'b>(
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
     if bar_ui_1.fill_value > 0.0 {
-        canvas.draw_rect(bar_ui_1.rect);
+        canvas.draw_rect(bar_ui_1.rect).unwrap();
         canvas.set_draw_color(bar_ui_1.color.unwrap());
-        canvas.fill_rect(bar_ui_1.rect);
+        canvas.fill_rect(bar_ui_1.rect).unwrap();
     }
 
     if bar_ui_2.fill_value > 0.0 {
-        canvas.draw_rect(bar_ui_2.rect);
+        canvas.draw_rect(bar_ui_2.rect).unwrap();
         canvas.set_draw_color(bar_ui_2.color.unwrap());
-        canvas.fill_rect(bar_ui_2.rect);
+        canvas.fill_rect(bar_ui_2.rect).unwrap();
     }
 
     if bar_ui_3.curr_value > 0.0 {
         for i in 0..bar_ui_3.render().len() {
-            canvas.draw_rect(bar_ui_3.rects[i]);
+            canvas.draw_rect(bar_ui_3.rects[i]).unwrap();
             canvas.set_draw_color(bar_ui_3.color.unwrap());
-            canvas.fill_rect(bar_ui_3.rects[i]);
+            canvas.fill_rect(bar_ui_3.rects[i]).unwrap();
         }
     }
 
     if bar_ui_4.curr_value > 0.0 {
         for i in 0..bar_ui_4.render().len() {
-            canvas.draw_rect(bar_ui_4.rects[i]);
+            canvas.draw_rect(bar_ui_4.rects[i]).unwrap();
             canvas.set_draw_color(bar_ui_4.color.unwrap());
-            canvas.fill_rect(bar_ui_4.rects[i]);
+            canvas.fill_rect(bar_ui_4.rects[i]).unwrap();
         }
     }
 
@@ -185,12 +183,12 @@ fn render_colliders<'a, 'b>(
         let collider_rect_size = Rect::new(0, 0, aabb.extents().x as u32, aabb.extents().y as u32);
         let screen_rect_2 = world_to_screen(collider_rect_size, collider_position, screen_res);
 
-        canvas.draw_rect(screen_rect_2);
+        canvas.draw_rect(screen_rect_2).unwrap();
         if collider.collider_type == ColliderType::Hurtbox {
             canvas.set_draw_color(semi_transparent_green);
         } else {
             canvas.set_draw_color(semi_transparent_red);
         }
-        canvas.fill_rect(screen_rect_2);
+        canvas.fill_rect(screen_rect_2).unwrap();
     }
 }

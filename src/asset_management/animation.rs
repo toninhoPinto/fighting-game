@@ -73,31 +73,13 @@ impl<'a> Animator<'a> {
         }
     }
 
-    pub fn render(&mut self, debug: bool) -> &Texture {
+    //needs to receive a dt and then compare with animation speed or something
+    pub fn update(&mut self) {
         let playing_animation = self.current_animation.unwrap();
-        if debug {
-            println!(
-                "render start index {} for {} currently playing {}",
-                self.animation_index, playing_animation.name, self.is_playing
-            );
-        }
 
         if self.is_playing {
             if !self.rewind {
-                if debug {
-                    println!(
-                        "start {} added {}",
-                        self.animation_index,
-                        self.animation_index + playing_animation.speed
-                    );
-                }
                 self.animation_index = self.animation_index + playing_animation.speed;
-                if debug {
-                    println!(
-                        "render not rewind index {} for {}",
-                        self.animation_index, playing_animation.name
-                    );
-                }
                 if self.play_once {
                     if self.animation_index >= (playing_animation.length - 1) as f64 {
                         self.animation_index = (playing_animation.length - 1) as f64;
@@ -109,12 +91,6 @@ impl<'a> Animator<'a> {
                 }
             } else {
                 self.animation_index = self.animation_index - playing_animation.speed;
-                if debug {
-                    println!(
-                        "render with rewind index {} for {}",
-                        self.animation_index, playing_animation.name
-                    );
-                }
                 if self.play_once {
                     if self.animation_index < 0.0 {
                         self.animation_index = 0.0;
@@ -127,13 +103,10 @@ impl<'a> Animator<'a> {
                 }
             }
         }
+    }
 
-        if debug {
-            println!(
-                "render with index {} for {}",
-                self.animation_index, playing_animation.name
-            );
-        }
+    pub fn render(&mut self) -> &Texture {
+        let playing_animation = self.current_animation.unwrap();
         &playing_animation.sprites[self.animation_index as usize]
     }
 }

@@ -1,5 +1,4 @@
 use super::characters::player::Player;
-use parry2d::bounding_volume::AABB;
 use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
