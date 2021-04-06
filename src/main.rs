@@ -157,19 +157,21 @@ fn main() -> Result<(), String> {
     let logic_timestep: f64 = 0.016;
     let mut logic_time_accumulated: f64 = 0.0;
     let mut update_counter = 0;
+    let mut frame_counter = 0;
 
+    let mut is_single_player = true;
     let mut debug_pause = false;
 
     'running: loop {
         let current_time = Instant::now();
         let delta_time = current_time.duration_since(previous_time);
-        let delta_time_as_mili =
+        let delta_time_as_nanos =
             delta_time.as_secs() as f64 + (delta_time.subsec_nanos() as f64 * 1e-9);
 
         previous_time = current_time;
 
         if !debug_pause {
-            logic_time_accumulated += delta_time_as_mili;
+            logic_time_accumulated += delta_time_as_nanos;
         }
         
         // Handle events
@@ -274,6 +276,7 @@ fn main() -> Result<(), String> {
         //Update
         while logic_time_accumulated >= logic_timestep {
             update_counter +=1;
+            frame_counter += 1;
 
             if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
                 logic_time_accumulated = 0.0;
