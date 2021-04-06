@@ -119,8 +119,8 @@ pub fn render<'a, 'b>(
         }
     }
 
-    render_colliders(canvas, screen_res, p1_assets, player1, p1_colliders);
-    render_colliders(canvas, screen_res, p2_assets, player2, p2_colliders);
+    render_colliders(canvas, screen_res, p1_colliders);
+    render_colliders(canvas, screen_res, p2_colliders);
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
     if bar_ui_1.fill_value > 0.0 {
@@ -159,19 +159,8 @@ pub fn render<'a, 'b>(
 fn render_colliders<'a, 'b>(
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
-    assets: &'a CharacterAssets,
-    player: &'b mut Player<'a>,
     colliders: &mut Vec<Collider>,
 ) {
-    let collider_animation = assets
-        .collider_animations
-        .get(&player.animator.current_animation.unwrap().name);
-    if collider_animation.is_some() {
-        collider_animation.unwrap().init(colliders, &player);
-        ColliderAnimation::update(colliders, &player);
-        collider_animation.unwrap().render(colliders, player);
-    }
-
     for collider in colliders.iter() {
         let aabb = collider.aabb;
         let semi_transparent_green = Color::RGBA(50, 200, 100, 100);

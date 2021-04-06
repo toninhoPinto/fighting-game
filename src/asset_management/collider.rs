@@ -26,7 +26,7 @@ pub struct Collider {
 }
 
 impl ColliderAnimation {
-    pub fn init(&self, current_colliders: &mut Vec<Collider>, player: &Player) {
+    pub fn init(&self, current_colliders: &mut Vec<Collider>) {
         for i in 0..self.colliders.len() {
             if i < current_colliders.len() {
                 //modify current
@@ -48,7 +48,7 @@ impl ColliderAnimation {
     }
 
     // update offsets by player position
-    pub fn update(current_colliders: &mut Vec<Collider>, player: &Player) {
+    pub fn update(&self, current_colliders: &mut Vec<Collider>, player: &Player) {
         for i in 0..current_colliders.len() {
             let aabb = &mut current_colliders[i].aabb;
 
@@ -59,17 +59,16 @@ impl ColliderAnimation {
             aabb.mins.coords[1] = player.position.y as f32;
             aabb.maxs.coords[0] = left_player_pos;
             aabb.maxs.coords[1] = player.position.y as f32;
+            self.sync_with_character_animation(&mut current_colliders[i], &self.colliders[i], player);
         }
     }
 
     //render offsets by frame index
-    pub fn render(&self, current_colliders: &mut Vec<Collider>, player: &Player) {
-        for i in 0..current_colliders.len() {
-            let collider = &mut current_colliders[i];
-            let aabb = &mut collider.aabb;
-            let original_aabb = self.colliders[i].aabb;
+    fn sync_with_character_animation(&self, current_collider: &mut Collider, original_collider: &Collider, player: &Player) {
+            let aabb = &mut current_collider.aabb;
+            let original_aabb = original_collider.aabb;
 
-            let position_at_frame = self.pos_animations.get(&self.colliders[i].name).unwrap();
+            let position_at_frame = self.pos_animations.get(&original_collider.name).unwrap();
 
             match position_at_frame.get(&(player.animator.animation_index as i32)) {
                 Some(transformation) => {
@@ -96,6 +95,8 @@ impl ColliderAnimation {
                 //collider doesnt exist at this frame
                 None => {}
             }
-        }
     }
+
+
+
 }

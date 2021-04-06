@@ -1,4 +1,4 @@
-use asset_management::collider::{Collider, ColliderType};
+use asset_management::collider::{Collider, ColliderAnimation, ColliderType};
 use game_logic::inputs::{
     apply_inputs::apply_game_input_state, process_inputs::update_directional_state,
 };
@@ -156,7 +156,7 @@ fn main() -> Result<(), String> {
     let mut p2_colliders: Vec<Collider> = Vec::new();
 
     let idle_hitboxes = p1_assets.collider_animations.get("idle").unwrap();
-    idle_hitboxes.init(&mut p1_colliders, &player1);
+    idle_hitboxes.init(&mut p1_colliders);
 
     let mut update_counter = 0;
     let max_updates_at_once = 4;
@@ -303,6 +303,22 @@ fn main() -> Result<(), String> {
 
             player1.state_update(&p1_assets);
             player2.state_update(&p2_assets);
+
+            let collider_animation1 = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
+            if collider_animation1.is_some() {
+                if collider_animation1.unwrap().colliders.len() != p1_colliders.len() {
+                    collider_animation1.unwrap().init(&mut p1_colliders);
+                }
+                collider_animation1.unwrap().update(&mut p1_colliders, &player1);
+            }
+
+            let collider_animation2 = p2_assets.collider_animations.get(&player2.animator.current_animation.unwrap().name);
+            if collider_animation2.is_some() {
+                if collider_animation2.unwrap().colliders.len() != p2_colliders.len() {
+                    collider_animation2.unwrap().init(&mut p2_colliders);
+                }
+                collider_animation2.unwrap().update(&mut p2_colliders, &player2);
+            }
 
             //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
             //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
