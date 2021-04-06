@@ -318,7 +318,6 @@ impl<'a> Player<'a> {
 
             self.prev_velocity_x = self.velocity_x;
         }
-        println!("id b4 animator: {}", self.animator.animation_index);
         self.animator.update();
     }
 

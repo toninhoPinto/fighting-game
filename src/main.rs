@@ -1,7 +1,7 @@
-use asset_management::collider::{Collider, ColliderAnimation, ColliderType};
-use game_logic::inputs::{
+use asset_management::collider::{Collider, ColliderType};
+use game_logic::{game::Game, inputs::{
     apply_inputs::apply_game_input_state, process_inputs::update_directional_state,
-};
+}};
 use sdl2::image::{self, InitFlag};
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
@@ -136,9 +136,6 @@ fn main() -> Result<(), String> {
         None,
     );
 
-    let mut p1_colliders: Vec<Collider> = Vec::new();
-    let mut p2_colliders: Vec<Collider> = Vec::new();
-
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
@@ -150,8 +147,7 @@ fn main() -> Result<(), String> {
         TranslatedInput::init_dir_input_state();
     let mut _input_buffer: Vec<i32> = Vec::new();
 
-    let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
-
+    let mut game = Game::new(&mut player1, &mut player2);
 
     let mut previous_time = Instant::now();
     let logic_timestep: f64 = 0.016;
@@ -206,7 +202,7 @@ fn main() -> Result<(), String> {
                     filtered_input = filter_already_pressed_direction(
                         translated_input,
                         &mut directional_state_input,
-                        &player1,
+                        &game.player1,
                     );
                 } else {
                     filtered_input = Some(translated_input);
@@ -232,7 +228,7 @@ fn main() -> Result<(), String> {
                     let game_input = GameInput::from_translated_input(
                         non_direction_repeated_input,
                         &current_state_input,
-                        player1.dir_related_of_other,
+                        game.player1.dir_related_of_other,
                     )
                     .unwrap();
 
@@ -251,13 +247,13 @@ fn main() -> Result<(), String> {
                             &mut current_state_input,
                             &mut directional_state_input,
                             &mut last_inputs,
-                            &player1,
+                            &game.player1,
                         );
                         if game_input.is_some() {
                             let final_input = game_input.unwrap();
                             apply_game_inputs(
                                 &p1_assets,
-                                &mut player1,
+                                &mut game.player1,
                                 final_input,
                                 is_pressed,
                                 &current_state_input,
@@ -284,7 +280,7 @@ fn main() -> Result<(), String> {
 
             apply_game_input_state(
                 &p1_assets,
-                &mut player1,
+                &mut game.player1,
                 &mut input_reset_timers,
                 &directional_state_input,
                 &mut current_state_input,
@@ -300,57 +296,57 @@ fn main() -> Result<(), String> {
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
-            p1_health_bar.update(player1.character.hp);
-            p2_health_bar.update(player2.character.hp);
+            p1_health_bar.update(game.player1.character.hp);
+            p2_health_bar.update(game.player2.character.hp);
 
-            p1_special_bar.update(player1.character.special_curr);
-            p2_special_bar.update(player2.character.special_curr);
+            p1_special_bar.update(game.player1.character.special_curr);
+            p2_special_bar.update(game.player2.character.special_curr);
 
-            player1.update(logic_timestep, player2.position.x);
-            player2.update(logic_timestep, player1.position.x);
+            game.player1.update(logic_timestep, game.player2.position.x);
+            game.player2.update(logic_timestep, game.player1.position.x);
 
-            player1.state_update(&p1_assets);
-            player2.state_update(&p2_assets);
+            game.player1.state_update(&p1_assets);
+            game.player2.state_update(&p2_assets);
 
-            let collider_animation1 = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
+            let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
             if collider_animation1.is_some() {
-                if collider_animation1.unwrap().colliders.len() != p1_colliders.len() {
-                    collider_animation1.unwrap().init(&mut p1_colliders);
+                if collider_animation1.unwrap().colliders.len() != game.p1_colliders.len() {
+                    collider_animation1.unwrap().init(&mut game.p1_colliders);
                 }
-                collider_animation1.unwrap().update(&mut p1_colliders, &player1);
+                collider_animation1.unwrap().update(&mut game.p1_colliders, &game.player1);
             }
 
-            let collider_animation2 = p2_assets.collider_animations.get(&player2.animator.current_animation.unwrap().name);
+            let collider_animation2 = p2_assets.collider_animations.get(&game.player2.animator.current_animation.unwrap().name);
             if collider_animation2.is_some() {
-                if collider_animation2.unwrap().colliders.len() != p2_colliders.len() {
-                    collider_animation2.unwrap().init(&mut p2_colliders);
+                if collider_animation2.unwrap().colliders.len() != game.p2_colliders.len() {
+                    collider_animation2.unwrap().init(&mut game.p2_colliders);
                 }
-                collider_animation2.unwrap().update(&mut p2_colliders, &player2);
+                collider_animation2.unwrap().update(&mut game.p2_colliders, &game.player2);
             }
 
             //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
             //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
-            for collider in p1_colliders
+            for collider in game.p1_colliders
                 .iter()
                 .filter(|&c| c.collider_type == ColliderType::Hitbox)
             {
-                for collider_to_take_dmg in p2_colliders
+                for collider_to_take_dmg in game.p2_colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Hurtbox)
                 {
                     if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
                         println!("DEAL DMG");
-                        player2.take_damage(10);
-                        player2.state_update(&p2_assets);
+                        game.player2.take_damage(10);
+                        game.player2.state_update(&p2_assets);
                     }
                 }
             }
 
-            for collider in p2_colliders
+            for collider in game.p2_colliders
                 .iter()
                 .filter(|&c| c.collider_type == ColliderType::Hitbox)
             {
-                for collider_to_take_dmg in p1_colliders
+                for collider_to_take_dmg in game.p1_colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Hurtbox)
                 {
@@ -361,8 +357,8 @@ fn main() -> Result<(), String> {
             }
 
             //Handle projectile movement
-            for i in 0..projectiles.len() {
-                projectiles[i].update();
+            for i in 0..game.projectiles.len() {
+                game.projectiles[i].update();
             }
        
             logic_time_accumulated -= logic_timestep;
@@ -373,13 +369,13 @@ fn main() -> Result<(), String> {
             rendering::renderer::render(
                 &mut canvas,
                 Color::RGB(60, 64, 255),
-                &mut player1,
+                game.player1,
                 &p1_assets,
-                &mut player2,
+                game.player2,
                 &p2_assets,
-                &projectiles,
-                &mut p1_colliders,
-                &mut p2_colliders,
+                &game.projectiles,
+                &mut game.p1_colliders,
+                &mut game.p2_colliders,
                 &p1_health_bar,
                 &p2_health_bar,
                 &p1_special_bar,
