@@ -55,6 +55,7 @@ use input::translated_inputs::TranslatedInput;
 //specific projectile only live if keep holding button
 //Add startup, active and recovery per animation
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
+const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
 
 fn main() -> Result<(), String> {
     println!("Starting Game");
@@ -135,6 +136,9 @@ fn main() -> Result<(), String> {
         None,
     );
 
+    let mut p1_colliders: Vec<Collider> = Vec::new();
+    let mut p2_colliders: Vec<Collider> = Vec::new();
+
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
@@ -146,20 +150,15 @@ fn main() -> Result<(), String> {
         TranslatedInput::init_dir_input_state();
     let mut _input_buffer: Vec<i32> = Vec::new();
 
+    let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
+
+
     let mut previous_time = Instant::now();
     let logic_timestep: f64 = 0.016;
     let mut logic_time_accumulated: f64 = 0.0;
-
-    let mut projectiles: Vec<game_logic::projectile::Projectile> = Vec::new();
-
-    let mut p1_colliders: Vec<Collider> = Vec::new();
-    let mut p2_colliders: Vec<Collider> = Vec::new();
-
-    let idle_hitboxes = p1_assets.collider_animations.get("idle").unwrap();
-    idle_hitboxes.init(&mut p1_colliders);
-
     let mut update_counter = 0;
-    let max_updates_at_once = 4;
+
+    let mut debug_pause = false;
 
     'running: loop {
         let current_time = Instant::now();
@@ -169,16 +168,22 @@ fn main() -> Result<(), String> {
 
         previous_time = current_time;
 
-        logic_time_accumulated += delta_time_as_mili;
-
+        if !debug_pause {
+            logic_time_accumulated += delta_time_as_mili;
+        }
+        
         // Handle events
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit { .. }
-                | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => break 'running,
+                Event::Quit { .. } => break 'running,
+                Event::KeyDown {keycode: Some(input),..} => {
+                    if input == Keycode::P {
+                        debug_pause ^= true
+                    }
+                    if input == Keycode::Right {
+                        logic_time_accumulated += logic_timestep;
+                    }
+                },
                 _ => {}
             };
             input::controller_handler::handle_new_controller(
@@ -270,7 +275,7 @@ fn main() -> Result<(), String> {
         while logic_time_accumulated >= logic_timestep {
             update_counter +=1;
 
-            if update_counter > max_updates_at_once {
+            if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
                 logic_time_accumulated = 0.0;
             }
 
@@ -305,6 +310,7 @@ fn main() -> Result<(), String> {
             player2.state_update(&p2_assets);
 
             let collider_animation1 = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
+            println!("{:?}", &player1.animator.current_animation.unwrap().name);
             if collider_animation1.is_some() {
                 if collider_animation1.unwrap().colliders.len() != p1_colliders.len() {
                     collider_animation1.unwrap().init(&mut p1_colliders);
@@ -357,7 +363,6 @@ fn main() -> Result<(), String> {
        
             logic_time_accumulated -= logic_timestep;
         }
-
 
         // Render
         if update_counter >= 0 {

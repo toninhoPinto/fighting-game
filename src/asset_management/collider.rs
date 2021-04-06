@@ -1,11 +1,8 @@
 use std::collections::HashMap;
-
 use parry2d::bounding_volume::AABB;
-use sdl2::rect::Point;
-
 use crate::game_logic::characters::player::Player;
-
 use super::transformation::Transformation;
+
 pub struct ColliderAnimation {
     pub colliders: Vec<Collider>,
     pub pos_animations: HashMap<String, HashMap<i32, Transformation>>,

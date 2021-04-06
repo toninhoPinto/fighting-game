@@ -232,7 +232,6 @@ impl<'a> Player<'a> {
         }
         
         if !self.is_attacking {
-
             match self.state {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;

@@ -7,7 +7,7 @@ use sdl2::render::WindowCanvas;
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::game_logic::projectile::Projectile;
 use crate::{
-    asset_management::collider::{Collider, ColliderAnimation, ColliderType},
+    asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
     ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };
@@ -155,7 +155,7 @@ pub fn render<'a, 'b>(
     Ok(())
 }
 
-//TODO i dont like update and init being here
+
 fn render_colliders<'a, 'b>(
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
