@@ -352,6 +352,10 @@ fn load_foxgirl_anims(
     //TODO iterate through folders and use folder name as key for hashmap
     let idle_anim: Vec<Texture> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/idle");
+    let take_damage_anim: Vec<Texture> =
+        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/take_damage/1");
+    let dead_anim: Vec<Texture> =
+        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/dead");
     let walk_anim: Vec<Texture> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/walk");
     let crouch_start_anim: Vec<Texture> =
@@ -392,6 +396,14 @@ fn load_foxgirl_anims(
     character_anims.insert(
         "idle".to_string(),
         Animation::new(idle_anim, "idle".to_string(), 0.35),
+    );
+    character_anims.insert(
+        "take_damage".to_string(),
+        Animation::new(take_damage_anim, "take_damage".to_string(), 0.35),
+    );
+    character_anims.insert(
+        "dead".to_string(),
+        Animation::new(dead_anim, "dead".to_string(), 0.35),
     );
     character_anims.insert(
         "dash".to_string(),

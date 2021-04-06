@@ -313,7 +313,6 @@ fn main() -> Result<(), String> {
             player2.state_update(&p2_assets);
 
             let collider_animation1 = p1_assets.collider_animations.get(&player1.animator.current_animation.unwrap().name);
-            println!("{:?}", &player1.animator.current_animation.unwrap().name);
             if collider_animation1.is_some() {
                 if collider_animation1.unwrap().colliders.len() != p1_colliders.len() {
                     collider_animation1.unwrap().init(&mut p1_colliders);
@@ -341,6 +340,8 @@ fn main() -> Result<(), String> {
                 {
                     if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
                         println!("DEAL DMG");
+                        player2.take_damage(10);
+                        player2.state_update(&p2_assets);
                     }
                 }
             }

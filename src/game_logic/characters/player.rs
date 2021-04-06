@@ -22,6 +22,7 @@ pub enum PlayerState {
     Grab,
     Grabbed,
     KnockedOut,
+    Hurt,
     Dead,
 }
 impl fmt::Display for PlayerState {
@@ -82,6 +83,7 @@ impl<'a> Player<'a> {
     pub fn take_damage(&mut self, damage: i32) {
         if self.character.hp > 0 {
             self.character.hp -= damage;
+            self.state = PlayerState::Hurt;
         }
 
         if self.character.hp <= 0 {
@@ -223,6 +225,10 @@ impl<'a> Player<'a> {
                 self.state = PlayerState::Standing;
             }
 
+            if self.state == PlayerState::Hurt {
+                self.state = PlayerState::Standing;
+            }
+
             if self.state == PlayerState::DashingForward
                 || self.state == PlayerState::DashingBackward
             {
@@ -304,11 +310,15 @@ impl<'a> Player<'a> {
                         .play_once(character_animation.get("grab").unwrap(), false);
                 }
                 PlayerState::Grabbed => {}
+                PlayerState::Hurt => { 
+                    self.animator
+                        .play_once(character_animation.get("take_damage").unwrap(), false);
+                }
             }
 
             self.prev_velocity_x = self.velocity_x;
         }
-
+        println!("id b4 animator: {}", self.animator.animation_index);
         self.animator.update();
     }
 

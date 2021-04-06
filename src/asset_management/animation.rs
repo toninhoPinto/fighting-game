@@ -103,7 +103,6 @@ impl<'a> Animator<'a> {
                 }
             }
         }
-        println!("anim index {:?}", self.animation_index);
     }
 
     pub fn render(&mut self) -> &Texture {
