@@ -50,15 +50,21 @@ impl<'a> SegmentedBar<'a> {
     //if current value = 2.0 -> index should be 2 and width should be 0 * step
     //if current value = 0.6 -> index should be 0 and width should be 0.6 * step
     pub fn update(&mut self, curr_value: f32) {
+
         self.curr_value = (curr_value.clamp(0.0, self.segmentations as f32) * 10.0).round() / 10.0;
-
         let index = min(self.curr_value as usize, self.segmentations as usize - 1);
-
+        
         let decimal_only = self.curr_value - index as f32;
-
         let new_width = min((decimal_only * self.step) as u32, self.step as u32);
-
-        self.rects[index].set_width(new_width);
+        
+        for i in 0..self.rects.len() {
+             if i < index {
+                self.rects[i].set_width(self.step as u32);
+             } else if i == index {
+                self.rects[i].set_width(new_width);
+                break;
+             }
+        }
     }
 
     pub fn render(&self) -> Vec<Rect> {

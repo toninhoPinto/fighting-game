@@ -27,6 +27,7 @@ impl<'a> Game<'a>{
         }
     }
 
+    //it is maybe better if serialize into some binary format for compression 
     pub fn save(&self) -> SavedGame{
         SavedGame{
             p1_id: self.player1.id,
