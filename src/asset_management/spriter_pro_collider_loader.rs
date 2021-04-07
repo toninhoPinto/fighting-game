@@ -100,7 +100,7 @@ pub fn load_hitboxes(
 
         let collider = Collider {
             aabb: AABB::new(min, max),
-            collider_type: collider_type,
+            collider_type,
             name: boxes[j].name.clone(),
         };
         colliders.push(collider);

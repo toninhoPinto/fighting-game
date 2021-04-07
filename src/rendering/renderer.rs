@@ -16,7 +16,7 @@ fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32)) -> Rect
     let (_, height) = screen_size;
     let mut inverted_pos = position;
     //to make world coordinates Y increase as we go up
-    inverted_pos.y = -1 * inverted_pos.y;
+    inverted_pos.y *= -1; 
     //first point is to make Y = 0 as the bottom of the screen
     //Second point it to make the bottom center of a rect as the position
     let screen_position =
@@ -43,7 +43,7 @@ pub fn render<'a, 'b>(
     p1_assets: &'a CharacterAssets,
     player2: &'b mut Player<'a>,
     p2_assets: &'a CharacterAssets,
-    projectiles: &Vec<Projectile>,
+    projectiles: &[Projectile],
     p1_colliders: &mut Vec<Collider>,
     p2_colliders: &mut Vec<Collider>,
     bar_ui_1: &Bar,
@@ -156,7 +156,7 @@ pub fn render<'a, 'b>(
 }
 
 
-fn render_colliders<'a, 'b>(
+fn render_colliders(
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
     colliders: &mut Vec<Collider>,

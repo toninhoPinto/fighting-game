@@ -79,7 +79,7 @@ impl<'a> Animator<'a> {
 
         if self.is_playing {
             if !self.rewind {
-                self.animation_index = self.animation_index + playing_animation.speed;
+                self.animation_index += playing_animation.speed;
                 if self.play_once {
                     if self.animation_index >= (playing_animation.length - 1) as f64 {
                         self.animation_index = (playing_animation.length - 1) as f64;
@@ -87,10 +87,10 @@ impl<'a> Animator<'a> {
                         self.is_finished = true;
                     }
                 } else {
-                    self.animation_index = self.animation_index % playing_animation.length as f64;
+                    self.animation_index %= playing_animation.length as f64;
                 }
             } else {
-                self.animation_index = self.animation_index - playing_animation.speed;
+                self.animation_index -= playing_animation.speed;
                 if self.play_once {
                     if self.animation_index < 0.0 {
                         self.animation_index = 0.0;

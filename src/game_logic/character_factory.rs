@@ -4,7 +4,7 @@ use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
 use super::characters::Character;
-use super::inputs::game_inputs::GameInput;
+use super::inputs::game_inputs::GameAction;
 use super::projectile::Projectile;
 use crate::asset_management::animation::Animation;
 use crate::asset_management::{asset_loader, collider::ColliderAnimation};
@@ -13,8 +13,8 @@ use std::string::String;
 
 pub struct CharacterAssets<'a> {
     pub animations: HashMap<String, Animation<'a>>,
-    pub input_combination_anims: Vec<(Vec<GameInput>, String)>,
-    pub directional_variation_anims: Vec<(Vec<GameInput>, String)>,
+    pub input_combination_anims: Vec<(Vec<GameAction>, String)>,
+    pub directional_variation_anims: Vec<(Vec<GameAction>, String)>,
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>,
     pub collider_animations: HashMap<String, ColliderAnimation>,
@@ -49,8 +49,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
         _ => None,
     }
     .unwrap();
-    let player = Player::new(id, fighter, spawn_pos, flipped);
-    player
+    Player::new(id, fighter, spawn_pos, flipped)
 }
 
 pub fn load_character_anim_data<'a, 'b>(
@@ -71,7 +70,7 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "idle".to_string(),
         asset_loader::load_hitboxes(
-            format!("assets/{}/standing/idle/idle.json", "keetar").to_string(),
+            format!("assets/{}/standing/idle/idle.json", "keetar"),
         ),
     );
     collider_animations.insert(
@@ -87,13 +86,13 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "walk".to_string(),
         asset_loader::load_hitboxes(
-            format!("assets/{}/standing/walk/walk.json", "keetar").to_string(),
+            format!("assets/{}/standing/walk/walk.json", "keetar"),
         ),
     );
     collider_animations.insert(
         "walk_back".to_string(),
         asset_loader::load_hitboxes(
-            format!("assets/{}/standing/walk_back/walk_back.json", "keetar").to_string(),
+            format!("assets/{}/standing/walk_back/walk_back.json", "keetar"),
         ),
     );
 
@@ -103,34 +102,38 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_keetar_anims(texture_creator);
 
-    let mut directional_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
-    let mut directional_string: Vec<GameInput> = Vec::new();
-    directional_string.push(GameInput::Forward);
-    directional_string.push(GameInput::LightPunch);
+    let mut directional_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
+    let directional_string= vec![
+        GameAction::Forward,
+        GameAction::LightPunch
+    ];
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
-    let mut specials_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
-    let mut light_combo_string: Vec<GameInput> = Vec::new();
-    light_combo_string.push(GameInput::Down);
-    light_combo_string.push(GameInput::ForwardDown);
-    light_combo_string.push(GameInput::Forward);
-    light_combo_string.push(GameInput::LightPunch);
+    let mut specials_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
+    let light_combo_string= vec![
+        GameAction::Down,
+        GameAction::ForwardDown,
+        GameAction::Forward,
+        GameAction::LightPunch
+    ];
     specials_inputs.push((light_combo_string, "light_special_attack".to_string()));
     let light_projectile = Projectile::new(0, Point::new(120, 5));
 
-    let mut med_combo_string: Vec<GameInput> = Vec::new();
-    med_combo_string.push(GameInput::Down);
-    med_combo_string.push(GameInput::ForwardDown);
-    med_combo_string.push(GameInput::Forward);
-    med_combo_string.push(GameInput::MediumPunch);
+    let med_combo_string= vec![
+        GameAction::Down,
+        GameAction::ForwardDown, 
+        GameAction::Forward,
+        GameAction::MediumPunch
+    ];
     specials_inputs.push((med_combo_string, "med_special_attack".to_string()));
     let med_projectile = Projectile::new(0, Point::new(120, 105));
 
-    let mut heavy_combo_string: Vec<GameInput> = Vec::new();
-    heavy_combo_string.push(GameInput::Down);
-    heavy_combo_string.push(GameInput::ForwardDown);
-    heavy_combo_string.push(GameInput::Forward);
-    heavy_combo_string.push(GameInput::HeavyPunch);
+    let mut heavy_combo_string: Vec<GameAction> = vec![
+        GameAction::Down,
+        GameAction::ForwardDown, 
+        GameAction::Forward,
+        GameAction::HeavyPunch
+    ];
     specials_inputs.push((heavy_combo_string, "heavy_special_attack".to_string()));
     let heavy_projectile = Projectile::new(0, Point::new(120, 205));
 
@@ -308,7 +311,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "idle".to_string(),
         asset_loader::load_hitboxes(
-            format!("assets/{}/standing/idle/idle.json", "foxgirl").to_string(),
+            format!("assets/{}/standing/idle/idle.json", "foxgirl"),
         ),
     );
 
@@ -318,20 +321,22 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
 fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_foxgirl_anims(texture_creator);
 
-    let mut directional_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
+    let mut directional_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
 
-    let mut directional_string: Vec<GameInput> = Vec::new();
-    directional_string.push(GameInput::Forward);
-    directional_string.push(GameInput::LightPunch);
+    let directional_string= vec![
+        GameAction::Forward,
+        GameAction::LightPunch
+    ];
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
-    let mut directional_string_2: Vec<GameInput> = Vec::new();
-    directional_string_2.push(GameInput::Forward);
-    directional_string_2.push(GameInput::HeavyPunch);
+    let directional_string_2: Vec<GameAction> = vec![
+        GameAction::Forward,
+        GameAction::HeavyPunch
+    ];
     directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
 
     let effects_of_abilities = HashMap::new();
-    let specials_inputs: Vec<(Vec<GameInput>, String)> = Vec::new();
+    let specials_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
     let projectile_anims = HashMap::new();
 
     CharacterAssets {

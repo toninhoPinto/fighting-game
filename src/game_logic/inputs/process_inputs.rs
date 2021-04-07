@@ -1,12 +1,10 @@
-use super::game_inputs::GameInput;
-use crate::game_logic::characters::player::Player;
+use super::game_inputs::GameAction;
 use crate::input::translated_inputs::TranslatedInput;
 use std::collections::VecDeque;
 
 pub fn filter_already_pressed_direction(
     input: TranslatedInput,
     directional_state_input: &mut [(TranslatedInput, bool); 4],
-    player: &Player,
 ) -> Option<TranslatedInput> {
     match input {
         TranslatedInput::Horizontal(h) if h != 0 => {
@@ -65,10 +63,10 @@ pub fn update_directional_state(
 }
 
 pub fn filter_already_pressed_button(
-    input: GameInput,
-    current_state_input: &mut [(GameInput, bool); 10],
-) -> Option<GameInput> {
-    let index = GameInput::get_button_index(current_state_input, input);
+    input: GameAction,
+    current_state_input: &mut [(GameAction, bool); 10],
+) -> Option<GameAction> {
+    let index = GameAction::get_button_index(current_state_input, input);
 
     if !current_state_input[index].1 {
         Some(input)
@@ -78,19 +76,18 @@ pub fn filter_already_pressed_button(
 }
 
 pub fn transform_input_state(
-    game_input: GameInput,
+    game_input: GameAction,
     is_pressed: bool,
-    current_state_input: &mut [(GameInput, bool); 10],
+    current_state_input: &mut [(GameAction, bool); 10],
     directional_state_input: &mut [(TranslatedInput, bool); 4],
-    last_inputs: &mut VecDeque<GameInput>,
-    player: &Player,
-) -> Option<GameInput> {
+    last_inputs: &mut VecDeque<GameAction>,
+) -> Option<GameAction> {
     //update current state
     let id = match game_input {
-        GameInput::Forward | GameInput::Backward | GameInput::Up | GameInput::Down => {
-            GameInput::get_direction_index(game_input)
+        GameAction::Forward | GameAction::Backward | GameAction::Up | GameAction::Down => {
+            GameAction::get_direction_index(game_input)
         }
-        _ => GameInput::get_button_index(current_state_input, game_input),
+        _ => GameAction::get_button_index(current_state_input, game_input),
     };
     current_state_input[id] = (game_input, is_pressed);
 
@@ -118,18 +115,18 @@ pub fn transform_input_state(
 }
 
 fn consolidate_directional_inputs(
-    recent_input: GameInput,
+    recent_input: GameAction,
     is_pressed: bool,
-    current_input_state: &mut [(GameInput, bool); 10],
-) -> Option<GameInput> {
+    current_input_state: &mut [(GameAction, bool); 10],
+) -> Option<GameAction> {
     //check if 1 vertical and 1 horizontal are currently pressed
     //if so -> merge into diagonal
     //if has up is more important
     //if has forward it is more important
-    let is_directional_input = recent_input == GameInput::Forward
-        || recent_input == GameInput::Up
-        || recent_input == GameInput::Down
-        || recent_input == GameInput::Backward;
+    let is_directional_input = recent_input == GameAction::Forward
+        || recent_input == GameAction::Up
+        || recent_input == GameAction::Down
+        || recent_input == GameAction::Backward;
 
     if !is_directional_input && is_pressed {
         //if the current input was not a direction button and it was a press (not release), just return
@@ -139,54 +136,53 @@ fn consolidate_directional_inputs(
         None
     } else if is_directional_input && is_pressed {
         //if the current input was a direnction button and it was a press
-        if current_input_state[7] == (GameInput::Up, true) {
-            if current_input_state[6] == (GameInput::Forward, true) {
+        if current_input_state[7] == (GameAction::Up, true) {
+            if current_input_state[6] == (GameAction::Forward, true) {
                 Some(
-                    GameInput::merge_horizontal_vertical(GameInput::Up, GameInput::Forward)
+                    GameAction::merge_horizontal_vertical(GameAction::Up, GameAction::Forward)
                         .unwrap(),
                 )
-            } else if current_input_state[8] == (GameInput::Backward, true) {
+            } else if current_input_state[8] == (GameAction::Backward, true) {
                 Some(
-                    GameInput::merge_horizontal_vertical(GameInput::Up, GameInput::Backward)
+                    GameAction::merge_horizontal_vertical(GameAction::Up, GameAction::Backward)
                         .unwrap(),
                 )
             } else {
-                Some(GameInput::Up)
+                Some(GameAction::Up)
             }
-        } else if current_input_state[9] == (GameInput::Down, true) {
-            if current_input_state[6] == (GameInput::Forward, true) {
+        } else if current_input_state[9] == (GameAction::Down, true) {
+            if current_input_state[6] == (GameAction::Forward, true) {
                 Some(
-                    GameInput::merge_horizontal_vertical(GameInput::Down, GameInput::Forward)
+                    GameAction::merge_horizontal_vertical(GameAction::Down, GameAction::Forward)
                         .unwrap(),
                 )
-            } else if current_input_state[8] == (GameInput::Backward, true) {
+            } else if current_input_state[8] == (GameAction::Backward, true) {
                 Some(
-                    GameInput::merge_horizontal_vertical(GameInput::Down, GameInput::Backward)
+                    GameAction::merge_horizontal_vertical(GameAction::Down, GameAction::Backward)
                         .unwrap(),
                 )
             } else {
-                Some(GameInput::Down)
+                Some(GameAction::Down)
             }
         } else {
             Some(recent_input) //nothing to merge with
         }
     } else {
-        if current_input_state[7] == (GameInput::Up, true) {
-            Some(GameInput::Up)
-        } else if current_input_state[6] == (GameInput::Forward, true) {
-            Some(GameInput::Forward)
-        } else if current_input_state[9] == (GameInput::Down, true) {
-            Some(GameInput::Down)
-        } else if current_input_state[8] == (GameInput::Backward, true) {
-            Some(GameInput::Backward)
+        if current_input_state[7] == (GameAction::Up, true) {
+            Some(GameAction::Up)
+        } else if current_input_state[6] == (GameAction::Forward, true) {
+            Some(GameAction::Forward)
+        } else if current_input_state[9] == (GameAction::Down, true) {
+            Some(GameAction::Down)
+        } else if current_input_state[8] == (GameAction::Backward, true) {
+            Some(GameAction::Backward)
         } else {
             None
         }
     }
 }
 
-//TODO maybe change this to somewhere else
-pub fn record_input(last_inputs: &mut VecDeque<GameInput>, input: GameInput) {
+pub fn record_input(last_inputs: &mut VecDeque<GameAction>, input: GameAction) {
     last_inputs.push_back(input);
     if last_inputs.len() > 5 {
         last_inputs.pop_front();

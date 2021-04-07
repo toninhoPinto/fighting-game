@@ -14,7 +14,7 @@ pub fn spawn_note(
 ) {
     let player_current_animation = player.animator.current_animation.unwrap();
     let p1_curr_anim = player_current_animation.length;
-    if (player.animator.animation_index as f32 + 0.35 as f32) as usize >= p1_curr_anim as usize {
+    if (player.animator.animation_index as f32 + 0.35_f32) as usize >= p1_curr_anim as usize {
         //TODO currently it adds the projectile once at the end, but should add at specific key frames
         if player.is_attacking && assets.effects.contains_key(&player_current_animation.name) {
             let mut projectile =

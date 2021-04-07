@@ -1,4 +1,4 @@
-use super::game_inputs::GameInput;
+use super::game_inputs::GameAction;
 use super::process_inputs::record_input;
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::{
@@ -13,30 +13,30 @@ pub fn apply_game_input_state<'a, 'b>(
     player: &'b mut Player<'a>,
     input_reset_timers: &mut Vec<i32>,
     current_directional_state: &[(TranslatedInput, bool); 4],
-    current_input_state: &mut [(GameInput, bool); 10],
-    last_inputs: &mut VecDeque<GameInput>,
+    current_input_state: &mut [(GameAction, bool); 10],
+    last_inputs: &mut VecDeque<GameAction>,
 ) {
     let len = last_inputs.len();
 
     //fix current_input_state based on current_directional_state
     //horizontal right
-    let right_as_game_input = GameInput::from_translated_input(
+    let right_as_game_input = GameAction::from_translated_input(
         current_directional_state[0].0,
         current_input_state,
         player.dir_related_of_other,
     );
 
-    current_input_state[GameInput::get_direction_index(right_as_game_input.unwrap())].1 =
+    current_input_state[GameAction::get_direction_index(right_as_game_input.unwrap())].1 =
         current_directional_state[0].1;
 
     //horizontal left
-    let right_as_game_input = GameInput::from_translated_input(
+    let right_as_game_input = GameAction::from_translated_input(
         current_directional_state[1].0,
         current_input_state,
         player.dir_related_of_other,
     );
 
-    current_input_state[GameInput::get_direction_index(right_as_game_input.unwrap())].1 =
+    current_input_state[GameAction::get_direction_index(right_as_game_input.unwrap())].1 =
         current_directional_state[1].1;
 
     //if forward and backwards at the same time, keep priorizing forward
@@ -45,35 +45,42 @@ pub fn apply_game_input_state<'a, 'b>(
         if current_input_state[6].1 {
             player.velocity_x = 1;
         }
-        player.velocity_x = player.velocity_x * player.dir_related_of_other;
+        player.velocity_x *= player.dir_related_of_other;
     }
+
+    if !current_input_state[6].1 && !current_input_state[8].1 && !current_input_state[7].1 && !current_input_state[9].1{
+        player.velocity_x = 0;  
+    }
+
 
     if current_input_state[6].1
         && (len == 0
-            || (last_inputs[len - 1] != GameInput::Forward
-                && last_inputs[len - 1] != GameInput::ForwardUp
-                && last_inputs[len - 1] != GameInput::ForwardDown))
+            || (last_inputs[len - 1] != GameAction::Forward
+                && last_inputs[len - 1] != GameAction::ForwardUp
+                && last_inputs[len - 1] != GameAction::ForwardDown))
     {
         record_input(last_inputs, current_input_state[6].0);
         input_reset_timers.push(0);
     }
+
     if current_input_state[8].1
         && (len == 0
-            || (last_inputs[len - 1] != GameInput::Backward
-                && last_inputs[len - 1] != GameInput::BackwardDown
-                && last_inputs[len - 1] != GameInput::BackwardUp
-                && last_inputs[len - 1] != GameInput::DashForward))
+            || (last_inputs[len - 1] != GameAction::Backward
+                && last_inputs[len - 1] != GameAction::BackwardDown
+                && last_inputs[len - 1] != GameAction::BackwardUp
+                && last_inputs[len - 1] != GameAction::DashForward))
     {
         record_input(last_inputs, current_input_state[8].0);
         input_reset_timers.push(0);
     }
+    
     //up
     if current_input_state[7].1 {
         if len == 0
-            || (last_inputs[len - 1] != GameInput::Up
-                && last_inputs[len - 1] != GameInput::ForwardUp
-                && last_inputs[len - 1] != GameInput::BackwardUp
-                && last_inputs[len - 1] != GameInput::DashBackward)
+            || (last_inputs[len - 1] != GameAction::Up
+                && last_inputs[len - 1] != GameAction::ForwardUp
+                && last_inputs[len - 1] != GameAction::BackwardUp
+                && last_inputs[len - 1] != GameAction::DashBackward)
         {
             record_input(last_inputs, current_input_state[7].0);
             input_reset_timers.push(0);
@@ -82,9 +89,9 @@ pub fn apply_game_input_state<'a, 'b>(
     } else if current_input_state[9].1 {
         //down
         if len == 0
-            || (last_inputs[len - 1] != GameInput::Down
-                && last_inputs[len - 1] != GameInput::ForwardDown
-                && last_inputs[len - 1] != GameInput::BackwardDown)
+            || (last_inputs[len - 1] != GameAction::Down
+                && last_inputs[len - 1] != GameAction::ForwardDown
+                && last_inputs[len - 1] != GameAction::BackwardDown)
         {
             record_input(last_inputs, current_input_state[9].0);
             input_reset_timers.push(0);
@@ -97,42 +104,40 @@ pub fn apply_game_input_state<'a, 'b>(
 pub fn apply_game_inputs<'a, 'b>(
     character_anims: &'a CharacterAssets,
     player: &'b mut Player<'a>,
-    recent_input: GameInput,
+    recent_input: GameAction,
     is_pressed: bool,
-    current_input_state: &[(GameInput, bool); 10],
-    last_inputs: &mut VecDeque<GameInput>,
+    current_input_state: &[(GameAction, bool); 10],
+    last_inputs: &mut VecDeque<GameAction>,
 ) {
     match recent_input {
-        GameInput::Forward => {
+        GameAction::Forward => {
             player.velocity_x = 1;
             if is_pressed {
                 check_for_dash_inputs(player, last_inputs);
+            } else if current_input_state[GameAction::get_direction_index(GameAction::Backward)].1 {
+                player.velocity_x = -1;
             } else {
-                if current_input_state[GameInput::get_direction_index(GameInput::Backward)].1 {
-                    player.velocity_x = -1;
-                } else {
-                    player.velocity_x = 0;
-                }
+                player.velocity_x = 0;
             }
-            player.velocity_x = player.velocity_x * player.dir_related_of_other;
+            player.velocity_x *= player.dir_related_of_other;
         }
-        GameInput::Backward => {
+        GameAction::Backward => {
             if is_pressed {
-                if !current_input_state[GameInput::get_direction_index(GameInput::Forward)].1 {
+                if !current_input_state[GameAction::get_direction_index(GameAction::Forward)].1 {
                     player.velocity_x = -1;
                     check_for_dash_inputs(player, last_inputs);
                     player.velocity_x = player.velocity_x * player.dir_related_of_other;
                 }
             } else {
-                if current_input_state[GameInput::get_direction_index(GameInput::Forward)].1 {
+                if current_input_state[GameAction::get_direction_index(GameAction::Forward)].1 {
                     player.velocity_x = 1;
                 } else {
                     player.velocity_x = 0;
                 }
-                player.velocity_x = player.velocity_x * player.dir_related_of_other;
+                player.velocity_x *= player.dir_related_of_other;
             }
         }
-        GameInput::Up => {
+        GameAction::Up => {
             if is_pressed {
                 //TODO just for testing
                 player.take_damage(10);
@@ -140,60 +145,60 @@ pub fn apply_game_inputs<'a, 'b>(
                 player.player_state_change(PlayerState::Jump);
             }
         }
-        GameInput::Down => {
+        GameAction::Down => {
             if is_pressed {
                 player.player_state_change(PlayerState::Crouch);
             } else {
                 player.player_state_change(PlayerState::UnCrouch);
             }
         }
-        GameInput::LightPunch => {
+        GameAction::LightPunch => {
             if is_pressed {
                 handle_attack_input_for_possible_combos(
                     character_anims,
                     player,
-                    GameInput::LightPunch,
+                    GameAction::LightPunch,
                     last_inputs,
                     "light_punch".to_string(),
                 );
             }
         }
-        GameInput::MediumPunch => {
+        GameAction::MediumPunch => {
             if is_pressed {
                 handle_attack_input_for_possible_combos(
                     character_anims,
                     player,
-                    GameInput::MediumPunch,
+                    GameAction::MediumPunch,
                     last_inputs,
                     "med_punch".to_string(),
                 );
             }
         }
-        GameInput::HeavyPunch => {
+        GameAction::HeavyPunch => {
             if is_pressed {
                 handle_attack_input_for_possible_combos(
                     character_anims,
                     player,
-                    GameInput::HeavyPunch,
+                    GameAction::HeavyPunch,
                     last_inputs,
                     "heavy_punch".to_string(),
                 );
             }
         }
-        GameInput::LightKick => {
+        GameAction::LightKick => {
             //TODO add input buffering both on button down and button up
             if is_pressed {
                 handle_attack_input_for_possible_combos(
                     character_anims,
                     player,
-                    GameInput::LightKick,
+                    GameAction::LightKick,
                     last_inputs,
                     "light_kick".to_string(),
                 );
             }
         }
-        GameInput::MediumKick => (),
-        GameInput::HeavyKick => (),
+        GameAction::MediumKick => (),
+        GameAction::HeavyKick => (),
         _ => (),
     }
 }
@@ -201,14 +206,14 @@ pub fn apply_game_inputs<'a, 'b>(
 fn handle_attack_input_for_possible_combos<'a, 'b>(
     character_anims: &'a CharacterAssets,
     player: &'b mut Player<'a>,
-    _input: GameInput,
-    last_inputs: &mut VecDeque<GameInput>,
+    _input: GameAction,
+    last_inputs: &mut VecDeque<GameAction>,
     animation_name: String,
 ) {
     let is_grab = check_for_grab_inputs(player, last_inputs);
     if !is_grab {
         let special_attack = check_for_history_string_inputs(character_anims, last_inputs);
-        if special_attack != "" && player.character.special_curr >= 1.0 {
+        if !special_attack.is_empty() && player.character.special_curr >= 1.0 {
             player.change_special_meter(-1.0);
             player_attack(character_anims, player, special_attack);
         } else {
@@ -218,7 +223,7 @@ fn handle_attack_input_for_possible_combos<'a, 'b>(
                 last_inputs,
                 &player,
             );
-            if directional_attack != "" {
+            if !directional_attack.is_empty() {
                 player_attack(character_anims, player, directional_attack);
             } else {
                 player.change_special_meter(0.1);
@@ -228,42 +233,42 @@ fn handle_attack_input_for_possible_combos<'a, 'b>(
     }
 }
 
-fn check_for_grab_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInput>) -> bool {
+fn check_for_grab_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameAction>) -> bool {
     let len = last_inputs.len();
     if len >= 2 && last_inputs[len - 2] != last_inputs[len - 1] {
-        if (last_inputs[len - 1] == GameInput::LightPunch
-            || last_inputs[len - 1] == GameInput::LightKick)
-            && (last_inputs[len - 2] == GameInput::LightPunch
-                || last_inputs[len - 2] == GameInput::LightKick)
+        if (last_inputs[len - 1] == GameAction::LightPunch
+            || last_inputs[len - 1] == GameAction::LightKick)
+            && (last_inputs[len - 2] == GameAction::LightPunch
+                || last_inputs[len - 2] == GameAction::LightKick)
         {
             player.player_state_change(PlayerState::Grab);
             player.is_attacking = false;
             last_inputs.clear();
-            last_inputs.push_back(GameInput::Grab);
+            last_inputs.push_back(GameAction::Grab);
             return true;
         }
     }
     false
 }
 
-fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameInput>) {
+fn check_for_dash_inputs(player: &mut Player, last_inputs: &mut VecDeque<GameAction>) {
     let len = last_inputs.len();
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1] {
-        if last_inputs[len - 1] == GameInput::Backward {
+        if last_inputs[len - 1] == GameAction::Backward {
             player.player_state_change(PlayerState::DashingBackward);
             last_inputs.clear();
-            last_inputs.push_back(GameInput::DashBackward)
-        } else if last_inputs[len - 1] == GameInput::Forward {
+            last_inputs.push_back(GameAction::DashBackward)
+        } else if last_inputs[len - 1] == GameAction::Forward {
             player.player_state_change(PlayerState::DashingForward);
             last_inputs.clear();
-            last_inputs.push_back(GameInput::DashForward)
+            last_inputs.push_back(GameAction::DashForward)
         }
     }
 }
 
 fn check_for_last_directional_inputs_directional_attacks(
     character_anims: &CharacterAssets,
-    last_inputs: &mut VecDeque<GameInput>,
+    last_inputs: &mut VecDeque<GameAction>,
     _player: &Player,
 ) -> String {
     let mut ability_name: &str = "";
@@ -293,7 +298,7 @@ fn check_for_last_directional_inputs_directional_attacks(
 
 fn check_for_history_string_inputs(
     character_anims: &CharacterAssets,
-    last_inputs: &mut VecDeque<GameInput>,
+    last_inputs: &mut VecDeque<GameAction>,
 ) -> String {
     //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims

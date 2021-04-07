@@ -35,7 +35,7 @@ impl<'a> SegmentedBar<'a> {
             ));
         }
         Self {
-            rects: rects,
+            rects,
             segmentations,
             curr_value: segmentations as f32,
             step,

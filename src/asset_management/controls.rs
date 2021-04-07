@@ -25,7 +25,7 @@ pub fn load_controls() -> HashMap<String, TranslatedInput> {
 
     let json_string = fs::read_to_string(&path).unwrap();
 
-    if json_string.len() > 0 {
+    if !json_string.is_empty() {
         let deserialized: HashMap<String, TranslatedInput> =
             serde_json::from_str(&json_string).unwrap();
         deserialized

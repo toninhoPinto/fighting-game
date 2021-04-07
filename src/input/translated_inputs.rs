@@ -44,11 +44,7 @@ impl TranslatedInput {
     }
 
     pub fn is_directional_input(input: TranslatedInput) -> bool {
-        match input {
-            TranslatedInput::Horizontal(_h) => true,
-            TranslatedInput::Vertical(_v) => true,
-            _ => false,
-        }
+        matches!(input, TranslatedInput::Horizontal(_) | TranslatedInput::Vertical(_))
     }
 
     pub fn is_currently_any_directional_input(
@@ -122,7 +118,7 @@ impl<'de> Deserialize<'de> for TranslatedInput {
     {
         struct FieldVisitor {
             min: usize,
-        };
+        }
 
         impl<'de> Visitor<'de> for FieldVisitor {
             type Value = TranslatedInput;

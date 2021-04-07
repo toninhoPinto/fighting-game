@@ -2,9 +2,10 @@ use sdl2::rect::Point;
 
 use crate::asset_management::collider::Collider;
 
-use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, projectile::Projectile};
+use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, inputs::game_inputs::GameAction, projectile::Projectile};
 
 pub struct Game<'a>{
+    pub current_frame: i32,
     pub player1: &'a mut Player<'a>,
     pub player2: &'a mut Player<'a>,
 
@@ -12,11 +13,18 @@ pub struct Game<'a>{
 
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
+
+    pub p1_input_state: [(GameAction, bool); 10],
+    pub last_game_action: Option<(GameAction, bool)>,
+
+    pub p2_input_state: [(GameAction, bool); 10],
 }
 
 impl<'a> Game<'a>{
     pub fn new(player1: &'a mut Player<'a>, player2: &'a mut Player<'a>) -> Self{
         Self{
+            current_frame: 0,
+
             player1,
             player2,
 
@@ -24,6 +32,11 @@ impl<'a> Game<'a>{
 
             p1_colliders: Vec::new(),
             p2_colliders: Vec::new(),
+
+            p1_input_state: GameAction::init_input_state(),
+            last_game_action: None,
+
+            p2_input_state: GameAction::init_input_state(),
         }
     }
 
