@@ -326,32 +326,38 @@ fn main() -> Result<(), String> {
 
             //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
             //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
-            for collider in game.p1_colliders
-                .iter()
-                .filter(|&c| c.collider_type == ColliderType::Hitbox)
-            {
-                for collider_to_take_dmg in game.p2_colliders
+            if !game.player1.has_hit {
+                for collider in game.p1_colliders
                     .iter()
-                    .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
                 {
-                    if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                        println!("DEAL DMG");
-                        game.player2.take_damage(10);
-                        game.player2.state_update(&p2_assets);
+                    for collider_to_take_dmg in game.p2_colliders
+                        .iter()
+                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                    {
+                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                            println!("DEAL DMG");
+                            game.player1.has_hit = true;
+                            game.player2.take_damage(10);
+                            game.player2.state_update(&p2_assets);
+                        }
                     }
                 }
             }
-
-            for collider in game.p2_colliders
-                .iter()
-                .filter(|&c| c.collider_type == ColliderType::Hitbox)
-            {
-                for collider_to_take_dmg in game.p1_colliders
+            
+            if !game.player2.has_hit {
+                for collider in game.p2_colliders
                     .iter()
-                    .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
                 {
-                    if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                        println!("TAKE DMG");
+                    for collider_to_take_dmg in game.p1_colliders
+                        .iter()
+                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                    {
+                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                            game.player2.has_hit = true;
+                            println!("TAKE DMG");
+                        }
                     }
                 }
             }

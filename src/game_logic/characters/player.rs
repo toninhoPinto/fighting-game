@@ -49,6 +49,7 @@ pub struct Player<'a> {
 
     pub animator: Animator<'a>,
     pub flipped: bool,
+    pub has_hit: bool,
 
     pub character: Character,
 
@@ -75,6 +76,7 @@ impl<'a> Player<'a> {
             animator: Animator::new(),
             is_attacking: false,
             is_airborne: false,
+            has_hit: false,
             flipped,
             character,
         }
@@ -201,6 +203,8 @@ impl<'a> Player<'a> {
         let character_animation = &character_data.animations;
 
         if self.animator.is_finished && self.state != PlayerState::Dead {
+            self.has_hit = false;
+
             if self.state == PlayerState::Jump {
                 self.state = PlayerState::Jumping;
             }
