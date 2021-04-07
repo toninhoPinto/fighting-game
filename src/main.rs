@@ -1,5 +1,5 @@
 use asset_management::collider::{Collider, ColliderType};
-use game_logic::{game::Game, inputs::{
+use game_logic::{game::{Game, SavedGame}, inputs::{
     apply_inputs::apply_game_input_state, process_inputs::update_directional_state,
 }};
 use sdl2::image::{self, InitFlag};
@@ -148,6 +148,7 @@ fn main() -> Result<(), String> {
     let mut _input_buffer: Vec<i32> = Vec::new();
 
     let mut game = Game::new(&mut player1, &mut player2);
+    let mut game_rollback: Option<SavedGame> = None;
 
     let mut previous_time = Instant::now();
     let logic_timestep: f64 = 0.016;
@@ -175,6 +176,12 @@ fn main() -> Result<(), String> {
             match event {
                 Event::Quit { .. } => break 'running,
                 Event::KeyDown {keycode: Some(input),..} => {
+                    if input == Keycode::L {
+                        match game_rollback {
+                            Some(ref gr) => {game.load(&gr, &p1_assets, &p2_assets)},
+                            None => {game_rollback = Some(game.save());}
+                        }
+                    }
                     if input == Keycode::P {
                         debug_pause ^= true
                     }

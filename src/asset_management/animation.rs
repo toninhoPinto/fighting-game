@@ -23,8 +23,8 @@ pub struct Animator<'a> {
     pub current_animation: Option<&'a Animation<'a>>,
     pub is_playing: bool,
     pub is_finished: bool,
-    play_once: bool,
-    rewind: bool,
+    pub play_once: bool,
+    pub rewind: bool,
 }
 
 impl<'a> Animator<'a> {

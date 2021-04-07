@@ -5,7 +5,7 @@ pub mod foxgirl;
 pub mod keetar;
 pub mod player;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Character {
     //visual
     pub sprite: Rect,

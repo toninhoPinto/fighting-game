@@ -15,7 +15,7 @@ pub enum ColliderType {
     Pushbox, //push character
     Grabbox,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Collider {
     pub collider_type: ColliderType,
     pub name: String,

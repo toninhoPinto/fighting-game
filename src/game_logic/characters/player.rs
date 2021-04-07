@@ -30,6 +30,7 @@ impl fmt::Display for PlayerState {
         write!(f, "{:?}", self)
     }
 }
+
 pub struct Player<'a> {
     pub id: i32,
     pub position: Point,
