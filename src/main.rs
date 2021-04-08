@@ -139,7 +139,7 @@ fn main() -> Result<(), String> {
     let mut input_processed: VecDeque<TranslatedInput> = VecDeque::new();
     let mut action_history: VecDeque<GameAction> = VecDeque::new();
 
-    let mut special_reset_timer: VecDeque<i32> = VecDeque::new();
+    let mut special_reset_timer: Vec<i32> = Vec::new();
     
     let mut directional_state_input: [(TranslatedInput, bool); 4] = TranslatedInput::init_dir_input_state();
     let mut button_state_input: [(TranslatedInput, bool); 6] = TranslatedInput::init_button_input_state();
@@ -236,6 +236,13 @@ fn main() -> Result<(), String> {
 
             if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
                 logic_time_accumulated = 0.0;
+            }
+
+            for i in 0..special_reset_timer.len() {
+                special_reset_timer[i] += 1;
+                if special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    action_history.pop_front();
+                }
             }
 
             if !input_history.is_empty() {

@@ -42,7 +42,7 @@ button_state: &[(TranslatedInput, bool); 6],
 to_process: &mut VecDeque<(TranslatedInput, bool)>,
 inputs_processed: &mut VecDeque<TranslatedInput>,
 action_history: &mut VecDeque<GameAction>,
-special_reset_timer: &mut VecDeque<i32>){
+special_reset_timer: &mut Vec<i32>){
 
     for &(recent_input, is_pressed) in to_process.iter(){
 
@@ -60,13 +60,15 @@ special_reset_timer: &mut VecDeque<i32>){
                 Ok(game_action) => {
                     action_history.push_back(game_action);
                     action_history.push_back(recent_input_as_game_action);
+                    special_reset_timer.push(0);
                 },
                 _ => action_history.push_back(recent_input_as_game_action)
             }
         } else if action_history.is_empty() {
             action_history.push_back(recent_input_as_game_action)
         }
-        
+        special_reset_timer.push(0);
+
         match recent_input {
             TranslatedInput::Horizontal(h) => {
                 if is_pressed {
@@ -94,6 +96,7 @@ special_reset_timer: &mut VecDeque<i32>){
                         directional_state,
                         button_state,
                         action_history,
+                        special_reset_timer,
                     );
                 }
             }
@@ -107,6 +110,7 @@ special_reset_timer: &mut VecDeque<i32>){
                         directional_state,
                         button_state,
                         action_history,
+                        special_reset_timer,
                     );
                 }
             }
@@ -120,6 +124,7 @@ special_reset_timer: &mut VecDeque<i32>){
                         directional_state,
                         button_state,
                         action_history,
+                        special_reset_timer,
                     );
                 }
             }
@@ -133,6 +138,7 @@ special_reset_timer: &mut VecDeque<i32>){
                         directional_state,
                         button_state,
                         action_history,
+                        special_reset_timer,
                     );
                 }
             }
@@ -166,9 +172,10 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     animation_name: String, 
     directional_state: &[(TranslatedInput, bool); 4],
     button_state: &[(TranslatedInput, bool); 6],
-    action_history: &mut VecDeque<GameAction>){
+    action_history: &mut VecDeque<GameAction>,
+    special_reset_timer: &mut Vec<i32>){
 
-    if let Some(special_input) = check_special_inputs(character_anims, action_history) {
+    if let Some(special_input) = check_special_inputs(character_anims, action_history, special_reset_timer) {
         player.change_special_meter(-1.0);
         player.attack(character_anims, special_input);
     } else if let Some(directional_input) = check_directional_inputs(player, character_anims, directional_state, recent_input_as_game_action) {
@@ -182,14 +189,13 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     }
 }
 
-fn check_special_inputs(character_anims: & CharacterAssets, action_history: &mut VecDeque<GameAction>) -> Option<String> {
+fn check_special_inputs(character_anims: & CharacterAssets, action_history: &mut VecDeque<GameAction>, special_reset_timer: &mut Vec<i32>) -> Option<String> {
      //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
     //if no match
     // iterate over last inputs starting from the end -1
     //etc
     //if find match, play animation and remove that input from array
-    println!("action history {:?}", action_history);
     let mut l;
     for possible_combo in character_anims.input_combination_anims.iter() {
         for n in 0..action_history.len() {
@@ -204,6 +210,7 @@ fn check_special_inputs(character_anims: & CharacterAssets, action_history: &mut
 
                 if l == moves.len() {
                     action_history.clear();
+                    special_reset_timer.clear();
                     return Some(name.to_string())
                 }
             }
