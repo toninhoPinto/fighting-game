@@ -1,7 +1,5 @@
 use asset_management::collider::ColliderType;
-use game_logic::{game::{Game, SavedGame}, inputs::{
-    apply_inputs::apply_game_input_state, process_inputs::update_directional_state,
-}};
+use game_logic::{game::{Game, SavedGame}, inputs::{apply_inputs::{apply_input_state, apply_input}, process_inputs::{update_button_state, update_directional_state}}};
 use sdl2::image::{self, InitFlag};
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
@@ -31,12 +29,8 @@ mod ui;
 
 use crate::asset_management::controls;
 use crate::game_logic::character_factory::{load_character, load_character_anim_data};
-use crate::game_logic::inputs::apply_inputs::apply_game_inputs;
 use crate::game_logic::inputs::game_inputs::GameAction;
-use crate::game_logic::inputs::process_inputs::{
-    filter_already_pressed_button, filter_already_pressed_direction,
-    released_joystick_reset_directional_state, transform_input_state,
-};
+use crate::game_logic::inputs::process_inputs::{released_joystick_reset_directional_state};
 use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
@@ -56,6 +50,7 @@ use input::translated_inputs::TranslatedInput;
 //Add startup, active and recovery per animation
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
 const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
+const FRAME_AMOUNT_CAN_ROLLBACK: i16 = 7;
 
 fn main() -> Result<(), String> {
     println!("Starting Game");
@@ -88,7 +83,7 @@ fn main() -> Result<(), String> {
     let p2_assets = load_character_anim_data(&texture_creator, player2_character);
 
     let mut player1 = load_character(player1_character, Point::new(400, 0), false, 1);
-    let mut player2 = load_character(player2_character, Point::new(900, -50), true, 2);
+    let mut player2 = load_character(player2_character, Point::new(700, -50), true, 2);
     player1
         .animator
         .play(p1_assets.animations.get("idle").unwrap(), false);
@@ -139,12 +134,17 @@ fn main() -> Result<(), String> {
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
-    //inputs
-    let mut input_reset_timers: Vec<i32> = Vec::new();
-    let mut last_game_actions: VecDeque<GameAction> = VecDeque::new();
-    let mut last_game_action: Option<(GameAction, bool)> = None;
-    let mut has_game_action_been_processed = true;
+    //p1 inputs
+    let mut input_history: VecDeque<(TranslatedInput, bool)> = VecDeque::new();
+    let mut input_processed: VecDeque<TranslatedInput> = VecDeque::new();
+    let mut action_history: VecDeque<GameAction> = VecDeque::new();
+
+    let mut special_reset_timer: VecDeque<i32> = VecDeque::new();
+    
     let mut directional_state_input: [(TranslatedInput, bool); 4] = TranslatedInput::init_dir_input_state();
+    let mut button_state_input: [(TranslatedInput, bool); 6] = TranslatedInput::init_button_input_state();
+    
+    //p2 inputs 
 
     let mut game = Game::new(&mut player1, &mut player2);
     let mut game_rollback: Option<SavedGame> = None;
@@ -202,16 +202,8 @@ fn main() -> Result<(), String> {
 
             if raw_input.is_some() {
                 let (translated_input, is_pressed) = raw_input.unwrap();
-                //This is to make hitboxes and keyboards work more similarly to joystick events
-                let filtered_input;
-                if is_pressed && TranslatedInput::is_directional_input(translated_input) {
-                    filtered_input = filter_already_pressed_direction(
-                        translated_input,
-                        &mut directional_state_input,
-                    );
-                } else {
-                    filtered_input = Some(translated_input);
-                }
+                
+                input_history.push_back((translated_input, is_pressed));
 
                 let is_directional_input = TranslatedInput::is_directional_input(translated_input);
                 if is_directional_input {
@@ -225,39 +217,13 @@ fn main() -> Result<(), String> {
                         translated_input,
                         is_pressed,
                         &mut directional_state_input,
-                    )
-                }
-
-                if filtered_input.is_some() {
-                    let non_direction_repeated_input = filtered_input.unwrap();
-                    let game_input = GameAction::from_translated_input(
-                        non_direction_repeated_input,
-                        &game.p1_input_state,
-                        game.player1.dir_related_of_other,
-                    )
-                    .unwrap();
-
-                    let filtered_buttons_input;
-                    if is_pressed && !is_directional_input {
-                        filtered_buttons_input =
-                            filter_already_pressed_button(game_input, &mut game.p1_input_state);
-                    } else {
-                        filtered_buttons_input = Some(game_input);
-                    }
-
-                    if filtered_buttons_input.is_some() {
-                        let game_input = transform_input_state(
-                            filtered_buttons_input.unwrap(),
-                            is_pressed,
-                            &mut game.p1_input_state,
-                            &mut directional_state_input,
-                            &mut last_game_actions,
-                        );
-                        if game_input.is_some() {
-                            last_game_action = Some((game_input.unwrap(), is_pressed));
-                            has_game_action_been_processed = false;
-                        }
-                    }
+                    );
+                } else {
+                    update_button_state(
+                        translated_input,
+                        is_pressed,
+                        &mut button_state_input,
+                    );
                 }
             }
             //end of input management
@@ -272,38 +238,13 @@ fn main() -> Result<(), String> {
                 logic_time_accumulated = 0.0;
             }
 
-            apply_game_input_state(
-                &p1_assets,
-                &mut game.player1,
-                &mut input_reset_timers,
-                &directional_state_input,
-                &mut game.p1_input_state,
-                &mut last_game_actions,
-            );
-
-            if !has_game_action_been_processed && last_game_action.is_some() {
-                has_game_action_been_processed = true;
-                apply_game_inputs(
-                    &p1_assets,
-                    &mut game.player1,
-                    last_game_action.unwrap().0,
-                    last_game_action.unwrap().1,
-                    &game.p1_input_state,
-                    &mut last_game_actions,
-                );
-                if last_game_action.unwrap().1 {
-                    input_reset_timers.push(0);
-                }
+            if !input_history.is_empty() {
+                apply_input(&mut game.player1, &p1_assets, 
+                    &directional_state_input, &button_state_input,
+                    &mut input_history, &mut input_processed,
+                    &mut action_history, &mut special_reset_timer);
             }
-
-            //Number of frames to delete each input
-            for i in 0..input_reset_timers.len() {
-                //input_reset_timers[i] += 1;
-                if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    //last_game_actions.pop_front();
-                }
-            }
-            input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+            apply_input_state(&mut game.player1, &directional_state_input, &button_state_input);
 
             p1_health_bar.update(game.player1.character.hp);
             p2_health_bar.update(game.player2.character.hp);

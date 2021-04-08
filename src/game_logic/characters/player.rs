@@ -113,11 +113,13 @@ impl<'a> Player<'a> {
         !(self.is_attacking || self.is_airborne || self.state == PlayerState::Dead)
     }
 
+
     pub fn player_state_change(&mut self, new_state: PlayerState) {
         let is_interruptable = self.state != PlayerState::DashingForward
             && self.state != PlayerState::DashingBackward
             && self.state != PlayerState::Jumping
             && self.state != PlayerState::Jump;
+            
 
         let already_crouching = (new_state == PlayerState::Crouch
             || new_state == PlayerState::Crouching)
@@ -125,6 +127,27 @@ impl<'a> Player<'a> {
 
         if is_interruptable && !already_crouching && self.state != PlayerState::Dead {
             self.state = new_state;
+        }
+    }
+
+    pub fn jump(&mut self){
+        if !self.is_airborne {
+            self.player_state_change(PlayerState::Jump);
+        }
+    }
+
+    
+    pub fn attack(&mut self,
+        character_anims: &'a CharacterAssets,
+        attack_animation: String,
+    ) {
+        println!("PRINT {}", attack_animation);
+        if self.player_can_attack() {
+            self.is_attacking = true;
+            self.animator.play_once(
+                character_anims.animations.get(&attack_animation).unwrap(),
+                false,
+            );
         }
     }
 

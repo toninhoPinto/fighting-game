@@ -19,42 +19,31 @@ pub enum TranslatedInput {
 
 impl TranslatedInput {
     pub fn init_dir_input_state() -> [(TranslatedInput, bool); 4] {
-        let mut current_inputs_state: [(TranslatedInput, bool); 4] =
-            [(TranslatedInput::LightPunch, false); 4];
-        current_inputs_state[0] = (TranslatedInput::Horizontal(1), false);
-        current_inputs_state[1] = (TranslatedInput::Horizontal(-1), false);
-        current_inputs_state[2] = (TranslatedInput::Vertical(1), false);
-        current_inputs_state[3] = (TranslatedInput::Vertical(-1), false);
-
-        current_inputs_state
+        [(
+            TranslatedInput::Horizontal(1), false),
+            (TranslatedInput::Horizontal(-1), false),
+            (TranslatedInput::Vertical(1), false),
+            (TranslatedInput::Vertical(-1), false),
+        ]
     }
 
-    pub fn get_button_index(
-        current_inputs_state: &mut [(TranslatedInput, bool); 4],
-        input: TranslatedInput,
-    ) -> Option<usize> {
-        let mut return_index = None;
-        for i in 0..4 {
-            if current_inputs_state[i].0 == input {
-                return_index = Some(i);
-                break;
-            }
-        }
-        return_index
+    pub fn init_button_input_state() -> [(TranslatedInput, bool); 6] {
+        [(
+            TranslatedInput::LightPunch, false),
+            (TranslatedInput::MediumPunch, false),
+            (TranslatedInput::HeavyPunch, false),
+            (TranslatedInput::LightKick, false),
+            (TranslatedInput::MediumKick, false),
+            (TranslatedInput::HeavyKick, false),
+        ]
     }
 
     pub fn is_directional_input(input: TranslatedInput) -> bool {
         matches!(input, TranslatedInput::Horizontal(_) | TranslatedInput::Vertical(_))
     }
 
-    pub fn is_currently_any_directional_input(
-        current_inputs_state: &[(TranslatedInput, bool); 4],
-    ) -> bool {
-        let mut return_index = false;
-        for i in 0..4 {
-            return_index |= current_inputs_state[i].1;
-        }
-        return_index
+    pub fn is_currently_any_directional_input(current_inputs_state: &[(TranslatedInput, bool); 4]) -> bool {
+        current_inputs_state[0].1 || current_inputs_state[1].1 || current_inputs_state[2].1 || current_inputs_state[3].1
     }
 }
 

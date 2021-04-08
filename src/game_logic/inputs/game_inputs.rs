@@ -85,7 +85,7 @@ impl GameAction {
 
     pub fn from_translated_input(
         original_input: TranslatedInput,
-        current_input_state: &[(GameAction, bool); 10],
+        current_input_state: &[(TranslatedInput, bool); 4],
         player_facing_dir: i32,
     ) -> Result<GameAction, String> {
         match original_input {
@@ -106,10 +106,10 @@ impl GameAction {
                 } else {
                     //Specifically for joysticks that do not inform what was once pressed and then released for the axis
                     //so whatever was once pressed is the direction that was released (this works because joystick only lets you have 1 direction at a time)
-                    if current_input_state[6].1 {
-                        Ok(current_input_state[6].0)
+                    if current_input_state[1].1 {
+                        Ok(GameAction::Backward)
                     } else {
-                        Ok(current_input_state[8].0)
+                        Ok(GameAction::Forward)
                     }
                 }
             }
@@ -117,7 +117,7 @@ impl GameAction {
             TranslatedInput::Vertical(v) if v < 0 => Ok(GameAction::Down),
 
             TranslatedInput::Vertical(v) if v == 0 => {
-                if current_input_state[7].1 {
+                if current_input_state[2].1 {
                     Ok(GameAction::Up)
                 } else {
                     Ok(GameAction::Down)

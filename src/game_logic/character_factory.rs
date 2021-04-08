@@ -1,4 +1,4 @@
-use super::characters::player::Player;
+use super::{characters::player::Player, game::Game};
 use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
@@ -14,7 +14,7 @@ use std::string::String;
 pub struct CharacterAssets<'a> {
     pub animations: HashMap<String, Animation<'a>>,
     pub input_combination_anims: Vec<(Vec<GameAction>, String)>,
-    pub directional_variation_anims: Vec<(Vec<GameAction>, String)>,
+    pub directional_variation_anims: Vec<((GameAction, GameAction), String)>,
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>,
     pub collider_animations: HashMap<String, ColliderAnimation>,
@@ -102,11 +102,8 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_keetar_anims(texture_creator);
 
-    let mut directional_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
-    let directional_string= vec![
-        GameAction::Forward,
-        GameAction::LightPunch
-    ];
+    let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
+    let directional_string= (GameAction::Forward,GameAction::LightPunch);
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
     let mut specials_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
@@ -239,8 +236,8 @@ fn load_keetar_anims(
         Animation::new(light_punch_anim, "light_punch".to_string(), 0.35),
     );
     character_anims.insert(
-        "med_punch".to_string(),
-        Animation::new(medium_punch_anim, "med_punch".to_string(), 0.35),
+        "medium_punch".to_string(),
+        Animation::new(medium_punch_anim, "medium_punch".to_string(), 0.35),
     );
     character_anims.insert(
         "heavy_punch".to_string(),
@@ -321,18 +318,12 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
 fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_foxgirl_anims(texture_creator);
 
-    let mut directional_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
+    let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
 
-    let directional_string= vec![
-        GameAction::Forward,
-        GameAction::LightPunch
-    ];
+    let directional_string= (GameAction::Forward,GameAction::LightPunch);
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
-    let directional_string_2: Vec<GameAction> = vec![
-        GameAction::Forward,
-        GameAction::HeavyPunch
-    ];
+    let directional_string_2 = (GameAction::Forward, GameAction::HeavyPunch);
     directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
 
     let effects_of_abilities = HashMap::new();
@@ -427,8 +418,8 @@ fn load_foxgirl_anims(
         Animation::new(light_punch_anim, "light_punch".to_string(), 0.35),
     );
     character_anims.insert(
-        "med_punch".to_string(),
-        Animation::new(medium_punch_anim, "med_punch".to_string(), 0.35),
+        "medium_punch".to_string(),
+        Animation::new(medium_punch_anim, "medium_punch".to_string(), 0.35),
     );
     character_anims.insert(
         "heavy_punch".to_string(),
