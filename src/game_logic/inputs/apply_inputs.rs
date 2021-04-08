@@ -28,6 +28,7 @@ pub fn apply_game_input_state<'a, 'b>(
 
     current_input_state[GameAction::get_direction_index(right_as_game_input.unwrap())].1 =
         current_directional_state[0].1;
+    
 
     //horizontal left
     let right_as_game_input = GameAction::from_translated_input(
@@ -50,28 +51,6 @@ pub fn apply_game_input_state<'a, 'b>(
 
     if !current_input_state[6].1 && !current_input_state[8].1 && !current_input_state[7].1 && !current_input_state[9].1{
         player.velocity_x = 0;  
-    }
-
-
-    if current_input_state[6].1
-        && (len == 0
-            || (last_inputs[len - 1] != GameAction::Forward
-                && last_inputs[len - 1] != GameAction::ForwardUp
-                && last_inputs[len - 1] != GameAction::ForwardDown))
-    {
-        record_input(last_inputs, current_input_state[6].0);
-        input_reset_timers.push(0);
-    }
-
-    if current_input_state[8].1
-        && (len == 0
-            || (last_inputs[len - 1] != GameAction::Backward
-                && last_inputs[len - 1] != GameAction::BackwardDown
-                && last_inputs[len - 1] != GameAction::BackwardUp
-                && last_inputs[len - 1] != GameAction::DashForward))
-    {
-        record_input(last_inputs, current_input_state[8].0);
-        input_reset_timers.push(0);
     }
     
     //up
@@ -98,6 +77,9 @@ pub fn apply_game_input_state<'a, 'b>(
         }
         player.player_state_change(PlayerState::Crouch);
     }
+
+
+
 }
 
 //TODO clean up this
@@ -109,6 +91,7 @@ pub fn apply_game_inputs<'a, 'b>(
     current_input_state: &[(GameAction, bool); 10],
     last_inputs: &mut VecDeque<GameAction>,
 ) {
+    println!("recent_input {:?} last_inputs {:?}", recent_input, last_inputs);
     match recent_input {
         GameAction::Forward => {
             player.velocity_x = 1;
@@ -141,7 +124,7 @@ pub fn apply_game_inputs<'a, 'b>(
             if is_pressed {
                 //TODO just for testing
                 player.take_damage(10);
-
+                last_inputs.clear();
                 player.player_state_change(PlayerState::Jump);
             }
         }

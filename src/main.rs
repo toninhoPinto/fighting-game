@@ -272,6 +272,15 @@ fn main() -> Result<(), String> {
                 logic_time_accumulated = 0.0;
             }
 
+            apply_game_input_state(
+                &p1_assets,
+                &mut game.player1,
+                &mut input_reset_timers,
+                &directional_state_input,
+                &mut game.p1_input_state,
+                &mut last_game_actions,
+            );
+
             if !has_game_action_been_processed && last_game_action.is_some() {
                 has_game_action_been_processed = true;
                 apply_game_inputs(
@@ -287,20 +296,11 @@ fn main() -> Result<(), String> {
                 }
             }
 
-            apply_game_input_state(
-                &p1_assets,
-                &mut game.player1,
-                &mut input_reset_timers,
-                &directional_state_input,
-                &mut game.p1_input_state,
-                &mut last_game_actions,
-            );
-
             //Number of frames to delete each input
             for i in 0..input_reset_timers.len() {
-                input_reset_timers[i] += 1;
+                //input_reset_timers[i] += 1;
                 if input_reset_timers[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    last_game_actions.pop_front();
+                    //last_game_actions.pop_front();
                 }
             }
             input_reset_timers.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
