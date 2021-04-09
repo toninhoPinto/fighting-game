@@ -125,7 +125,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
     specials_inputs.push((med_combo_string, "med_special_attack".to_string()));
     let med_projectile = Projectile::new(0, Point::new(120, 105));
 
-    let mut heavy_combo_string: Vec<i32> = vec![
+    let heavy_combo_string: Vec<i32> = vec![
         GameAction::Down as i32,
         GameAction::Down as i32 +  GameAction::Forward as i32,
         GameAction::Forward as i32,

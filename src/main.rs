@@ -142,7 +142,6 @@ fn main() -> Result<(), String> {
     let mut special_reset_timer: Vec<i32> = Vec::new();
     
     let mut directional_state_input: [(TranslatedInput, bool); 4] = TranslatedInput::init_dir_input_state();
-    let mut button_state_input: [(TranslatedInput, bool); 6] = TranslatedInput::init_button_input_state();
     
     //p2 inputs 
 
@@ -217,13 +216,7 @@ fn main() -> Result<(), String> {
                         is_pressed,
                         &mut directional_state_input,
                     );
-                } else {
-                    update_button_state(
-                        translated_input,
-                        is_pressed,
-                        &mut button_state_input,
-                    );
-                }
+                } 
             }
             //end of input management
         }
@@ -239,11 +232,11 @@ fn main() -> Result<(), String> {
          
             if !input_history.is_empty() {
                 apply_input(&mut game.player1, &p1_assets, 
-                    &directional_state_input, &button_state_input,
+                    &directional_state_input,
                     &mut input_history, &mut input_processed,
                     &mut action_history, &mut special_reset_timer);
             }
-            apply_input_state(&mut game.player1, &directional_state_input, &button_state_input);
+            apply_input_state(&mut game.player1, &directional_state_input);
 
             for i in 0..special_reset_timer.len() {
                 special_reset_timer[i] += 1;

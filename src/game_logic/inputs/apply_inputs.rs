@@ -14,7 +14,7 @@ pub fn record_input(last_inputs: &mut VecDeque<GameAction>, input: GameAction) {
     }
 }
 
-pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedInput, bool); 4], button_state: &[(TranslatedInput, bool); 6]) {
+pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedInput, bool); 4]) {
     
     //in case you press forward, then press backwards, and then release backwards
     //since forward should still be applied
@@ -38,7 +38,6 @@ pub fn apply_input<'a, 'b>(
 player: &'b mut Player<'a>,
 character_anims: &'a CharacterAssets,
 directional_state: &[(TranslatedInput, bool); 4],
-button_state: &[(TranslatedInput, bool); 6],
 to_process: &mut VecDeque<(TranslatedInput, bool)>,
 inputs_processed: &mut VecDeque<TranslatedInput>,
 action_history: &mut VecDeque<i32>,
@@ -93,9 +92,7 @@ special_reset_timer: &mut Vec<i32>){
                         GameAction::LightPunch,
                         "light_punch".to_string(),
                         directional_state,
-                        button_state,
                         action_history,
-                        special_reset_timer,
                     );
                 }
             }
@@ -107,9 +104,7 @@ special_reset_timer: &mut Vec<i32>){
                         GameAction::MediumPunch,
                         "medium_punch".to_string(),
                         directional_state,
-                        button_state,
                         action_history,
-                        special_reset_timer,
                     );
                 }
             }
@@ -121,9 +116,7 @@ special_reset_timer: &mut Vec<i32>){
                         GameAction::HeavyPunch,
                         "heavy_punch".to_string(),
                         directional_state,
-                        button_state,
                         action_history,
-                        special_reset_timer,
                     );
                 }
             }
@@ -135,9 +128,7 @@ special_reset_timer: &mut Vec<i32>){
                         GameAction::LightKick,
                         "light_kick".to_string(),
                         directional_state,
-                        button_state,
                         action_history,
-                        special_reset_timer,
                     );
                 }
             }
@@ -170,16 +161,15 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     recent_input_as_game_action: GameAction, 
     animation_name: String, 
     directional_state: &[(TranslatedInput, bool); 4],
-    button_state: &[(TranslatedInput, bool); 6],
     action_history: &VecDeque<i32>,
-    special_reset_timer: &mut Vec<i32>){
+){
 
-    if let Some(special_input) = check_special_inputs(character_anims, action_history, special_reset_timer) {
+    if let Some(special_input) = check_special_inputs(character_anims, action_history) {
         player.change_special_meter(-1.0);
         player.attack(character_anims, special_input);
     } else if let Some(directional_input) = check_directional_inputs(player, character_anims, directional_state, recent_input_as_game_action) {
         player.attack(character_anims, directional_input);
-    } else if check_grab_input(button_state) {
+    } else if check_grab_input(action_history[action_history.len()-1]) {
         player.player_state_change(PlayerState::Grab);
         player.is_attacking = false;
     } else {
@@ -188,7 +178,7 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     }
 }
 
-fn check_special_inputs(character_anims: & CharacterAssets, action_history: &VecDeque<i32>, special_reset_timer: &mut Vec<i32>) -> Option<String> {
+fn check_special_inputs(character_anims: & CharacterAssets, action_history: &VecDeque<i32>) -> Option<String> {
      //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
     //if no match
@@ -246,7 +236,8 @@ fn check_directional_inputs(player: &mut Player,
     None
 }
 
-fn check_grab_input(button_state: &[(TranslatedInput, bool); 6]) -> bool {
-    button_state[0].1 && button_state[3].1
+fn check_grab_input(input_state: i32) -> bool {
+    let grab_input = GameAction::LightPunch as i32 | GameAction::LightKick as i32;
+    (grab_input & input_state) == grab_input
 }
 
