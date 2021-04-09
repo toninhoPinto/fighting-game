@@ -137,8 +137,9 @@ fn main() -> Result<(), String> {
     //p1 inputs
     let mut input_history: VecDeque<(TranslatedInput, bool)> = VecDeque::new();
     let mut input_processed: VecDeque<TranslatedInput> = VecDeque::new();
+    let mut input_processed_reset_timer: Vec<i32> = Vec::new();
+    
     let mut action_history: VecDeque<i32> = VecDeque::new();
-
     let mut special_reset_timer: Vec<i32> = Vec::new();
     
     let mut directional_state_input: [(TranslatedInput, bool); 4] = TranslatedInput::init_dir_input_state();
@@ -233,10 +234,20 @@ fn main() -> Result<(), String> {
             if !input_history.is_empty() {
                 apply_input(&mut game.player1, &p1_assets, 
                     &directional_state_input,
-                    &mut input_history, &mut input_processed,
+                    &mut input_history, 
+                    &mut input_processed, &mut input_processed_reset_timer,
                     &mut action_history, &mut special_reset_timer);
             }
             apply_input_state(&mut game.player1, &directional_state_input);
+
+            for i in 0..input_processed_reset_timer.len() {
+                input_processed_reset_timer[i] += 1;
+                if input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    input_processed.pop_front();
+                }
+            }
+            input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+
 
             for i in 0..special_reset_timer.len() {
                 special_reset_timer[i] += 1;

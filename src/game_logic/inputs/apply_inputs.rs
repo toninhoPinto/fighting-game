@@ -40,6 +40,7 @@ character_anims: &'a CharacterAssets,
 directional_state: &[(TranslatedInput, bool); 4],
 to_process: &mut VecDeque<(TranslatedInput, bool)>,
 inputs_processed: &mut VecDeque<TranslatedInput>,
+input_processed_reset_timer: &mut Vec<i32>,
 action_history: &mut VecDeque<i32>,
 special_reset_timer: &mut Vec<i32>){
 
@@ -60,6 +61,7 @@ special_reset_timer: &mut Vec<i32>){
 
         if is_pressed {
             inputs_processed.push_back(recent_input);
+            input_processed_reset_timer.push(0);
         }
 
         let recent_input_as_game_action = GameAction::from_translated_input(
