@@ -153,7 +153,6 @@ fn main() -> Result<(), String> {
     let logic_timestep: f64 = 0.016;
     let mut logic_time_accumulated: f64 = 0.0;
     let mut update_counter = 0;
-    let mut frame_counter = 0;
 
     let mut is_single_player = true;
     let mut debug_pause = false;
@@ -232,11 +231,11 @@ fn main() -> Result<(), String> {
         //Update
         while logic_time_accumulated >= logic_timestep {
             update_counter +=1;
-            frame_counter += 1;
-
             if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
                 logic_time_accumulated = 0.0;
             }
+
+            game.current_frame += 1;
          
             if !input_history.is_empty() {
                 apply_input(&mut game.player1, &p1_assets, 

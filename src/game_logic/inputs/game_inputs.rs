@@ -16,6 +16,13 @@ pub enum GameAction {
     HeavyKick = 0b1000000000,
 }
 
+impl Display for GameAction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+
 impl GameAction {
     pub fn update_state(curr_state: &mut i32, update: (GameAction, bool)) {
         if update.1 { 
@@ -27,67 +34,6 @@ impl GameAction {
 
     pub fn check_if_pressed(curr_state: &mut i32, check: i32) -> bool {
         *curr_state & check > 0
-    }
-}
-
-impl Display for GameAction {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl GameAction {
-    pub fn init_input_state() -> [(GameAction, bool); 10] {
-        let mut current_inputs_state: [(GameAction, bool); 10] =
-            [(GameAction::LightPunch, false); 10];
-        current_inputs_state[0] = (GameAction::LightPunch, false);
-        current_inputs_state[1] = (GameAction::MediumPunch, false);
-        current_inputs_state[2] = (GameAction::HeavyPunch, false);
-        current_inputs_state[3] = (GameAction::LightKick, false);
-        current_inputs_state[4] = (GameAction::MediumKick, false);
-        current_inputs_state[5] = (GameAction::HeavyKick, false);
-        current_inputs_state[6] = (GameAction::Forward, false);
-        current_inputs_state[7] = (GameAction::Up, false);
-        current_inputs_state[8] = (GameAction::Backward, false);
-        current_inputs_state[9] = (GameAction::Down, false);
-
-        current_inputs_state
-    }
-
-    pub fn is_pressed(current_inputs_state: &[(GameAction, bool); 10], input: GameAction) -> bool {
-        let mut return_bool = false;
-        for i in 0..10 {
-            if current_inputs_state[i].0 == input {
-                return_bool = current_inputs_state[i].1;
-                break;
-            }
-        }
-        return_bool
-    }
-
-    //TODO maybe return Result on these to avoid 0 being default
-    pub fn get_button_index(
-        current_inputs_state: &mut [(GameAction, bool); 10],
-        input: GameAction,
-    ) -> usize {
-        let mut return_index: usize = 0;
-        for i in 0..6 {
-            if current_inputs_state[i].0 == input {
-                return_index = i;
-                break;
-            }
-        }
-        return_index
-    }
-
-    pub fn get_direction_index(input: GameAction) -> usize {
-        match input {
-            GameAction::Forward => 6,
-            GameAction::Backward => 8,
-            GameAction::Up => 7,
-            GameAction::Down => 9,
-            _ => 0,
-        }
     }
 
     pub fn from_translated_input(

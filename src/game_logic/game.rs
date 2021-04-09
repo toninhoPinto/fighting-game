@@ -13,11 +13,6 @@ pub struct Game<'a>{
 
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
-
-    pub p1_input_state: [(GameAction, bool); 10],
-    pub last_game_action: Option<(GameAction, bool)>,
-
-    pub p2_input_state: [(GameAction, bool); 10],
 }
 
 impl<'a> Game<'a>{
@@ -32,11 +27,6 @@ impl<'a> Game<'a>{
 
             p1_colliders: Vec::new(),
             p2_colliders: Vec::new(),
-
-            p1_input_state: GameAction::init_input_state(),
-            last_game_action: None,
-
-            p2_input_state: GameAction::init_input_state(),
         }
     }
 
