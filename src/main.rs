@@ -76,61 +76,6 @@ fn main() -> Result<(), String> {
     let mut event_pump = sdl_context.event_pump()?;
     let mut joys: HashMap<u32, Controller> = HashMap::new();
 
-    let player1_character = "keetar";
-    let player2_character = "foxgirl";
-
-    let p1_assets = load_character_anim_data(&texture_creator, player1_character);
-    let p2_assets = load_character_anim_data(&texture_creator, player2_character);
-
-    let mut player1 = load_character(player1_character, Point::new(400, 0), false, 1);
-    let mut player2 = load_character(player2_character, Point::new(700, -50), true, 2);
-    player1
-        .animator
-        .play(p1_assets.animations.get("idle").unwrap(), false);
-    player2
-        .animator
-        .play(p2_assets.animations.get("idle").unwrap(), false);
-
-    let screen_res = canvas.output_size()?;
-    let mut p1_health_bar = Bar::new(
-        10,
-        20,
-        screen_res.0 / 2 - 20,
-        50,
-        player1.character.hp,
-        Some(Color::RGB(255, 100, 100)),
-        None,
-    );
-    let mut p2_health_bar = Bar::new(
-        screen_res.0 as i32 / 2 + 10,
-        20,
-        screen_res.0 / 2 - 20,
-        50,
-        player2.character.hp,
-        Some(Color::RGB(255, 100, 100)),
-        None,
-    );
-
-    let special_bar_width = 150;
-    let mut p1_special_bar = SegmentedBar::new(
-        10,
-        screen_res.1 as i32 - 30,
-        special_bar_width,
-        10,
-        player1.character.special_max,
-        Some(Color::RGB(20, 250, 250)),
-        None,
-    );
-    let mut p2_special_bar = SegmentedBar::new(
-        screen_res.0 as i32 - (special_bar_width as i32 + 10 * player2.character.special_max),
-        screen_res.1 as i32 - 30,
-        special_bar_width,
-        10,
-        player2.character.special_max,
-        Some(Color::RGB(20, 250, 250)),
-        None,
-    );
-
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
@@ -146,8 +91,67 @@ fn main() -> Result<(), String> {
     
     //p2 inputs 
 
-    let mut game = Game::new(&mut player1, &mut player2);
-    let mut game_rollback: Option<SavedGame> = None;
+
+
+
+    let player1_character = "keetar";
+    let player2_character = "foxgirl";
+
+    let p1_assets = load_character_anim_data(&texture_creator, player1_character);
+    let p2_assets = load_character_anim_data(&texture_creator, player2_character);
+
+    let mut game = Game::new(
+        load_character(player1_character, Point::new(400, 0), false, 1), 
+        load_character(player2_character, Point::new(700, -50), true, 2));
+    let mut game_rollback: Vec<u8> = Vec::new();
+
+    game.player1
+        .animator
+        .play(p1_assets.animations.get("idle").unwrap(), false);
+    game.player2
+        .animator
+        .play(p2_assets.animations.get("idle").unwrap(), false);
+
+    let screen_res = canvas.output_size()?;
+    let mut p1_health_bar = Bar::new(
+        10,
+        20,
+        screen_res.0 / 2 - 20,
+        50,
+        game.player1.character.hp,
+        Some(Color::RGB(255, 100, 100)),
+        None,
+    );
+    let mut p2_health_bar = Bar::new(
+        screen_res.0 as i32 / 2 + 10,
+        20,
+        screen_res.0 / 2 - 20,
+        50,
+        game.player2.character.hp,
+        Some(Color::RGB(255, 100, 100)),
+        None,
+    );
+
+    let special_bar_width = 150;
+    let mut p1_special_bar = SegmentedBar::new(
+        10,
+        screen_res.1 as i32 - 30,
+        special_bar_width,
+        10,
+        game.player1.character.special_max,
+        Some(Color::RGB(20, 250, 250)),
+        None,
+    );
+    let mut p2_special_bar = SegmentedBar::new(
+        screen_res.0 as i32 - (special_bar_width as i32 + 10 * game.player2.character.special_max),
+        screen_res.1 as i32 - 30,
+        special_bar_width,
+        10,
+        game.player2.character.special_max,
+        Some(Color::RGB(20, 250, 250)),
+        None,
+    );
+
 
     let mut previous_time = Instant::now();
     let logic_timestep: f64 = 0.016;
@@ -172,12 +176,13 @@ fn main() -> Result<(), String> {
         // Handle events
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit { .. } => break 'running,
+                Event::Quit { .. } => break 'running, 
                 Event::KeyDown {keycode: Some(input),..} => {
                     if input == Keycode::L {
-                        match game_rollback {
-                            Some(ref gr) => {game.load(&gr, &p1_assets, &p2_assets)},
-                            None => {game_rollback = Some(game.save());}
+                        if game_rollback.is_empty() {
+                            game_rollback = game.save();
+                        } else {
+                            //game = Game::load(&game_rollback, &p1_assets, &p2_assets);
                         }
                     }
                     if input == Keycode::P {
@@ -338,9 +343,9 @@ fn main() -> Result<(), String> {
             rendering::renderer::render(
                 &mut canvas,
                 Color::RGB(60, 64, 255),
-                game.player1,
+                &mut game.player1,
                 &p1_assets,
-                game.player2,
+                &mut game.player2,
                 &p2_assets,
                 &game.projectiles,
                 &mut game.p1_colliders,

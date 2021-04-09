@@ -4,10 +4,11 @@ use std::string::String;
 pub mod foxgirl;
 pub mod keetar;
 pub mod player;
-
-#[derive(Debug, Clone)]
+use crate::asset_management::custom_serialization::sdl2_rect_serial;
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Character {
     //visual
+    #[serde(with = "sdl2_rect_serial")]
     pub sprite: Rect,
 
     //stats
@@ -53,4 +54,8 @@ impl Character {
             jump_distance,
         }
     }
+
+
+
+
 }

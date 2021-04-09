@@ -1,12 +1,16 @@
 use sdl2::rect::{Point, Rect};
 use std::string::String;
+use crate::asset_management::{custom_serialization::{sdl2_point_serial,sdl2_rect_serial}, my_point::MyPoint};
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Projectile {
+    #[serde(with = "sdl2_point_serial")]
     pub position: Point,
+    #[serde(with = "sdl2_rect_serial")]
     pub sprite: Rect,
+    #[serde(with = "sdl2_point_serial")]
     pub direction: Point,
-    pub target_position: Option<Point>,
+    pub target_position: Option<MyPoint>,
     pub speed: i32,
     pub damage: i32,
     pub flipped: bool,
@@ -36,8 +40,8 @@ impl Projectile {
     pub fn update(&mut self) {
         match self.target_position {
             Some(_) => {
-                if self.position.x <= self.target_position.unwrap().x
-                    && self.position.y <= self.target_position.unwrap().y
+                if self.position.x <= self.target_position.unwrap().p.x
+                    && self.position.y <= self.target_position.unwrap().p.y
                 {
                     self.position = self.position.offset(self.speed, 0);
                 }

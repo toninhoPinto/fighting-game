@@ -6,9 +6,10 @@ use std::fmt;
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::game_logic::characters::Character;
 
-use crate::asset_management::animation::Animator;
+use crate::asset_management::custom_serialization::sdl2_point_serial;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+use crate::asset_management::animation::Animator;
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
 pub enum PlayerState {
     Standing,
     Crouch,
@@ -30,9 +31,10 @@ impl fmt::Display for PlayerState {
         write!(f, "{:?}", self)
     }
 }
-
+#[derive(Serialize, Deserialize)]
 pub struct Player<'a> {
     pub id: i32,
+    #[serde(with = "sdl2_point_serial")]
     pub position: Point,
     pub ground_height: i32,
     pub velocity_y: f64,
@@ -48,6 +50,7 @@ pub struct Player<'a> {
     pub is_attacking: bool,
     pub is_airborne: bool,
 
+    #[serde(borrow)]
     pub animator: Animator<'a>,
     pub flipped: bool,
     pub has_hit: bool,
@@ -112,7 +115,6 @@ impl<'a> Player<'a> {
     pub fn player_can_move(&self) -> bool {
         !(self.is_attacking || self.is_airborne || self.state == PlayerState::Dead)
     }
-
 
     pub fn player_state_change(&mut self, new_state: PlayerState) {
         let is_interruptable = self.state != PlayerState::DashingForward

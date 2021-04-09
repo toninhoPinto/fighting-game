@@ -1,5 +1,4 @@
 use sdl2::render::Texture;
-
 pub struct Animation<'a> {
     pub name: String,
     pub speed: f64,
@@ -17,9 +16,11 @@ impl<'a> Animation<'a> {
         }
     }
 }
-
+#[derive(Serialize, Deserialize)]
 pub struct Animator<'a> {
     pub animation_index: f64,
+    pub current_animation_name: String,
+    #[serde(skip)]
     pub current_animation: Option<&'a Animation<'a>>,
     pub is_playing: bool,
     pub is_finished: bool,
@@ -36,6 +37,7 @@ impl<'a> Animator<'a> {
             is_finished: false,
             play_once: false,
             rewind: false,
+            current_animation_name: String::new(),
         }
     }
 
@@ -49,6 +51,7 @@ impl<'a> Animator<'a> {
                 self.animation_index = (new_animation.length - 1) as f64;
             }
             self.current_animation = Some(new_animation);
+            self.current_animation_name = new_animation.name.clone();
             self.play_once = false;
             self.is_playing = true;
             self.is_finished = false;
@@ -66,6 +69,7 @@ impl<'a> Animator<'a> {
                 self.animation_index = (new_animation.length - 1) as f64;
             }
             self.current_animation = Some(new_animation);
+            self.current_animation_name = new_animation.name.clone();
             self.play_once = true;
             self.is_playing = true;
             self.is_finished = false;

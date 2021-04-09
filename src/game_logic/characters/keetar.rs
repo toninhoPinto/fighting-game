@@ -1,8 +1,7 @@
-use crate::game_logic::character_factory::CharacterAssets;
+use crate::{asset_management::my_point::MyPoint, game_logic::character_factory::CharacterAssets};
 use crate::game_logic::projectile::Projectile;
 
 use super::player::Player;
-use sdl2::rect::Point;
 
 //logic only module, no struct
 
@@ -24,7 +23,7 @@ pub fn spawn_note(
             projectile.flipped = player.dir_related_of_other > 0;
             projectile.player_owner = player.id;
 
-            let target_pos = Point::new(
+            let target_pos = MyPoint::new(
                 opponent.position.x + (projectile.direction.x * 100),
                 projectile.position.y,
             );

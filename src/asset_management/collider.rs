@@ -2,23 +2,25 @@ use std::collections::HashMap;
 use parry2d::bounding_volume::AABB;
 use crate::game_logic::characters::player::Player;
 use super::transformation::Transformation;
+use crate::asset_management::custom_serialization::parry2d_aabb_serial;
 
 pub struct ColliderAnimation {
     pub colliders: Vec<Collider>,
     pub pos_animations: HashMap<String, HashMap<i32, Transformation>>,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
 pub enum ColliderType {
     Hitbox,  //attacking collider
     Hurtbox, //take damage
     Pushbox, //push character
     Grabbox,
 }
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Collider {
     pub collider_type: ColliderType,
     pub name: String,
+    #[serde(with = "parry2d_aabb_serial")]
     pub aabb: AABB,
 }
 
