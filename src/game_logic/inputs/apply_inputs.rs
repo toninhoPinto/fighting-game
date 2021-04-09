@@ -20,12 +20,19 @@ pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedIn
     //since forward should still be applied
     if directional_state[0].1 {
         player.velocity_x = 1;
+    } else if directional_state[1].1 {
+        player.velocity_x = -1;
     } else {
-        if directional_state[1].1 {
-            player.velocity_x = -1;
-        }
+        player.velocity_x = 0;
     }
     
+
+    //TODO FIX action_history based on current_directional_state
+    //in the case where you jump over character making the "forward is pressed" state invalid
+    //and change to backwards
+    //horizontal right
+    //------------------------------------
+
     if directional_state[2].1 {
         player.jump();
     } else if directional_state[3].1 {
