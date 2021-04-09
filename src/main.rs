@@ -137,7 +137,7 @@ fn main() -> Result<(), String> {
     //p1 inputs
     let mut input_history: VecDeque<(TranslatedInput, bool)> = VecDeque::new();
     let mut input_processed: VecDeque<TranslatedInput> = VecDeque::new();
-    let mut action_history: VecDeque<GameAction> = VecDeque::new();
+    let mut action_history: VecDeque<i32> = VecDeque::new();
 
     let mut special_reset_timer: Vec<i32> = Vec::new();
     
@@ -237,14 +237,7 @@ fn main() -> Result<(), String> {
             if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
                 logic_time_accumulated = 0.0;
             }
-
-            for i in 0..special_reset_timer.len() {
-                special_reset_timer[i] += 1;
-                if special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    action_history.pop_front();
-                }
-            }
-
+         
             if !input_history.is_empty() {
                 apply_input(&mut game.player1, &p1_assets, 
                     &directional_state_input, &button_state_input,
@@ -252,6 +245,16 @@ fn main() -> Result<(), String> {
                     &mut action_history, &mut special_reset_timer);
             }
             apply_input_state(&mut game.player1, &directional_state_input, &button_state_input);
+
+            for i in 0..special_reset_timer.len() {
+                special_reset_timer[i] += 1;
+                if special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    if action_history.len() > 1 {
+                        action_history.pop_front();
+                    }
+                }
+            }
+            special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
             p1_health_bar.update(game.player1.character.hp);
             p2_health_bar.update(game.player2.character.hp);

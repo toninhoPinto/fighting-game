@@ -41,8 +41,21 @@ directional_state: &[(TranslatedInput, bool); 4],
 button_state: &[(TranslatedInput, bool); 6],
 to_process: &mut VecDeque<(TranslatedInput, bool)>,
 inputs_processed: &mut VecDeque<TranslatedInput>,
-action_history: &mut VecDeque<GameAction>,
+action_history: &mut VecDeque<i32>,
 special_reset_timer: &mut Vec<i32>){
+
+    let mut frame_state = if action_history.is_empty() {0} else { action_history[action_history.len() - 1].clone() };
+    
+    for &(recent_input, is_pressed) in to_process.iter(){
+        let recent_input_as_game_action = GameAction::from_translated_input(
+            recent_input ,
+            directional_state, 
+            player.dir_related_of_other).unwrap();
+        GameAction::update_state(&mut frame_state, (recent_input_as_game_action, is_pressed));
+    }
+
+    action_history.push_back(frame_state);
+    special_reset_timer.push(0);
 
     for &(recent_input, is_pressed) in to_process.iter(){
 
@@ -54,20 +67,6 @@ special_reset_timer: &mut Vec<i32>){
             recent_input ,
             directional_state, 
             player.dir_related_of_other).unwrap();
-
-        if is_pressed && !action_history.is_empty() {
-            match GameAction::merge_horizontal_vertical(recent_input_as_game_action, action_history[action_history.len() - 1]) {
-                Ok(game_action) => {
-                    action_history.push_back(game_action);
-                    action_history.push_back(recent_input_as_game_action);
-                    special_reset_timer.push(0);
-                },
-                _ => action_history.push_back(recent_input_as_game_action)
-            }
-        } else if action_history.is_empty() {
-            action_history.push_back(recent_input_as_game_action)
-        }
-        special_reset_timer.push(0);
 
         match recent_input {
             TranslatedInput::Horizontal(h) => {
@@ -172,7 +171,7 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     animation_name: String, 
     directional_state: &[(TranslatedInput, bool); 4],
     button_state: &[(TranslatedInput, bool); 6],
-    action_history: &mut VecDeque<GameAction>,
+    action_history: &VecDeque<i32>,
     special_reset_timer: &mut Vec<i32>){
 
     if let Some(special_input) = check_special_inputs(character_anims, action_history, special_reset_timer) {
@@ -189,34 +188,32 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     }
 }
 
-fn check_special_inputs(character_anims: & CharacterAssets, action_history: &mut VecDeque<GameAction>, special_reset_timer: &mut Vec<i32>) -> Option<String> {
+fn check_special_inputs(character_anims: & CharacterAssets, action_history: &VecDeque<i32>, special_reset_timer: &mut Vec<i32>) -> Option<String> {
      //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
     //if no match
     // iterate over last inputs starting from the end -1
     //etc
     //if find match, play animation and remove that input from array
-    let mut l;
+    let cleaned_history: VecDeque<i32> = action_history.iter().cloned().filter(|&z| z > 0).collect();
     for possible_combo in character_anims.input_combination_anims.iter() {
-        for n in 0..action_history.len() {
-            l = 0;
-            for d in n..action_history.len() {
-                let (moves, name) = possible_combo;
-                if action_history[d] == moves[l] {
-                    l += 1;
+        let size_of_combo = possible_combo.0.len();
+        let size_of_history = cleaned_history.len();
+        let mut j = 0;
+        if size_of_combo <= size_of_history {
+            for i in (size_of_history-size_of_combo)..cleaned_history.len() {
+                if cleaned_history[i] & possible_combo.0[j] > 0 {
+                    j+=1;
                 } else {
                     break;
                 }
 
-                if l == moves.len() {
-                    action_history.clear();
-                    special_reset_timer.clear();
-                    return Some(name.to_string())
+                if j == size_of_combo {
+                    return Some(possible_combo.1.clone())
                 }
             }
         }
     }
-
     None
 }
 

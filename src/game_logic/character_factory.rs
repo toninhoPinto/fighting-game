@@ -13,7 +13,7 @@ use std::string::String;
 
 pub struct CharacterAssets<'a> {
     pub animations: HashMap<String, Animation<'a>>,
-    pub input_combination_anims: Vec<(Vec<GameAction>, String)>,
+    pub input_combination_anims: Vec<(Vec<i32>, String)>,
     pub directional_variation_anims: Vec<((GameAction, GameAction), String)>,
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>,
@@ -106,30 +106,30 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
     let directional_string= (GameAction::Forward,GameAction::LightPunch);
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
-    let mut specials_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
-    let light_combo_string= vec![
-        GameAction::Down,
-        GameAction::ForwardDown,
-        GameAction::Forward,
-        GameAction::LightPunch
+    let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
+    let light_combo_string:Vec<i32>= vec![
+        GameAction::Down as i32,
+        GameAction::Down as i32 +  GameAction::Forward as i32,
+        GameAction::Forward as i32,
+        GameAction::LightPunch as i32
     ];
     specials_inputs.push((light_combo_string, "light_special_attack".to_string()));
     let light_projectile = Projectile::new(0, Point::new(120, 5));
 
     let med_combo_string= vec![
-        GameAction::Down,
-        GameAction::ForwardDown, 
-        GameAction::Forward,
-        GameAction::MediumPunch
+        GameAction::Down as i32,
+        GameAction::Down as i32 +  GameAction::Forward as i32,
+        GameAction::Forward as i32,
+        GameAction::MediumPunch as i32
     ];
     specials_inputs.push((med_combo_string, "med_special_attack".to_string()));
     let med_projectile = Projectile::new(0, Point::new(120, 105));
 
-    let mut heavy_combo_string: Vec<GameAction> = vec![
-        GameAction::Down,
-        GameAction::ForwardDown, 
-        GameAction::Forward,
-        GameAction::HeavyPunch
+    let mut heavy_combo_string: Vec<i32> = vec![
+        GameAction::Down as i32,
+        GameAction::Down as i32 +  GameAction::Forward as i32,
+        GameAction::Forward as i32,
+        GameAction::HeavyPunch as i32
     ];
     specials_inputs.push((heavy_combo_string, "heavy_special_attack".to_string()));
     let heavy_projectile = Projectile::new(0, Point::new(120, 205));
@@ -327,7 +327,7 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
     directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
 
     let effects_of_abilities = HashMap::new();
-    let specials_inputs: Vec<(Vec<GameAction>, String)> = Vec::new();
+    let specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
     let projectile_anims = HashMap::new();
 
     CharacterAssets {
