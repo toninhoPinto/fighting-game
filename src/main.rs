@@ -1,5 +1,5 @@
 use asset_management::collider::ColliderType;
-use game_logic::{game::{Game, SavedGame}, inputs::{apply_inputs::{apply_input_state, apply_input}, process_inputs::{update_button_state, update_directional_state}}};
+use game_logic::{game::{Game, SavedGame}, inputs::{apply_inputs::{apply_input_state, apply_input}, input_cycle::AllInputManagement, process_inputs::{update_button_state, update_directional_state}}};
 use sdl2::image::{self, InitFlag};
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
@@ -135,19 +135,14 @@ fn main() -> Result<(), String> {
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
     //p1 inputs
-    let mut input_history: VecDeque<(TranslatedInput, bool)> = VecDeque::new();
-    let mut input_processed: VecDeque<TranslatedInput> = VecDeque::new();
-    let mut input_processed_reset_timer: Vec<i32> = Vec::new();
-    
-    let mut action_history: VecDeque<i32> = VecDeque::new();
-    let mut special_reset_timer: Vec<i32> = Vec::new();
-    
-    let mut directional_state_input: [(TranslatedInput, bool); 4] = TranslatedInput::init_dir_input_state();
-    
+    let mut p1_input_history: VecDeque<AllInputManagement> = VecDeque::new();
+    let mut p1_inputs: AllInputManagement = AllInputManagement::new();
+
     //p2 inputs 
+    let mut p2_inputs: AllInputManagement = AllInputManagement::new();
 
     let mut game = Game::new(&mut player1, &mut player2);
-    let mut game_rollback: Option<SavedGame> = None;
+    let mut game_rollback: VecDeque<SavedGame> = VecDeque::new();
 
     let mut previous_time = Instant::now();
     let logic_timestep: f64 = 0.016;
@@ -156,6 +151,8 @@ fn main() -> Result<(), String> {
 
     let mut is_single_player = true;
     let mut debug_pause = false;
+    let mut debug_rollback = false;
+    let mut rollback = 0;
 
     'running: loop {
         let current_time = Instant::now();
@@ -175,10 +172,7 @@ fn main() -> Result<(), String> {
                 Event::Quit { .. } => break 'running,
                 Event::KeyDown {keycode: Some(input),..} => {
                     if input == Keycode::L {
-                        match game_rollback {
-                            Some(ref gr) => {game.load(&gr, &p1_assets, &p2_assets)},
-                            None => {game_rollback = Some(game.save());}
-                        }
+                        debug_rollback ^= true;
                     }
                     if input == Keycode::P {
                         debug_pause ^= true
@@ -202,20 +196,20 @@ fn main() -> Result<(), String> {
             if raw_input.is_some() {
                 let (translated_input, is_pressed) = raw_input.unwrap();
                 
-                input_history.push_back((translated_input, is_pressed));
+                p1_inputs.input_new_frame.push_back((translated_input, is_pressed));
 
                 let is_directional_input = TranslatedInput::is_directional_input(translated_input);
                 if is_directional_input {
                     if !is_pressed {
                         released_joystick_reset_directional_state(
                             translated_input,
-                            &mut directional_state_input,
+                            &mut p1_inputs.directional_state_input,
                         );
                     }
                     update_directional_state(
                         translated_input,
                         is_pressed,
-                        &mut directional_state_input,
+                        &mut p1_inputs.directional_state_input,
                     );
                 } 
             }
@@ -223,41 +217,71 @@ fn main() -> Result<(), String> {
         }
 
         //Update
-        while logic_time_accumulated >= logic_timestep {
+        while logic_time_accumulated >= logic_timestep || rollback > 0 {
             update_counter +=1;
-            if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
+            if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH && rollback == 0 {
                 logic_time_accumulated = 0.0;
             }
 
-            game.current_frame += 1;
-         
-            if !input_history.is_empty() {
-                apply_input(&mut game.player1, &p1_assets, 
-                    &directional_state_input,
-                    &mut input_history, 
-                    &mut input_processed, &mut input_processed_reset_timer,
-                    &mut action_history, &mut special_reset_timer);
-            }
-            apply_input_state(&mut game.player1, &directional_state_input);
+            if rollback > 0 {
+                rollback -= 1;
+                println!("ROLLBACK {:?} {:?} {:?}", p1_input_history.len(), FRAME_AMOUNT_CAN_ROLLBACK ,  rollback);
+                if rollback > 0 {
+                    p1_inputs = p1_input_history.get((FRAME_AMOUNT_CAN_ROLLBACK - rollback) as usize).unwrap().clone();
+                }
+            } 
 
-            for i in 0..input_processed_reset_timer.len() {
-                input_processed_reset_timer[i] += 1;
-                if input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    input_processed.pop_front();
+
+            if debug_rollback {             
+                if rollback == 0 {
+                    rollback = FRAME_AMOUNT_CAN_ROLLBACK;
+                    game.load(&game_rollback.get(0).unwrap(), &p1_assets, &p2_assets);
+                    p1_inputs = p1_input_history.get(0).unwrap().clone();
+                    debug_rollback = false;
+                }
+                println!("START ROLLBACK {:?} ", p1_input_history);
+            }
+            println!("INPUTS {:?}",p1_inputs);
+
+            
+            game.current_frame += 1;
+
+            if rollback == 0 {
+                game_rollback.push_back(game.save());
+                p1_input_history.push_back(p1_inputs.clone());
+                if p1_input_history.len() as i16 > FRAME_AMOUNT_CAN_ROLLBACK {
+                    p1_input_history.pop_front();
+                    game_rollback.pop_front();
                 }
             }
-            input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+
+            if !p1_inputs.input_new_frame.is_empty() {
+                apply_input(&mut game.player1, &p1_assets, 
+                    &p1_inputs.directional_state_input,
+                    &mut p1_inputs.input_new_frame, 
+                    &mut p1_inputs.input_processed, &mut p1_inputs.input_processed_reset_timer,
+                    &mut p1_inputs.action_history, &mut p1_inputs.special_reset_timer);
+            }
+            apply_input_state(&mut game.player1, &p1_inputs.directional_state_input);
+
+            for i in 0..p1_inputs.input_processed_reset_timer.len() {
+                p1_inputs.input_processed_reset_timer[i] += 1;
+                if p1_inputs.input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    p1_inputs.input_processed.pop_front();
+                }
+            }
+            p1_inputs.input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
 
-            for i in 0..special_reset_timer.len() {
-                special_reset_timer[i] += 1;
-                if special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    if action_history.len() > 1 {
-                        action_history.pop_front();
+            for i in 0..p1_inputs.special_reset_timer.len() {
+                p1_inputs.special_reset_timer[i] += 1;
+                if p1_inputs.special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                    if p1_inputs.action_history.len() > 1 {
+                        p1_inputs.action_history.pop_front();
                     }
                 }
             }
-            special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+            p1_inputs.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
             p1_health_bar.update(game.player1.character.hp);
             p2_health_bar.update(game.player2.character.hp);
@@ -271,67 +295,12 @@ fn main() -> Result<(), String> {
             game.player1.state_update(&p1_assets);
             game.player2.state_update(&p2_assets);
 
-            let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
-            if collider_animation1.is_some() {
-                if collider_animation1.unwrap().colliders.len() != game.p1_colliders.len() {
-                    collider_animation1.unwrap().init(&mut game.p1_colliders);
-                }
-                collider_animation1.unwrap().update(&mut game.p1_colliders, &game.player1);
+            println!("inside while");
+            if rollback == 0 {
+                logic_time_accumulated -= logic_timestep;
             }
-
-            let collider_animation2 = p2_assets.collider_animations.get(&game.player2.animator.current_animation.unwrap().name);
-            if collider_animation2.is_some() {
-                if collider_animation2.unwrap().colliders.len() != game.p2_colliders.len() {
-                    collider_animation2.unwrap().init(&mut game.p2_colliders);
-                }
-                collider_animation2.unwrap().update(&mut game.p2_colliders, &game.player2);
-            }
-
-            //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
-            //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
-            if !game.player1.has_hit {
-                for collider in game.p1_colliders
-                    .iter()
-                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
-                {
-                    for collider_to_take_dmg in game.p2_colliders
-                        .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
-                    {
-                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                            println!("DEAL DMG");
-                            game.player1.has_hit = true;
-                            game.player2.take_damage(10);
-                            game.player2.state_update(&p2_assets);
-                        }
-                    }
-                }
-            }
-            
-            if !game.player2.has_hit {
-                for collider in game.p2_colliders
-                    .iter()
-                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
-                {
-                    for collider_to_take_dmg in game.p1_colliders
-                        .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
-                    {
-                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                            game.player2.has_hit = true;
-                            println!("TAKE DMG");
-                        }
-                    }
-                }
-            }
-
-            //Handle projectile movement
-            for i in 0..game.projectiles.len() {
-                game.projectiles[i].update();
-            }
-       
-            logic_time_accumulated -= logic_timestep;
         }
+        println!("left while");
 
         // Render
         if update_counter >= 0 {
