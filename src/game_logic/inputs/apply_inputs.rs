@@ -173,8 +173,7 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     action_history: &VecDeque<i32>,
 ){
 
-    if let Some(special_input) = check_special_inputs(character_anims, action_history) {
-        player.change_special_meter(-1.0);
+    if let Some(special_input) = check_special_inputs(character_anims, player, action_history) {
         player.attack(character_anims, special_input);
     } else if let Some(directional_input) = check_directional_inputs(player, character_anims, directional_state, recent_input_as_game_action) {
         player.attack(character_anims, directional_input);
@@ -187,7 +186,7 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
     }
 }
 
-fn check_special_inputs(character_anims: & CharacterAssets, action_history: &VecDeque<i32>) -> Option<String> {
+fn check_special_inputs(character_anims: &CharacterAssets, player: &mut Player, action_history: &VecDeque<i32>) -> Option<String> {
      //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
     //if no match
@@ -196,19 +195,24 @@ fn check_special_inputs(character_anims: & CharacterAssets, action_history: &Vec
     //if find match, play animation and remove that input from array
     let cleaned_history: VecDeque<i32> = action_history.iter().cloned().filter(|&z| z > 0).collect();
     for possible_combo in character_anims.input_combination_anims.iter() {
+
+        
         let size_of_combo = possible_combo.0.len();
         let size_of_history = cleaned_history.len();
         let mut j = 0;
-        if size_of_combo <= size_of_history {
-            for i in (size_of_history-size_of_combo)..cleaned_history.len() {
-                if cleaned_history[i] & possible_combo.0[j] > 0 {
-                    j+=1;
-                } else {
-                    break;
-                }
+        if player.character.special_curr >= 1.0 { //TODO change special meter price per ability
+            if size_of_combo <= size_of_history {
+                for i in (size_of_history-size_of_combo)..cleaned_history.len() {
+                    if cleaned_history[i] & possible_combo.0[j] > 0 {
+                        j+=1;
+                    } else {
+                        break;
+                    }
 
-                if j == size_of_combo {
-                    return Some(possible_combo.1.clone())
+                    if j == size_of_combo {
+                        player.change_special_meter(-1.0); //TODO change special meter price per ability
+                        return Some(possible_combo.1.clone())
+                    }
                 }
             }
         }

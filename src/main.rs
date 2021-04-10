@@ -225,7 +225,6 @@ fn main() -> Result<(), String> {
 
             if rollback > 0 {
                 rollback -= 1;
-                println!("ROLLBACK {:?} {:?} {:?}", p1_input_history.len(), FRAME_AMOUNT_CAN_ROLLBACK ,  rollback);
                 if rollback > 0 {
                     p1_inputs = p1_input_history.get((FRAME_AMOUNT_CAN_ROLLBACK - rollback) as usize).unwrap().clone();
                 }
@@ -239,9 +238,7 @@ fn main() -> Result<(), String> {
                     p1_inputs = p1_input_history.get(0).unwrap().clone();
                     debug_rollback = false;
                 }
-                println!("START ROLLBACK {:?} ", p1_input_history);
             }
-            println!("INPUTS {:?}",p1_inputs);
 
             
             game.current_frame += 1;
@@ -355,12 +352,10 @@ fn main() -> Result<(), String> {
                 game.projectiles[i].update();
             }
 
-            println!("inside while");
             if rollback == 0 {
                 logic_time_accumulated -= logic_timestep;
             }
         }
-        println!("left while");
 
         // Render
         if update_counter >= 0 {
