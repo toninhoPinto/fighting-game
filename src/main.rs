@@ -295,6 +295,66 @@ fn main() -> Result<(), String> {
             game.player1.state_update(&p1_assets);
             game.player2.state_update(&p2_assets);
 
+
+            let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
+            if collider_animation1.is_some() {
+                if collider_animation1.unwrap().colliders.len() != game.p1_colliders.len() {
+                    collider_animation1.unwrap().init(&mut game.p1_colliders);
+                }
+                collider_animation1.unwrap().update(&mut game.p1_colliders, &game.player1);
+            }
+
+            let collider_animation2 = p2_assets.collider_animations.get(&game.player2.animator.current_animation.unwrap().name);
+            if collider_animation2.is_some() {
+                if collider_animation2.unwrap().colliders.len() != game.p2_colliders.len() {
+                    collider_animation2.unwrap().init(&mut game.p2_colliders);
+                }
+                collider_animation2.unwrap().update(&mut game.p2_colliders, &game.player2);
+            }
+
+            //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
+            //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
+            if !game.player1.has_hit {
+                for collider in game.p1_colliders
+                    .iter()
+                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
+                {
+                    for collider_to_take_dmg in game.p2_colliders
+                        .iter()
+                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                    {
+                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                            println!("DEAL DMG");
+                            game.player1.has_hit = true;
+                            game.player2.take_damage(10);
+                            game.player2.state_update(&p2_assets);
+                        }
+                    }
+                }
+            }
+            
+            if !game.player2.has_hit {
+                for collider in game.p2_colliders
+                    .iter()
+                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
+                {
+                    for collider_to_take_dmg in game.p1_colliders
+                        .iter()
+                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                    {
+                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                            game.player2.has_hit = true;
+                            println!("TAKE DMG");
+                        }
+                    }
+                }
+            }
+
+            //Handle projectile movement
+            for i in 0..game.projectiles.len() {
+                game.projectiles[i].update();
+            }
+
             println!("inside while");
             if rollback == 0 {
                 logic_time_accumulated -= logic_timestep;
