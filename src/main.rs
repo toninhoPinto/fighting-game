@@ -1,5 +1,3 @@
-use asset_management::collider::ColliderType;
-use game_logic::{game::{Game, SavedGame}, inputs::{apply_inputs::{apply_input_state, apply_input}, input_cycle::AllInputManagement, process_inputs::{update_button_state, update_directional_state}}};
 use sdl2::image::{self, InitFlag};
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
@@ -15,6 +13,7 @@ use ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar};
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::time::Instant;
+use std::path::Path;
 
 #[macro_use]
 extern crate serde_derive;
@@ -27,9 +26,12 @@ mod input;
 mod rendering;
 mod ui;
 
+use asset_management::sound::{audio_player::{self, play_sound}, init_sound, music_player};
+use asset_management::collider::ColliderType;
+use game_logic::{game::{Game, SavedGame}, inputs::{apply_inputs::{apply_input_state, apply_input}, input_cycle::AllInputManagement, process_inputs::{update_button_state, update_directional_state}}};
+
 use crate::asset_management::controls;
 use crate::game_logic::character_factory::{load_character, load_character_anim_data};
-use crate::game_logic::inputs::game_inputs::GameAction;
 use crate::game_logic::inputs::process_inputs::{released_joystick_reset_directional_state};
 use crate::input::controller_handler::Controller;
 
@@ -60,6 +62,15 @@ fn main() -> Result<(), String> {
     let _image_context = image::init(InitFlag::PNG | InitFlag::JPG)?;
     let joystick = sdl_context.joystick()?;
     let controller = sdl_context.game_controller()?;
+
+    let _mixer_context = init_sound();    
+    
+    let mut sound_chunk = audio_player::load_from_file(Path::new("assets/sounds/104183__ekokubza123__punch.wav"))
+    .map_err(|e| format!("Cannot load sound file: {:?}", e)).unwrap();
+
+    let music = music_player::load_from_file(Path::new("assets/musics/RetroFuture_Dirty.mp3")).unwrap();
+    music_player::play_music(&music);
+
 
     let window = video_subsystem
         .window("game tutorial", 1280, 720)
@@ -240,7 +251,6 @@ fn main() -> Result<(), String> {
                 }
             }
 
-            
             game.current_frame += 1;
 
             if rollback == 0 {
@@ -292,7 +302,6 @@ fn main() -> Result<(), String> {
             game.player1.state_update(&p1_assets);
             game.player2.state_update(&p2_assets);
 
-
             let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
             if collider_animation1.is_some() {
                 if collider_animation1.unwrap().colliders.len() != game.p1_colliders.len() {
@@ -322,11 +331,14 @@ fn main() -> Result<(), String> {
                     {
                         if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
                             println!("DEAL DMG");
+                            play_sound(&mut sound_chunk);
                             game.player1.has_hit = true;
                             game.player2.take_damage(10);
                             game.player2.state_update(&p2_assets);
+                            game.player2.knock_back(5);
+
                         }
-                    }
+                    }   
                 }
             }
             

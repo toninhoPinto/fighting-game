@@ -21,7 +21,6 @@ pub enum PlayerState {
     DashingBackward,
     Grab,
     Grabbed,
-    KnockedOut,
     Hurt,
     Dead,
 }
@@ -47,6 +46,7 @@ pub struct Player<'a> {
     pub state: PlayerState,
     pub is_attacking: bool,
     pub is_airborne: bool,
+    pub knock_back_distance: i32,
 
     pub animator: Animator<'a>,
     pub flipped: bool,
@@ -78,6 +78,7 @@ impl<'a> Player<'a> {
             is_attacking: false,
             is_airborne: false,
             has_hit: false,
+            knock_back_distance: 0,
             flipped,
             character,
         }
@@ -110,9 +111,8 @@ impl<'a> Player<'a> {
     }
 
     pub fn player_can_move(&self) -> bool {
-        !(self.is_attacking || self.is_airborne || self.state == PlayerState::Dead)
+        !(self.is_attacking || self.is_airborne || self.knock_back_distance > 0 || self.state == PlayerState::Dead)
     }
-
 
     pub fn player_state_change(&mut self, new_state: PlayerState) {
         let is_interruptable = self.state != PlayerState::DashingForward
@@ -136,7 +136,10 @@ impl<'a> Player<'a> {
         }
     }
 
-    
+    pub fn knock_back(&mut self, amount: i32) {
+        self.knock_back_distance = amount;
+    }
+
     pub fn attack(&mut self,
         character_anims: &'a CharacterAssets,
         attack_animation: String,
@@ -163,6 +166,14 @@ impl<'a> Player<'a> {
 
         if self.state == PlayerState::Jumping {
             self.is_airborne = true;
+        }
+
+        //TODO im just moving by an int instead of multiplying by dt, not sure if this is bad
+        if self.knock_back_distance > 0 {
+            self.position = self.position.offset(
+                self.knock_back_distance , 
+                0);
+            self.knock_back_distance = 0;
         }
 
         if self.is_airborne {
@@ -291,8 +302,6 @@ impl<'a> Player<'a> {
                     self.animator
                         .play_once(character_animation.get("dead").unwrap(), false);
                 }
-
-                PlayerState::KnockedOut => {}
 
                 PlayerState::Jump => {
                     self.animator
