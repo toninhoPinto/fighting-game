@@ -95,6 +95,12 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
             format!("assets/{}/standing/walk_back/walk_back.json", "keetar"),
         ),
     );
+    collider_animations.insert(
+        "neutral_jump".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/neutral_jump/jump.json", "keetar"),
+        ),
+    );
 
     collider_animations
 }

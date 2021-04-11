@@ -161,10 +161,11 @@ fn render_colliders(
     screen_res: (u32, u32),
     colliders: &mut Vec<Collider>,
 ) {
-    for collider in colliders.iter() {
+    for collider in colliders.iter().rev() {
         let aabb = collider.aabb;
         let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
         let semi_transparent_red = Color::RGBA(200, 50, 100, 150);
+        let semi_transparent_blue = Color::RGBA(100, 50, 200, 150);
         let collider_position = Point::new(
             aabb.center().x as i32,
             aabb.center().y as i32 - aabb.half_extents().y as i32,
@@ -175,7 +176,9 @@ fn render_colliders(
         canvas.draw_rect(screen_rect_2).unwrap();
         if collider.collider_type == ColliderType::Hurtbox {
             canvas.set_draw_color(semi_transparent_green);
-        } else {
+        } else if collider.collider_type == ColliderType::Pushbox {
+            canvas.set_draw_color(semi_transparent_blue);
+        }else{
             canvas.set_draw_color(semi_transparent_red);
         }
         canvas.fill_rect(screen_rect_2).unwrap();

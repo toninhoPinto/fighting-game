@@ -8,6 +8,7 @@ pub fn load_from_file(sound_file: &Path) -> Result<Chunk, String> {
     Chunk::from_file(sound_file)
 }
 
+//TODO need to find how to pitch up and down depending on frame advantage
 //TODO need to be able to stop already playing sounds and skip some few miliseconds for rollback to work
 pub fn play_sound(sound_chunk: &mut Chunk) {
     sound_chunk.set_volume(SFX_VOLUME);

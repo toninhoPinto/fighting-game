@@ -46,6 +46,7 @@ pub struct Player<'a> {
     pub state: PlayerState,
     pub is_attacking: bool,
     pub is_airborne: bool,
+    pub is_pushing: bool,
     pub knock_back_distance: i32,
 
     pub animator: Animator<'a>,
@@ -78,6 +79,7 @@ impl<'a> Player<'a> {
             is_attacking: false,
             is_airborne: false,
             has_hit: false,
+            is_pushing: false,
             knock_back_distance: 0,
             flipped,
             character,
@@ -158,6 +160,13 @@ impl<'a> Player<'a> {
         self.state = PlayerState::Standing;
     }
 
+    pub fn push(&mut self, dir: i32, speed: f64, dt: f64) {
+        self.position = self.position.offset(
+            (dir as f64 * speed * dt) as i32,
+            0,
+        );
+    }
+
     pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5;
@@ -176,6 +185,12 @@ impl<'a> Player<'a> {
             self.knock_back_distance = 0;
         }
 
+        let speed_mod = if self.is_pushing {
+             0.5
+        } else {
+            1.0
+        };
+
         if self.is_airborne {
             let gravity = match self.extra_gravity {
                 Some(extra_g) => extra_g,
@@ -184,7 +199,7 @@ impl<'a> Player<'a> {
 
             if self.position.y >= self.ground_height {
                 let position_offset_x =
-                    self.direction_at_jump_time as f64 * self.character.jump_distance * dt;
+                    self.direction_at_jump_time as f64 * self.character.jump_distance * dt * speed_mod;
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
                 self.position = self
@@ -206,7 +221,7 @@ impl<'a> Player<'a> {
         if self.player_can_move() && self.character.hit_stunned_duration <= 0 {
             if self.state == PlayerState::Standing {
                 self.position = self.position.offset(
-                    (self.velocity_x as f64 * self.character.speed * dt) as i32,
+                    (self.velocity_x as f64 * self.character.speed * dt * speed_mod) as i32,
                     0,
                 );
             }
@@ -216,7 +231,8 @@ impl<'a> Player<'a> {
             if is_dashing {
                 let dash_speed = (self.dir_related_of_other.signum() as f64
                     * self.character.dash_speed as f64
-                    * dt) as i32;
+                    * dt
+                    * speed_mod) as i32;
                 if self.state == PlayerState::DashingForward {
                     self.position = self.position.offset(dash_speed, 0);
                 } else {

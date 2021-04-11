@@ -26,7 +26,7 @@ mod input;
 mod rendering;
 mod ui;
 
-use asset_management::sound::{audio_player::{self, play_sound}, init_sound, music_player};
+use asset_management::sound::{audio_player, init_sound, music_player};
 use asset_management::collider::ColliderType;
 use game_logic::{game::{Game, SavedGame}, inputs::{apply_inputs::{apply_input_state, apply_input}, input_cycle::AllInputManagement, process_inputs::{update_button_state, update_directional_state}}};
 
@@ -320,29 +320,55 @@ fn main() -> Result<(), String> {
 
             //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
             //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
-            if !game.player1.has_hit {
+            {
+                game.player1.is_pushing = false;
+                game.player2.is_pushing = false;
                 for collider in game.p1_colliders
                     .iter()
-                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
+                    .filter(|&c| c.collider_type == ColliderType::Pushbox)
                 {
                     for collider_to_take_dmg in game.p2_colliders
                         .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                        .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     {
                         if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                            println!("DEAL DMG");
-                            play_sound(&mut sound_chunk);
-                            game.player1.has_hit = true;
-                            game.player2.take_damage(10);
-                            game.player2.state_update(&p2_assets);
-                            game.player2.knock_back(5);
+                            println!("PUSH OR BE PUSHED");
+                            if game.player1.velocity_x != 0 {
+                                game.player2.push(game.player1.velocity_x, game.player1.character.speed / 2.0, logic_timestep);
+                                game.player1.is_pushing = true;
+                            }
 
+                            if game.player2.velocity_x != 0 {
+                                game.player1.push(game.player1.velocity_x, game.player1.character.speed / 2.0, logic_timestep);
+                                game.player2.is_pushing = true;
+                            }
+                            
                         }
                     }   
                 }
-            }
-            
-            if !game.player2.has_hit {
+
+                if !game.player1.has_hit {
+                    for collider in game.p1_colliders
+                        .iter()
+                        .filter(|&c| c.collider_type == ColliderType::Hitbox)
+                    {
+                        for collider_to_take_dmg in game.p2_colliders
+                            .iter()
+                            .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                        {
+                            if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                                println!("DEAL DMG");
+                                audio_player::play_sound(&mut sound_chunk);
+                                game.player1.has_hit = true;
+                                game.player2.take_damage(10);
+                                game.player2.state_update(&p2_assets);
+                                game.player2.knock_back(5);
+                            }
+                        }   
+                    }
+                }
+                
+                if !game.player2.has_hit {
                 for collider in game.p2_colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Hitbox)
@@ -352,13 +378,16 @@ fn main() -> Result<(), String> {
                         .filter(|&c| c.collider_type == ColliderType::Hurtbox)
                     {
                         if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                            game.player2.has_hit = true;
                             println!("TAKE DMG");
+                            game.player2.has_hit = true;
+                            game.player1.take_damage(10);
+                            game.player1.state_update(&p1_assets);
+                            game.player1.knock_back(5);
                         }
                     }
                 }
             }
-
+            }
             //Handle projectile movement
             for i in 0..game.projectiles.len() {
                 game.projectiles[i].update();
@@ -373,7 +402,7 @@ fn main() -> Result<(), String> {
         if update_counter >= 0 {
             rendering::renderer::render(
                 &mut canvas,
-                Color::RGB(60, 64, 255),
+                Color::RGB(100, 100, 100),
                 game.player1,
                 &p1_assets,
                 game.player2,
