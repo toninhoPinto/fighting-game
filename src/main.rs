@@ -1,18 +1,9 @@
+use engine_traits::scene::Scene;
+use game_logic::match_scene::Match;
 use sdl2::image::{self, InitFlag};
-use sdl2::pixels::Color;
-use sdl2::rect::Point;
 use sdl2::render::BlendMode;
 
-//simply for exiting program
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-
-use parry2d::bounding_volume::BoundingVolume;
-use ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar};
-
 use std::collections::HashMap;
-use std::collections::VecDeque;
-use std::time::Instant;
 use std::path::Path;
 
 #[macro_use]
@@ -25,26 +16,28 @@ mod game_logic;
 mod input;
 mod rendering;
 mod ui;
+mod engine_traits;
 
-use asset_management::sound::{audio_player, init_sound, music_player};
-use asset_management::collider::ColliderType;
-use game_logic::{game::{Game, SavedGame}, inputs::{apply_inputs::{apply_input_state, apply_input}, input_cycle::AllInputManagement, process_inputs::{update_button_state, update_directional_state}}};
+use asset_management::sound::{init_sound, music_player};
 
 use crate::asset_management::controls;
-use crate::game_logic::character_factory::{load_character, load_character_anim_data};
-use crate::game_logic::inputs::process_inputs::{released_joystick_reset_directional_state};
 use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//add pushboxes
-//make characters pushable
+//REFACTOR MAIN.rs AND ADD MENU 
+//refactor controller and input to be able to distinguish between local p1 and local p2 input sources
+//make characters push correctly when jumped on top
+//add vfx to attacks on hit
+//change color of vfx using sdl2 texture tint
+//apply attacks struct values (knockback, hitstun, etc)
+//calculate frame advantage on the fly
+//display different vfx colors and sizes depending on the frame advantage
 
-//FIX GRAB, if you press light kick, and then halfway through the animation you press light punch, you can cancel the kick halfway and then grab
-//improve reset input timers
 //Hold attacks
 //attack animations that vary depending on distance
+//check how to pitch shift attacks depending on frame advantage
 //dash attacks
 //add movement to each attack
 //projectile with a specific target location
@@ -65,12 +58,8 @@ fn main() -> Result<(), String> {
 
     let _mixer_context = init_sound();    
     
-    let mut sound_chunk = audio_player::load_from_file(Path::new("assets/sounds/104183__ekokubza123__punch.wav"))
-    .map_err(|e| format!("Cannot load sound file: {:?}", e)).unwrap();
-
     let music = music_player::load_from_file(Path::new("assets/musics/RetroFuture_Dirty.mp3")).unwrap();
     music_player::play_music(&music);
-
 
     let window = video_subsystem
         .window("game tutorial", 1280, 720)
@@ -81,345 +70,21 @@ fn main() -> Result<(), String> {
         .into_canvas()
         .build()
         .expect("could not make a canvas");
+
     canvas.set_blend_mode(BlendMode::Blend); //blend mode was added specifically to see the colliders
     let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_context.event_pump()?;
     let mut joys: HashMap<u32, Controller> = HashMap::new();
 
-    let player1_character = "keetar";
-    let player2_character = "foxgirl";
-
-    let p1_assets = load_character_anim_data(&texture_creator, player1_character);
-    let p2_assets = load_character_anim_data(&texture_creator, player2_character);
-
-    let mut player1 = load_character(player1_character, Point::new(400, 0), false, 1);
-    let mut player2 = load_character(player2_character, Point::new(700, -50), true, 2);
-    player1
-        .animator
-        .play(p1_assets.animations.get("idle").unwrap(), false);
-    player2
-        .animator
-        .play(p2_assets.animations.get("idle").unwrap(), false);
-
-    let screen_res = canvas.output_size()?;
-    let mut p1_health_bar = Bar::new(
-        10,
-        20,
-        screen_res.0 / 2 - 20,
-        50,
-        player1.character.hp,
-        Some(Color::RGB(255, 100, 100)),
-        None,
-    );
-    let mut p2_health_bar = Bar::new(
-        screen_res.0 as i32 / 2 + 10,
-        20,
-        screen_res.0 / 2 - 20,
-        50,
-        player2.character.hp,
-        Some(Color::RGB(255, 100, 100)),
-        None,
-    );
-
-    let special_bar_width = 150;
-    let mut p1_special_bar = SegmentedBar::new(
-        10,
-        screen_res.1 as i32 - 30,
-        special_bar_width,
-        10,
-        player1.character.special_max,
-        Some(Color::RGB(20, 250, 250)),
-        None,
-    );
-    let mut p2_special_bar = SegmentedBar::new(
-        screen_res.0 as i32 - (special_bar_width as i32 + 10 * player2.character.special_max),
-        screen_res.1 as i32 - 30,
-        special_bar_width,
-        10,
-        player2.character.special_max,
-        Some(Color::RGB(20, 250, 250)),
-        None,
-    );
-
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
-    //p1 inputs
-    let mut p1_input_history: VecDeque<AllInputManagement> = VecDeque::new();
-    let mut p1_inputs: AllInputManagement = AllInputManagement::new();
+    let mut scene = Match::new(
+        false, true, 
+        "keetar".to_string(), "foxgirl".to_string());
 
-    //p2 inputs 
-    let mut p2_inputs: AllInputManagement = AllInputManagement::new();
-
-    let mut game = Game::new(&mut player1, &mut player2);
-    let mut game_rollback: VecDeque<SavedGame> = VecDeque::new();
-
-    let mut previous_time = Instant::now();
-    let logic_timestep: f64 = 0.016;
-    let mut logic_time_accumulated: f64 = 0.0;
-    let mut update_counter = 0;
-
-    let mut is_single_player = true;
-    let mut debug_pause = false;
-    let mut debug_rollback = false;
-    let mut rollback = 0;
-
-    'running: loop {
-        let current_time = Instant::now();
-        let delta_time = current_time.duration_since(previous_time);
-        let delta_time_as_nanos =
-            delta_time.as_secs() as f64 + (delta_time.subsec_nanos() as f64 * 1e-9);
-
-        previous_time = current_time;
-
-        if !debug_pause {
-            logic_time_accumulated += delta_time_as_nanos;
-        }
-        
-        // Handle events
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. } => break 'running,
-                Event::KeyDown {keycode: Some(input),..} => {
-                    if input == Keycode::L {
-                        debug_rollback ^= true;
-                    }
-                    if input == Keycode::P {
-                        debug_pause ^= true
-                    }
-                    if input == Keycode::Right {
-                        logic_time_accumulated += logic_timestep;
-                    }
-                },
-                _ => {}
-            };
-            input::controller_handler::handle_new_controller(
-                &controller,
-                &joystick,
-                &event,
-                &mut joys,
-            );
-
-            //needs also to return which controller/ which player
-            let raw_input = input::input_handler::rcv_input(&event, &mut controls);
-
-            if raw_input.is_some() {
-                let (translated_input, is_pressed) = raw_input.unwrap();
-                
-                p1_inputs.input_new_frame.push_back((translated_input, is_pressed));
-
-                let is_directional_input = TranslatedInput::is_directional_input(translated_input);
-                if is_directional_input {
-                    if !is_pressed {
-                        released_joystick_reset_directional_state(
-                            translated_input,
-                            &mut p1_inputs.directional_state_input,
-                        );
-                    }
-                    update_directional_state(
-                        translated_input,
-                        is_pressed,
-                        &mut p1_inputs.directional_state_input,
-                    );
-                } 
-            }
-            //end of input management
-        }
-
-        //Update
-        while logic_time_accumulated >= logic_timestep || rollback > 0 {
-            update_counter +=1;
-            if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH && rollback == 0 {
-                logic_time_accumulated = 0.0;
-            }
-
-            if rollback > 0 {
-                rollback -= 1;
-                if rollback > 0 {
-                    p1_inputs = p1_input_history.get((FRAME_AMOUNT_CAN_ROLLBACK - rollback) as usize).unwrap().clone();
-                }
-            } 
-
-
-            if debug_rollback {             
-                if rollback == 0 {
-                    rollback = FRAME_AMOUNT_CAN_ROLLBACK;
-                    game.load(&game_rollback.get(0).unwrap(), &p1_assets, &p2_assets);
-                    p1_inputs = p1_input_history.get(0).unwrap().clone();
-                    debug_rollback = false;
-                }
-            }
-
-            game.current_frame += 1;
-
-            if rollback == 0 {
-                game_rollback.push_back(game.save());
-                p1_input_history.push_back(p1_inputs.clone());
-                if p1_input_history.len() as i16 > FRAME_AMOUNT_CAN_ROLLBACK {
-                    p1_input_history.pop_front();
-                    game_rollback.pop_front();
-                }
-            }
-
-            if !p1_inputs.input_new_frame.is_empty() {
-                apply_input(&mut game.player1, &p1_assets, 
-                    &p1_inputs.directional_state_input,
-                    &mut p1_inputs.input_new_frame, 
-                    &mut p1_inputs.input_processed, &mut p1_inputs.input_processed_reset_timer,
-                    &mut p1_inputs.action_history, &mut p1_inputs.special_reset_timer);
-            }
-            apply_input_state(&mut game.player1, &p1_inputs.directional_state_input);
-
-            for i in 0..p1_inputs.input_processed_reset_timer.len() {
-                p1_inputs.input_processed_reset_timer[i] += 1;
-                if p1_inputs.input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    p1_inputs.input_processed.pop_front();
-                }
-            }
-            p1_inputs.input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
-
-
-            for i in 0..p1_inputs.special_reset_timer.len() {
-                p1_inputs.special_reset_timer[i] += 1;
-                if p1_inputs.special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                    if p1_inputs.action_history.len() > 1 {
-                        p1_inputs.action_history.pop_front();
-                    }
-                }
-            }
-            p1_inputs.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
-
-            p1_health_bar.update(game.player1.character.hp);
-            p2_health_bar.update(game.player2.character.hp);
-
-            p1_special_bar.update(game.player1.character.special_curr);
-            p2_special_bar.update(game.player2.character.special_curr);
-
-            game.player1.update(logic_timestep, game.player2.position.x);
-            game.player2.update(logic_timestep, game.player1.position.x);
-
-            game.player1.state_update(&p1_assets);
-            game.player2.state_update(&p2_assets);
-
-            let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
-            if collider_animation1.is_some() {
-                if collider_animation1.unwrap().colliders.len() != game.p1_colliders.len() {
-                    collider_animation1.unwrap().init(&mut game.p1_colliders);
-                }
-                collider_animation1.unwrap().update(&mut game.p1_colliders, &game.player1);
-            }
-
-            let collider_animation2 = p2_assets.collider_animations.get(&game.player2.animator.current_animation.unwrap().name);
-            if collider_animation2.is_some() {
-                if collider_animation2.unwrap().colliders.len() != game.p2_colliders.len() {
-                    collider_animation2.unwrap().init(&mut game.p2_colliders);
-                }
-                collider_animation2.unwrap().update(&mut game.p2_colliders, &game.player2);
-            }
-
-            //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
-            //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
-            {
-                game.player1.is_pushing = false;
-                game.player2.is_pushing = false;
-                for collider in game.p1_colliders
-                    .iter()
-                    .filter(|&c| c.collider_type == ColliderType::Pushbox)
-                {
-                    for collider_to_take_dmg in game.p2_colliders
-                        .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Pushbox)
-                    {
-                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                            println!("PUSH OR BE PUSHED");
-                            if game.player1.velocity_x != 0 {
-                                game.player2.push(game.player1.velocity_x, game.player1.character.speed / 2.0, logic_timestep);
-                                game.player1.is_pushing = true;
-                            }
-
-                            if game.player2.velocity_x != 0 {
-                                game.player1.push(game.player1.velocity_x, game.player1.character.speed / 2.0, logic_timestep);
-                                game.player2.is_pushing = true;
-                            }
-                            
-                        }
-                    }   
-                }
-
-                if !game.player1.has_hit {
-                    for collider in game.p1_colliders
-                        .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Hitbox)
-                    {
-                        for collider_to_take_dmg in game.p2_colliders
-                            .iter()
-                            .filter(|&c| c.collider_type == ColliderType::Hurtbox)
-                        {
-                            if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                                println!("DEAL DMG");
-                                audio_player::play_sound(&mut sound_chunk);
-                                game.player1.has_hit = true;
-                                game.player2.take_damage(10);
-                                game.player2.state_update(&p2_assets);
-                                game.player2.knock_back(5);
-                            }
-                        }   
-                    }
-                }
-                
-                if !game.player2.has_hit {
-                for collider in game.p2_colliders
-                    .iter()
-                    .filter(|&c| c.collider_type == ColliderType::Hitbox)
-                {
-                    for collider_to_take_dmg in game.p1_colliders
-                        .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Hurtbox)
-                    {
-                        if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                            println!("TAKE DMG");
-                            game.player2.has_hit = true;
-                            game.player1.take_damage(10);
-                            game.player1.state_update(&p1_assets);
-                            game.player1.knock_back(5);
-                        }
-                    }
-                }
-            }
-            }
-            //Handle projectile movement
-            for i in 0..game.projectiles.len() {
-                game.projectiles[i].update();
-            }
-
-            if rollback == 0 {
-                logic_time_accumulated -= logic_timestep;
-            }
-        }
-
-        // Render
-        if update_counter >= 0 {
-            rendering::renderer::render(
-                &mut canvas,
-                Color::RGB(100, 100, 100),
-                game.player1,
-                &p1_assets,
-                game.player2,
-                &p2_assets,
-                &game.projectiles,
-                &mut game.p1_colliders,
-                &mut game.p2_colliders,
-                &p1_health_bar,
-                &p2_health_bar,
-                &p1_special_bar,
-                &p2_special_bar,
-                true,
-            )?;
-
-            update_counter = 0;
-        }
-    }
+    scene.run(&texture_creator, &mut event_pump, &joystick, &controller, &controls, &mut joys, &mut canvas);
 
     Ok(())
 }

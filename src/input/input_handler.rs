@@ -7,7 +7,7 @@ use super::translated_inputs::TranslatedInput;
 
 pub fn rcv_input(
     event: &Event,
-    game_controls: &mut HashMap<std::string::String, TranslatedInput>,
+    game_controls: &HashMap<std::string::String, TranslatedInput>,
 ) -> Option<(TranslatedInput, bool)> {
     return match *event {
         Event::JoyAxisMotion {

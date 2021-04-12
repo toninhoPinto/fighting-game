@@ -2,7 +2,7 @@ use sdl2::rect::Point;
 
 use crate::asset_management::collider::Collider;
 
-use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, inputs::game_inputs::GameAction, projectile::Projectile};
+use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, projectile::Projectile};
 
 pub struct Game<'a>{
     pub current_frame: i32,

@@ -9,7 +9,7 @@ use crate::game_logic::projectile::Projectile;
 use crate::{
     asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
-    ui::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
+    ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };
 
 fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32)) -> Rect {
