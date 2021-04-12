@@ -43,9 +43,6 @@ use input::translated_inputs::TranslatedInput;
 //projectile with a specific target location
 //specific projectile only live if keep holding button
 //Add startup, active and recovery per animation
-const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
-const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
-const FRAME_AMOUNT_CAN_ROLLBACK: i16 = 7;
 
 fn main() -> Result<(), String> {
     println!("Starting Game");
