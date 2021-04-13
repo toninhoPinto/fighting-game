@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, VecDeque}, time::Instant};
-use sdl2::rect::Rect;
+use sdl2::{rect::Rect, render::TextureQuery};
 
 use parry2d::bounding_volume::BoundingVolume;
 use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, keyboard::Keycode, pixels::Color, rect::Point, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
@@ -406,11 +406,15 @@ impl Scene for Match {
                 
                 if collision_point.is_some()  {
                     let point = collision_point.unwrap();
-                    let texture_width = 640;
-                    let texture_height = 480;
+                    let TextureQuery { width, height, .. } = general_assets.hit_effect_animations.get("normal_hit").unwrap().sprites[0].query();
+
+                    let texture_width = width * 2;
+                    let texture_height = height * 2;
+                    //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
+                    //this will have issues with other vfx
                     game.spawn_vfx(
-                        Rect::new(point.x as i32 - texture_width as i32 / 2 , 
-                            point.y as i32 - texture_height as i32 / 2, 
+                        Rect::new(point.x as i32 - texture_width as i32 / 2 - 80, 
+                            point.y as i32 - texture_height as i32 / 2 - 100, 
                             texture_width, texture_height), 
             "normal_hit".to_string());
                 }
