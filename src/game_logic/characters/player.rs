@@ -3,7 +3,7 @@ use sdl2::render::Texture;
 
 use std::fmt;
 
-use crate::game_logic::character_factory::CharacterAssets;
+use crate::{asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets};
 use crate::game_logic::characters::Character;
 
 use crate::asset_management::animation::Animator;
@@ -50,6 +50,7 @@ pub struct Player<'a> {
     pub knock_back_distance: i32,
 
     pub animator: Animator<'a>,
+    pub animation_state: Option<AnimationState>,
     pub flipped: bool,
     pub has_hit: bool,
 
@@ -76,6 +77,7 @@ impl<'a> Player<'a> {
             dir_related_of_other: 0,
             state: PlayerState::Standing,
             animator: Animator::new(),
+            animation_state: None,
             is_attacking: false,
             is_airborne: false,
             has_hit: false,
@@ -253,45 +255,6 @@ impl<'a> Player<'a> {
     pub fn state_update(&mut self, character_data: &'a CharacterAssets) {
         let character_animation = &character_data.animations;
 
-        if self.animator.is_finished && self.state != PlayerState::Dead {
-            self.has_hit = false;
-
-            if self.state == PlayerState::Jump {
-                self.state = PlayerState::Jumping;
-            }
-
-            if self.state == PlayerState::Crouch {
-                self.state = PlayerState::Crouching;
-            }
-
-            if self.state == PlayerState::Landing {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::UnCrouch {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.is_attacking {
-                self.is_attacking = false;
-            }
-
-            if self.state == PlayerState::Grab {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::Hurt {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::DashingForward
-                || self.state == PlayerState::DashingBackward
-            {
-                self.state = PlayerState::Standing;
-                self.character.hit_stunned_duration = 5;
-            }
-        }
-        
         if !self.is_attacking {
             match self.state {
                 PlayerState::Standing => {
@@ -371,6 +334,50 @@ impl<'a> Player<'a> {
 
             self.prev_velocity_x = self.velocity_x;
         }
+        
+       
+
+
+
+        if self.animator.is_finished && self.state != PlayerState::Dead {
+            self.has_hit = false;
+
+            if self.state == PlayerState::Jump {
+                self.state = PlayerState::Jumping;
+            }
+
+            if self.state == PlayerState::Crouch {
+                self.state = PlayerState::Crouching;
+            }
+
+            if self.state == PlayerState::Landing {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.state == PlayerState::UnCrouch {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.is_attacking {
+                self.is_attacking = false;
+            }
+
+            if self.state == PlayerState::Grab {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.state == PlayerState::Hurt {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.state == PlayerState::DashingForward
+                || self.state == PlayerState::DashingBackward
+            {
+                self.state = PlayerState::Standing;
+                self.character.hit_stunned_duration = 5;
+            }
+        }
+        
         self.animator.update();
     }
 

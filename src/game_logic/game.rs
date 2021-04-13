@@ -1,9 +1,10 @@
-use sdl2::rect::Point;
+use sdl2::rect::{Point, Rect};
 
-use crate::asset_management::collider::Collider;
+use crate::asset_management::{animation::Animation, collider::Collider, common_assets::CommonAssets};
 
 use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, projectile::Projectile};
 
+const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game<'a>{
     pub current_frame: i32,
     pub player1: &'a mut Player<'a>,
@@ -13,6 +14,8 @@ pub struct Game<'a>{
 
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
+
+    pub hit_vfx: Vec<(bool, Rect, String, i32)>,
 }
 
 impl<'a> Game<'a>{
@@ -27,6 +30,47 @@ impl<'a> Game<'a>{
 
             p1_colliders: Vec::new(),
             p2_colliders: Vec::new(),
+
+            hit_vfx: Vec::new(),
+        }
+    }
+
+    pub fn spawn_vfx(&mut self, rect: Rect, type_of_animation: String){
+        if self.hit_vfx.len() < LIMIT_NUMBER_OF_VFX {
+            //push with bool as true
+            self.hit_vfx.push( (
+                true,
+                rect,
+                type_of_animation,
+                0,
+            ) );
+        } else {
+            let mut disabled_index = None;
+            for i in 0..self.hit_vfx.len() {
+                if !self.hit_vfx[i].0 {
+                    disabled_index = Some(i);
+                    break;
+                }
+            }
+            if disabled_index.is_some() {
+                self.hit_vfx[disabled_index.unwrap()].0 = true;
+                self.hit_vfx[disabled_index.unwrap()].1 = rect;
+                self.hit_vfx[disabled_index.unwrap()].2 = type_of_animation;
+                self.hit_vfx[disabled_index.unwrap()].3 = 0;
+            }
+            
+        }
+    }
+
+    pub fn update_vfx(&mut self, assets: &CommonAssets){
+        for i in 0..self.hit_vfx.len() {
+            if self.hit_vfx[i].0 {
+                self.hit_vfx[i].3 += 1; // multiply by dt and by animation speed i think, check animator code
+                if self.hit_vfx[i].3 >= assets.hit_effect_animations.get(&self.hit_vfx[i].2).unwrap().length {
+                    self.hit_vfx[i].0 = false;
+                    self.hit_vfx[i].3 = 0;
+                }
+            }
         }
     }
 
@@ -89,6 +133,7 @@ impl<'a> Game<'a>{
             p1_colliders: self.p1_colliders.clone(),
             p2_colliders: self.p2_colliders.clone(),
 
+            hit_vfx: self.hit_vfx.clone(),
         }
     }
 
@@ -144,6 +189,8 @@ impl<'a> Game<'a>{
         self.projectiles = saved_game.projectiles.clone(); 
         self.p1_colliders = saved_game.p1_colliders.clone(); 
         self.p2_colliders = saved_game.p2_colliders.clone(); 
+
+        self.hit_vfx = saved_game.hit_vfx.clone();
     }
 }
 
@@ -212,4 +259,6 @@ pub struct SavedGame{
 
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
+
+    pub hit_vfx: Vec<(bool, Rect, String, i32)>,
 }

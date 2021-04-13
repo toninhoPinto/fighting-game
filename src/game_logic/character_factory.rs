@@ -1,4 +1,4 @@
-use super::characters::player::Player;
+use super::characters::{Attack, player::Player};
 use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
@@ -18,6 +18,7 @@ pub struct CharacterAssets<'a> {
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<Texture<'a>>>,
     pub collider_animations: HashMap<String, ColliderAnimation>,
+    pub attacks: HashMap<String, Attack>,
 }
 
 pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id: i32) -> Player {
@@ -63,6 +64,8 @@ pub fn load_character_anim_data<'a, 'b>(
     }
     .unwrap()
 }
+
+//===========================================================
 
 fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
     let mut collider_animations = HashMap::new();
@@ -159,6 +162,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         effects: effects_of_abilities,
         projectile_animation: projectile_anims,
         collider_animations: load_keetar_colliders(),
+        attacks: load_keetar_attacks(),
     }
 }
 
@@ -308,6 +312,24 @@ fn load_keetar_anims(
     character_anims
 }
 
+fn load_keetar_attacks() -> HashMap<String,Attack> {
+    let mut attacks = HashMap::new();
+    
+    attacks.insert("light_punch".to_string(), Attack {
+        damage: 5,
+        stun_on_hit: 10,
+        stun_on_block: 4,
+        push_back: 5,
+        stun: 10,
+        attack_move: 10,
+        
+    });
+
+    attacks
+}
+
+//===========================================================
+
 fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     let mut collider_animations = HashMap::new();
 
@@ -343,6 +365,7 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
         effects: effects_of_abilities,
         projectile_animation: projectile_anims,
         collider_animations: load_foxgirl_colliders(),
+        attacks: load_foxgirl_attacks(),
     }
 }
 
@@ -457,4 +480,11 @@ fn load_foxgirl_anims(
     );
 
     character_anims
+}
+
+fn load_foxgirl_attacks() -> HashMap<String,Attack> {
+    let attacks = HashMap::new();
+
+
+    attacks
 }

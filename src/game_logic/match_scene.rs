@@ -1,10 +1,10 @@
 use std::{collections::{HashMap, VecDeque}, time::Instant};
-use std::path::Path;
+use sdl2::rect::Rect;
 
 use parry2d::bounding_volume::BoundingVolume;
 use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, keyboard::Keycode, pixels::Color, rect::Point, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{asset_management::collider::ColliderType, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
+use crate::{asset_management::{collider::ColliderType, common_assets::CommonAssets}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::asset_management::sound::audio_player;
 
 use super::{character_factory::{load_character, load_character_anim_data}, game::{Game, SavedGame}, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}};
@@ -30,7 +30,6 @@ pub struct Match {
 }
 
 impl Match {
-    
     pub fn new(
         is_single_player: bool, 
         is_local_versus: bool,
@@ -47,6 +46,22 @@ impl Match {
             p2_inputs: AllInputManagement::new(),
             game_rollback: VecDeque::new(),
         }
+    }
+
+    pub fn reset(&mut self,
+        is_single_player: bool, 
+        is_local_versus: bool,
+        p1_character: String,
+        p2_character: String,
+    ) {
+        self.is_single_player = is_single_player;
+        self.is_local_versus = is_local_versus;
+        self.p1_character = p1_character;
+        self.p2_character = p2_character;
+        self.p1_input_history.clear();
+        self.p1_inputs = AllInputManagement::new();
+        self.p2_inputs = AllInputManagement::new();
+        self.game_rollback.clear();
     }
 
     fn hp_bars_init<'a>(screen_res: (u32, u32), p1_hp: i32, p2_hp: i32) -> [Bar<'a>; 2] {
@@ -107,6 +122,9 @@ impl Scene for Match {
         joys: &mut HashMap<u32, Controller>,
         canvas: &mut Canvas<Window>) {
 
+        let mut general_assets = CommonAssets::load(&texture_creator);
+        //TODO
+
         let p1_assets = load_character_anim_data(texture_creator, &self.p1_character);
         let p2_assets = load_character_anim_data(texture_creator, &self.p2_character);
 
@@ -134,9 +152,6 @@ impl Scene for Match {
         let mut debug_pause = false;
         let mut debug_rollback = false;
         let mut rollback = 0;
-
-        let mut sound_chunk = audio_player::load_from_file(Path::new("assets/sounds/104183__ekokubza123__punch.wav"))
-        .map_err(|e| format!("Cannot load sound file: {:?}", e)).unwrap();
 
         'running: loop {
             let current_time = Instant::now();
@@ -275,6 +290,11 @@ impl Scene for Match {
                 game.player1.state_update(&p1_assets);
                 game.player2.state_update(&p2_assets);
 
+                if  game.player1.is_attacking {
+                    println!("is attacking {} -> {}", game.player1.animator.current_animation.unwrap().name,  game.player1.animator.animation_index);
+                }
+                
+
                 let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
                 if collider_animation1.is_some() {
                     if collider_animation1.unwrap().colliders.len() != game.p1_colliders.len() {
@@ -291,6 +311,8 @@ impl Scene for Match {
                     collider_animation2.unwrap().update(&mut game.p2_colliders, &game.player2);
                 }
 
+                
+                let mut collision_point = None;
                 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
                 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
                 {
@@ -330,37 +352,74 @@ impl Scene for Match {
                             {
                                 if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
                                     println!("DEAL DMG");
-                                    audio_player::play_sound(&mut sound_chunk);
+                                    audio_player::play_sound(general_assets.sound_effects.get_mut("hit").unwrap());
+                                    println!("ATTACK {:?}", game.player1.animator.current_animation.unwrap().name);
+                                    //TODO sometimes the current animation is walk, which is weird since no hitbox exists during walk
+                                    //TODO happens when pressing attack followed by a fast forward movement
+                                    //should not happen since attack shouldnt be interruptable by a walk
+                                    let attack = p1_assets.attacks.get(&game.player1.animator.current_animation.unwrap().name).unwrap();
                                     game.player1.has_hit = true;
-                                    game.player2.take_damage(10);
+                                    game.player2.take_damage(attack.damage);
                                     game.player2.state_update(&p2_assets);
-                                    game.player2.knock_back(5);
+                                    game.player2.knock_back(attack.push_back);
+                                    
+                                    let mut center = collider_to_take_dmg.aabb.center();
+                                    let mut left = center;
+                                    left.x -= collider_to_take_dmg.aabb.half_extents().x;
+                                    let mut right = center;
+                                    right.x += collider_to_take_dmg.aabb.half_extents().x;
+
+                                    collision_point = Some(
+                                        collider.aabb.clip_segment(
+                                            &left,
+                                            &right
+                                        ).unwrap().a
+                                    );
+                                    println!("left{:?} right{:?} collision_point{:?}", left, right, collision_point.unwrap());
                                 }
                             }   
                         }
                     }
                     
                     if !game.player2.has_hit {
-                    for collider in game.p2_colliders
-                        .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Hitbox)
-                    {
-                        for collider_to_take_dmg in game.p1_colliders
+                        for collider in game.p2_colliders
                             .iter()
-                            .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                            .filter(|&c| c.collider_type == ColliderType::Hitbox)
                         {
-                            if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                                println!("TAKE DMG");
-                                game.player2.has_hit = true;
-                                game.player1.take_damage(10);
-                                game.player1.state_update(&p1_assets);
-                                game.player1.knock_back(5);
+                            for collider_to_take_dmg in game.p1_colliders
+                                .iter()
+                                .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                            {
+                                if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                                    println!("TAKE DMG");
+                                    audio_player::play_sound(general_assets.sound_effects.get_mut("hit").unwrap());
+                                    let attack = p2_assets.attacks.get(&game.player2.animator.current_animation.unwrap().name).unwrap();
+                                    game.player2.has_hit = true;
+                                    game.player1.take_damage(attack.damage);
+                                    game.player1.state_update(&p1_assets);
+                                    game.player1.knock_back(attack.push_back);
+                                }
                             }
                         }
-                    }
+                    } 
                 }
+                
+                if collision_point.is_some()  {
+                    let point = collision_point.unwrap();
+                    let texture_width = 640;
+                    let texture_height = 480;
+                    game.spawn_vfx(
+                        Rect::new(point.x as i32 - texture_width as i32 / 2 , 
+                            point.y as i32 - texture_height as i32 / 2, 
+                            texture_width, texture_height), 
+            "normal_hit".to_string());
                 }
+                
+                game.update_vfx(&general_assets);
+
+
                 //Handle projectile movement
+                //TODO maybe have a function inside game that does this, like update_vfx
                 for i in 0..game.projectiles.len() {
                     game.projectiles[i].update();
                 }
@@ -374,19 +433,21 @@ impl Scene for Match {
             if update_counter >= 0 {
                 rendering::renderer::render(
                     canvas,
-                    Color::RGB(100, 100, 100),
+                    Color::RGB(70, 70, 70),
                     game.player1,
                     &p1_assets,
                     game.player2,
                     &p2_assets,
                     &game.projectiles,
+                    &mut game.hit_vfx,
+                    &general_assets,
                     &mut game.p1_colliders,
                     &mut game.p2_colliders,
                     &hp_bars[0],
                     &hp_bars[1],
                     &special_bars[0],
                     &special_bars[1],
-                    true,
+                    false,
                 ).unwrap();
 
                 update_counter = 0;

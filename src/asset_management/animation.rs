@@ -4,7 +4,7 @@ pub struct Animation<'a> {
     pub name: String,
     pub speed: f64,
     pub length: i32,
-    sprites: Vec<Texture<'a>>,
+    pub sprites: Vec<Texture<'a>>,
 }
 
 impl<'a> Animation<'a> {
@@ -16,6 +16,12 @@ impl<'a> Animation<'a> {
             sprites,
         }
     }
+}
+
+pub enum AnimationState {
+    Startup,
+    Active,
+    Recovery
 }
 
 pub struct Animator<'a> {
