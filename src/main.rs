@@ -46,6 +46,7 @@ use input::translated_inputs::TranslatedInput;
 //add movement to each attack
 //projectile with a specific target location
 //specific projectile only live if keep holding button
+//VFX sprites are not centered, hard to place
 
 //rollback should not happen during enemy stunned/hitstun if there is no way to escape
 //same during uncancellable animations
