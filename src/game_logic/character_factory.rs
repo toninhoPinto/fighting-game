@@ -347,6 +347,13 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
         ),
     );
 
+    collider_animations.insert(
+        "dash".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/dash/dash.json", "foxgirl"),
+        ),
+    );
+
     collider_animations
 }
 
