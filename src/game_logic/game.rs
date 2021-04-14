@@ -1,6 +1,6 @@
 use sdl2::rect::{Point, Rect};
 
-use crate::asset_management::{animation::Animation, collider::Collider, common_assets::CommonAssets};
+use crate::asset_management::{collider::Collider, common_assets::CommonAssets};
 
 use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, projectile::Projectile};
 
@@ -15,6 +15,7 @@ pub struct Game<'a>{
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
 
+    //TODO probably smart to make this a separate struct instead of a weird tuple
     pub hit_vfx: Vec<(bool, Rect, String, i32)>,
 }
 

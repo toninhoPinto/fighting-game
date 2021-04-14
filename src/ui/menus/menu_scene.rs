@@ -11,7 +11,7 @@
 
 use std::collections::HashMap;
 use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, pixels::Color, rect::Rect, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
-use crate::input::{self, controller_handler::Controller, translated_inputs::TranslatedInput};
+use crate::{GameStateData, game_logic::match_scene::Match, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}};
 
 //character select
 //stage select
@@ -109,6 +109,8 @@ impl<'a>  MenuScene<'a> {
 
 impl<'a> Scene for MenuScene<'a> {
     fn run(&mut self, 
+        game_state_stack: &mut Vec<Box<dyn Scene>>,
+        game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
         event_pump: &mut EventPump, joystick: &JoystickSubsystem,
         controller: &GameControllerSubsystem,
@@ -164,6 +166,10 @@ impl<'a> Scene for MenuScene<'a> {
                             //confirm
                             if self.selected_btn == 2 {
                                 //must leave and make main use match scene instead
+                                game_state_stack.push(Box::new(Match::new(
+                                    false, true, 
+                                    "keetar".to_string(), "foxgirl".to_string())));
+                                return;
                             }
                         } else if translated_input == TranslatedInput::LightKick {
                             //go back
@@ -171,10 +177,6 @@ impl<'a> Scene for MenuScene<'a> {
                                 self.curr_screen = self.prev_screen.unwrap();
                             }
                         }
-
-
-
-
                     }
                     
                 }

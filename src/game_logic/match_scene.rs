@@ -4,7 +4,7 @@ use sdl2::{rect::Rect, render::TextureQuery};
 use parry2d::bounding_volume::BoundingVolume;
 use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, keyboard::Keycode, pixels::Color, rect::Point, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{asset_management::{collider::ColliderType, common_assets::CommonAssets}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
+use crate::{GameStateData, asset_management::{collider::ColliderType, common_assets::CommonAssets}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::asset_management::sound::audio_player;
 
 use super::{character_factory::{load_character, load_character_anim_data}, game::{Game, SavedGame}, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}};
@@ -114,7 +114,9 @@ impl Match {
 
 impl Scene for Match {
     fn run(
-        &mut self, 
+        &mut self,
+        game_state_stack: &mut Vec<Box<dyn Scene>>,
+        game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
         event_pump: &mut EventPump, joystick: &JoystickSubsystem,
         controller: &GameControllerSubsystem,

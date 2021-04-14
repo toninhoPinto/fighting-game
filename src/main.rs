@@ -18,7 +18,7 @@ mod rendering;
 mod ui;
 mod engine_traits;
 
-use asset_management::{common_assets::CommonAssets, sound::{init_sound, music_player}};
+use asset_management::{sound::{init_sound, music_player}};
 
 use crate::asset_management::controls;
 use crate::input::controller_handler::Controller;
@@ -29,7 +29,6 @@ use input::translated_inputs::TranslatedInput;
 //REFACTOR MAIN.rs AND ADD MENU 
 //refactor controller and input to be able to distinguish between local p1 and local p2 input sources
 //make characters push correctly when jumped on top
-//add vfx to attacks on hit
 //change color of vfx using sdl2 texture tint
 //apply attacks struct values (knockback, hitstun, etc)
 //calculate frame advantage on the fly
@@ -54,6 +53,11 @@ use input::translated_inputs::TranslatedInput;
 //lobby system -> needs server
 //instant rematch (avoid going back to lobby or going back to selection)
 //show ping and show wifi/ethernet
+
+pub struct GameStateData<'a> {
+    p1_character: &'a str,
+    p2_character: &'a str,
+}
 
 fn main() -> Result<(), String> {
     println!("Starting Game");
@@ -97,7 +101,21 @@ fn main() -> Result<(), String> {
 
     let mut scene2 = MenuScene::new_main_menu(&font);
 
-    scene.run(&texture_creator, &mut event_pump, &joystick, &controller, &controls, &mut joys, &mut canvas);
+    let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();
+    state_stack.push(Box::new(scene2)); //menu state
+
+    let mut game_state_data = GameStateData {
+        p1_character: "",
+        p2_character: "",
+    };
+
+    while !state_stack.is_empty() {
+        state_stack.pop().unwrap().run(&mut state_stack, &mut game_state_data, &texture_creator, &mut event_pump, &joystick, &controller, &controls, &mut joys, &mut canvas);
+         //pop top, call run(), pass state to be able to add new states and game_data for character selection and stuff like that
+    }
+    
+
+    //scene.run(&texture_creator, &mut event_pump, &joystick, &controller, &controls, &mut joys, &mut canvas);
 
     Ok(())
 }
