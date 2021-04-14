@@ -1,6 +1,6 @@
-use sdl2::rect::{Point, Rect};
+use sdl2::{pixels::Color, rect::{Point, Rect}};
 
-use crate::asset_management::{collider::Collider, common_assets::CommonAssets};
+use crate::asset_management::{collider::Collider, common_assets::CommonAssets, vfx::particle::Particle};
 
 use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, projectile::Projectile};
 
@@ -16,7 +16,7 @@ pub struct Game<'a>{
     pub p2_colliders: Vec<Collider>,
 
     //TODO probably smart to make this a separate struct instead of a weird tuple
-    pub hit_vfx: Vec<(bool, Rect, String, i32)>,
+    pub hit_vfx: Vec<Particle>,
 }
 
 impl<'a> Game<'a>{
@@ -36,28 +36,30 @@ impl<'a> Game<'a>{
         }
     }
 
-    pub fn spawn_vfx(&mut self, rect: Rect, type_of_animation: String){
+    pub fn spawn_vfx(&mut self, rect: Rect, type_of_animation: String, tint: Option<Color>){
         if self.hit_vfx.len() < LIMIT_NUMBER_OF_VFX {
             //push with bool as true
-            self.hit_vfx.push( (
-                true,
-                rect,
-                type_of_animation,
-                0,
-            ) );
+            self.hit_vfx.push( Particle {
+                active: true,
+                sprite: rect,
+                name: type_of_animation,
+                animation_index: 0,
+                tint,
+             } );
         } else {
             let mut disabled_index = None;
             for i in 0..self.hit_vfx.len() {
-                if !self.hit_vfx[i].0 {
+                if !self.hit_vfx[i].active {
                     disabled_index = Some(i);
                     break;
                 }
             }
             if disabled_index.is_some() {
-                self.hit_vfx[disabled_index.unwrap()].0 = true;
-                self.hit_vfx[disabled_index.unwrap()].1 = rect;
-                self.hit_vfx[disabled_index.unwrap()].2 = type_of_animation;
-                self.hit_vfx[disabled_index.unwrap()].3 = 0;
+                self.hit_vfx[disabled_index.unwrap()].active = true;
+                self.hit_vfx[disabled_index.unwrap()].sprite = rect;
+                self.hit_vfx[disabled_index.unwrap()].name = type_of_animation;
+                self.hit_vfx[disabled_index.unwrap()].animation_index = 0;
+                self.hit_vfx[disabled_index.unwrap()].tint = tint;
             }
             
         }
@@ -65,11 +67,11 @@ impl<'a> Game<'a>{
 
     pub fn update_vfx(&mut self, assets: &CommonAssets){
         for i in 0..self.hit_vfx.len() {
-            if self.hit_vfx[i].0 {
-                self.hit_vfx[i].3 += 1; // multiply by dt and by animation speed i think, check animator code
-                if self.hit_vfx[i].3 >= assets.hit_effect_animations.get(&self.hit_vfx[i].2).unwrap().length {
-                    self.hit_vfx[i].0 = false;
-                    self.hit_vfx[i].3 = 0;
+            if self.hit_vfx[i].active {
+                self.hit_vfx[i].animation_index += 1; // multiply by dt and by animation speed i think, check animator code
+                if self.hit_vfx[i].animation_index >= assets.hit_effect_animations.get(&self.hit_vfx[i].name).unwrap().length {
+                    self.hit_vfx[i].active = false;
+                    self.hit_vfx[i].animation_index = 0;
                 }
             }
         }
@@ -261,5 +263,5 @@ pub struct SavedGame{
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
 
-    pub hit_vfx: Vec<(bool, Rect, String, i32)>,
+    pub hit_vfx: Vec<Particle>,
 }

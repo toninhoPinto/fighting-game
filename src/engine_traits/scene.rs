@@ -11,6 +11,6 @@ pub(crate) trait Scene {
         event_pump: &mut EventPump, joystick: &JoystickSubsystem,
         controller: &GameControllerSubsystem,
         controls: &HashMap<String, TranslatedInput>,
-        joys: &mut HashMap<u32, Controller>,
+        joys: &mut Controller,
         canvas: &mut Canvas<Window>);
 }

@@ -1,10 +1,10 @@
 use std::string::String;
 
-use sdl2::pixels::Color;
+use sdl2::{pixels::Color, render::BlendMode};
 use sdl2::rect::{Point, Rect};
 use sdl2::render::WindowCanvas;
 
-use crate::{asset_management::common_assets::CommonAssets, game_logic::character_factory::CharacterAssets};
+use crate::{asset_management::{common_assets::CommonAssets, vfx::particle::Particle}, game_logic::character_factory::CharacterAssets};
 use crate::game_logic::projectile::Projectile;
 use crate::{
     asset_management::collider::{Collider, ColliderType},
@@ -44,8 +44,8 @@ pub fn render<'a, 'b>(
     player2: &'b mut Player<'a>,
     p2_assets: &'a CharacterAssets,
     projectiles: &[Projectile],
-    hit_vfx: &mut Vec<(bool, Rect, String, i32)>,
-    common_assets: &CommonAssets,
+    hit_vfx: &mut Vec<Particle>,
+    common_assets: &mut CommonAssets,
     p1_colliders: &mut Vec<Collider>,
     p2_colliders: &mut Vec<Collider>,
     bar_ui_1: &Bar,
@@ -118,11 +118,7 @@ pub fn render<'a, 'b>(
         }
     }
 
-    render_vfx(canvas,
-        screen_res,
-        hit_vfx,
-        common_assets,
-        debug);
+    render_vfx(canvas, screen_res, hit_vfx, common_assets, debug);
 
     if debug {
         render_colliders(canvas, screen_res, p1_colliders);
@@ -164,24 +160,27 @@ pub fn render<'a, 'b>(
 
 fn render_vfx(canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
-    hit_vfx: &mut Vec<(bool, Rect, String, i32)>,
-    common_assets: &CommonAssets,
+    hit_vfx: &mut Vec<Particle>,
+    common_assets: &mut CommonAssets,
     debug: bool) {
 
     for vfx in hit_vfx.iter() {
-        if vfx.0 {
-            let rect_size = Rect::new(0, 0, vfx.1.width(), vfx.1.height());
+        if vfx.active {
+            let rect_size = Rect::new(0, 0, vfx.sprite.width(), vfx.sprite.height());
             let vfx_position = Point::new(
-                vfx.1.center().x,
-                vfx.1.center().y - vfx.1.bottom() / 2,
+                vfx.sprite.center().x,
+                vfx.sprite.center().y - vfx.sprite.bottom() / 2,
             );
             let screen_rect = world_to_screen(rect_size, vfx_position, screen_res);
+
+            let texture = &mut common_assets
+                .hit_effect_animations
+                .get_mut(&vfx.name)
+                .unwrap()
+                .sprites[vfx.animation_index as usize];
+
             canvas.copy_ex(
-            &common_assets
-                        .hit_effect_animations
-                        .get(&vfx.2)
-                        .unwrap()
-                        .sprites[vfx.3 as usize],
+                texture,
                 rect_size,
                 screen_rect,
                 0.0,

@@ -23,13 +23,11 @@ use asset_management::{sound::{init_sound, music_player}};
 use crate::asset_management::controls;
 use crate::input::controller_handler::Controller;
 
-use input::translated_inputs::TranslatedInput;
+use input::{controller_handler::ControllerType, translated_inputs::TranslatedInput};
 
 //TODO list
-//REFACTOR MAIN.rs AND ADD MENU 
 //refactor controller and input to be able to distinguish between local p1 and local p2 input sources
 //make characters push correctly when jumped on top
-//change color of vfx using sdl2 texture tint
 //apply attacks struct values (knockback, hitstun, etc)
 //calculate frame advantage on the fly
 //display different vfx colors and sizes depending on the frame advantage
@@ -46,7 +44,10 @@ use input::translated_inputs::TranslatedInput;
 //projectile with a specific target location
 //specific projectile only live if keep holding button
 //VFX sprites are not centered, hard to place
+//change color of vfx using sdl2 texture tint OR shader, which one?
 
+//add menu to be apply to change the controllers for each player
+//refactor menu and maybe remove menu having a separate loop?
 //rollback should not happen during enemy stunned/hitstun if there is no way to escape
 //same during uncancellable animations
 //it stills re-simulate but doesnt change anything 
@@ -88,7 +89,8 @@ fn main() -> Result<(), String> {
     let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_context.event_pump()?;
-    let mut joys: HashMap<u32, Controller> = HashMap::new();
+    let mut controller_data = Controller::new();
+    controller_data.add_keyboard(); //should not use 0
 
     let mut font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 128)?;
 
@@ -110,12 +112,9 @@ fn main() -> Result<(), String> {
     };
 
     while !state_stack.is_empty() {
-        state_stack.pop().unwrap().run(&mut state_stack, &mut game_state_data, &texture_creator, &mut event_pump, &joystick, &controller, &controls, &mut joys, &mut canvas);
-         //pop top, call run(), pass state to be able to add new states and game_data for character selection and stuff like that
+        state_stack.pop().unwrap().run(&mut state_stack, &mut game_state_data, &texture_creator,
+             &mut event_pump, &joystick, &controller, &controls, &mut controller_data, &mut canvas);
     }
     
-
-    //scene.run(&texture_creator, &mut event_pump, &joystick, &controller, &controls, &mut joys, &mut canvas);
-
     Ok(())
 }

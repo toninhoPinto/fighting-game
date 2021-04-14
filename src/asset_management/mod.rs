@@ -6,3 +6,4 @@ pub mod spriter_pro_collider_loader;
 pub mod transformation;
 pub mod sound;
 pub mod common_assets;
+pub mod vfx;

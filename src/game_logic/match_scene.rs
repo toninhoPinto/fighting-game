@@ -121,11 +121,10 @@ impl Scene for Match {
         event_pump: &mut EventPump, joystick: &JoystickSubsystem,
         controller: &GameControllerSubsystem,
         controls: &HashMap<String, TranslatedInput>,
-        joys: &mut HashMap<u32, Controller>,
+        connected_controllers: &mut Controller,
         canvas: &mut Canvas<Window>) {
 
         let mut general_assets = CommonAssets::load(&texture_creator);
-        //TODO
 
         let p1_assets = load_character_anim_data(texture_creator, &self.p1_character);
         let p2_assets = load_character_anim_data(texture_creator, &self.p2_character);
@@ -188,32 +187,60 @@ impl Scene for Match {
                     controller,
                     joystick,
                     &event,
-                    joys,
+                    connected_controllers,
                 );
-
+ 
                 //needs also to return which controller/ which player
                 let raw_input = input::input_handler::rcv_input(&event, &controls);
 
                 if raw_input.is_some() {
-                    let (translated_input, is_pressed) = raw_input.unwrap();
+                    let (controller_id, translated_input, is_pressed) = raw_input.unwrap();
                     
-                    self.p1_inputs.input_new_frame.push_back((translated_input, is_pressed));
+                    let is_p1_input = connected_controllers.selected_controllers[0].is_some() && controller_id == connected_controllers.selected_controllers[0].unwrap();
+                    let is_p2_input = connected_controllers.selected_controllers[1].is_some() && controller_id == connected_controllers.selected_controllers[1].unwrap();
 
+                    if is_p1_input {
+                        self.p1_inputs.input_new_frame.push_back((translated_input, is_pressed));
+                    } else if is_p2_input {
+                        self.p2_inputs.input_new_frame.push_back((translated_input, is_pressed));
+                    } 
+                    
                     let is_directional_input = TranslatedInput::is_directional_input(translated_input);
                     if is_directional_input {
-                        if !is_pressed {
-                            released_joystick_reset_directional_state(
+                        if is_p1_input {
+                            if !is_pressed {
+                                if is_p1_input {
+                                    released_joystick_reset_directional_state(
+                                        translated_input,
+                                        &mut self.p1_inputs.directional_state_input,
+                                    );
+                                } 
+                            }
+                            update_directional_state(
                                 translated_input,
+                                is_pressed,
                                 &mut self.p1_inputs.directional_state_input,
                             );
                         }
-                        update_directional_state(
-                            translated_input,
-                            is_pressed,
-                            &mut self.p1_inputs.directional_state_input,
-                        );
+                        else if is_p2_input {
+                            if !is_pressed {
+                                if is_p1_input {
+                                    released_joystick_reset_directional_state(
+                                        translated_input,
+                                        &mut self.p2_inputs.directional_state_input,
+                                    );
+                                } 
+                            }
+                            update_directional_state(
+                                translated_input,
+                                is_pressed,
+                                &mut self.p2_inputs.directional_state_input,
+                            );
+                        } 
                     } 
                 }
+
+
                 //end of input management
             }
 
@@ -259,7 +286,16 @@ impl Scene for Match {
                         &mut self.p1_inputs.input_processed, &mut self.p1_inputs.input_processed_reset_timer,
                         &mut self.p1_inputs.action_history, &mut self.p1_inputs.special_reset_timer);
                 }
+                if !self.p2_inputs.input_new_frame.is_empty() {
+                    apply_input(&mut game.player2, &p2_assets, 
+                        &self.p2_inputs.directional_state_input,
+                        &mut self.p2_inputs.input_new_frame, 
+                        &mut self.p2_inputs.input_processed, &mut self.p2_inputs.input_processed_reset_timer,
+                        &mut self.p2_inputs.action_history, &mut self.p2_inputs.special_reset_timer);
+                }
+
                 apply_input_state(&mut game.player1, &self.p1_inputs.directional_state_input);
+                apply_input_state(&mut game.player2, &self.p2_inputs.directional_state_input);
 
                 for i in 0..self.p1_inputs.input_processed_reset_timer.len() {
                     self.p1_inputs.input_processed_reset_timer[i] += 1;
@@ -280,6 +316,29 @@ impl Scene for Match {
                 }
                 self.p1_inputs.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
 
+
+
+
+
+                for i in 0..self.p2_inputs.input_processed_reset_timer.len() {
+                    self.p2_inputs.input_processed_reset_timer[i] += 1;
+                    if self.p2_inputs.input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                        self.p2_inputs.input_processed.pop_front();
+                    }
+                }
+                self.p2_inputs.input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+
+
+                for i in 0..self.p2_inputs.special_reset_timer.len() {
+                    self.p2_inputs.special_reset_timer[i] += 1;
+                    if self.p2_inputs.special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                        if self.p2_inputs.action_history.len() > 1 {
+                            self.p2_inputs.action_history.pop_front();
+                        }
+                    }
+                }
+                self.p2_inputs.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+
                 hp_bars[0].update(game.player1.character.hp);
                 hp_bars[1].update(game.player2.character.hp);
 
@@ -293,7 +352,7 @@ impl Scene for Match {
                 game.player2.state_update(&p2_assets);
 
                 if  game.player1.is_attacking {
-                    println!("is attacking {} -> {}", game.player1.animator.current_animation.unwrap().name,  game.player1.animator.animation_index);
+                    //println!("is attacking {} -> {}", game.player1.animator.current_animation.unwrap().name,  game.player1.animator.animation_index);
                 }
                 
 
@@ -354,11 +413,8 @@ impl Scene for Match {
                             {
                                 if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
                                     println!("DEAL DMG");
-                                    audio_player::play_sound(general_assets.sound_effects.get_mut("hit").unwrap());
-                                    println!("ATTACK {:?}", game.player1.animator.current_animation.unwrap().name);
-                                    //TODO sometimes the current animation is walk, which is weird since no hitbox exists during walk
-                                    //TODO happens when pressing attack followed by a fast forward movement
-                                    //should not happen since attack shouldnt be interruptable by a walk
+                                    audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
+                                    
                                     let attack = p1_assets.attacks.get(&game.player1.animator.current_animation.unwrap().name).unwrap();
                                     game.player1.has_hit = true;
                                     game.player2.take_damage(attack.damage);
@@ -414,11 +470,12 @@ impl Scene for Match {
                     let texture_height = height * 2;
                     //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
                     //this will have issues with other vfx
+
                     game.spawn_vfx(
                         Rect::new(point.x as i32 - texture_width as i32 / 2 - 80, 
                             point.y as i32 - texture_height as i32 / 2 - 100, 
                             texture_width, texture_height), 
-            "normal_hit".to_string());
+            "special_hit".to_string(), Some(Color::GREEN));
                 }
                 
                 game.update_vfx(&general_assets);
@@ -446,7 +503,7 @@ impl Scene for Match {
                     &p2_assets,
                     &game.projectiles,
                     &mut game.hit_vfx,
-                    &general_assets,
+                    &mut general_assets,
                     &mut game.p1_colliders,
                     &mut game.p2_colliders,
                     &hp_bars[0],

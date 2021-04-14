@@ -115,7 +115,7 @@ impl<'a> Scene for MenuScene<'a> {
         event_pump: &mut EventPump, joystick: &JoystickSubsystem,
         controller: &GameControllerSubsystem,
         controls: &HashMap<String, TranslatedInput>,
-        joys: &mut HashMap<u32, Controller>,
+        joys: &mut Controller,
         canvas: &mut Canvas<Window>){
 
         let mut offset = 0;
@@ -155,7 +155,7 @@ impl<'a> Scene for MenuScene<'a> {
                 let raw_input = input::input_handler::rcv_input(&event, &controls);
 
                 if raw_input.is_some() {
-                    let (translated_input, is_pressed) = raw_input.unwrap();
+                    let (id, translated_input, is_pressed) = raw_input.unwrap();
                     if is_pressed {
                         if translated_input == TranslatedInput::Vertical(1) {
                             self.selected_btn = (((self.selected_btn - 1) % self.text.len() as i32) + self.text.len() as i32) % self.text.len() as i32;
