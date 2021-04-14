@@ -61,6 +61,10 @@ pub struct Player<'a> {
 
 impl<'a> Player<'a> {
     pub fn new(id: i32, character: Character, spawn_position: Point, flipped: bool) -> Self {
+        if id == 2 {
+            println!("{:?}", spawn_position);
+        }
+        
         Self {
             id,
             position: spawn_position,
@@ -211,13 +215,14 @@ impl<'a> Player<'a> {
 
             //reset position back to ground height
             if self.position.y < self.ground_height {
-                self.position.y = 0;
+                self.position.y = self.ground_height ;
                 self.velocity_y = self.character.jump_height;
                 if self.state == PlayerState::Jumping {
                     self.state = PlayerState::Landing;
                 }
                 self.is_airborne = false;
             }
+
         }
 
         if self.player_can_move() && self.character.hit_stunned_duration <= 0 {
