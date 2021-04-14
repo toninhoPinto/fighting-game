@@ -90,7 +90,7 @@ fn main() -> Result<(), String> {
 
     let mut event_pump = sdl_context.event_pump()?;
     let mut controller_data = Controller::new();
-    controller_data.add_keyboard(); //should not use 0
+    controller_data.add_keyboard( ); //should not use 0
 
     let mut font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 128)?;
 

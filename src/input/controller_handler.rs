@@ -49,8 +49,8 @@ impl Controller {
     }
 
     pub fn add_keyboard(&mut self) {
-        self.connected_controllers.insert(666, ControllerType::Keyboard);
-        self.selected_controllers[0] = Some(666);
+        self.connected_controllers.insert(KEYBOARD_ID as u32, ControllerType::Keyboard);
+        self.selected_controllers[0] = Some(KEYBOARD_ID as u32);
     }
 
     pub fn add(&mut self, controller: ControllerType) {
@@ -60,7 +60,7 @@ impl Controller {
 
         match self.selected_controllers[0] {
             Some(p1_id) => {
-                if p1_id == 666 {
+                if p1_id == KEYBOARD_ID as u32 {
                     self.selected_controllers[1] = self.selected_controllers[0];
                     self.selected_controllers[0] = Some(id);
                 } else {

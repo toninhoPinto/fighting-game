@@ -58,7 +58,7 @@ impl<'a> Animator<'a> {
             self.play_once = false;
             self.is_playing = true;
             self.is_finished = false;
-            self.rewind = false;
+            self.rewind = play_rewind;
         }
     }
 

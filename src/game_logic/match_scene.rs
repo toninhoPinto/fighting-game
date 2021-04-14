@@ -354,7 +354,6 @@ impl Scene for Match {
                 if  game.player1.is_attacking {
                     //println!("is attacking {} -> {}", game.player1.animator.current_animation.unwrap().name,  game.player1.animator.animation_index);
                 }
-                
 
                 let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
                 if collider_animation1.is_some() {
@@ -378,6 +377,7 @@ impl Scene for Match {
                 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
                 {
                     game.player1.is_pushing = false;
+                    game.player2.is_pushing = false;
                     for collider in game.p1_colliders
                         .iter()
                         .filter(|&c| c.collider_type == ColliderType::Pushbox)
@@ -388,13 +388,13 @@ impl Scene for Match {
                         {
                             if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
                                 println!("PUSH OR BE PUSHED");
-                                if game.player1.velocity_x != 0 {
+                                if game.player1.velocity_x != 0 && game.player1.velocity_x.signum() == game.player1.dir_related_of_other {
                                     game.player2.push(game.player1.velocity_x, game.player1.character.speed / 2.0, logic_timestep);
                                     game.player1.is_pushing = true;
                                 }
 
-                                if game.player2.velocity_x != 0 {
-                                    game.player1.push(game.player1.velocity_x, game.player1.character.speed / 2.0, logic_timestep);
+                                if game.player2.velocity_x != 0 && game.player2.velocity_x.signum() == game.player2.dir_related_of_other {
+                                    game.player1.push(game.player2.velocity_x, game.player2.character.speed / 2.0, logic_timestep);
                                     game.player2.is_pushing = true;
                                 }
                                 
@@ -510,7 +510,7 @@ impl Scene for Match {
                     &hp_bars[1],
                     &special_bars[0],
                     &special_bars[1],
-                    false,
+                    true,
                 ).unwrap();
 
                 update_counter = 0;

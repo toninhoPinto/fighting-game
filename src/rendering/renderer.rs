@@ -1,6 +1,6 @@
 use std::string::String;
 
-use sdl2::{pixels::Color, render::BlendMode};
+use sdl2::{pixels::Color};
 use sdl2::rect::{Point, Rect};
 use sdl2::render::WindowCanvas;
 
