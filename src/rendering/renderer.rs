@@ -1,6 +1,6 @@
 use std::string::String;
 
-use sdl2::{pixels::Color};
+use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::WindowCanvas;
 
@@ -11,6 +11,8 @@ use crate::{
     game_logic::characters::player::Player,
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };
+
+use super::camera::Camera;
 
 fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32)) -> Rect {
     let (_, height) = screen_size;
@@ -38,6 +40,7 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
 
 pub fn render<'a, 'b>(
     canvas: &mut WindowCanvas,
+    camera: &mut Camera,
     color: Color,
     player1: &'b mut Player<'a>,
     p1_assets: &'a CharacterAssets,
@@ -54,38 +57,13 @@ pub fn render<'a, 'b>(
     bar_ui_4: &SegmentedBar,
     debug: bool,
 ) -> Result<(), String> {
+
     canvas.set_draw_color(color);
     canvas.clear();
     let screen_res = canvas.output_size()?;
 
-    let screen_rect = world_to_screen(player1.character.sprite, player1.position, screen_res);
-    let sprite = player1.character.sprite;
-    let is_flipped = player1.flipped;
-    let texture = player1.render();
-
-    canvas.copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)?;
-    if debug {
-        debug_points(canvas, screen_rect.center(), screen_rect);
-        canvas.set_draw_color(color);
-    }
-
-    let screen_rect_2 = world_to_screen(player2.character.sprite, player2.position, screen_res);
-    let sprite_2 = player2.character.sprite;
-    let is_flipped_2 = player2.flipped;
-    let texture_2 = player2.render();
-    canvas.copy_ex(
-        texture_2,
-        sprite_2,
-        screen_rect_2,
-        0.0,
-        None,
-        is_flipped_2,
-        false,
-    )?;
-    if debug {
-        debug_points(canvas, screen_rect_2.center(), screen_rect_2);
-        canvas.set_draw_color(color);
-    }
+    render_player(player1 , canvas, screen_res, debug);
+    render_player(player2 , canvas, screen_res, debug);
 
     for projectile in projectiles.iter() {
         let screen_rect_2 = world_to_screen(projectile.sprite, projectile.position, screen_res);
@@ -156,6 +134,25 @@ pub fn render<'a, 'b>(
 
     canvas.present();
     Ok(())
+}
+
+fn render_player(player: &mut Player, canvas: &mut WindowCanvas, screen_res: (u32, u32),debug: bool) {
+    let screen_rect = world_to_screen(player.character.sprite, player.position, screen_res);
+    let sprite = player.character.sprite;
+    let is_flipped = player.flipped;
+    let texture = player.render();
+    canvas.copy_ex(
+        texture,
+        sprite,
+        screen_rect,
+        0.0,
+        None,
+        is_flipped,
+        false,
+    ).unwrap();
+    if debug {
+        debug_points(canvas, screen_rect.center(), screen_rect);
+    }
 }
 
 fn render_vfx(canvas: &mut WindowCanvas,

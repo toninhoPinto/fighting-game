@@ -3,16 +3,22 @@ use sdl2::{rect::Rect, render::TextureQuery};
 
 use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, keyboard::Keycode, pixels::Color, rect::Point, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, asset_management::common_assets::CommonAssets, collision::collision_detector::{detect_p1_hit_p2, detect_p2_hit_p1, detect_push}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
+use crate::{GameStateData, asset_management::common_assets::CommonAssets, collision::collision_detector::{detect_p1_hit_p2, detect_p2_hit_p1, detect_push}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering::{self, camera::Camera}, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::asset_management::sound::audio_player;
 
 use super::{character_factory::{load_character, load_character_anim_data}, game::Game, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}, saved_game::SavedGame};
 use super::inputs::process_inputs::{released_joystick_reset_directional_state, update_directional_state};
 use super::inputs::apply_inputs::apply_input_state;
 
-const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
 const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
 const FRAME_AMOUNT_CAN_ROLLBACK: i16 = 7;
+
+const LEVEL_WIDTH: i32 = 2080;
+const LEVEL_HEIGHT: i32 = 720;
+
+//Screen dimension constants
+const SCREEN_WIDTH: u32 = 1280;
+const SCREEN_HEIGHT: u32 = 720;
 
 pub struct Match {
     pub is_single_player: bool,
@@ -144,6 +150,9 @@ impl Scene for Match {
         let mut hp_bars = Match::hp_bars_init(screen_res, game.player1.character.hp, game.player2.character.hp);
         let mut special_bars = Match::special_bars_init(screen_res, game.player1.character.special_max, game.player2.character.special_max);
         
+        let mut camera: Camera = Camera::new(LEVEL_WIDTH/2, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+
         let mut previous_time = Instant::now();
         let logic_timestep: f64 = 0.016;
         let mut logic_time_accumulated: f64 = 0.0;
@@ -238,9 +247,6 @@ impl Scene for Match {
                         } 
                     } 
                 }
-
-
-                //end of input management
             }
 
             //Update
@@ -285,6 +291,7 @@ impl Scene for Match {
                         &mut self.p1_inputs.input_processed, &mut self.p1_inputs.input_processed_reset_timer,
                         &mut self.p1_inputs.action_history, &mut self.p1_inputs.special_reset_timer);
                 }
+
                 if !self.p2_inputs.input_new_frame.is_empty() {
                     apply_input(&mut game.player2, &p2_assets, 
                         &self.p2_inputs.directional_state_input,
@@ -387,6 +394,7 @@ impl Scene for Match {
             if update_counter >= 0 {
                 rendering::renderer::render(
                     canvas,
+                    &mut camera,
                     Color::RGB(70, 70, 70),
                     game.player1,
                     &p1_assets,

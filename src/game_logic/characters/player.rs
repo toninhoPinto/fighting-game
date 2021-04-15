@@ -173,7 +173,6 @@ impl<'a> Player<'a> {
             } else {
                 player_width as f64 - (player_pushing.position.x - self.position.x).abs() as f64
             };
-            println!("{} {}", (player_pushing.position.x - self.position.x).abs(), offset);
             offset * 20.0
         } else {
             player_pushing.character.speed / 2.0
