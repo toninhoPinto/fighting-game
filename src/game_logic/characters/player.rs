@@ -167,6 +167,9 @@ impl<'a> Player<'a> {
     pub fn push(&mut self, dir: i32, player_pushing: &Player, dt: f64) {
         let speed = if player_pushing.state == PlayerState::DashingForward {
             player_pushing.character.dash_speed / 2.0
+        } else if player_pushing.is_airborne {
+            println!("{}", (player_pushing.position.y - self.position.y).abs());
+            (player_pushing.position.y - self.position.y).abs() as f64 * 6.0
         } else {
             player_pushing.character.speed / 2.0
         };
@@ -210,6 +213,7 @@ impl<'a> Player<'a> {
             if self.position.y >= self.ground_height {
                 let position_offset_x =
                     self.direction_at_jump_time as f64 * self.character.jump_distance * dt * speed_mod;
+
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
                 self.position = self

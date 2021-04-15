@@ -387,9 +387,14 @@ impl Scene for Match {
                             .filter(|&c| c.collider_type == ColliderType::Pushbox)
                         {
                             if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                                println!("PUSH OR BE PUSHED");
+                                //println!("PUSH OR BE PUSHED");
                                 if game.player1.velocity_x != 0 && game.player1.velocity_x.signum() == game.player1.dir_related_of_other {
                                     game.player2.push(game.player1.velocity_x, game.player1, logic_timestep);
+                                    game.player1.is_pushing = true;
+                                }
+
+                                if game.player1.is_airborne {
+                                    game.player2.push(game.player1.dir_related_of_other, game.player1, logic_timestep);
                                     game.player1.is_pushing = true;
                                 }
 
@@ -397,7 +402,11 @@ impl Scene for Match {
                                     game.player1.push(game.player2.velocity_x, game.player2, logic_timestep);
                                     game.player2.is_pushing = true;
                                 }
-                                
+
+                                if game.player2.is_airborne {
+                                    game.player1.push(game.player2.dir_related_of_other, game.player2, logic_timestep);
+                                    game.player2.is_pushing = true;
+                                }
                             }
                         }   
                     }
