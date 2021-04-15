@@ -40,7 +40,6 @@ pub struct Player<'a> {
     pub jump_initial_velocity: f64,
     pub extra_gravity: Option<f64>,
 
-    pub prev_velocity_x: i32,
     pub velocity_x: i32,
     pub dir_related_of_other: i32,
     pub state: PlayerState,
@@ -76,7 +75,6 @@ impl<'a> Player<'a> {
             velocity_y: 0.0,
             extra_gravity: None,
 
-            prev_velocity_x: 0,
             velocity_x: 0,
             dir_related_of_other: 0,
             state: PlayerState::Standing,
@@ -166,7 +164,13 @@ impl<'a> Player<'a> {
         self.state = PlayerState::Standing;
     }
 
-    pub fn push(&mut self, dir: i32, speed: f64, dt: f64) {
+    pub fn push(&mut self, dir: i32, player_pushing: &Player, dt: f64) {
+        let speed = if player_pushing.state == PlayerState::DashingForward {
+            player_pushing.character.dash_speed / 2.0
+        } else {
+            player_pushing.character.speed / 2.0
+        };
+        
         self.position = self.position.offset(
             (dir as f64 * speed * dt) as i32,
             0,
@@ -236,6 +240,7 @@ impl<'a> Player<'a> {
             let is_dashing = self.state == PlayerState::DashingForward
                 || self.state == PlayerState::DashingBackward;
             if is_dashing {
+                self.velocity_x = self.dir_related_of_other.signum();
                 let dash_speed = (self.dir_related_of_other.signum() as f64
                     * self.character.dash_speed as f64
                     * dt
@@ -336,8 +341,6 @@ impl<'a> Player<'a> {
                         .play_once(character_animation.get("take_damage").unwrap(), false);
                 }
             }
-
-            self.prev_velocity_x = self.velocity_x;
         }
         
        

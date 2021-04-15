@@ -99,6 +99,13 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
         ),
     );
     collider_animations.insert(
+        "dash".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/dash/dash.json", "keetar"),
+        ),
+    );
+
+    collider_animations.insert(
         "neutral_jump".to_string(),
         asset_loader::load_hitboxes(
             format!("assets/{}/standing/neutral_jump/jump.json", "keetar"),
@@ -450,7 +457,7 @@ fn load_foxgirl_anims(
     );
     character_anims.insert(
         "dash_back".to_string(),
-        Animation::new(dash_back_anim, "dash_back".to_string(), 0.5),
+        Animation::new(dash_back_anim, "dash_back".to_string(), 0.35),
     );
     character_anims.insert(
         "walk".to_string(),

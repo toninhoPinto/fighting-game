@@ -87,7 +87,6 @@ impl<'a> Game<'a>{
             p1_direction_at_jump_time: self.player1.direction_at_jump_time,
             p1_jump_initial_velocity: self.player1.jump_initial_velocity,
             p1_extra_gravity: self.player1.extra_gravity,
-            p1_prev_velocity_x: self.player1.prev_velocity_x,
             p1_velocity_x: self.player1.velocity_x,
             p1_dir_related_of_other: self.player1.dir_related_of_other,
             p1_state: self.player1.state,
@@ -113,7 +112,6 @@ impl<'a> Game<'a>{
             p2_direction_at_jump_time: self.player2.direction_at_jump_time,
             p2_jump_initial_velocity: self.player2.jump_initial_velocity,
             p2_extra_gravity: self.player2.extra_gravity,
-            p2_prev_velocity_x: self.player2.prev_velocity_x,
             p2_velocity_x: self.player2.velocity_x,
             p2_dir_related_of_other: self.player2.dir_related_of_other,
             p2_state: self.player2.state,
@@ -148,7 +146,6 @@ impl<'a> Game<'a>{
         self.player1.direction_at_jump_time = saved_game.p1_direction_at_jump_time;
         self.player1.jump_initial_velocity = saved_game.p1_jump_initial_velocity;
         self.player1.extra_gravity = saved_game.p1_extra_gravity;
-        self.player1.prev_velocity_x = saved_game.p1_prev_velocity_x;
         self.player1.velocity_x = saved_game.p1_velocity_x;
         self.player1.dir_related_of_other = saved_game.p1_dir_related_of_other;
         self.player1.state = saved_game.p1_state;
@@ -172,7 +169,6 @@ impl<'a> Game<'a>{
         self.player2.direction_at_jump_time = saved_game.p2_direction_at_jump_time; 
         self.player2.jump_initial_velocity = saved_game.p2_jump_initial_velocity; 
         self.player2.extra_gravity = saved_game.p2_extra_gravity; 
-        self.player2.prev_velocity_x = saved_game.p2_prev_velocity_x; 
         self.player2.velocity_x = saved_game.p2_velocity_x;
         self.player2.dir_related_of_other = saved_game.p2_dir_related_of_other; 
         self.player2.state = saved_game.p2_state; 
@@ -206,7 +202,6 @@ pub struct SavedGame{
     pub p1_direction_at_jump_time: i32,
     pub p1_jump_initial_velocity: f64,
     pub p1_extra_gravity: Option<f64>,
-    pub p1_prev_velocity_x: i32,
     pub p1_velocity_x: i32,
     pub p1_dir_related_of_other: i32,
     pub p1_state: PlayerState,
@@ -235,7 +230,6 @@ pub struct SavedGame{
     pub p2_direction_at_jump_time: i32,
     pub p2_jump_initial_velocity: f64,
     pub p2_extra_gravity: Option<f64>,
-    pub p2_prev_velocity_x: i32,
     pub p2_velocity_x: i32,
     pub p2_dir_related_of_other: i32,
     pub p2_state: PlayerState,
