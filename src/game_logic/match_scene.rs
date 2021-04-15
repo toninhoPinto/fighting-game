@@ -1,13 +1,12 @@
 use std::{collections::{HashMap, VecDeque}, time::Instant};
 use sdl2::{rect::Rect, render::TextureQuery};
 
-use parry2d::bounding_volume::BoundingVolume;
 use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, keyboard::Keycode, pixels::Color, rect::Point, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, asset_management::{collider::ColliderType, common_assets::CommonAssets}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
+use crate::{GameStateData, asset_management::common_assets::CommonAssets, collision::collision_detector::{detect_p1_hit_p2, detect_p2_hit_p1, detect_push}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::asset_management::sound::audio_player;
 
-use super::{character_factory::{load_character, load_character_anim_data}, game::{Game, SavedGame}, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}};
+use super::{character_factory::{load_character, load_character_anim_data}, game::Game, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}, saved_game::SavedGame};
 use super::inputs::process_inputs::{released_joystick_reset_directional_state, update_directional_state};
 use super::inputs::apply_inputs::apply_input_state;
 
@@ -262,7 +261,7 @@ impl Scene for Match {
                 if debug_rollback {             
                     if rollback == 0 {
                         rollback = FRAME_AMOUNT_CAN_ROLLBACK;
-                        game.load(&self.game_rollback.get(0).unwrap(), &p1_assets, &p2_assets);
+                        self.game_rollback.get(0).unwrap().load(&mut game, &p1_assets, &p2_assets);
                         self.p1_inputs = self.p1_input_history.get(0).unwrap().clone();
                         debug_rollback = false;
                     }
@@ -271,7 +270,7 @@ impl Scene for Match {
                 game.current_frame += 1;
 
                 if rollback == 0 {
-                    self.game_rollback.push_back(game.save());
+                    self.game_rollback.push_back(SavedGame::save(&game));
                     self.p1_input_history.push_back(self.p1_inputs.clone());
                     if self.p1_input_history.len() as i16 > FRAME_AMOUNT_CAN_ROLLBACK {
                         self.p1_input_history.pop_front();
@@ -297,47 +296,11 @@ impl Scene for Match {
                 apply_input_state(&mut game.player1, &self.p1_inputs.directional_state_input);
                 apply_input_state(&mut game.player2, &self.p2_inputs.directional_state_input);
 
-                for i in 0..self.p1_inputs.input_processed_reset_timer.len() {
-                    self.p1_inputs.input_processed_reset_timer[i] += 1;
-                    if self.p1_inputs.input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                        self.p1_inputs.input_processed.pop_front();
-                    }
-                }
-                self.p1_inputs.input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+                self.p1_inputs.update_inputs_reset_timer();
+                self.p1_inputs.update_special_inputs_reset_timer();
 
-
-                for i in 0..self.p1_inputs.special_reset_timer.len() {
-                    self.p1_inputs.special_reset_timer[i] += 1;
-                    if self.p1_inputs.special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                        if self.p1_inputs.action_history.len() > 1 {
-                            self.p1_inputs.action_history.pop_front();
-                        }
-                    }
-                }
-                self.p1_inputs.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
-
-
-
-
-
-                for i in 0..self.p2_inputs.input_processed_reset_timer.len() {
-                    self.p2_inputs.input_processed_reset_timer[i] += 1;
-                    if self.p2_inputs.input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                        self.p2_inputs.input_processed.pop_front();
-                    }
-                }
-                self.p2_inputs.input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
-
-
-                for i in 0..self.p2_inputs.special_reset_timer.len() {
-                    self.p2_inputs.special_reset_timer[i] += 1;
-                    if self.p2_inputs.special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
-                        if self.p2_inputs.action_history.len() > 1 {
-                            self.p2_inputs.action_history.pop_front();
-                        }
-                    }
-                }
-                self.p2_inputs.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+                self.p2_inputs.update_inputs_reset_timer();
+                self.p2_inputs.update_special_inputs_reset_timer();
 
                 hp_bars[0].update(game.player1.character.hp);
                 hp_bars[1].update(game.player2.character.hp);
@@ -351,151 +314,69 @@ impl Scene for Match {
                 game.player1.state_update(&p1_assets);
                 game.player2.state_update(&p2_assets);
 
-                if  game.player1.is_attacking {
-                    //println!("is attacking {} -> {}", game.player1.animator.current_animation.unwrap().name,  game.player1.animator.animation_index);
-                }
+                game.update_collider_p1(&p1_assets);
+                game.update_collider_p2(&p2_assets);
 
-                let collider_animation1 = p1_assets.collider_animations.get(&game.player1.animator.current_animation.unwrap().name);
-                if collider_animation1.is_some() {
-                    if collider_animation1.unwrap().colliders.len() != game.p1_colliders.len() {
-                        collider_animation1.unwrap().init(&mut game.p1_colliders);
+                detect_push(&mut game.player1, &mut game.player2, 
+                    &game.p1_colliders, &game.p2_colliders, logic_timestep);
+    
+                match detect_p1_hit_p2(game.player1, &game.p1_colliders, &game.p2_colliders) {
+                    Some(point) => {
+                        println!("DEAL DMG");
+                        audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
+                        
+                        let attack = p1_assets.attacks.get(&game.player1.animator.current_animation.unwrap().name).unwrap();
+                        game.player1.has_hit = true;
+                        game.player2.take_damage(attack.damage);
+                        game.player2.state_update(&p2_assets);
+                        game.player2.knock_back(attack.push_back);
+
+                        let TextureQuery { width, height, .. } = general_assets.hit_effect_animations.get("normal_hit").unwrap().sprites[0].query();
+    
+                        let texture_width = width * 2;
+                        let texture_height = height * 2;
+                        //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
+                        //this will have issues with other vfx
+    
+                        game.spawn_vfx(
+                            Rect::new(point.x as i32 - texture_width as i32 / 2 - 80, 
+                                point.y as i32 - texture_height as i32 / 2 - 100, 
+                                texture_width, texture_height), 
+                "special_hit".to_string(), Some(Color::GREEN));
                     }
-                    collider_animation1.unwrap().update(&mut game.p1_colliders, &game.player1);
+                    None => {}
                 }
+            
+                match detect_p2_hit_p1(game.player2, &game.p1_colliders, &game.p2_colliders) {
+                    Some(point) => {
+                        println!("DEAL DMG");
+                        audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
+                        
+                        let attack = p2_assets.attacks.get(&game.player2.animator.current_animation.unwrap().name).unwrap();
+                        game.player2.has_hit = true;
+                        game.player1.take_damage(attack.damage);
+                        game.player1.state_update(&p1_assets);
+                        game.player1.knock_back(attack.push_back);
 
-                let collider_animation2 = p2_assets.collider_animations.get(&game.player2.animator.current_animation.unwrap().name);
-                if collider_animation2.is_some() {
-                    if collider_animation2.unwrap().colliders.len() != game.p2_colliders.len() {
-                        collider_animation2.unwrap().init(&mut game.p2_colliders);
+                        let TextureQuery { width, height, .. } = general_assets.hit_effect_animations.get("normal_hit").unwrap().sprites[0].query();
+    
+                        let texture_width = width * 2;
+                        let texture_height = height * 2;
+                        //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
+                        //this will have issues with other vfx
+    
+                        game.spawn_vfx(
+                            Rect::new(point.x as i32 - texture_width as i32 / 2 - 80, 
+                                point.y as i32 - texture_height as i32 / 2 - 100, 
+                                texture_width, texture_height), 
+                "special_hit".to_string(), Some(Color::GREEN));
                     }
-                    collider_animation2.unwrap().update(&mut game.p2_colliders, &game.player2);
+                    None => {}
                 }
-
-                
-                let mut collision_point = None;
-                //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
-                //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
-                {
-                    game.player1.is_pushing = false;
-                    game.player2.is_pushing = false;
-                    for p1_collider in game.p1_colliders
-                        .iter()
-                        .filter(|&c| c.collider_type == ColliderType::Pushbox)
-                    {
-                        for p2_collider in game.p2_colliders
-                            .iter()
-                            .filter(|&c| c.collider_type == ColliderType::Pushbox)
-                        {
-                            if p1_collider.aabb.intersects(&p2_collider.aabb) {
-                                //println!("PUSH OR BE PUSHED");
-                                let p1_width = p1_collider.aabb.half_extents().y;
-                                let p2_width = p2_collider.aabb.half_extents().y;
-                                if game.player1.velocity_x != 0 && game.player1.velocity_x.signum() == game.player1.dir_related_of_other {
-                                    game.player2.push(game.player1.velocity_x, game.player1, p2_width, logic_timestep);
-                                    game.player1.is_pushing = true;
-                                }
-
-                                if game.player1.is_airborne {
-                                    game.player2.push(game.player1.dir_related_of_other, game.player1, p2_width, logic_timestep);
-                                    game.player1.is_pushing = true;
-                                }
-
-                                if game.player2.velocity_x != 0 && game.player2.velocity_x.signum() == game.player2.dir_related_of_other {
-                                    game.player1.push(game.player2.velocity_x, game.player2, p1_width,logic_timestep);
-                                    game.player2.is_pushing = true;
-                                }
-
-                                if game.player2.is_airborne {
-                                    game.player1.push(game.player2.dir_related_of_other, game.player2, p1_width,logic_timestep);
-                                    game.player2.is_pushing = true;
-                                }
-                            }
-                        }   
-                    }
-
-                    if !game.player1.has_hit {
-                        for collider in game.p1_colliders
-                            .iter()
-                            .filter(|&c| c.collider_type == ColliderType::Hitbox)
-                        {
-                            for collider_to_take_dmg in game.p2_colliders
-                                .iter()
-                                .filter(|&c| c.collider_type == ColliderType::Hurtbox)
-                            {
-                                if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                                    println!("DEAL DMG");
-                                    audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-                                    
-                                    let attack = p1_assets.attacks.get(&game.player1.animator.current_animation.unwrap().name).unwrap();
-                                    game.player1.has_hit = true;
-                                    game.player2.take_damage(attack.damage);
-                                    game.player2.state_update(&p2_assets);
-                                    game.player2.knock_back(attack.push_back);
-                                    
-                                    let mut center = collider_to_take_dmg.aabb.center();
-                                    let mut left = center;
-                                    left.x -= collider_to_take_dmg.aabb.half_extents().x;
-                                    let mut right = center;
-                                    right.x += collider_to_take_dmg.aabb.half_extents().x;
-
-                                    collision_point = Some(
-                                        collider.aabb.clip_segment(
-                                            &left,
-                                            &right
-                                        ).unwrap().a
-                                    );
-                                }
-                            }   
-                        }
-                    }
-                    
-                    if !game.player2.has_hit {
-                        for collider in game.p2_colliders
-                            .iter()
-                            .filter(|&c| c.collider_type == ColliderType::Hitbox)
-                        {
-                            for collider_to_take_dmg in game.p1_colliders
-                                .iter()
-                                .filter(|&c| c.collider_type == ColliderType::Hurtbox)
-                            {
-                                if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                                    println!("TAKE DMG");
-                                    audio_player::play_sound(general_assets.sound_effects.get_mut("hit").unwrap());
-                                    let attack = p2_assets.attacks.get(&game.player2.animator.current_animation.unwrap().name).unwrap();
-                                    game.player2.has_hit = true;
-                                    game.player1.take_damage(attack.damage);
-                                    game.player1.state_update(&p1_assets);
-                                    game.player1.knock_back(attack.push_back);
-                                }
-                            }
-                        }
-                    } 
-                }
-                
-                if collision_point.is_some()  {
-                    let point = collision_point.unwrap();
-                    let TextureQuery { width, height, .. } = general_assets.hit_effect_animations.get("normal_hit").unwrap().sprites[0].query();
-
-                    let texture_width = width * 2;
-                    let texture_height = height * 2;
-                    //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
-                    //this will have issues with other vfx
-
-                    game.spawn_vfx(
-                        Rect::new(point.x as i32 - texture_width as i32 / 2 - 80, 
-                            point.y as i32 - texture_height as i32 / 2 - 100, 
-                            texture_width, texture_height), 
-            "special_hit".to_string(), Some(Color::GREEN));
-                }
-                
+            
                 game.update_vfx(&general_assets);
 
-
-                //Handle projectile movement
-                //TODO maybe have a function inside game that does this, like update_vfx
-                for i in 0..game.projectiles.len() {
-                    game.projectiles[i].update();
-                }
+                game.update_projectiles();
 
                 if rollback == 0 {
                     logic_time_accumulated -= logic_timestep;
@@ -520,18 +401,12 @@ impl Scene for Match {
                     &hp_bars[1],
                     &special_bars[0],
                     &special_bars[1],
-                    false,
+                    true,
                 ).unwrap();
 
                 update_counter = 0;
             }
         }
     }
-
-
-
-
-
-
 
 }

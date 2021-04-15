@@ -2,6 +2,8 @@ use std::collections::VecDeque;
 
 use crate::input::translated_inputs::TranslatedInput;
 
+const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
+
 #[derive(Clone, PartialEq, Debug)]
 pub struct AllInputManagement {
     pub input_new_frame: VecDeque<(TranslatedInput, bool)>,
@@ -26,4 +28,28 @@ impl AllInputManagement {
             directional_state_input: TranslatedInput::init_dir_input_state(),
         }
     }
+
+    pub fn update_inputs_reset_timer(&mut self) {
+        for i in 0..self.input_processed_reset_timer.len() {
+            self.input_processed_reset_timer[i] += 1;
+            if self.input_processed_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                self.input_processed.pop_front();
+            }
+        }
+        self.input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+    }
+
+    pub fn update_special_inputs_reset_timer(&mut self) {
+        for i in 0..self.special_reset_timer.len() {
+            self.special_reset_timer[i] += 1;
+            if self.special_reset_timer[i] > FRAME_WINDOW_BETWEEN_INPUTS {
+                if self.action_history.len() > 1 {
+                    self.action_history.pop_front();
+                }
+            }
+        }
+        self.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+    }
+
+    
 }

@@ -2,7 +2,7 @@ use engine_traits::scene::Scene;
 use game_logic::match_scene::Match;
 use sdl2::image::{self, InitFlag};
 use sdl2::render::BlendMode;
-use ui::menus::menu_scene::{MenuScene, MenuScreen};
+use ui::menus::menu_scene::MenuScene;
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -17,22 +17,22 @@ mod input;
 mod rendering;
 mod ui;
 mod engine_traits;
+mod collision;
 
 use asset_management::{sound::{init_sound, music_player}};
 
 use crate::asset_management::controls;
 use crate::input::controller_handler::Controller;
 
-use input::{controller_handler::ControllerType, translated_inputs::TranslatedInput};
+use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//refactor controller and input to be able to distinguish between local p1 and local p2 input sources
-//make characters push correctly when jumped on top
+//make dash have movcement only during some frames and not during others + lock in position
 //apply attacks struct values (knockback, hitstun, etc)
 //calculate frame advantage on the fly
 //display different vfx colors and sizes depending on the frame advantage
 //make an enum for with startup|active|recovery and use code to detect a hitbox and switch to active, and switch back to recovery 
-//tis is important to be able to cancel the recovery of attacks
+//this is important to be able to cancel the recovery of attacks
 
 //define a ground height and a offset for each character to be at the correct ground height
 //add hit combos and block combos
@@ -97,11 +97,7 @@ fn main() -> Result<(), String> {
     //controllers
     let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
-    let mut scene = Match::new(
-        false, true, 
-        "keetar".to_string(), "foxgirl".to_string());
-
-    let mut scene2 = MenuScene::new_main_menu(&font);
+    let scene2 = MenuScene::new_main_menu(&font);
 
     let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();
     state_stack.push(Box::new(scene2)); //menu state

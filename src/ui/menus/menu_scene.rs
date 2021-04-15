@@ -97,7 +97,7 @@ impl<'a>  MenuScene<'a> {
         }
     }
 
-    pub fn get_centered_rect(screen_res: (u32, u32), rect_width: u32, rect_height: u32, offset: u32) -> Rect {
+    pub fn get_centered_rect( screen_res: (u32, u32), rect_width: u32, rect_height: u32, offset: u32) -> Rect {
         
         let cx = 20;
         let cy = 20 + offset;
