@@ -164,12 +164,17 @@ impl<'a> Player<'a> {
         self.state = PlayerState::Standing;
     }
 
-    pub fn push(&mut self, dir: i32, player_pushing: &Player, dt: f64) {
+    pub fn push(&mut self, dir: i32, player_pushing: &Player, player_width: f32, dt: f64) {
         let speed = if player_pushing.state == PlayerState::DashingForward {
             player_pushing.character.dash_speed / 2.0
         } else if player_pushing.is_airborne {
-            println!("{}", (player_pushing.position.y - self.position.y).abs());
-            (player_pushing.position.y - self.position.y).abs() as f64 * 6.0
+            let offset = if  (player_pushing.position.x - self.position.x).abs() < 10 {
+                player_width as f64
+            } else {
+                player_width as f64 - (player_pushing.position.x - self.position.x).abs() as f64
+            };
+            println!("{} {}", (player_pushing.position.x - self.position.x).abs(), offset);
+            offset * 20.0
         } else {
             player_pushing.character.speed / 2.0
         };

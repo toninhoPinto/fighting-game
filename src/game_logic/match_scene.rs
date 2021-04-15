@@ -378,33 +378,35 @@ impl Scene for Match {
                 {
                     game.player1.is_pushing = false;
                     game.player2.is_pushing = false;
-                    for collider in game.p1_colliders
+                    for p1_collider in game.p1_colliders
                         .iter()
                         .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     {
-                        for collider_to_take_dmg in game.p2_colliders
+                        for p2_collider in game.p2_colliders
                             .iter()
                             .filter(|&c| c.collider_type == ColliderType::Pushbox)
                         {
-                            if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                            if p1_collider.aabb.intersects(&p2_collider.aabb) {
                                 //println!("PUSH OR BE PUSHED");
+                                let p1_width = p1_collider.aabb.half_extents().y;
+                                let p2_width = p2_collider.aabb.half_extents().y;
                                 if game.player1.velocity_x != 0 && game.player1.velocity_x.signum() == game.player1.dir_related_of_other {
-                                    game.player2.push(game.player1.velocity_x, game.player1, logic_timestep);
+                                    game.player2.push(game.player1.velocity_x, game.player1, p2_width, logic_timestep);
                                     game.player1.is_pushing = true;
                                 }
 
                                 if game.player1.is_airborne {
-                                    game.player2.push(game.player1.dir_related_of_other, game.player1, logic_timestep);
+                                    game.player2.push(game.player1.dir_related_of_other, game.player1, p2_width, logic_timestep);
                                     game.player1.is_pushing = true;
                                 }
 
                                 if game.player2.velocity_x != 0 && game.player2.velocity_x.signum() == game.player2.dir_related_of_other {
-                                    game.player1.push(game.player2.velocity_x, game.player2, logic_timestep);
+                                    game.player1.push(game.player2.velocity_x, game.player2, p1_width,logic_timestep);
                                     game.player2.is_pushing = true;
                                 }
 
                                 if game.player2.is_airborne {
-                                    game.player1.push(game.player2.dir_related_of_other, game.player2, logic_timestep);
+                                    game.player1.push(game.player2.dir_related_of_other, game.player2, p1_width,logic_timestep);
                                     game.player2.is_pushing = true;
                                 }
                             }
@@ -442,7 +444,6 @@ impl Scene for Match {
                                             &right
                                         ).unwrap().a
                                     );
-                                    println!("left{:?} right{:?} collision_point{:?}", left, right, collision_point.unwrap());
                                 }
                             }   
                         }
@@ -519,7 +520,7 @@ impl Scene for Match {
                     &hp_bars[1],
                     &special_bars[0],
                     &special_bars[1],
-                    true,
+                    false,
                 ).unwrap();
 
                 update_counter = 0;
