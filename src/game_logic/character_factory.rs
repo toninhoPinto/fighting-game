@@ -30,7 +30,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
             200,
             4,
             450.0,
-            550.0,
+            650.0,
             650.0,
             700.0,
             600.0,
@@ -227,6 +227,8 @@ fn load_keetar_anims(
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/attacks/grab");
     let dead_anim: Vec<Texture> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/dead");
+    let take_damage_anim: Vec<Texture> =
+        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/take_damage");
 
     character_anims.insert(
         "idle".to_string(),
@@ -292,6 +294,10 @@ fn load_keetar_anims(
         "dead".to_string(),
         Animation::new(dead_anim, "dead".to_string(), 0.15),
     );
+    character_anims.insert(
+        "take_damage".to_string(),
+        Animation::new(take_damage_anim, "take_damage".to_string(), 0.35),
+    );
 
     character_anims.insert(
         "light_special_attack".to_string(),
@@ -327,7 +333,6 @@ fn load_keetar_attacks() -> HashMap<String,Attack> {
         stun_on_hit: 10,
         stun_on_block: 4,
         push_back: 5,
-        stun: 10,
         attack_move: 10,
         
     });
@@ -358,6 +363,13 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
         "dash".to_string(),
         asset_loader::load_hitboxes(
             format!("assets/{}/standing/dash/dash.json", "foxgirl"),
+        ),
+    );
+
+    collider_animations.insert(
+        "heavy_punch".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/attacks/heavy_punch/heavy_punch.json", "foxgirl"),
         ),
     );
 
@@ -453,7 +465,7 @@ fn load_foxgirl_anims(
     );
     character_anims.insert(
         "dash".to_string(),
-        Animation::new(dash_anim, "dash".to_string(), 0.35),
+        Animation::new(dash_anim, "dash".to_string(), 0.45),
     );
     character_anims.insert(
         "dash_back".to_string(),
@@ -504,8 +516,15 @@ fn load_foxgirl_anims(
 }
 
 fn load_foxgirl_attacks() -> HashMap<String,Attack> {
-    let attacks = HashMap::new();
+    let mut attacks = HashMap::new();
 
+    attacks.insert("heavy_punch".to_string(), Attack {
+        damage: 10,
+        stun_on_hit: 20,
+        stun_on_block: 14,
+        push_back: 10,
+        attack_move: 10, 
+    });
 
     attacks
 }

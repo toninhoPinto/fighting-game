@@ -53,18 +53,12 @@ pub fn detect_p2_hit_p1(player2: &mut Player,
                 .filter(|&c| c.collider_type == ColliderType::Hurtbox)
             {
                 if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-
-                    let mut center = collider_to_take_dmg.aabb.center();
-                    let mut left = center;
-                    left.x -= collider_to_take_dmg.aabb.half_extents().x;
-                    let mut right = center;
-                    right.x += collider_to_take_dmg.aabb.half_extents().x;
-
+                    let mut polygon = collider_to_take_dmg.aabb.vertices().to_vec();
+                    collider.aabb.clip_polygon(
+                        &mut polygon
+                    );
                     return Some(
-                        collider.aabb.clip_segment(
-                            &left,
-                            &right
-                        ).unwrap().a
+                        polygon[0]
                     )
                 }
             }

@@ -1,8 +1,8 @@
-use sdl2::{pixels::Color, rect::{Point, Rect}};
+use sdl2::{pixels::Color, rect::Rect};
 
 use crate::asset_management::{collider::Collider, common_assets::CommonAssets, vfx::particle::Particle};
 
-use super::{character_factory::CharacterAssets, characters::{Character, player::{Player, PlayerState}}, projectile::Projectile};
+use super::{character_factory::CharacterAssets, characters::player::Player, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game<'a>{

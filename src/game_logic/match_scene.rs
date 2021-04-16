@@ -6,7 +6,7 @@ use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, 
 use crate::{GameStateData, asset_management::common_assets::CommonAssets, collision::collision_detector::{detect_p1_hit_p2, detect_p2_hit_p1, detect_push}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering::{self, camera::Camera}, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::asset_management::sound::audio_player;
 
-use super::{character_factory::{load_character, load_character_anim_data}, game::Game, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}, saved_game::SavedGame};
+use super::{character_factory::{load_character, load_character_anim_data}, characters::player::PlayerState, game::Game, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}, saved_game::SavedGame};
 use super::inputs::process_inputs::{released_joystick_reset_directional_state, update_directional_state};
 use super::inputs::apply_inputs::apply_input_state;
 
@@ -152,14 +152,13 @@ impl Scene for Match {
         
         let mut camera: Camera = Camera::new(LEVEL_WIDTH/2, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-
         let mut previous_time = Instant::now();
         let logic_timestep: f64 = 0.016;
         let mut logic_time_accumulated: f64 = 0.0;
         let mut update_counter = 0;
 
         let mut debug_pause = false;
-        let mut debug_rollback = false;
+        let mut should_rollback = false;
         let mut rollback = 0;
 
         'running: loop {
@@ -180,7 +179,7 @@ impl Scene for Match {
                     Event::Quit { .. } => break 'running,
                     Event::KeyDown {keycode: Some(input),..} => {
                         if input == Keycode::L {
-                            debug_rollback ^= true;
+                            should_rollback ^= true;
                         }
                         if input == Keycode::P {
                             debug_pause ^= true
@@ -262,19 +261,12 @@ impl Scene for Match {
                         self.p1_inputs = self.p1_input_history.get((FRAME_AMOUNT_CAN_ROLLBACK - rollback) as usize).unwrap().clone();
                     }
                 } 
-
-
-                if debug_rollback {             
-                    if rollback == 0 {
-                        rollback = FRAME_AMOUNT_CAN_ROLLBACK;
-                        self.game_rollback.get(0).unwrap().load(&mut game, &p1_assets, &p2_assets);
-                        self.p1_inputs = self.p1_input_history.get(0).unwrap().clone();
-                        debug_rollback = false;
-                    }
+                if should_rollback && rollback == 0 {             
+                    rollback = FRAME_AMOUNT_CAN_ROLLBACK;
+                    self.game_rollback.get(0).unwrap().load(&mut game, &p1_assets, &p2_assets);
+                    self.p1_inputs = self.p1_input_history.get(0).unwrap().clone();
+                    should_rollback = false;
                 }
-
-                game.current_frame += 1;
-
                 if rollback == 0 {
                     self.game_rollback.push_back(SavedGame::save(&game));
                     self.p1_input_history.push_back(self.p1_inputs.clone());
@@ -284,24 +276,30 @@ impl Scene for Match {
                     }
                 }
 
-                if !self.p1_inputs.input_new_frame.is_empty() {
-                    apply_input(&mut game.player1, &p1_assets, 
-                        &self.p1_inputs.directional_state_input,
-                        &mut self.p1_inputs.input_new_frame, 
-                        &mut self.p1_inputs.input_processed, &mut self.p1_inputs.input_processed_reset_timer,
-                        &mut self.p1_inputs.action_history, &mut self.p1_inputs.special_reset_timer);
-                }
+                game.current_frame += 1;
 
-                if !self.p2_inputs.input_new_frame.is_empty() {
-                    apply_input(&mut game.player2, &p2_assets, 
-                        &self.p2_inputs.directional_state_input,
-                        &mut self.p2_inputs.input_new_frame, 
-                        &mut self.p2_inputs.input_processed, &mut self.p2_inputs.input_processed_reset_timer,
-                        &mut self.p2_inputs.action_history, &mut self.p2_inputs.special_reset_timer);
-                }
 
-                apply_input_state(&mut game.player1, &self.p1_inputs.directional_state_input);
-                apply_input_state(&mut game.player2, &self.p2_inputs.directional_state_input);
+                if game.player1.state != PlayerState::Dead && game.player2.state != PlayerState::Dead {
+
+                    if !self.p1_inputs.input_new_frame.is_empty() {
+                        apply_input(&mut game.player1, &p1_assets, 
+                            &self.p1_inputs.directional_state_input,
+                            &mut self.p1_inputs.input_new_frame, 
+                            &mut self.p1_inputs.input_processed, &mut self.p1_inputs.input_processed_reset_timer,
+                            &mut self.p1_inputs.action_history, &mut self.p1_inputs.special_reset_timer);
+                    }
+
+                    if !self.p2_inputs.input_new_frame.is_empty() {
+                        apply_input(&mut game.player2, &p2_assets, 
+                            &self.p2_inputs.directional_state_input,
+                            &mut self.p2_inputs.input_new_frame, 
+                            &mut self.p2_inputs.input_processed, &mut self.p2_inputs.input_processed_reset_timer,
+                            &mut self.p2_inputs.action_history, &mut self.p2_inputs.special_reset_timer);
+                    }
+
+                    apply_input_state(&mut game.player1, &self.p1_inputs.directional_state_input);
+                    apply_input_state(&mut game.player2, &self.p2_inputs.directional_state_input);
+                }
 
                 self.p1_inputs.update_inputs_reset_timer();
                 self.p1_inputs.update_special_inputs_reset_timer();
@@ -309,16 +307,10 @@ impl Scene for Match {
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
 
-                hp_bars[0].update(game.player1.character.hp);
-                hp_bars[1].update(game.player2.character.hp);
-
-                special_bars[0].update(game.player1.character.special_curr);
-                special_bars[1].update(game.player2.character.special_curr);
-
                 game.player1.update(logic_timestep, game.player2.position.x);
-                game.player2.update(logic_timestep, game.player1.position.x);
-
                 game.player1.state_update(&p1_assets);
+
+                game.player2.update(logic_timestep, game.player1.position.x);
                 game.player2.state_update(&p2_assets);
 
                 game.update_collider_p1(&p1_assets);
@@ -329,7 +321,6 @@ impl Scene for Match {
     
                 match detect_p1_hit_p2(game.player1, &game.p1_colliders, &game.p2_colliders) {
                     Some(point) => {
-                        println!("DEAL DMG");
                         audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
                         
                         let attack = p1_assets.attacks.get(&game.player1.animator.current_animation.unwrap().name).unwrap();
@@ -356,9 +347,8 @@ impl Scene for Match {
             
                 match detect_p2_hit_p1(game.player2, &game.p1_colliders, &game.p2_colliders) {
                     Some(point) => {
-                        println!("DEAL DMG");
                         audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-                        
+                        println!("{:?}", game.player2.animator.current_animation.unwrap().name);
                         let attack = p2_assets.attacks.get(&game.player2.animator.current_animation.unwrap().name).unwrap();
                         game.player2.has_hit = true;
                         game.player1.take_damage(attack.damage);
@@ -384,6 +374,13 @@ impl Scene for Match {
                 game.update_vfx(&general_assets);
 
                 game.update_projectiles();
+
+                hp_bars[0].update(game.player1.character.hp);
+                hp_bars[1].update(game.player2.character.hp);
+
+                special_bars[0].update(game.player1.character.special_curr);
+                special_bars[1].update(game.player2.character.special_curr);
+
 
                 if rollback == 0 {
                     logic_time_accumulated -= logic_timestep;

@@ -27,12 +27,15 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//add hitstun in hurt animation
+//if there is a trade make the hitstun work during attack animation
 //make dash have movcement only during some frames and not during others + lock in position
 //apply attacks struct values (knockback, hitstun, etc)
 //calculate frame advantage on the fly
 //display different vfx colors and sizes depending on the frame advantage
 //make an enum for with startup|active|recovery and use code to detect a hitbox and switch to active, and switch back to recovery 
 //this is important to be able to cancel the recovery of attacks
+//make jump attacks go lower than ground to be able to hit crouched players
 
 //define a ground height and a offset for each character to be at the correct ground height
 //add hit combos and block combos

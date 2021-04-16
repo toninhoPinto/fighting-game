@@ -52,7 +52,6 @@ pub struct Player<'a> {
     pub animation_state: Option<AnimationState>,
     pub flipped: bool,
     pub has_hit: bool,
-
     pub character: Character,
 
     pub mid_jump_pos: f64,
@@ -60,10 +59,6 @@ pub struct Player<'a> {
 
 impl<'a> Player<'a> {
     pub fn new(id: i32, character: Character, spawn_position: Point, flipped: bool) -> Self {
-        if id == 2 {
-            println!("{:?}", spawn_position);
-        }
-        
         Self {
             id,
             position: spawn_position,
@@ -237,7 +232,7 @@ impl<'a> Player<'a> {
 
         }
 
-        if self.player_can_move() && self.character.hit_stunned_duration <= 0 {
+        if self.player_can_move() {
             if self.state == PlayerState::Standing {
                 self.position = self.position.offset(
                     (self.velocity_x as f64 * self.character.speed * dt * speed_mod) as i32,
@@ -263,10 +258,6 @@ impl<'a> Player<'a> {
 
         if opponent_position_x - self.position.x != 0 {
             self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
-        }
-    
-        if self.character.hit_stunned_duration > 0 {
-            self.character.hit_stunned_duration -= 1;
         }
     }
 
@@ -390,7 +381,6 @@ impl<'a> Player<'a> {
                 || self.state == PlayerState::DashingBackward
             {
                 self.state = PlayerState::Standing;
-                self.character.hit_stunned_duration = 5;
             }
         }
         

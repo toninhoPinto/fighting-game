@@ -18,7 +18,6 @@ pub struct Character {
     pub speed: f64,
     pub dash_speed: f64,
     pub dash_back_speed: f64,
-    hit_stunned_duration: i32,
     // hit_stunned_duration was intended to give a small break on the dash animation
     // but actually ryu dash has 6 sprites that run over 26 frames and not spread equally, 11 of which have movement
     pub jump_height: f64,
@@ -30,7 +29,6 @@ pub struct Attack {
     pub stun_on_hit: i32,
     pub stun_on_block: i32,
     pub push_back: i32,
-    pub stun: i32,
     pub attack_move: i32
 }
 
@@ -57,7 +55,6 @@ impl Character {
             special_max,
             special_curr: special_max as f32,
 
-            hit_stunned_duration: 5,
             jump_height,
             jump_distance,
         }
