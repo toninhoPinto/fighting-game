@@ -371,6 +371,13 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     );
 
     collider_animations.insert(
+        "light_punch".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/attacks/light_punch/light_punch.json", "foxgirl"),
+        ),
+    );
+
+    collider_animations.insert(
         "heavy_punch".to_string(),
         asset_loader::load_hitboxes(
             format!("assets/{}/standing/attacks/heavy_punch/heavy_punch.json", "foxgirl"),
@@ -535,6 +542,15 @@ fn load_foxgirl_anims(
 
 fn load_foxgirl_attacks() -> HashMap<String,Attack> {
     let mut attacks = HashMap::new();
+
+    attacks.insert("light_punch".to_string(), Attack {
+        damage: 5,
+        stun_on_hit: 10,
+        stun_on_block: 4,
+        push_back: 5,
+        attack_move: 10,
+        
+    });
 
     attacks.insert("heavy_punch".to_string(), Attack {
         damage: 10,

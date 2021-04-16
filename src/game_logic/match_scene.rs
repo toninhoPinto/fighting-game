@@ -360,6 +360,7 @@ impl Scene for Match {
                     Some(point) => {
                         audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
                         println!("{:?}", game.player2.animator.current_animation.unwrap().name);
+                        println!("{:?}", p2_assets.attacks.keys());
                         let attack = p2_assets.attacks.get(&game.player2.animator.current_animation.unwrap().name).unwrap();
                         game.player2.has_hit = true;
                         game.player1.take_damage(attack.damage);

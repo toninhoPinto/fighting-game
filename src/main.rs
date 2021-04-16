@@ -59,6 +59,7 @@ use input::translated_inputs::TranslatedInput;
 //instant rematch (avoid going back to lobby or going back to selection)
 //show ping and show wifi/ethernet
 //make ui loop only 60fps to avoid the computer doing too many wasted computations
+//check if game is deterministic <- THIS IS VITAL FOR ROLLBACK MULTIPLAYER
 
 pub struct GameStateData<'a> {
     p1_character: &'a str,
