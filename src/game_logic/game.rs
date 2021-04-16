@@ -15,7 +15,6 @@ pub struct Game<'a>{
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
 
-    //TODO probably smart to make this a separate struct instead of a weird tuple
     pub hit_vfx: Vec<Particle>,
 }
 

@@ -18,8 +18,6 @@ pub struct Character {
     pub speed: f64,
     pub dash_speed: f64,
     pub dash_back_speed: f64,
-    // hit_stunned_duration was intended to give a small break on the dash animation
-    // but actually ryu dash has 6 sprites that run over 26 frames and not spread equally, 11 of which have movement
     pub jump_height: f64,
     pub jump_distance: f64,
 }

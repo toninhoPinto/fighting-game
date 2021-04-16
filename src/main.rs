@@ -27,33 +27,35 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//define camera scrolling and level walls
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
 //make dash have movcement only during some frames and not during others + lock in position
 //apply attacks struct values (knockback, hitstun, etc)
-//calculate frame advantage on the fly
-//display different vfx colors and sizes depending on the frame advantage
-//make an enum for with startup|active|recovery and use code to detect a hitbox and switch to active, and switch back to recovery 
+//add movement to each attack
+//in a jump mixup, it should push the opponent in the direction that you are travelling 
+//(e.g: if you jump and kick on the right side of the opponent, he should be pushed to the right)
+//make an enum for with startup|active|recovery and use code to detect a hitbox and switch to active, and switch back to recovery ´
 //this is important to be able to cancel the recovery of attacks
+//calculate frame advantage on the fly
+//display different vfx colors and sizes depending on the frame advantage //change color of vfx using sdl2 texture tint OR shader, which one?
 //make jump attacks go lower than ground to be able to hit crouched players
 
 //define a ground height and a offset for each character to be at the correct ground height
-//add hit combos and block combos
-//Hold attacks
-//attack animations that vary depending on distance
-//check how to pitch shift attacks depending on frame advantage
+//add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
+//charge special attacks
+//check how to pitch shift attacks sound chunks depending on frame advantage
 //dash attacks
-//add movement to each attack
 //projectile with a specific target location
 //specific projectile only live if keep holding button
 //VFX sprites are not centered, hard to place
-//change color of vfx using sdl2 texture tint OR shader, which one?
 
-//add menu to be apply to change the controllers for each player
+//add menu to change the controllers for each player
+//add menu to change the controller mapping of keys/buttons
 //refactor menu and maybe remove menu having a separate loop?
 //rollback should not happen during enemy stunned/hitstun if there is no way to escape
 //same during uncancellable animations
-//it stills re-simulate but doesnt change anything 
+//should it still re-simulate? probably not, but need to handle inputs if we buffer inputs during hitstun
 //lobby system -> needs server
 //instant rematch (avoid going back to lobby or going back to selection)
 //show ping and show wifi/ethernet

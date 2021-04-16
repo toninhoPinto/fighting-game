@@ -373,6 +373,20 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
         ),
     );
 
+    collider_animations.insert(
+        "neutral_jump".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/neutral_jump/neutral_jump.json", "foxgirl"),
+        ),
+    );
+
+    collider_animations.insert(
+        "crouch".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/crouch/crouched/crouched.json", "foxgirl"),
+        ),
+    );
+
     collider_animations
 }
 
@@ -493,7 +507,7 @@ fn load_foxgirl_anims(
     );
     character_anims.insert(
         "crouch".to_string(),
-        Animation::new(crouch_start_anim, "crouch".to_string(), 0.35),
+        Animation::new(crouch_start_anim, "crouch".to_string(), 0.8),
     );
     character_anims.insert(
         "crouching".to_string(),

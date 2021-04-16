@@ -342,10 +342,6 @@ impl<'a> Player<'a> {
             }
         }
         
-       
-
-
-
         if self.animator.is_finished && self.state != PlayerState::Dead {
             self.has_hit = false;
 
