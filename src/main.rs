@@ -27,7 +27,6 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//cornered opponent, push should stop player
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
 //make dash have movcement only during some frames and not during others + lock in position

@@ -104,7 +104,7 @@ pub fn detect_push(player1: &mut Player, player2: &mut Player,
                 ).unwrap().unwrap().dist;
 
                 if player1.velocity_x != 0 && player1.velocity_x.signum() == player1.dir_related_of_other {
-                    player1.position.x -= penetrating as i32;
+                    player1.position.x = player1.position.x + player1.velocity_x * penetrating as i32;
                     player2.push(player1.velocity_x, player1, p2_width, logic_timestep);
                     player1.is_pushing = true;
                 }
@@ -115,7 +115,7 @@ pub fn detect_push(player1: &mut Player, player2: &mut Player,
                 }
 
                 if player2.velocity_x != 0 && player2.velocity_x.signum() == player2.dir_related_of_other {
-                    player2.position.x -= penetrating as i32;
+                    player2.position.x = player2.position.x + player2.velocity_x * penetrating as i32;
                     player1.push(player2.velocity_x, player2, p1_width,logic_timestep);
                     player2.is_pushing = true;
                 }
