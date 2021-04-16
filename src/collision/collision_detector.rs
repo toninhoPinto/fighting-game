@@ -1,4 +1,4 @@
-use parry2d::{bounding_volume::BoundingVolume, math::Real, math::Point};
+use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Vector2}, query, shape::Cuboid};
 
 use crate::asset_management::collider::{Collider, ColliderType};
 use crate::game_logic::characters::player::Player;
@@ -57,6 +57,7 @@ pub fn detect_p2_hit_p1(player2: &mut Player,
                     collider.aabb.clip_polygon(
                         &mut polygon
                     );
+
                     return Some(
                         polygon[0]
                     )
@@ -85,7 +86,25 @@ pub fn detect_push(player1: &mut Player, player2: &mut Player,
             if p1_collider.aabb.intersects(&p2_collider.aabb) {
                 let p1_width = p1_collider.aabb.half_extents().y;
                 let p2_width = p2_collider.aabb.half_extents().y;
+
+
+                let cuboid1 = Cuboid::new(p1_collider.aabb.half_extents());
+                let cuboid2 = Cuboid::new(p2_collider.aabb.half_extents());
+                let prediction = 1.0;
+
+                let cuboid1_pos = Isometry2::translation(p1_collider.aabb.center().x, p1_collider.aabb.center().y);
+                let cuboid2_pos = Isometry2::translation(p2_collider.aabb.center().x, p2_collider.aabb.center().y);
+            
+                let penetrating = query::contact(
+                    &cuboid1_pos,
+                    &cuboid1,
+                    &cuboid2_pos,
+                    &cuboid2,
+                    prediction,
+                ).unwrap().unwrap().dist;
+
                 if player1.velocity_x != 0 && player1.velocity_x.signum() == player1.dir_related_of_other {
+                    player1.position.x -= penetrating as i32;
                     player2.push(player1.velocity_x, player1, p2_width, logic_timestep);
                     player1.is_pushing = true;
                 }
@@ -96,6 +115,7 @@ pub fn detect_push(player1: &mut Player, player2: &mut Player,
                 }
 
                 if player2.velocity_x != 0 && player2.velocity_x.signum() == player2.dir_related_of_other {
+                    player2.position.x -= penetrating as i32;
                     player1.push(player2.velocity_x, player2, p1_width,logic_timestep);
                     player2.is_pushing = true;
                 }

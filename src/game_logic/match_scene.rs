@@ -139,7 +139,6 @@ impl Scene for Match {
         let stage_rect = Rect::new(0,0, LEVEL_WIDTH as u32, LEVEL_HEIGHT  as u32);
 
         let mut camera: Camera = Camera::new(LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-        println!("{:?}", camera);
 
         let mut player1 = load_character(&self.p1_character, Point::new(camera.rect.center().x - 200, 0), false, 1);
         let mut player2 = load_character(&self.p2_character, Point::new(camera.rect.center().x + 200, -50), true, 2);
@@ -315,7 +314,6 @@ impl Scene for Match {
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
 
-                println!("{:?}", game.p1_colliders);
                 let pushbox_right_x = game.p1_colliders.iter()
                 .filter(|&c| { c.collider_type == ColliderType::Pushbox }).last().unwrap().aabb.half_extents().x;
                 game.player1.update(&camera,logic_timestep, pushbox_right_x as i32, game.player2.position.x);
