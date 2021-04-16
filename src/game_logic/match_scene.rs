@@ -3,17 +3,18 @@ use sdl2::{rect::Rect, render::TextureQuery};
 
 use sdl2::{EventPump, GameControllerSubsystem, JoystickSubsystem, event::Event, keyboard::Keycode, pixels::Color, rect::Point, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
+use crate::asset_management::collider::ColliderType;
 use crate::{GameStateData, asset_management::common_assets::CommonAssets, collision::collision_detector::{detect_p1_hit_p2, detect_p2_hit_p1, detect_push}, engine_traits::scene::Scene, input::{self, controller_handler::Controller, translated_inputs::TranslatedInput}, rendering::{self, camera::Camera}, ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar}};
 use crate::asset_management::sound::audio_player;
 
-use super::{character_factory::{load_character, load_character_anim_data}, characters::player::PlayerState, game::Game, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}, saved_game::SavedGame};
+use super::{character_factory::{load_character, load_character_anim_data, load_stage}, characters::player::PlayerState, game::Game, inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement}, saved_game::SavedGame};
 use super::inputs::process_inputs::{released_joystick_reset_directional_state, update_directional_state};
 use super::inputs::apply_inputs::apply_input_state;
 
 const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
 const FRAME_AMOUNT_CAN_ROLLBACK: i16 = 7;
 
-const LEVEL_WIDTH: i32 = 2080;
+const LEVEL_WIDTH: i32 = 2560;
 const LEVEL_HEIGHT: i32 = 720;
 
 //Screen dimension constants
@@ -134,8 +135,14 @@ impl Scene for Match {
         let p1_assets = load_character_anim_data(texture_creator, &self.p1_character);
         let p2_assets = load_character_anim_data(texture_creator, &self.p2_character);
 
-        let mut player1 = load_character(&self.p1_character, Point::new(400, 0), false, 1);
-        let mut player2 = load_character(&self.p2_character, Point::new(700, -50), true, 2);
+        let stage = load_stage(texture_creator);
+        let stage_rect = Rect::new(0,0, LEVEL_WIDTH as u32, LEVEL_HEIGHT  as u32);
+
+        let mut camera: Camera = Camera::new(LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        println!("{:?}", camera);
+
+        let mut player1 = load_character(&self.p1_character, Point::new(camera.rect.center().x - 200, 0), false, 1);
+        let mut player2 = load_character(&self.p2_character, Point::new(camera.rect.center().x + 200, -50), true, 2);
 
         let mut game = Game::new(&mut player1, &mut player2);
 
@@ -150,7 +157,8 @@ impl Scene for Match {
         let mut hp_bars = Match::hp_bars_init(screen_res, game.player1.character.hp, game.player2.character.hp);
         let mut special_bars = Match::special_bars_init(screen_res, game.player1.character.special_max, game.player2.character.special_max);
         
-        let mut camera: Camera = Camera::new(LEVEL_WIDTH/2, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        game.update_collider_p1(&p1_assets);
+        game.update_collider_p2(&p2_assets);
 
         let mut previous_time = Instant::now();
         let logic_timestep: f64 = 0.016;
@@ -307,10 +315,15 @@ impl Scene for Match {
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
 
-                game.player1.update(logic_timestep, game.player2.position.x);
+                println!("{:?}", game.p1_colliders);
+                let pushbox_right_x = game.p1_colliders.iter()
+                .filter(|&c| { c.collider_type == ColliderType::Pushbox }).last().unwrap().aabb.half_extents().x;
+                game.player1.update(&camera,logic_timestep, pushbox_right_x as i32, game.player2.position.x);
                 game.player1.state_update(&p1_assets);
 
-                game.player2.update(logic_timestep, game.player1.position.x);
+                let pushbox2_right_x = game.p2_colliders.iter()
+                .filter(|&c| { c.collider_type == ColliderType::Pushbox }).last().unwrap().aabb.half_extents().x;
+                game.player2.update(&camera,logic_timestep, pushbox2_right_x as i32, game.player1.position.x);
                 game.player2.state_update(&p2_assets);
 
                 game.update_collider_p1(&p1_assets);
@@ -375,6 +388,9 @@ impl Scene for Match {
 
                 game.update_projectiles();
 
+                camera.update(LEVEL_WIDTH, game.player1, game.player2);
+    
+
                 hp_bars[0].update(game.player1.character.hp);
                 hp_bars[1].update(game.player2.character.hp);
 
@@ -392,7 +408,7 @@ impl Scene for Match {
                 rendering::renderer::render(
                     canvas,
                     &mut camera,
-                    Color::RGB(70, 70, 70),
+                    (&stage, stage_rect),
                     game.player1,
                     &p1_assets,
                     game.player2,

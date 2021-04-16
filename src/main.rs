@@ -59,6 +59,7 @@ use input::translated_inputs::TranslatedInput;
 //lobby system -> needs server
 //instant rematch (avoid going back to lobby or going back to selection)
 //show ping and show wifi/ethernet
+//make ui loop only 60fps to avoid the computer doing too many wasted computations
 
 pub struct GameStateData<'a> {
     p1_character: &'a str,

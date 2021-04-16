@@ -21,6 +21,10 @@ pub struct CharacterAssets<'a> {
     pub attacks: HashMap<String, Attack>,
 }
 
+pub fn load_stage(texture_creator: &TextureCreator<WindowContext>) -> Texture {
+        asset_loader::load_texture(&texture_creator, "assets/stages/Sf3si-hugo.png")
+}
+
 pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id: i32) -> Player {
     let fighter = match character_name {
         "foxgirl" => Some(Character::new(

@@ -3,7 +3,7 @@ use sdl2::render::Texture;
 
 use std::fmt;
 
-use crate::{asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets};
+use crate::{asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets, rendering::camera::Camera};
 use crate::game_logic::characters::Character;
 
 use crate::asset_management::animation::Animator;
@@ -179,7 +179,7 @@ impl<'a> Player<'a> {
         );
     }
 
-    pub fn update(&mut self, dt: f64, opponent_position_x: i32) {
+    pub fn update(&mut self, camera: &Camera, dt: f64, character_width: i32, opponent_position_x: i32) {
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5;
             self.direction_at_jump_time = self.velocity_x;
@@ -256,8 +256,17 @@ impl<'a> Player<'a> {
             }
         }
 
+
         if opponent_position_x - self.position.x != 0 {
             self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
+        }
+
+        if (self.position.x - character_width) < camera.rect.x() {
+            self.position.x = camera.rect.x() + character_width;
+        }
+
+        if (self.position.x + character_width) > (camera.rect.x() + camera.rect.width() as i32)  {
+            self.position.x = camera.rect.x() + camera.rect.width() as i32 - character_width;
         }
     }
 

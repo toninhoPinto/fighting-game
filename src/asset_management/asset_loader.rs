@@ -15,6 +15,13 @@ pub fn load_hitboxes(file: std::string::String) -> ColliderAnimation {
     }
 }
 
+pub fn load_texture<'a>(
+    tex_creator: &'a TextureCreator<WindowContext>,
+    path: &'_ str,
+) -> Texture<'a> {
+    tex_creator.load_texture(path).unwrap()
+}
+
 pub fn load_anim_from_dir<'a>(
     tex_creator: &'a TextureCreator<WindowContext>,
     dir: &'_ str,
