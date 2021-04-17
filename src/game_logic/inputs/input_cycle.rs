@@ -11,7 +11,7 @@ pub struct AllInputManagement {
     pub input_processed_reset_timer: Vec<i32>,
     pub action_history: VecDeque<i32>,
     pub special_reset_timer: Vec<i32>,
-    
+
     pub directional_state_input: [(TranslatedInput, bool); 4],
 }
 
@@ -20,11 +20,11 @@ impl AllInputManagement {
         Self {
             input_new_frame: VecDeque::new(),
             input_processed: VecDeque::new(),
-            input_processed_reset_timer:  Vec::new(),
-            
+            input_processed_reset_timer: Vec::new(),
+
             action_history: VecDeque::new(),
             special_reset_timer: Vec::new(),
-            
+
             directional_state_input: TranslatedInput::init_dir_input_state(),
         }
     }
@@ -36,7 +36,8 @@ impl AllInputManagement {
                 self.input_processed.pop_front();
             }
         }
-        self.input_processed_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+        self.input_processed_reset_timer
+            .retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
     }
 
     pub fn update_special_inputs_reset_timer(&mut self) {
@@ -48,8 +49,7 @@ impl AllInputManagement {
                 }
             }
         }
-        self.special_reset_timer.retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+        self.special_reset_timer
+            .retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
     }
-
-    
 }

@@ -76,9 +76,9 @@ pub struct ObjectHitbox {
     pub scale_y: Option<f64>,
 }
 
-pub fn load_hitboxes(file: std::string::String) 
-    -> (Vec<Collider>, HashMap<String, HashMap<i32, Transformation>>) {
-
+pub fn load_hitboxes(
+    file: std::string::String,
+) -> (Vec<Collider>, HashMap<String, HashMap<i32, Transformation>>) {
     let json_string = fs::read_to_string(file).unwrap();
     let v = serde_json::from_str::<BaseJson>(&json_string).unwrap();
     let timeline = &v.animation[0].timeline;

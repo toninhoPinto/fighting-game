@@ -47,6 +47,4 @@ impl Projectile {
             }
         }
     }
-
-    fn render(&self) {}
 }

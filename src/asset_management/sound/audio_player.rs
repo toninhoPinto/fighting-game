@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use sdl2::mixer::{Chunk, Channel};
+use sdl2::mixer::{Channel, Chunk};
 
 pub fn load_from_file(sound_file: &Path) -> Result<Chunk, String> {
     Chunk::from_file(sound_file)

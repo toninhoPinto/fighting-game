@@ -3,8 +3,11 @@ use sdl2::render::Texture;
 
 use std::fmt;
 
-use crate::{asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets, rendering::camera::Camera};
 use crate::game_logic::characters::Character;
+use crate::{
+    asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets,
+    rendering::camera::Camera,
+};
 
 use crate::asset_management::animation::Animator;
 
@@ -112,7 +115,10 @@ impl<'a> Player<'a> {
     }
 
     pub fn player_can_move(&self) -> bool {
-        !(self.is_attacking || self.is_airborne || self.knock_back_distance > 0 || self.state == PlayerState::Dead)
+        !(self.is_attacking
+            || self.is_airborne
+            || self.knock_back_distance > 0
+            || self.state == PlayerState::Dead)
     }
 
     pub fn player_state_change(&mut self, new_state: PlayerState) {
@@ -120,7 +126,6 @@ impl<'a> Player<'a> {
             && self.state != PlayerState::DashingBackward
             && self.state != PlayerState::Jumping
             && self.state != PlayerState::Jump;
-            
 
         let already_crouching = (new_state == PlayerState::Crouch
             || new_state == PlayerState::Crouching)
@@ -131,7 +136,7 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn jump(&mut self){
+    pub fn jump(&mut self) {
         if !self.is_airborne {
             self.player_state_change(PlayerState::Jump);
         }
@@ -141,17 +146,13 @@ impl<'a> Player<'a> {
         self.knock_back_distance = amount;
     }
 
-    pub fn attack(&mut self,
-        character_anims: &'a CharacterAssets,
-        attack_animation: String,
-    ) {
+    pub fn attack(&mut self, character_anims: &'a CharacterAssets, attack_animation: String) {
         println!("ATTACK {}", attack_animation);
         if self.player_can_attack() {
             self.is_attacking = true;
             if let Some(attack) = character_anims.animations.get(&attack_animation) {
-                self.animator.play_once(attack,false);
+                self.animator.play_once(attack, false);
             };
-            
         }
     }
 
@@ -163,7 +164,7 @@ impl<'a> Player<'a> {
         let speed = if player_pushing.state == PlayerState::DashingForward {
             player_pushing.character.dash_speed / 2.0
         } else if player_pushing.is_airborne {
-            let offset = if  (player_pushing.position.x - self.position.x).abs() < 10 {
+            let offset = if (player_pushing.position.x - self.position.x).abs() < 10 {
                 player_width as f64
             } else {
                 player_width as f64 - (player_pushing.position.x - self.position.x).abs() as f64
@@ -172,15 +173,17 @@ impl<'a> Player<'a> {
         } else {
             player_pushing.character.speed / 2.0
         };
-        
-        self.position = self.position.offset(
-            (dir as f64 * speed * dt) as i32,
-            0,
-        );
+
+        self.position = self.position.offset((dir as f64 * speed * dt) as i32, 0);
     }
 
-    pub fn update(&mut self, camera: &Camera, dt: f64, character_width: i32, opponent_position_x: i32) {
-        
+    pub fn update(
+        &mut self,
+        camera: &Camera,
+        dt: f64,
+        character_width: i32,
+        opponent_position_x: i32,
+    ) {
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5;
             self.direction_at_jump_time = self.velocity_x;
@@ -192,30 +195,30 @@ impl<'a> Player<'a> {
 
         //TODO im just moving by an int instead of multiplying by dt, not sure if this is bad
         if self.knock_back_distance != 0 {
-            self.position = self.position.offset(
-                self.knock_back_distance, 
-                0);
+            self.position = self.position.offset(self.knock_back_distance, 0);
             self.knock_back_distance = 0;
         }
 
-        let speed_mod = if self.is_pushing {
-             0.5
-        } else {
-            1.0
-        };
-        
+        let speed_mod = if self.is_pushing { 0.5 } else { 1.0 };
+
         if self.is_airborne {
             let gravity = match self.extra_gravity {
                 Some(extra_g) => extra_g,
                 None => -2.0 * self.jump_initial_velocity / 0.25,
             };
 
-            let ground = if self.is_attacking && !self.has_hit {self.ground_height - 100} else {  self.ground_height };
+            let ground = if self.is_attacking && !self.has_hit {
+                self.ground_height - 100
+            } else {
+                self.ground_height
+            };
             let should_land = self.position.y < ground;
 
             if !should_land {
-                let position_offset_x =
-                    self.direction_at_jump_time as f64 * self.character.jump_distance * dt * speed_mod;
+                let position_offset_x = self.direction_at_jump_time as f64
+                    * self.character.jump_distance
+                    * dt
+                    * speed_mod;
 
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
@@ -235,7 +238,6 @@ impl<'a> Player<'a> {
                 }
                 self.is_airborne = false;
             }
-
         }
 
         if self.player_can_move() {
@@ -271,7 +273,7 @@ impl<'a> Player<'a> {
             self.position.x = camera.rect.x() + character_width;
         }
 
-        if (self.position.x + character_width) > (camera.rect.x() + camera.rect.width() as i32)  {
+        if (self.position.x + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
             self.position.x = camera.rect.x() + camera.rect.width() as i32 - character_width;
         }
     }
@@ -320,7 +322,6 @@ impl<'a> Player<'a> {
                 self.state = PlayerState::Standing;
             }
         }
-        
 
         if self.has_hit && self.state == PlayerState::Landing {
             self.has_hit = false;
@@ -333,7 +334,7 @@ impl<'a> Player<'a> {
             match self.state {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
-                    
+
                     if self.velocity_x * -self.dir_related_of_other < 0 {
                         self.animator
                             .play(character_animation.get("walk").unwrap(), false);
@@ -400,13 +401,13 @@ impl<'a> Player<'a> {
                         .play_once(character_animation.get("grab").unwrap(), false);
                 }
                 PlayerState::Grabbed => {}
-                PlayerState::Hurt => { 
+                PlayerState::Hurt => {
                     self.animator
                         .play_once(character_animation.get("take_damage").unwrap(), false);
                 }
             }
         }
-        
+
         self.animator.update();
     }
 

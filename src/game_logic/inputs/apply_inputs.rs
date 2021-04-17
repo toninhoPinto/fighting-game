@@ -1,4 +1,4 @@
-use super::game_inputs::GameAction;
+use super::{game_inputs::GameAction, input_cycle::AllInputManagement};
 use crate::game_logic::character_factory::CharacterAssets;
 use crate::{
     game_logic::characters::player::{Player, PlayerState},
@@ -15,7 +15,6 @@ pub fn record_input(last_inputs: &mut VecDeque<GameAction>, input: GameAction) {
 }
 
 pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedInput, bool); 4]) {
-    
     //in case you press forward, then press backwards, and then release backwards
     //since forward should still be applied
     if directional_state[0].1 {
@@ -25,7 +24,6 @@ pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedIn
     } else {
         player.velocity_x = 0;
     }
-    
 
     //TODO FIX action_history based on current_directional_state
     //in the case where you jump over character making the "forward is pressed" state invalid
@@ -40,56 +38,63 @@ pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedIn
     }
 }
 
-
 pub fn apply_input<'a, 'b>(
-player: &'b mut Player<'a>,
-character_anims: &'a CharacterAssets,
-directional_state: &[(TranslatedInput, bool); 4],
-to_process: &mut VecDeque<(TranslatedInput, bool)>,
-inputs_processed: &mut VecDeque<TranslatedInput>,
-input_processed_reset_timer: &mut Vec<i32>,
-action_history: &mut VecDeque<i32>,
-special_reset_timer: &mut Vec<i32>){
+    player: &'b mut Player<'a>,
+    character_anims: &'a CharacterAssets,
+    inputs: &mut AllInputManagement,
+) {
+    let mut frame_state = if inputs.action_history.is_empty() {
+        0
+    } else {
+        inputs.action_history[inputs.action_history.len() - 1].clone()
+    };
 
-    let mut frame_state = if action_history.is_empty() {0} else { action_history[action_history.len() - 1].clone() };
-    
-    for &(recent_input, is_pressed) in to_process.iter(){
+    for &(recent_input, is_pressed) in inputs.input_new_frame.iter() {
         let recent_input_as_game_action = GameAction::from_translated_input(
-            recent_input ,
-            directional_state, 
-            player.dir_related_of_other).unwrap();
+            recent_input,
+            &inputs.directional_state_input,
+            player.dir_related_of_other,
+        )
+        .unwrap();
         GameAction::update_state(&mut frame_state, (recent_input_as_game_action, is_pressed));
     }
 
-    action_history.push_back(frame_state);
-    special_reset_timer.push(0);
+    inputs.action_history.push_back(frame_state);
+    inputs.special_reset_timer.push(0);
 
-    for &(recent_input, is_pressed) in to_process.iter(){
-
+    for &(recent_input, is_pressed) in inputs.input_new_frame.iter() {
         if is_pressed {
-            inputs_processed.push_back(recent_input);
-            input_processed_reset_timer.push(0);
+            inputs.input_processed.push_back(recent_input);
+            inputs.input_processed_reset_timer.push(0);
         }
 
         let recent_input_as_game_action = GameAction::from_translated_input(
-            recent_input ,
-            directional_state, 
-            player.dir_related_of_other).unwrap();
+            recent_input,
+            &inputs.directional_state_input,
+            player.dir_related_of_other,
+        )
+        .unwrap();
 
         match recent_input {
             TranslatedInput::Horizontal(h) => {
                 if is_pressed {
-                    check_for_dash_inputs(player, recent_input_as_game_action, inputs_processed);
+                    check_for_dash_inputs(
+                        player,
+                        recent_input_as_game_action,
+                        &mut inputs.input_processed,
+                    );
                 }
-                player.velocity_x = if is_pressed {h} else {0};
+                player.velocity_x = if is_pressed { h } else { 0 };
             }
             TranslatedInput::Vertical(v) => {
                 if is_pressed && v > 0 {
                     player.jump();
                 }
-                if is_pressed && v < 0{
+                if is_pressed && v < 0 {
                     player.player_state_change(PlayerState::Crouch);
-                } else if player.state == PlayerState::Crouching || player.state == PlayerState::Crouch {
+                } else if player.state == PlayerState::Crouching
+                    || player.state == PlayerState::Crouch
+                {
                     player.player_state_change(PlayerState::UnCrouch);
                 }
             }
@@ -100,8 +105,8 @@ special_reset_timer: &mut Vec<i32>){
                         character_anims,
                         GameAction::LightPunch,
                         "light_punch".to_string(),
-                        directional_state,
-                        action_history,
+                        &inputs.directional_state_input,
+                        &inputs.action_history,
                     );
                 }
             }
@@ -112,8 +117,8 @@ special_reset_timer: &mut Vec<i32>){
                         character_anims,
                         GameAction::MediumPunch,
                         "medium_punch".to_string(),
-                        directional_state,
-                        action_history,
+                        &inputs.directional_state_input,
+                        &inputs.action_history,
                     );
                 }
             }
@@ -124,8 +129,8 @@ special_reset_timer: &mut Vec<i32>){
                         character_anims,
                         GameAction::HeavyPunch,
                         "heavy_punch".to_string(),
-                        directional_state,
-                        action_history,
+                        &inputs.directional_state_input,
+                        &inputs.action_history,
                     );
                 }
             }
@@ -136,25 +141,28 @@ special_reset_timer: &mut Vec<i32>){
                         character_anims,
                         GameAction::LightKick,
                         "light_kick".to_string(),
-                        directional_state,
-                        action_history,
+                        &inputs.directional_state_input,
+                        &inputs.action_history,
                     );
                 }
             }
             TranslatedInput::MediumKick => {}
             TranslatedInput::HeavyKick => {}
         }
-
-
-
     }
-    to_process.clear();
+    inputs.input_new_frame.clear();
 }
 
-fn check_for_dash_inputs(player: &mut Player, recent_input_as_game_action: GameAction, last_inputs: &mut VecDeque<TranslatedInput>) {
+fn check_for_dash_inputs(
+    player: &mut Player,
+    recent_input_as_game_action: GameAction,
+    last_inputs: &mut VecDeque<TranslatedInput>,
+) {
     let len = last_inputs.len();
     if len >= 2 && last_inputs[len - 2] == last_inputs[len - 1] {
-        if last_inputs[len - 1] == TranslatedInput::Horizontal(-1)  || last_inputs[len - 1] == TranslatedInput::Horizontal(1) {
+        if last_inputs[len - 1] == TranslatedInput::Horizontal(-1)
+            || last_inputs[len - 1] == TranslatedInput::Horizontal(1)
+        {
             if recent_input_as_game_action == GameAction::Forward {
                 player.player_state_change(PlayerState::DashingForward);
             } else {
@@ -165,58 +173,69 @@ fn check_for_dash_inputs(player: &mut Player, recent_input_as_game_action: GameA
     }
 }
 
-fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>, 
-    character_anims: &'a CharacterAssets, 
-    recent_input_as_game_action: GameAction, 
-    animation_name: String, 
+fn check_attack_inputs<'a, 'b>(
+    player: &'b mut Player<'a>,
+    character_anims: &'a CharacterAssets,
+    recent_input_as_game_action: GameAction,
+    animation_name: String,
     directional_state: &[(TranslatedInput, bool); 4],
     action_history: &VecDeque<i32>,
-){
-
+) {
     if let Some(special_input) = check_special_inputs(character_anims, player, action_history) {
         player.attack(character_anims, special_input);
-    } else if let Some(directional_input) = check_directional_inputs(player, character_anims, directional_state, recent_input_as_game_action) {
+    } else if let Some(directional_input) = check_directional_inputs(
+        player,
+        character_anims,
+        directional_state,
+        recent_input_as_game_action,
+    ) {
         player.attack(character_anims, directional_input);
-    } else if check_grab_input(action_history[action_history.len()-1]) {
+    } else if check_grab_input(action_history[action_history.len() - 1]) {
         player.player_state_change(PlayerState::Grab);
         player.is_attacking = false;
     } else {
         player.change_special_meter(0.1);
-        if !player.is_airborne { 
+        if !player.is_airborne {
             player.attack(character_anims, animation_name);
         } else {
-            player.attack(character_anims, format!("{}_{}", "airborne", animation_name) );
+            player.attack(
+                character_anims,
+                format!("{}_{}", "airborne", animation_name),
+            );
         }
-        
     }
 }
 
-fn check_special_inputs(character_anims: &CharacterAssets, player: &mut Player, action_history: &VecDeque<i32>) -> Option<String> {
-     //iterate over last inputs starting from the end
+fn check_special_inputs(
+    character_anims: &CharacterAssets,
+    player: &mut Player,
+    action_history: &VecDeque<i32>,
+) -> Option<String> {
+    //iterate over last inputs starting from the end
     //check of matches against each of the player.input_combination_anims
     //if no match
     // iterate over last inputs starting from the end -1
     //etc
     //if find match, play animation and remove that input from array
-    let cleaned_history: VecDeque<i32> = action_history.iter().cloned().filter(|&z| z > 0).collect();
+    let cleaned_history: VecDeque<i32> =
+        action_history.iter().cloned().filter(|&z| z > 0).collect();
     for possible_combo in character_anims.input_combination_anims.iter() {
-
-        
         let size_of_combo = possible_combo.0.len();
         let size_of_history = cleaned_history.len();
         let mut j = 0;
-        if player.character.special_curr >= 1.0 { //TODO change special meter price per ability
+        if player.character.special_curr >= 1.0 {
+            //TODO change special meter price per ability
             if size_of_combo <= size_of_history {
-                for i in (size_of_history-size_of_combo)..cleaned_history.len() {
+                for i in (size_of_history - size_of_combo)..cleaned_history.len() {
                     if cleaned_history[i] & possible_combo.0[j] > 0 {
-                        j+=1;
+                        j += 1;
                     } else {
                         break;
                     }
 
                     if j == size_of_combo {
                         player.change_special_meter(-1.0); //TODO change special meter price per ability
-                        return Some(possible_combo.1.clone())
+                        return Some(possible_combo.1.clone());
                     }
                 }
             }
@@ -225,29 +244,31 @@ fn check_special_inputs(character_anims: &CharacterAssets, player: &mut Player, 
     None
 }
 
-fn check_directional_inputs(player: &mut Player, 
-    character_anims: &CharacterAssets, 
+fn check_directional_inputs(
+    player: &mut Player,
+    character_anims: &CharacterAssets,
     directional_state: &[(TranslatedInput, bool); 4],
-    recent_input_as_game_action: GameAction
-) -> Option<String>{
-    
+    recent_input_as_game_action: GameAction,
+) -> Option<String> {
     for possible_combo in character_anims.directional_variation_anims.iter() {
         let (moves, name) = possible_combo;
 
         if TranslatedInput::is_currently_any_directional_input(directional_state)
-         && recent_input_as_game_action == moves.1 {
+            && recent_input_as_game_action == moves.1
+        {
             for i in 0..directional_state.len() {
                 if directional_state[i].1 {
                     let direction_as_game_action = GameAction::from_translated_input(
                         directional_state[i].0,
-                        directional_state, 
-                        player.dir_related_of_other).unwrap();
-        
-                    if direction_as_game_action == moves.0 {
-                        return Some(name.to_string())
-                    }
-                } 
+                        directional_state,
+                        player.dir_related_of_other,
+                    )
+                    .unwrap();
 
+                    if direction_as_game_action == moves.0 {
+                        return Some(name.to_string());
+                    }
+                }
             }
         }
     }
@@ -258,4 +279,3 @@ fn check_grab_input(input_state: i32) -> bool {
     let grab_input = GameAction::LightPunch as i32 | GameAction::LightKick as i32;
     (grab_input & input_state) == grab_input
 }
-

@@ -4,15 +4,15 @@ use crate::input::translated_inputs::TranslatedInput;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum GameAction {
-    Forward = 0b00001, // 1
-    Backward = 0b00010, // 2
-    Up = 0b00100, // 4
-    Down = 0b01000, // 8 
-    LightPunch = 0b10000, // 16 
-    MediumPunch = 0b100000, // 32 
-    HeavyPunch = 0b1000000, // 64 
-    LightKick = 0b10000000, // 128 
-    MediumKick = 0b100000000, 
+    Forward = 0b00001,      // 1
+    Backward = 0b00010,     // 2
+    Up = 0b00100,           // 4
+    Down = 0b01000,         // 8
+    LightPunch = 0b10000,   // 16
+    MediumPunch = 0b100000, // 32
+    HeavyPunch = 0b1000000, // 64
+    LightKick = 0b10000000, // 128
+    MediumKick = 0b100000000,
     HeavyKick = 0b1000000000,
 }
 
@@ -22,10 +22,9 @@ impl Display for GameAction {
     }
 }
 
-
 impl GameAction {
     pub fn update_state(curr_state: &mut i32, update: (GameAction, bool)) {
-        if update.1 { 
+        if update.1 {
             *curr_state |= update.0 as i32;
         } else if *curr_state & (update.0 as i32) > 0 {
             *curr_state ^= update.0 as i32;
@@ -79,6 +78,4 @@ impl GameAction {
             _ => Err("cannot identify this input".to_string()),
         }
     }
-
-
 }

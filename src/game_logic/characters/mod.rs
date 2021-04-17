@@ -25,7 +25,7 @@ pub struct Character {
 pub enum AttackType {
     LOW,
     MIDDLE,
-    HIGH
+    HIGH,
 }
 
 pub struct Attack {

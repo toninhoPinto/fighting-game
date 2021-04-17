@@ -21,7 +21,7 @@ impl<'a> Animation<'a> {
 pub enum AnimationState {
     Startup,
     Active,
-    Recovery
+    Recovery,
 }
 
 pub struct Animator<'a> {

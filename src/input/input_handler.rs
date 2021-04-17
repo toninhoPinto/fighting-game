@@ -52,7 +52,9 @@ pub fn rcv_input(
                 None
             }
         }
-        Event::KeyDown { keycode, repeat,  ..} => {
+        Event::KeyDown {
+            keycode, repeat, ..
+        } => {
             let key_down = keycode.unwrap();
             if game_controls.contains_key(&key_down.to_string()) && !repeat {
                 let input = *game_controls.get(&key_down.to_string()).unwrap();

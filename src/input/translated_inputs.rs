@@ -19,8 +19,8 @@ pub enum TranslatedInput {
 
 impl TranslatedInput {
     pub fn init_dir_input_state() -> [(TranslatedInput, bool); 4] {
-        [(
-            TranslatedInput::Horizontal(1), false),
+        [
+            (TranslatedInput::Horizontal(1), false),
             (TranslatedInput::Horizontal(-1), false),
             (TranslatedInput::Vertical(1), false),
             (TranslatedInput::Vertical(-1), false),
@@ -28,8 +28,8 @@ impl TranslatedInput {
     }
 
     pub fn init_button_input_state() -> [(TranslatedInput, bool); 6] {
-        [(
-            TranslatedInput::LightPunch, false),
+        [
+            (TranslatedInput::LightPunch, false),
             (TranslatedInput::MediumPunch, false),
             (TranslatedInput::HeavyPunch, false),
             (TranslatedInput::LightKick, false),
@@ -39,11 +39,19 @@ impl TranslatedInput {
     }
 
     pub fn is_directional_input(input: TranslatedInput) -> bool {
-        matches!(input, TranslatedInput::Horizontal(_) | TranslatedInput::Vertical(_))
+        matches!(
+            input,
+            TranslatedInput::Horizontal(_) | TranslatedInput::Vertical(_)
+        )
     }
 
-    pub fn is_currently_any_directional_input(current_inputs_state: &[(TranslatedInput, bool); 4]) -> bool {
-        current_inputs_state[0].1 || current_inputs_state[1].1 || current_inputs_state[2].1 || current_inputs_state[3].1
+    pub fn is_currently_any_directional_input(
+        current_inputs_state: &[(TranslatedInput, bool); 4],
+    ) -> bool {
+        current_inputs_state[0].1
+            || current_inputs_state[1].1
+            || current_inputs_state[2].1
+            || current_inputs_state[3].1
     }
 }
 

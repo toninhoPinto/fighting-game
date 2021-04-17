@@ -18,7 +18,7 @@ pub enum ControllerType {
 impl PartialEq for ControllerType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (ControllerType::Keyboard, ControllerType::Keyboard) => { true }
+            (ControllerType::Keyboard, ControllerType::Keyboard) => true,
 
             (ControllerType::Controller(c1), ControllerType::Controller(c2)) => {
                 c1.instance_id() == c2.instance_id()
@@ -28,7 +28,7 @@ impl PartialEq for ControllerType {
                 j1.instance_id() == j2.instance_id()
             }
 
-            (_ , _) => { false }
+            (_, _) => false,
         }
     }
 }
@@ -49,7 +49,8 @@ impl Controller {
     }
 
     pub fn add_keyboard(&mut self) {
-        self.connected_controllers.insert(KEYBOARD_ID as u32, ControllerType::Keyboard);
+        self.connected_controllers
+            .insert(KEYBOARD_ID as u32, ControllerType::Keyboard);
         self.selected_controllers[0] = Some(KEYBOARD_ID as u32);
     }
 
@@ -76,23 +77,22 @@ impl Controller {
     pub fn remove(&mut self, id_controller: u32) {
         if self.connected_controllers.contains_key(&id_controller) {
             self.connected_controllers.remove(&id_controller);
-        
+
             match self.selected_controllers[0] {
                 Some(c) if c == id_controller => {
                     self.selected_controllers[0] = None;
                 }
                 _ => {}
             }
-    
+
             match self.selected_controllers[1] {
-                Some(c) if c == id_controller  => {
+                Some(c) if c == id_controller => {
                     self.selected_controllers[1] = None;
                 }
                 _ => {}
             }
         }
     }
-
 }
 
 pub fn handle_new_controller(
@@ -105,21 +105,21 @@ pub fn handle_new_controller(
         Event::JoyDeviceAdded { which, .. } => {
             println!("added joystick: {}", which);
             let joy = joystick.open(which as u32).unwrap();
-            controllers.add( ControllerType::Joystick(joy));
+            controllers.add(ControllerType::Joystick(joy));
         }
         Event::ControllerDeviceAdded { which, .. } => {
             println!("added controller: {}", which);
             let control = controller.open(which as u32).unwrap();
-            controllers.add( ControllerType::Controller(control));
+            controllers.add(ControllerType::Controller(control));
         }
-        Event::JoyDeviceRemoved { which, ..} => {
+        Event::JoyDeviceRemoved { which, .. } => {
             println!("removed joystick: {}", which);
             controllers.remove(which);
-        },
-        Event::ControllerDeviceRemoved { which, ..} => {
+        }
+        Event::ControllerDeviceRemoved { which, .. } => {
             println!("removed controller: {}", which);
             controllers.remove(which);
-        },
+        }
         Event::Quit { .. }
         | Event::KeyDown {
             keycode: Some(Keycode::Escape),

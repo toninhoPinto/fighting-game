@@ -1,5 +1,4 @@
 use engine_traits::scene::Scene;
-use game_logic::match_scene::Match;
 use sdl2::image::{self, InitFlag};
 use sdl2::render::BlendMode;
 use ui::menus::menu_scene::MenuScene;
@@ -12,14 +11,14 @@ extern crate serde_derive;
 extern crate directories;
 
 mod asset_management;
+mod collision;
+mod engine_traits;
 mod game_logic;
 mod input;
 mod rendering;
 mod ui;
-mod engine_traits;
-mod collision;
 
-use asset_management::{sound::{init_sound, music_player}};
+use asset_management::sound::{init_sound, music_player};
 
 use crate::asset_management::controls;
 use crate::input::controller_handler::Controller;
@@ -29,8 +28,6 @@ use input::translated_inputs::TranslatedInput;
 //TODO list
 //make jump attacks go lower than ground to be able to hit crouched players
 //but if jump attack hits enemy then dont go lower than ground and reset to standing or other action
-//hit stun should only freeze two characters not everything else
-
 
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
@@ -43,7 +40,7 @@ use input::translated_inputs::TranslatedInput;
 //calculate frame advantage on the fly
 //display different vfx colors and sizes depending on the frame advantage //change color of vfx using sdl2 texture tint OR shader, which one?
 
-
+//hit stun should only freeze two characters not everything else
 //define a ground height and a offset for each character to be at the correct ground height
 //add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
 //charge special attacks
@@ -80,9 +77,10 @@ fn main() -> Result<(), String> {
     let controller = sdl_context.game_controller()?;
     let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
-    let _mixer_context = init_sound();    
-    
-    let music = music_player::load_from_file(Path::new("assets/musics/RetroFuture_Dirty.mp3")).unwrap();
+    let _mixer_context = init_sound();
+
+    let music =
+        music_player::load_from_file(Path::new("assets/musics/RetroFuture_Dirty.mp3")).unwrap();
     music_player::play_music(&music);
 
     let window = video_subsystem
@@ -100,12 +98,12 @@ fn main() -> Result<(), String> {
 
     let mut event_pump = sdl_context.event_pump()?;
     let mut controller_data = Controller::new();
-    controller_data.add_keyboard( ); //should not use 0
+    controller_data.add_keyboard(); //should not use 0
 
-    let mut font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 128)?;
+    let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 128)?;
 
     //controllers
-    let mut controls: HashMap<_, TranslatedInput> = controls::load_controls();
+    let controls: HashMap<_, TranslatedInput> = controls::load_controls();
 
     let scene2 = MenuScene::new_main_menu(&font);
 
@@ -118,9 +116,18 @@ fn main() -> Result<(), String> {
     };
 
     while !state_stack.is_empty() {
-        state_stack.pop().unwrap().run(&mut state_stack, &mut game_state_data, &texture_creator,
-             &mut event_pump, &joystick, &controller, &controls, &mut controller_data, &mut canvas);
+        state_stack.pop().unwrap().run(
+            &mut state_stack,
+            &mut game_state_data,
+            &texture_creator,
+            &mut event_pump,
+            &joystick,
+            &controller,
+            &controls,
+            &mut controller_data,
+            &mut canvas,
+        );
     }
-    
+
     Ok(())
 }

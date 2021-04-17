@@ -1,15 +1,18 @@
 use std::string::String;
 
-use sdl2::{pixels::Color, render::Texture};
 use sdl2::rect::{Point, Rect};
 use sdl2::render::WindowCanvas;
+use sdl2::{pixels::Color, render::Texture};
 
-use crate::{asset_management::{common_assets::CommonAssets, vfx::particle::Particle}, game_logic::character_factory::CharacterAssets};
 use crate::game_logic::projectile::Projectile;
 use crate::{
     asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
+};
+use crate::{
+    asset_management::{common_assets::CommonAssets, vfx::particle::Particle},
+    game_logic::character_factory::CharacterAssets,
 };
 
 use super::camera::Camera;
@@ -19,9 +22,9 @@ fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), camera:
     let mut inverted_pos = position;
     //make world coordinates Y increase as we go up
     //and make Y = 0 as the bottom of the screen
-    inverted_pos.y = -inverted_pos.y + height as i32; 
+    inverted_pos.y = -inverted_pos.y + height as i32;
     inverted_pos.x -= camera.rect.x();
-    
+
     //make the bottom center of a rect as the position
     let screen_position = inverted_pos - Point::new(0, (rect.height() as i32) / 2);
     Rect::from_center(screen_position, rect.width(), rect.height())
@@ -60,11 +63,13 @@ pub fn render<'a, 'b>(
 ) -> Result<(), String> {
     canvas.clear();
 
-    canvas.copy(
-        stage.0,
-        camera.rect,
-        Rect::new(0,0, camera.rect.width(), camera.rect.height())
-    ).unwrap();
+    canvas
+        .copy(
+            stage.0,
+            camera.rect,
+            Rect::new(0, 0, camera.rect.width(), camera.rect.height()),
+        )
+        .unwrap();
 
     let screen_res = canvas.output_size()?;
 
@@ -72,7 +77,8 @@ pub fn render<'a, 'b>(
     render_player(player2, canvas, screen_res, camera, debug);
 
     for projectile in projectiles.iter() {
-        let screen_rect_2 = world_to_screen(projectile.sprite, projectile.position, screen_res, camera);
+        let screen_rect_2 =
+            world_to_screen(projectile.sprite, projectile.position, screen_res, camera);
         if projectile.player_owner == 1 {
             canvas.copy_ex(
                 &p1_assets
@@ -142,33 +148,34 @@ pub fn render<'a, 'b>(
     Ok(())
 }
 
-fn render_player(player: &mut Player, canvas: &mut WindowCanvas, screen_res: (u32, u32), camera: &Camera, debug: bool) {
+fn render_player(
+    player: &mut Player,
+    canvas: &mut WindowCanvas,
+    screen_res: (u32, u32),
+    camera: &Camera,
+    debug: bool,
+) {
     let screen_rect = world_to_screen(player.character.sprite, player.position, screen_res, camera);
     //println!("world{:?} screen{:?}",player.position, screen_rect);
     let sprite = player.character.sprite;
     let is_flipped = player.flipped;
     let texture = player.render();
-    canvas.copy_ex(
-        texture,
-        sprite,
-        screen_rect,
-        0.0,
-        None,
-        is_flipped,
-        false,
-    ).unwrap();
+    canvas
+        .copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)
+        .unwrap();
     if debug {
         debug_points(canvas, screen_rect.center(), screen_rect);
     }
 }
 
-fn render_vfx(canvas: &mut WindowCanvas,
+fn render_vfx(
+    canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
     camera: &Camera,
     hit_vfx: &mut Vec<Particle>,
     common_assets: &mut CommonAssets,
-    debug: bool) {
-
+    debug: bool,
+) {
     for vfx in hit_vfx.iter() {
         if vfx.active {
             let rect_size = Rect::new(0, 0, vfx.sprite.width(), vfx.sprite.height());
@@ -184,15 +191,9 @@ fn render_vfx(canvas: &mut WindowCanvas,
                 .unwrap()
                 .sprites[vfx.animation_index as usize];
 
-            canvas.copy_ex(
-                texture,
-                rect_size,
-                screen_rect,
-                0.0,
-                None,
-                false,
-                false,
-            ).unwrap();
+            canvas
+                .copy_ex(texture, rect_size, screen_rect, 0.0, None, false, false)
+                .unwrap();
 
             if debug {
                 debug_points(canvas, screen_rect.center(), screen_rect);
@@ -221,14 +222,15 @@ fn render_colliders(
             aabb.center().y as i32 - aabb.half_extents().y as i32,
         );
         let collider_rect_size = Rect::new(0, 0, aabb.extents().x as u32, aabb.extents().y as u32);
-        let screen_rect_2 = world_to_screen(collider_rect_size, collider_position, screen_res, camera);
+        let screen_rect_2 =
+            world_to_screen(collider_rect_size, collider_position, screen_res, camera);
 
         canvas.draw_rect(screen_rect_2).unwrap();
         if collider.collider_type == ColliderType::Hurtbox {
             canvas.set_draw_color(semi_transparent_green);
         } else if collider.collider_type == ColliderType::Pushbox {
             canvas.set_draw_color(semi_transparent_blue);
-        }else{
+        } else {
             canvas.set_draw_color(semi_transparent_red);
         }
         canvas.fill_rect(screen_rect_2).unwrap();
