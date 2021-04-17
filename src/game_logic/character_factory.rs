@@ -380,6 +380,14 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     );
 
     collider_animations.insert(
+        "crouched_light_kick".to_string(),
+        asset_loader::load_hitboxes(format!(
+            "assets/{}/crouch/attacks/light_kick/crouched_light_kick.json",
+            "foxgirl"
+        )),
+    );
+
+    collider_animations.insert(
         "airborne_light_kick".to_string(),
         asset_loader::load_hitboxes(format!(
             "assets/{}/airborne/attacks/light_kick/airborne_light_kick.json",
@@ -482,6 +490,10 @@ fn load_foxgirl_anims(
         &texture_creator,
         "assets/foxgirl/standing/attacks/light_kick",
     );
+    let crouched_light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+        &texture_creator,
+        "assets/foxgirl/crouch/attacks/light_kick",
+    );
     let airborne_light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/airborne/attacks/light_kick",
@@ -529,14 +541,7 @@ fn load_foxgirl_anims(
         "light_punch".to_string(),
         Animation::new(light_punch_anim, "light_punch".to_string(), 0.35),
     );
-    character_anims.insert(
-        "airborne_light_kick".to_string(),
-        Animation::new(
-            airborne_light_kick_anim,
-            "airborne_light_kick".to_string(),
-            0.35,
-        ),
-    );
+    
     character_anims.insert(
         "medium_punch".to_string(),
         Animation::new(medium_punch_anim, "medium_punch".to_string(), 0.35),
@@ -548,6 +553,19 @@ fn load_foxgirl_anims(
     character_anims.insert(
         "light_kick".to_string(),
         Animation::new(light_kick_anim, "light_kick".to_string(), 0.35),
+    );
+    character_anims.insert(
+        "airborne_light_kick".to_string(),
+        Animation::new(
+            airborne_light_kick_anim,
+            "airborne_light_kick".to_string(),
+            0.35,
+        ),
+    );
+    character_anims.insert(
+        "crouched_light_kick".to_string(),
+        Animation::new(crouched_light_kick_anim,"crouched_light_kick".to_string(),0.35,
+        ),
     );
     character_anims.insert(
         "crouch".to_string(),
@@ -585,6 +603,18 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             push_back: 5,
             attack_move: 10,
             attack_type: AttackType::MIDDLE,
+        },
+    );
+
+    attacks.insert(
+        "crouched_light_kick".to_string(),
+        Attack {
+            damage: 15,
+            stun_on_hit: 10,
+            stun_on_block: 4,
+            push_back: 30,
+            attack_move: 10,
+            attack_type: AttackType::LOW,
         },
     );
 
