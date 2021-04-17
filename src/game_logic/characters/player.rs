@@ -231,10 +231,11 @@ impl<'a> Player<'a> {
             let should_land = self.position.y < ground;
             if should_land {
                 println!("LANDED");
-                self.position.y = ground;
+                self.position.y = self.ground_height;
                 self.velocity_y = self.character.jump_height;
                 if self.state == PlayerState::Jumping {
                     self.state = PlayerState::Landing;
+                    self.is_attacking = false;
                 }
                 self.is_airborne = false;
             }
@@ -284,9 +285,6 @@ impl<'a> Player<'a> {
         if self.animator.is_finished && self.state != PlayerState::Dead {
             self.has_hit = false;
             self.flipped = self.dir_related_of_other > 0;
-            //when you attack in the air, you need to go a bit lower than normal to be able to hit low opponents
-            //when attack animation is finished, boost back up to normal height
-            self.position.y = self.ground_height;
 
             if self.is_attacking {
                 self.is_attacking = false;
