@@ -1,4 +1,4 @@
-use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Vector2}, query, shape::Cuboid};
+use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::Isometry2, query, shape::Cuboid};
 
 use crate::asset_management::collider::{Collider, ColliderType};
 use crate::game_logic::characters::player::Player;
@@ -12,11 +12,11 @@ pub fn detect_p1_hit_p2(player1: &mut Player,
     if !player1.has_hit {
         for collider in p1_colliders
             .iter()
-            .filter(|&c| c.collider_type == ColliderType::Hitbox)
+            .filter(|&c| c.collider_type == ColliderType::Hitbox  && c.enabled)
         {
             for collider_to_take_dmg in p2_colliders
                 .iter()
-                .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                .filter(|&c| c.collider_type == ColliderType::Hurtbox  && c.enabled)
             {
                 if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
 
@@ -42,29 +42,33 @@ pub fn detect_p1_hit_p2(player1: &mut Player,
 
 pub fn detect_p2_hit_p1(player2: &mut Player, 
     p1_colliders: &Vec<Collider>, p2_colliders: &Vec<Collider>) -> Option<Point<Real>>{
-    
-    if !player2.has_hit {
+
+    if !player1.has_hit {
         for collider in p2_colliders
             .iter()
-            .filter(|&c| c.collider_type == ColliderType::Hitbox)
+            .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled && !c.has_hit)
         {
             for collider_to_take_dmg in p1_colliders
                 .iter()
-                .filter(|&c| c.collider_type == ColliderType::Hurtbox)
+                .filter(|&c| c.collider_type == ColliderType::Hurtbox && c.enabled)
             {
                 if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                    println!("HIT {:?} {:?} {:?}",player2.animator.current_animation.unwrap().name, collider.aabb, collider_to_take_dmg.aabb);
                     let mut polygon = collider_to_take_dmg.aabb.vertices().to_vec();
                     collider.aabb.clip_polygon(
                         &mut polygon
                     );
+                    
+                    return if polygon.len() > 0 {
+                        Some(polygon[0])
+                    } else {
+                        None
+                    }
 
-                    return Some(
-                        polygon[0]
-                    )
                 }
             }
         }
-    } 
+    }
     None
 }
 

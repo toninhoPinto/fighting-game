@@ -152,12 +152,19 @@ impl Scene for Match {
             .animator
             .play(p2_assets.animations.get("idle").unwrap(), false);
 
+        game.update_collider_p1(&p1_assets);
+        game.update_collider_p2(&p2_assets);
+
+        let p1_width = game.p1_colliders.iter()
+                .filter(|&c| { c.collider_type == ColliderType::Pushbox }).last().unwrap().aabb.half_extents().x;
+
+        let p2_width = game.p2_colliders.iter()
+            .filter(|&c| { c.collider_type == ColliderType::Pushbox }).last().unwrap().aabb.half_extents().x;
+
         let screen_res = canvas.output_size().unwrap();
         let mut hp_bars = Match::hp_bars_init(screen_res, game.player1.character.hp, game.player2.character.hp);
         let mut special_bars = Match::special_bars_init(screen_res, game.player1.character.special_max, game.player2.character.special_max);
-        
-        game.update_collider_p1(&p1_assets);
-        game.update_collider_p2(&p2_assets);
+
 
         let mut previous_time = Instant::now();
         let logic_timestep: f64 = 0.016;
@@ -314,13 +321,18 @@ impl Scene for Match {
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
 
-                let pushbox_right_x = game.p1_colliders.iter()
-                .filter(|&c| { c.collider_type == ColliderType::Pushbox }).last().unwrap().aabb.half_extents().x;
-                game.player1.update(&camera,logic_timestep, pushbox_right_x as i32, game.player2.position.x);
+                let pushbox1_right_x = match game.p1_colliders.iter().filter(|&c| { c.collider_type == ColliderType::Pushbox }).last() {
+                    Some(point) => {point.aabb.half_extents().x},
+                    None => p1_width
+                };
+                game.player1.update(&camera,logic_timestep, pushbox1_right_x as i32, game.player2.position.x);
                 game.player1.state_update(&p1_assets);
 
-                let pushbox2_right_x = game.p2_colliders.iter()
-                .filter(|&c| { c.collider_type == ColliderType::Pushbox }).last().unwrap().aabb.half_extents().x;
+                let pushbox2_right_x = match game.p2_colliders.iter().filter(|&c| { c.collider_type == ColliderType::Pushbox }).last() {
+                    Some(point) => {point.aabb.half_extents().x},
+                    None => p2_width
+                };
+
                 game.player2.update(&camera,logic_timestep, pushbox2_right_x as i32, game.player1.position.x);
                 game.player2.state_update(&p2_assets);
 
@@ -330,15 +342,15 @@ impl Scene for Match {
                 detect_push(&mut game.player1, &mut game.player2, 
                     &game.p1_colliders, &game.p2_colliders, logic_timestep);
     
-                match detect_p1_hit_p2(game.player1, &game.p1_colliders, &game.p2_colliders) {
+                match detect_p1_hit_p2(game.player1, &mut game.p1_colliders, &game.p2_colliders) {
                     Some(point) => {
                         audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
                         
                         let attack = p1_assets.attacks.get(&game.player1.animator.current_animation.unwrap().name).unwrap();
-                        game.player1.has_hit = true;
                         game.player2.take_damage(attack.damage);
                         game.player2.state_update(&p2_assets);
-                        game.player2.knock_back(attack.push_back);
+                        let dir_to_push = if game.player2.is_airborne { game.player2.direction_at_jump_time } else {game.player2.dir_related_of_other};
+                        game.player2.knock_back(dir_to_push * attack.push_back );
 
                         let TextureQuery { width, height, .. } = general_assets.hit_effect_animations.get("normal_hit").unwrap().sprites[0].query();
     
@@ -356,16 +368,14 @@ impl Scene for Match {
                     None => {}
                 }
             
-                match detect_p2_hit_p1(game.player2, &game.p1_colliders, &game.p2_colliders) {
+                match detect_p2_hit_p1(game.player2, &game.p1_colliders, &mut game.p2_colliders) {
                     Some(point) => {
                         audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-                        println!("{:?}", game.player2.animator.current_animation.unwrap().name);
-                        println!("{:?}", p2_assets.attacks.keys());
-                        let attack = p2_assets.attacks.get(&game.player2.animator.current_animation.unwrap().name).unwrap();
-                        game.player2.has_hit = true;
+                         let attack = p2_assets.attacks.get(&game.player2.animator.current_animation.unwrap().name).unwrap();
                         game.player1.take_damage(attack.damage);
                         game.player1.state_update(&p1_assets);
-                        game.player1.knock_back(attack.push_back);
+                        let dir_to_push = if game.player2.is_airborne { game.player2.direction_at_jump_time } else {game.player2.dir_related_of_other};
+                        game.player1.knock_back(attack.push_back * dir_to_push);
 
                         let TextureQuery { width, height, .. } = general_assets.hit_effect_animations.get("normal_hit").unwrap().sprites[0].query();
     
@@ -382,6 +392,7 @@ impl Scene for Match {
                     }
                     None => {}
                 }
+                println!("{:?}", game.p2_colliders);
             
                 game.update_vfx(&general_assets);
 

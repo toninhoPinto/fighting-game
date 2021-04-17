@@ -378,6 +378,20 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     );
 
     collider_animations.insert(
+        "light_kick".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/attacks/light_kick/light_kick.json", "foxgirl"),
+        ),
+    );
+
+    collider_animations.insert(
+        "airborne_light_kick".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/airborne/attacks/light_kick/airborne_light_kick.json", "foxgirl"),
+        ),
+    );
+
+    collider_animations.insert(
         "heavy_punch".to_string(),
         asset_loader::load_hitboxes(
             format!("assets/{}/standing/attacks/heavy_punch/heavy_punch.json", "foxgirl"),
@@ -461,6 +475,10 @@ fn load_foxgirl_anims(
         &texture_creator,
         "assets/foxgirl/standing/attacks/light_kick",
     );
+    let airborne_light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+        &texture_creator,
+        "assets/foxgirl/airborne/attacks/light_kick",
+    );
     let special1_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/specials/directionals/forward_light_punch",
@@ -503,6 +521,10 @@ fn load_foxgirl_anims(
     character_anims.insert(
         "light_punch".to_string(),
         Animation::new(light_punch_anim, "light_punch".to_string(), 0.35),
+    );
+    character_anims.insert(
+        "airborne_light_kick".to_string(),
+        Animation::new(airborne_light_kick_anim, "airborne_light_kick".to_string(), 0.35),
     );
     character_anims.insert(
         "medium_punch".to_string(),
@@ -550,6 +572,23 @@ fn load_foxgirl_attacks() -> HashMap<String,Attack> {
         push_back: 5,
         attack_move: 10,
         
+    });
+
+    attacks.insert("light_kick".to_string(), Attack {
+        damage: 5,
+        stun_on_hit: 10,
+        stun_on_block: 4,
+        push_back: 5,
+        attack_move: 10,
+        
+    });
+
+    attacks.insert("airborne_light_kick".to_string(), Attack {
+        damage: 50,
+        stun_on_hit: 10,
+        stun_on_block: 4,
+        push_back: 30,
+        attack_move: 10,
     });
 
     attacks.insert("heavy_punch".to_string(), Attack {

@@ -76,9 +76,9 @@ pub struct ObjectHitbox {
     pub scale_y: Option<f64>,
 }
 
-pub fn load_hitboxes(
-    file: std::string::String,
-) -> (Vec<Collider>, HashMap<String, HashMap<i32, Transformation>>) {
+pub fn load_hitboxes(file: std::string::String) 
+    -> (Vec<Collider>, HashMap<String, HashMap<i32, Transformation>>) {
+
     let json_string = fs::read_to_string(file).unwrap();
     let v = serde_json::from_str::<BaseJson>(&json_string).unwrap();
     let timeline = &v.animation[0].timeline;
@@ -102,6 +102,7 @@ pub fn load_hitboxes(
             aabb: AABB::new(min, max),
             collider_type,
             name: boxes[j].name.clone(),
+            enabled: false,
         };
         colliders.push(collider);
     }

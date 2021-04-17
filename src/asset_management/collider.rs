@@ -20,6 +20,7 @@ pub struct Collider {
     pub collider_type: ColliderType,
     pub name: String,
     pub aabb: AABB,
+    pub enabled: bool,
 }
 
 impl ColliderAnimation {
@@ -30,12 +31,14 @@ impl ColliderAnimation {
                 current_colliders[i].collider_type = self.colliders[i].collider_type;
                 current_colliders[i].name = self.colliders[i].name.clone();
                 current_colliders[i].aabb = self.colliders[i].aabb;
+                current_colliders[i].enabled = self.colliders[i].enabled;
             } else {
                 //push
                 current_colliders.push(Collider {
                     collider_type: self.colliders[i].collider_type,
                     name: self.colliders[i].name.clone(),
                     aabb: self.colliders[i].aabb,
+                    enabled: self.colliders[i].enabled
                 });
             }
         }
@@ -69,6 +72,7 @@ impl ColliderAnimation {
 
             match position_at_frame.get(&(player.animator.animation_index as i32)) {
                 Some(transformation) => {
+                    current_collider.enabled = true;
                     let offset_x = transformation.pos.x as f32 * 2.0;
                     let offset_y = transformation.pos.y as f32 * 2.0;
 
@@ -90,7 +94,9 @@ impl ColliderAnimation {
                         offset_y + original_aabb.maxs.y * 2.0 * transformation.scale.1;
                 }
                 //collider doesnt exist at this frame
-                None => {}
+                None => {
+                    current_collider.enabled = false;
+                }
             }
     }
 

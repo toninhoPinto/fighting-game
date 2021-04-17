@@ -182,7 +182,12 @@ fn check_attack_inputs<'a, 'b>(player: &'b mut Player<'a>,
         player.is_attacking = false;
     } else {
         player.change_special_meter(0.1);
-        player.attack(character_anims, animation_name);
+        if !player.is_airborne { 
+            player.attack(character_anims, animation_name);
+        } else {
+            player.attack(character_anims, format!("{}_{}", "airborne", animation_name) );
+        }
+        
     }
 }
 

@@ -208,6 +208,10 @@ fn render_colliders(
     colliders: &mut Vec<Collider>,
 ) {
     for collider in colliders.iter().rev() {
+        if !collider.enabled {
+            continue;
+        }
+
         let aabb = collider.aabb;
         let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
         let semi_transparent_red = Color::RGBA(200, 50, 100, 150);

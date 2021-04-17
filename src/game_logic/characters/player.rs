@@ -190,9 +190,9 @@ impl<'a> Player<'a> {
         }
 
         //TODO im just moving by an int instead of multiplying by dt, not sure if this is bad
-        if self.knock_back_distance > 0 {
+        if self.knock_back_distance != 0 {
             self.position = self.position.offset(
-                self.knock_back_distance , 
+                self.knock_back_distance, 
                 0);
             self.knock_back_distance = 0;
         }
@@ -202,7 +202,7 @@ impl<'a> Player<'a> {
         } else {
             1.0
         };
-
+        
         if self.is_airborne {
             let gravity = match self.extra_gravity {
                 Some(extra_g) => extra_g,
@@ -222,7 +222,7 @@ impl<'a> Player<'a> {
 
             //reset position back to ground height
             if self.position.y < self.ground_height {
-                self.position.y = self.ground_height ;
+                 self.position.y = self.ground_height;
                 self.velocity_y = self.character.jump_height;
                 if self.state == PlayerState::Jumping {
                     self.state = PlayerState::Landing;
@@ -255,7 +255,6 @@ impl<'a> Player<'a> {
                 }
             }
         }
-
 
         if opponent_position_x - self.position.x != 0 {
             self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
@@ -352,7 +351,6 @@ impl<'a> Player<'a> {
         }
         
         if self.animator.is_finished && self.state != PlayerState::Dead {
-            self.has_hit = false;
 
             if self.state == PlayerState::Jump {
                 self.state = PlayerState::Jumping;
