@@ -43,7 +43,7 @@ pub fn detect_p1_hit_p2(player1: &mut Player,
 pub fn detect_p2_hit_p1(player2: &mut Player, 
     p1_colliders: &Vec<Collider>, p2_colliders: &Vec<Collider>) -> Option<Point<Real>>{
 
-    if !player1.has_hit {
+    if !player2.has_hit {
         for collider in p2_colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled && !c.has_hit)
