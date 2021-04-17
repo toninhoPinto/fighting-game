@@ -46,7 +46,7 @@ pub fn detect_p2_hit_p1(player2: &mut Player,
     if !player2.has_hit {
         for collider in p2_colliders
             .iter()
-            .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled && !c.has_hit)
+            .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
         {
             for collider_to_take_dmg in p1_colliders
                 .iter()
