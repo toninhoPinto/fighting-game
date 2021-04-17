@@ -165,6 +165,7 @@ impl Scene for Match {
         let mut hp_bars = Match::hp_bars_init(screen_res, game.player1.character.hp, game.player2.character.hp);
         let mut special_bars = Match::special_bars_init(screen_res, game.player1.character.special_max, game.player2.character.special_max);
 
+        let mut hit_stop = 0;
 
         let mut previous_time = Instant::now();
         let logic_timestep: f64 = 0.016;
@@ -290,9 +291,13 @@ impl Scene for Match {
                     }
                 }
 
+                if hit_stop > 0 {
+                    hit_stop -=1;
+                    logic_time_accumulated -= logic_timestep;
+                    break;
+                }
+
                 game.current_frame += 1;
-
-
                 if game.player1.state != PlayerState::Dead && game.player2.state != PlayerState::Dead {
 
                     if !self.p1_inputs.input_new_frame.is_empty() {
@@ -314,7 +319,6 @@ impl Scene for Match {
                     apply_input_state(&mut game.player1, &self.p1_inputs.directional_state_input);
                     apply_input_state(&mut game.player2, &self.p2_inputs.directional_state_input);
                 }
-
                 self.p1_inputs.update_inputs_reset_timer();
                 self.p1_inputs.update_special_inputs_reset_timer();
 
@@ -358,7 +362,7 @@ impl Scene for Match {
                         let texture_height = height * 2;
                         //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
                         //this will have issues with other vfx
-    
+                        hit_stop = 10;
                         game.spawn_vfx(
                             Rect::new(point.x as i32 - texture_width as i32 / 2 - 80, 
                                 point.y as i32 - texture_height as i32 / 2 - 100, 
@@ -383,7 +387,7 @@ impl Scene for Match {
                         let texture_height = height * 2;
                         //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
                         //this will have issues with other vfx
-    
+                        hit_stop = 10;
                         game.spawn_vfx(
                             Rect::new(point.x as i32 - texture_width as i32 / 2 - 80, 
                                 point.y as i32 - texture_height as i32 / 2 - 100, 
@@ -392,7 +396,6 @@ impl Scene for Match {
                     }
                     None => {}
                 }
-                println!("{:?}", game.p2_colliders);
             
                 game.update_vfx(&general_assets);
 
@@ -400,7 +403,6 @@ impl Scene for Match {
 
                 camera.update(LEVEL_WIDTH, game.player1, game.player2);
     
-
                 hp_bars[0].update(game.player1.character.hp);
                 hp_bars[1].update(game.player2.character.hp);
 

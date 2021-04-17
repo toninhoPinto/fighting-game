@@ -27,6 +27,11 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//make jump attacks go lower than ground to be able to hit crouched players
+//but if jump attack hits enemy then dont go lower than ground and reset to standing or other action
+//hit stun should only freeze two characters not everything else
+
+
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
 //make dash have movcement only during some frames and not during others + lock in position
@@ -37,7 +42,7 @@ use input::translated_inputs::TranslatedInput;
 //this is important to be able to cancel the recovery of attacks
 //calculate frame advantage on the fly
 //display different vfx colors and sizes depending on the frame advantage //change color of vfx using sdl2 texture tint OR shader, which one?
-//make jump attacks go lower than ground to be able to hit crouched players
+
 
 //define a ground height and a offset for each character to be at the correct ground height
 //add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
@@ -81,7 +86,7 @@ fn main() -> Result<(), String> {
     music_player::play_music(&music);
 
     let window = video_subsystem
-        .window("game tutorial", 1280, 720)
+        .window("fighting game", 1280, 720)
         .position_centered()
         .build()
         .expect("could not initialize video subsystem");

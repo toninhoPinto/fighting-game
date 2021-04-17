@@ -22,12 +22,19 @@ pub struct Character {
     pub jump_distance: f64,
 }
 
+pub enum AttackType {
+    LOW,
+    MIDDLE,
+    HIGH
+}
+
 pub struct Attack {
     pub damage: i32,
     pub stun_on_hit: i32,
     pub stun_on_block: i32,
     pub push_back: i32,
-    pub attack_move: i32
+    pub attack_move: i32,
+    pub attack_type: AttackType,
 }
 
 impl Character {

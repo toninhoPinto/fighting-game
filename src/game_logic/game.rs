@@ -89,6 +89,7 @@ impl<'a> Game<'a>{
     pub fn update_collider_p2(&mut self, p2_assets: &CharacterAssets){
         let collider_animation2 = p2_assets.collider_animations.get(&self.player2.animator.current_animation.unwrap().name);
         if collider_animation2.is_some() {
+            //TODO ISTO VAI DAR PROBLEMAS MAIS TARDE OU MAIS CEDO, 
             if collider_animation2.unwrap().colliders.len() != self.p2_colliders.len() {
                 collider_animation2.unwrap().init(&mut self.p2_colliders);
             }

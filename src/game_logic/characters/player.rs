@@ -145,13 +145,13 @@ impl<'a> Player<'a> {
         character_anims: &'a CharacterAssets,
         attack_animation: String,
     ) {
-        println!("PRINT {}", attack_animation);
+        println!("ATTACK {}", attack_animation);
         if self.player_can_attack() {
             self.is_attacking = true;
-            self.animator.play_once(
-                character_anims.animations.get(&attack_animation).unwrap(),
-                false,
-            );
+            if let Some(attack) = character_anims.animations.get(&attack_animation) {
+                self.animator.play_once(attack,false);
+            };
+            
         }
     }
 
@@ -180,6 +180,7 @@ impl<'a> Player<'a> {
     }
 
     pub fn update(&mut self, camera: &Camera, dt: f64, character_width: i32, opponent_position_x: i32) {
+        
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5;
             self.direction_at_jump_time = self.velocity_x;
@@ -209,7 +210,10 @@ impl<'a> Player<'a> {
                 None => -2.0 * self.jump_initial_velocity / 0.25,
             };
 
-            if self.position.y >= self.ground_height {
+            let ground = if self.is_attacking && !self.has_hit {self.ground_height - 100} else {  self.ground_height };
+            let should_land = self.position.y < ground;
+
+            if !should_land {
                 let position_offset_x =
                     self.direction_at_jump_time as f64 * self.character.jump_distance * dt * speed_mod;
 
@@ -221,8 +225,10 @@ impl<'a> Player<'a> {
             }
 
             //reset position back to ground height
-            if self.position.y < self.ground_height {
-                 self.position.y = self.ground_height;
+            let should_land = self.position.y < ground;
+            if should_land {
+                println!("LANDED");
+                self.position.y = ground;
                 self.velocity_y = self.character.jump_height;
                 if self.state == PlayerState::Jumping {
                     self.state = PlayerState::Landing;
@@ -234,6 +240,7 @@ impl<'a> Player<'a> {
 
         if self.player_can_move() {
             if self.state == PlayerState::Standing {
+                self.position.y = self.ground_height;
                 self.position = self.position.offset(
                     (self.velocity_x as f64 * self.character.speed * dt * speed_mod) as i32,
                     0,
@@ -271,6 +278,56 @@ impl<'a> Player<'a> {
 
     pub fn state_update(&mut self, character_data: &'a CharacterAssets) {
         let character_animation = &character_data.animations;
+
+        if self.animator.is_finished && self.state != PlayerState::Dead {
+            self.has_hit = false;
+            self.flipped = self.dir_related_of_other > 0;
+            //when you attack in the air, you need to go a bit lower than normal to be able to hit low opponents
+            //when attack animation is finished, boost back up to normal height
+            self.position.y = self.ground_height;
+
+            if self.is_attacking {
+                self.is_attacking = false;
+            }
+
+            if self.state == PlayerState::Jump {
+                self.state = PlayerState::Jumping;
+            }
+
+            if self.state == PlayerState::Crouch {
+                self.state = PlayerState::Crouching;
+            }
+
+            if self.state == PlayerState::Landing {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.state == PlayerState::UnCrouch {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.state == PlayerState::Grab {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.state == PlayerState::Hurt {
+                self.state = PlayerState::Standing;
+            }
+
+            if self.state == PlayerState::DashingForward
+                || self.state == PlayerState::DashingBackward
+            {
+                self.state = PlayerState::Standing;
+            }
+        }
+        
+
+        if self.has_hit && self.state == PlayerState::Landing {
+            self.has_hit = false;
+            self.position.y = self.ground_height;
+            self.is_attacking = false;
+            println!("new reset");
+        }
 
         if !self.is_attacking {
             match self.state {
@@ -347,43 +404,6 @@ impl<'a> Player<'a> {
                     self.animator
                         .play_once(character_animation.get("take_damage").unwrap(), false);
                 }
-            }
-        }
-        
-        if self.animator.is_finished && self.state != PlayerState::Dead {
-
-            if self.state == PlayerState::Jump {
-                self.state = PlayerState::Jumping;
-            }
-
-            if self.state == PlayerState::Crouch {
-                self.state = PlayerState::Crouching;
-            }
-
-            if self.state == PlayerState::Landing {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::UnCrouch {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.is_attacking {
-                self.is_attacking = false;
-            }
-
-            if self.state == PlayerState::Grab {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::Hurt {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::DashingForward
-                || self.state == PlayerState::DashingBackward
-            {
-                self.state = PlayerState::Standing;
             }
         }
         

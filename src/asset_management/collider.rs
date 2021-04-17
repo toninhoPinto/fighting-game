@@ -24,6 +24,7 @@ pub struct Collider {
 }
 
 impl ColliderAnimation {
+    //TODO INIT AND COLLIDER LIFE MANAGEMENT NEEDS TO BE CLEANED
     pub fn init(&self, current_colliders: &mut Vec<Collider>) {
         for i in 0..self.colliders.len() {
             if i < current_colliders.len() {
@@ -42,8 +43,6 @@ impl ColliderAnimation {
                 });
             }
         }
-        //TODO perhaps instead of truncating, add a bool that makes it enabled or disabled
-        //TODO this way, eventually the player will get all the colliders it needs in the vec
         current_colliders.truncate(self.colliders.len());
     }
 

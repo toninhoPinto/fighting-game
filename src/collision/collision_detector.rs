@@ -20,18 +20,17 @@ pub fn detect_p1_hit_p2(player1: &mut Player,
             {
                 if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
 
-                    let mut center = collider_to_take_dmg.aabb.center();
-                    let mut left = center;
-                    left.x -= collider_to_take_dmg.aabb.half_extents().x;
-                    let mut right = center;
-                    right.x += collider_to_take_dmg.aabb.half_extents().x;
-
-                    return Some(
-                        collider.aabb.clip_segment(
-                            &left,
-                            &right
-                        ).unwrap().a
-                    )
+                    let mut polygon = collider_to_take_dmg.aabb.vertices().to_vec();
+                    collider.aabb.clip_polygon(
+                        &mut polygon
+                    );
+                    
+                    return if polygon.len() > 0 {
+                        player1.has_hit = true;
+                        Some(polygon[0])
+                    } else {
+                        None
+                    }
                 }
             }   
         }
@@ -60,6 +59,7 @@ pub fn detect_p2_hit_p1(player2: &mut Player,
                     );
                     
                     return if polygon.len() > 0 {
+                        player2.has_hit = true;
                         Some(polygon[0])
                     } else {
                         None

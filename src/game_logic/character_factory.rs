@@ -1,4 +1,4 @@
-use super::characters::{Attack, player::Player};
+use super::characters::{Attack, AttackType, player::Player};
 use sdl2::rect::Point;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
@@ -338,7 +338,7 @@ fn load_keetar_attacks() -> HashMap<String,Attack> {
         stun_on_block: 4,
         push_back: 5,
         attack_move: 10,
-        
+        attack_type: AttackType::MIDDLE,
     });
 
     attacks
@@ -388,6 +388,14 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
         "airborne_light_kick".to_string(),
         asset_loader::load_hitboxes(
             format!("assets/{}/airborne/attacks/light_kick/airborne_light_kick.json", "foxgirl"),
+        ),
+    );
+
+
+    collider_animations.insert(
+        "medium_punch".to_string(),
+        asset_loader::load_hitboxes(
+            format!("assets/{}/standing/attacks/medium_punch/medium_punch.json", "foxgirl"),
         ),
     );
 
@@ -565,30 +573,40 @@ fn load_foxgirl_anims(
 fn load_foxgirl_attacks() -> HashMap<String,Attack> {
     let mut attacks = HashMap::new();
 
-    attacks.insert("light_punch".to_string(), Attack {
-        damage: 5,
-        stun_on_hit: 10,
-        stun_on_block: 4,
-        push_back: 5,
-        attack_move: 10,
-        
-    });
-
     attacks.insert("light_kick".to_string(), Attack {
         damage: 5,
         stun_on_hit: 10,
         stun_on_block: 4,
         push_back: 5,
         attack_move: 10,
-        
+        attack_type: AttackType::MIDDLE,
     });
 
     attacks.insert("airborne_light_kick".to_string(), Attack {
-        damage: 50,
+        damage: 15,
         stun_on_hit: 10,
         stun_on_block: 4,
         push_back: 30,
         attack_move: 10,
+        attack_type: AttackType::HIGH,
+    });
+
+    attacks.insert("light_punch".to_string(), Attack {
+        damage: 5,
+        stun_on_hit: 10,
+        stun_on_block: 4,
+        push_back: 5,
+        attack_move: 10,
+        attack_type: AttackType::MIDDLE,
+    });
+
+    attacks.insert("medium_punch".to_string(), Attack {
+        damage: 5,
+        stun_on_hit: 10,
+        stun_on_block: 4,
+        push_back: 5,
+        attack_move: 10,
+        attack_type: AttackType::MIDDLE,
     });
 
     attacks.insert("heavy_punch".to_string(), Attack {
@@ -596,7 +614,8 @@ fn load_foxgirl_attacks() -> HashMap<String,Attack> {
         stun_on_hit: 20,
         stun_on_block: 14,
         push_back: 10,
-        attack_move: 10, 
+        attack_move: 10,
+        attack_type: AttackType::MIDDLE,
     });
 
     attacks
