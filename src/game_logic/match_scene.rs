@@ -1,3 +1,4 @@
+use parry2d::math::Real;
 use sdl2::{rect::Rect, render::TextureQuery};
 use std::{
     collections::{HashMap, VecDeque},
@@ -18,7 +19,7 @@ use crate::asset_management::collider::ColliderType;
 use crate::asset_management::sound::audio_player;
 use crate::{
     asset_management::common_assets::CommonAssets,
-    collision::collision_detector::{detect_p1_hit_p2, detect_p2_hit_p1, detect_push},
+    collision::collision_detector::{detect_hit, detect_push},
     engine_traits::scene::Scene,
     input::{self, controller_handler::Controller, translated_inputs::TranslatedInput},
     rendering::{self, camera::Camera},
@@ -26,7 +27,7 @@ use crate::{
     GameStateData,
 };
 
-use super::inputs::apply_inputs::apply_input_state;
+use super::{character_factory::CharacterAssets, characters::player::Player, inputs::apply_inputs::apply_input_state};
 use super::inputs::process_inputs::{
     released_joystick_reset_directional_state, update_directional_state,
 };
@@ -150,6 +151,26 @@ impl Match {
     }
 }
 
+
+fn hit_opponent<'a>(general_assets: &CommonAssets, 
+    player_hitting: &mut Player, player_hit: &mut Player<'a>, 
+    player_hitting_assets: &CharacterAssets, player_hit_assets: &'a CharacterAssets){
+    
+    audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
+    let attack = player_hitting_assets
+        .attacks
+        .get(&player_hitting.animator.current_animation.unwrap().name)
+        .unwrap();
+    player_hit.take_damage(attack.damage);
+    player_hit.state_update(&player_hit_assets);
+    let dir_to_push = if player_hitting.is_airborne {
+        player_hitting.direction_at_jump_time
+    } else {
+        player_hitting.dir_related_of_other
+    };
+    player_hit.knock_back(attack.push_back * dir_to_push);
+}
+
 impl Scene for Match {
     fn run(
         &mut self,
@@ -195,10 +216,10 @@ impl Scene for Match {
 
         game.player1
             .animator
-            .play(p1_assets.animations.get("idle").unwrap(), false);
+            .play(p1_assets.animations.get("idle").unwrap(), 1.0,false);
         game.player2
             .animator
-            .play(p2_assets.animations.get("idle").unwrap(), false);
+            .play(p2_assets.animations.get("idle").unwrap(), 1.0,false);
 
         game.update_collider_p1(&p1_assets);
         game.update_collider_p2(&p2_assets);
@@ -403,7 +424,6 @@ impl Scene for Match {
 
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
-
                 let pushbox1_right_x = match game
                     .p1_colliders
                     .iter()
@@ -450,35 +470,25 @@ impl Scene for Match {
                     logic_timestep,
                 );
 
-                match detect_p1_hit_p2(game.player1, &mut game.p1_colliders, &game.p2_colliders) {
+                match detect_hit(game.player1, &game.p1_colliders, &game.p2_colliders) {
                     Some(point) => {
-                        audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-
-                        let attack = p1_assets
-                            .attacks
-                            .get(&game.player1.animator.current_animation.unwrap().name)
-                            .unwrap();
-                        game.player2.take_damage(attack.damage);
-                        game.player2.state_update(&p2_assets);
-                        let dir_to_push = if game.player2.is_airborne {
-                            game.player2.direction_at_jump_time
-                        } else {
-                            game.player2.dir_related_of_other
-                        };
-                        game.player2.knock_back(dir_to_push * attack.push_back);
+                        hit_opponent(
+                            &general_assets, 
+                            &mut game.player1, &mut game.player2, 
+                            &p1_assets, &p2_assets);
 
                         let TextureQuery { width, height, .. } = general_assets
                             .hit_effect_animations
                             .get("normal_hit")
                             .unwrap()
                             .sprites[0]
+                            .1
                             .query();
 
                         let texture_width = width * 2;
                         let texture_height = height * 2;
                         //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
                         //this will have issues with other vfx
-                        hit_stop = 10;
                         game.spawn_vfx(
                             Rect::new(
                                 point.x as i32 - texture_width as i32 / 2 - 80,
@@ -489,38 +499,30 @@ impl Scene for Match {
                             "special_hit".to_string(),
                             Some(Color::GREEN),
                         );
+                        hit_stop = 10;
                     }
                     None => {}
                 }
 
-                match detect_p2_hit_p1(game.player2, &game.p1_colliders, &mut game.p2_colliders) {
+                match detect_hit(game.player2, &game.p1_colliders, &game.p2_colliders) {
                     Some(point) => {
-                        audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-                        let attack = p2_assets
-                            .attacks
-                            .get(&game.player2.animator.current_animation.unwrap().name)
-                            .unwrap();
-                        game.player1.take_damage(attack.damage);
-                        game.player1.state_update(&p1_assets);
-                        let dir_to_push = if game.player2.is_airborne {
-                            game.player2.direction_at_jump_time
-                        } else {
-                            game.player2.dir_related_of_other
-                        };
-                        game.player1.knock_back(attack.push_back * dir_to_push);
+                        hit_opponent(
+                            &general_assets, 
+                            &mut game.player2, &mut game.player1, 
+                            &p2_assets, &p1_assets);
+
 
                         let TextureQuery { width, height, .. } = general_assets
                             .hit_effect_animations
                             .get("normal_hit")
                             .unwrap()
                             .sprites[0]
+                            .1
                             .query();
-
                         let texture_width = width * 2;
                         let texture_height = height * 2;
                         //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
                         //this will have issues with other vfx
-                        hit_stop = 10;
                         game.spawn_vfx(
                             Rect::new(
                                 point.x as i32 - texture_width as i32 / 2 - 80,
@@ -531,6 +533,7 @@ impl Scene for Match {
                             "special_hit".to_string(),
                             Some(Color::GREEN),
                         );
+                        hit_stop = 10;
                     }
                     None => {}
                 }

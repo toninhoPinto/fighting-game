@@ -26,8 +26,12 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//make jump attacks go lower than ground to be able to hit crouched players
-//but if jump attack hits enemy then dont go lower than ground and reset to standing or other action
+//Finish making animations having a frame duration per sprite + having speed modifiers depending on the situation not per animation
+//backwalking with makoto seem to have some kind of overflow due to usize i believe
+//make character position into a float, and only round it when rendering, this means i can use dt for dashes and alike
+//colliders stop working
+//fix init colliders, its a mess
+
 
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation

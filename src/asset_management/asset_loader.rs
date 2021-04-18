@@ -25,16 +25,18 @@ pub fn load_texture<'a>(
 pub fn load_anim_from_dir<'a>(
     tex_creator: &'a TextureCreator<WindowContext>,
     dir: &'_ str,
-) -> Vec<Texture<'a>> {
+) -> Vec<(i32, Texture<'a>)> {
     let paths = fs::read_dir(dir).unwrap();
 
-    let mut vec: Vec<Texture> = Vec::new();
+    let mut vec: Vec<(i32, Texture)> = Vec::new();
 
+    let mut i = 2;
     for entry in paths {
         let entry = entry.unwrap();
         let path = entry.path();
         if path.is_file() && path.extension().unwrap() == "png" {
-            vec.push(tex_creator.load_texture(path).unwrap());
+            i += 3;
+            vec.push((i,tex_creator.load_texture(path).unwrap()));
         }
     }
     vec

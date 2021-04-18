@@ -84,7 +84,7 @@ pub fn render<'a, 'b>(
                 &p1_assets
                     .projectile_animation
                     .get(&projectile.animation_name)
-                    .unwrap()[projectile.animation_index as usize],
+                    .unwrap()[projectile.animation_index as usize].1,
                 projectile.sprite,
                 screen_rect_2,
                 0.0,
@@ -96,8 +96,8 @@ pub fn render<'a, 'b>(
             canvas.copy_ex(
                 &p2_assets
                     .projectile_animation
-                    .get(&projectile.animation_name)
-                    .unwrap()[projectile.animation_index as usize],
+                    .get(&projectile.animation_name).unwrap()
+                    [projectile.animation_index as usize].1,
                 projectile.sprite,
                 screen_rect_2,
                 0.0,
@@ -192,7 +192,7 @@ fn render_vfx(
                 .sprites[vfx.animation_index as usize];
 
             canvas
-                .copy_ex(texture, rect_size, screen_rect, 0.0, None, false, false)
+                .copy_ex(&texture.1, rect_size, screen_rect, 0.0, None, false, false)
                 .unwrap();
 
             if debug {

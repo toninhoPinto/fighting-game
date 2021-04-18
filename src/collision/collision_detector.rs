@@ -8,64 +8,23 @@ use crate::game_logic::characters::player::Player;
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
 
-pub fn detect_p1_hit_p2(
-    player1: &mut Player,
-    p1_colliders: &Vec<Collider>,
-    p2_colliders: &Vec<Collider>,
-) -> Option<Point<Real>> {
-    if !player1.has_hit {
-        for collider in p1_colliders
+pub fn detect_hit(player_hitting: &mut Player, player_hitting_colliders: &Vec<Collider>, player_hit_colliders: &Vec<Collider>) -> Option<Point<Real>>{
+
+    if !player_hitting.has_hit {
+        for collider in player_hitting_colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
         {
-            for collider_to_take_dmg in p2_colliders
+            for collider_to_take_dmg in player_hit_colliders
                 .iter()
                 .filter(|&c| c.collider_type == ColliderType::Hurtbox && c.enabled)
             {
                 if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
                     let mut polygon = collider_to_take_dmg.aabb.vertices().to_vec();
                     collider.aabb.clip_polygon(&mut polygon);
-
+                    
                     return if polygon.len() > 0 {
-                        player1.has_hit = true;
-                        Some(polygon[0])
-                    } else {
-                        None
-                    };
-                }
-            }
-        }
-    }
-
-    None
-}
-
-pub fn detect_p2_hit_p1(
-    player2: &mut Player,
-    p1_colliders: &Vec<Collider>,
-    p2_colliders: &Vec<Collider>,
-) -> Option<Point<Real>> {
-    if !player2.has_hit {
-        for collider in p2_colliders
-            .iter()
-            .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
-        {
-            for collider_to_take_dmg in p1_colliders
-                .iter()
-                .filter(|&c| c.collider_type == ColliderType::Hurtbox && c.enabled)
-            {
-                if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                    println!(
-                        "HIT {:?} {:?} {:?}",
-                        player2.animator.current_animation.unwrap().name,
-                        collider.aabb,
-                        collider_to_take_dmg.aabb
-                    );
-                    let mut polygon = collider_to_take_dmg.aabb.vertices().to_vec();
-                    collider.aabb.clip_polygon(&mut polygon);
-
-                    return if polygon.len() > 0 {
-                        player2.has_hit = true;
+                        player_hitting.has_hit = true;
                         Some(polygon[0])
                     } else {
                         None
@@ -76,6 +35,7 @@ pub fn detect_p2_hit_p1(
     }
     None
 }
+
 
 pub fn detect_push(
     player1: &mut Player,

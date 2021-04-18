@@ -16,7 +16,7 @@ pub struct CharacterAssets<'a> {
     pub input_combination_anims: Vec<(Vec<i32>, String)>,
     pub directional_variation_anims: Vec<((GameAction, GameAction), String)>,
     pub effects: HashMap<String, Projectile>,
-    pub projectile_animation: HashMap<String, Vec<Texture<'a>>>,
+    pub projectile_animation: HashMap<String, Vec<(i32, Texture<'a>)>>,
     pub collider_animations: HashMap<String, ColliderAnimation>,
     pub attacks: HashMap<String, Attack>,
 }
@@ -33,7 +33,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
             215 * 2,
             200,
             4,
-            450.0,
+            350.0,
             650.0,
             650.0,
             700.0,
@@ -156,7 +156,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
     effects_of_abilities.insert("heavy_special_attack".to_string(), heavy_projectile);
 
     let mut projectile_anims = HashMap::new();
-    let projectile_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let projectile_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/projectiles",
     );
@@ -179,147 +179,147 @@ fn load_keetar_anims(
     let mut character_anims = HashMap::new();
 
     //TODO iterate through folders and use folder name as key for hashmap
-    let idle_anim: Vec<Texture> =
+    let idle_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/idle");
-    let walk_anim: Vec<Texture> =
+    let walk_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/walk");
-    let walk_back_anim: Vec<Texture> =
+    let walk_back_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/walk_back");
-    let crouch_start_anim: Vec<Texture> =
+    let crouch_start_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/crouch/crouched");
-    let crouch_idle_anim: Vec<Texture> =
+    let crouch_idle_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/crouch/crouching");
-    let light_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let light_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/light_punch",
     );
-    let medium_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let medium_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/medium_punch",
     );
-    let heavy_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let heavy_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/heavy_punch",
     );
-    let light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/light_kick",
     );
-    let special1_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let special1_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/directionals/directional_light_punch",
     );
-    let special2_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let special2_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/combinations",
     );
-    let dash_anim: Vec<Texture> =
+    let dash_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/dash");
-    let dash_back_anim: Vec<Texture> =
+    let dash_back_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/back_dash");
-    let neutral_jump_anim: Vec<Texture> =
+    let neutral_jump_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/neutral_jump");
-    let directional_jump_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let directional_jump_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/directional_jump",
     );
-    let grab_anim: Vec<Texture> =
+    let grab_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/attacks/grab");
-    let dead_anim: Vec<Texture> =
+    let dead_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/dead");
-    let take_damage_anim: Vec<Texture> =
+    let take_damage_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/take_damage");
 
     character_anims.insert(
         "idle".to_string(),
-        Animation::new(idle_anim, "idle".to_string(), 0.35),
+        Animation::new(idle_anim, "idle".to_string()),
     );
     character_anims.insert(
         "dash".to_string(),
-        Animation::new(dash_anim, "dash".to_string(), 0.35),
+        Animation::new(dash_anim, "dash".to_string()),
     );
     character_anims.insert(
         "dash_back".to_string(),
-        Animation::new(dash_back_anim, "dash_back".to_string(), 0.5),
+        Animation::new(dash_back_anim, "dash_back".to_string()),
     );
     character_anims.insert(
         "walk".to_string(),
-        Animation::new(walk_anim, "walk".to_string(), 0.35),
+        Animation::new(walk_anim, "walk".to_string()),
     );
     character_anims.insert(
         "walk_back".to_string(),
-        Animation::new(walk_back_anim, "walk_back".to_string(), 0.35),
+        Animation::new(walk_back_anim, "walk_back".to_string()),
     );
     character_anims.insert(
         "light_punch".to_string(),
-        Animation::new(light_punch_anim, "light_punch".to_string(), 0.35),
+        Animation::new(light_punch_anim, "light_punch".to_string()),
     );
     character_anims.insert(
         "medium_punch".to_string(),
-        Animation::new(medium_punch_anim, "medium_punch".to_string(), 0.35),
+        Animation::new(medium_punch_anim, "medium_punch".to_string()),
     );
     character_anims.insert(
         "heavy_punch".to_string(),
-        Animation::new(heavy_punch_anim, "heavy_punch".to_string(), 0.35),
+        Animation::new(heavy_punch_anim, "heavy_punch".to_string()),
     );
     character_anims.insert(
         "light_kick".to_string(),
-        Animation::new(light_kick_anim, "light_kick".to_string(), 0.35),
+        Animation::new(light_kick_anim, "light_kick".to_string()),
     );
     character_anims.insert(
         "crouch".to_string(),
-        Animation::new(crouch_start_anim, "crouch".to_string(), 0.35),
+        Animation::new(crouch_start_anim, "crouch".to_string()),
     );
     character_anims.insert(
         "crouching".to_string(),
-        Animation::new(crouch_idle_anim, "crouching".to_string(), 0.35),
+        Animation::new(crouch_idle_anim, "crouching".to_string()),
     );
     character_anims.insert(
         "neutral_jump".to_string(),
-        Animation::new(neutral_jump_anim, "neutral_jump".to_string(), 0.35),
+        Animation::new(neutral_jump_anim, "neutral_jump".to_string()),
     );
     character_anims.insert(
         "directional_jump".to_string(),
-        Animation::new(directional_jump_anim, "directional_jump".to_string(), 0.35),
+        Animation::new(directional_jump_anim, "directional_jump".to_string()),
     );
     character_anims.insert(
         "directional_light_punch".to_string(),
-        Animation::new(special1_anim, "directional_light_punch".to_string(), 0.35),
+        Animation::new(special1_anim, "directional_light_punch".to_string()),
     );
     character_anims.insert(
         "grab".to_string(),
-        Animation::new(grab_anim, "grab".to_string(), 0.15),
+        Animation::new(grab_anim, "grab".to_string()),
     );
     character_anims.insert(
         "dead".to_string(),
-        Animation::new(dead_anim, "dead".to_string(), 0.15),
+        Animation::new(dead_anim, "dead".to_string()),
     );
     character_anims.insert(
         "take_damage".to_string(),
-        Animation::new(take_damage_anim, "take_damage".to_string(), 0.35),
+        Animation::new(take_damage_anim, "take_damage".to_string()),
     );
 
     character_anims.insert(
         "light_special_attack".to_string(),
-        Animation::new(special2_anim, "light_special_attack".to_string(), 0.35),
+        Animation::new(special2_anim, "light_special_attack".to_string()),
     );
 
     //TODO DUPLICATED DATA, i think the only solution is to have a separate texture manager and character anims becomes a hashmap<string, id on texturemanager>
-    let special3_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let special3_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/combinations",
     );
-    let special4_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let special4_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/combinations",
     );
     character_anims.insert(
         "med_special_attack".to_string(),
-        Animation::new(special3_anim, "med_special_attack".to_string(), 0.35),
+        Animation::new(special3_anim, "med_special_attack".to_string()),
     );
     character_anims.insert(
         "heavy_special_attack".to_string(),
-        Animation::new(special4_anim, "heavy_special_attack".to_string(), 0.35),
+        Animation::new(special4_anim, "heavy_special_attack".to_string()),
     );
 
     character_anims
@@ -462,130 +462,125 @@ fn load_foxgirl_anims(
     let mut character_anims = HashMap::new();
 
     //TODO iterate through folders and use folder name as key for hashmap
-    let idle_anim: Vec<Texture> =
+    let idle_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/idle");
-    let take_damage_anim: Vec<Texture> =
+    let take_damage_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/take_damage/1");
-    let dead_anim: Vec<Texture> =
+    let dead_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/dead");
-    let walk_anim: Vec<Texture> =
+    let walk_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/walk");
-    let crouch_start_anim: Vec<Texture> =
+    let crouch_start_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/crouch/crouched");
-    let crouch_idle_anim: Vec<Texture> =
+    let crouch_idle_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/crouch/crouching");
-    let light_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let light_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/light_punch",
     );
-    let medium_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let medium_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/medium_punch",
     );
-    let heavy_punch_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let heavy_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/heavy_punch",
     );
-    let light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/light_kick",
     );
-    let crouched_light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let crouched_light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/crouch/attacks/light_kick",
     );
-    let airborne_light_kick_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let airborne_light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/airborne/attacks/light_kick",
     );
-    let special1_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let special1_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/specials/directionals/forward_light_punch",
     );
-    let special2_anim: Vec<Texture> = asset_loader::load_anim_from_dir(
+    let special2_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/specials/directionals/forward_heavy_punch",
     );
-    let dash_anim: Vec<Texture> =
+    let dash_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/dash");
-    let dash_back_anim: Vec<Texture> =
+    let dash_back_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/back_dash");
-    let neutral_jump_anim: Vec<Texture> =
+    let neutral_jump_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/neutral_jump");
 
     character_anims.insert(
         "idle".to_string(),
-        Animation::new(idle_anim, "idle".to_string(), 0.35),
+        Animation::new(idle_anim, "idle".to_string()),
     );
     character_anims.insert(
         "take_damage".to_string(),
-        Animation::new(take_damage_anim, "take_damage".to_string(), 0.35),
+        Animation::new(take_damage_anim, "take_damage".to_string()),
     );
     character_anims.insert(
         "dead".to_string(),
-        Animation::new(dead_anim, "dead".to_string(), 0.35),
+        Animation::new(dead_anim, "dead".to_string()),
     );
     character_anims.insert(
         "dash".to_string(),
-        Animation::new(dash_anim, "dash".to_string(), 0.45),
+        Animation::new(dash_anim, "dash".to_string()),
     );
     character_anims.insert(
         "dash_back".to_string(),
-        Animation::new(dash_back_anim, "dash_back".to_string(), 0.35),
+        Animation::new(dash_back_anim, "dash_back".to_string()),
     );
     character_anims.insert(
         "walk".to_string(),
-        Animation::new(walk_anim, "walk".to_string(), 0.35),
+        Animation::new(walk_anim, "walk".to_string()),
     );
     character_anims.insert(
         "light_punch".to_string(),
-        Animation::new(light_punch_anim, "light_punch".to_string(), 0.35),
+        Animation::new(light_punch_anim, "light_punch".to_string()),
     );
     
     character_anims.insert(
         "medium_punch".to_string(),
-        Animation::new(medium_punch_anim, "medium_punch".to_string(), 0.35),
+        Animation::new(medium_punch_anim, "medium_punch".to_string()),
     );
     character_anims.insert(
         "heavy_punch".to_string(),
-        Animation::new(heavy_punch_anim, "heavy_punch".to_string(), 0.35),
+        Animation::new(heavy_punch_anim, "heavy_punch".to_string()),
     );
     character_anims.insert(
         "light_kick".to_string(),
-        Animation::new(light_kick_anim, "light_kick".to_string(), 0.35),
+        Animation::new(light_kick_anim, "light_kick".to_string()),
     );
     character_anims.insert(
         "airborne_light_kick".to_string(),
-        Animation::new(
-            airborne_light_kick_anim,
-            "airborne_light_kick".to_string(),
-            0.35,
-        ),
+        Animation::new(airborne_light_kick_anim,"airborne_light_kick".to_string()),
     );
     character_anims.insert(
         "crouched_light_kick".to_string(),
-        Animation::new(crouched_light_kick_anim,"crouched_light_kick".to_string(),0.35,
-        ),
+        Animation::new(crouched_light_kick_anim,"crouched_light_kick".to_string()),
     );
     character_anims.insert(
         "crouch".to_string(),
-        Animation::new(crouch_start_anim, "crouch".to_string(), 0.8),
+        Animation::new(crouch_start_anim, "crouch".to_string()),
     );
     character_anims.insert(
         "crouching".to_string(),
-        Animation::new(crouch_idle_anim, "crouching".to_string(), 0.35),
+        Animation::new(crouch_idle_anim, "crouching".to_string()),
     );
     character_anims.insert(
         "neutral_jump".to_string(),
-        Animation::new(neutral_jump_anim, "neutral_jump".to_string(), 0.35),
+        Animation::new(neutral_jump_anim, "neutral_jump".to_string()),
     );
     character_anims.insert(
         "directional_light_punch".to_string(),
-        Animation::new(special1_anim, "forward_light_punch".to_string(), 0.35),
+        Animation::new(special1_anim, "forward_light_punch".to_string()),
     );
     character_anims.insert(
         "directional_heavy_punch".to_string(),
-        Animation::new(special2_anim, "forward_heavy_punch".to_string(), 0.35),
+        Animation::new(special2_anim, "forward_heavy_punch".to_string()),
     );
 
     character_anims

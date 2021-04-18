@@ -43,6 +43,7 @@ pub struct Player<'a> {
     pub jump_initial_velocity: f64,
     pub extra_gravity: Option<f64>,
 
+    pub prev_velocity_x: i32,
     pub velocity_x: i32,
     pub dir_related_of_other: i32,
     pub state: PlayerState,
@@ -73,6 +74,7 @@ impl<'a> Player<'a> {
             velocity_y: 0.0,
             extra_gravity: None,
 
+            prev_velocity_x: 0,
             velocity_x: 0,
             dir_related_of_other: 0,
             state: PlayerState::Standing,
@@ -151,7 +153,7 @@ impl<'a> Player<'a> {
         if self.player_can_attack() {
             self.is_attacking = true;
             if let Some(attack) = character_anims.animations.get(&attack_animation) {
-                self.animator.play_once(attack, false);
+                self.animator.play_once(attack, 1.0, false);
             };
         }
     }
@@ -333,79 +335,82 @@ impl<'a> Player<'a> {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
 
-                    if self.velocity_x * -self.dir_related_of_other < 0 {
-                        self.animator
-                            .play(character_animation.get("walk").unwrap(), false);
-                    } else if self.velocity_x * -self.dir_related_of_other > 0 {
-                        if character_animation.contains_key("walk_back") {
+                    if self.velocity_x != self.prev_velocity_x {
+                        if self.velocity_x * -self.dir_related_of_other < 0 {
                             self.animator
-                                .play(character_animation.get("walk_back").unwrap(), false);
+                                .play(character_animation.get("walk").unwrap(), 1.0, false);
+                        } else if self.velocity_x * -self.dir_related_of_other > 0 {
+                            if character_animation.contains_key("walk_back") {
+                                self.animator
+                                    .play(character_animation.get("walk_back").unwrap(), 1.0, false);
+                            } else {
+                                self.animator
+                                    .play(character_animation.get("walk").unwrap(), 1.0, true);
+                            }
                         } else {
                             self.animator
-                                .play(character_animation.get("walk").unwrap(), true);
+                                .play(character_animation.get("idle").unwrap(), 1.0, false);
                         }
-                    } else {
-                        self.animator
-                            .play(character_animation.get("idle").unwrap(), false);
                     }
                 }
 
                 PlayerState::Dead => {
                     self.animator
-                        .play_once(character_animation.get("dead").unwrap(), false);
+                        .play_once(character_animation.get("dead").unwrap(), 1.0, false);
                 }
 
                 PlayerState::Jump => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), true);
+                        .play_once(character_animation.get("crouch").unwrap(), 3.0, true);
                 }
 
                 PlayerState::Jumping => {
                     self.animator
-                        .play_once(character_animation.get("neutral_jump").unwrap(), false);
+                        .play_once(character_animation.get("neutral_jump").unwrap(), 1.0, false);
                 }
 
                 PlayerState::Landing => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), false);
+                        .play_once(character_animation.get("crouch").unwrap(), 3.0, false);
                 }
 
                 PlayerState::UnCrouch => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), true);
+                        .play_once(character_animation.get("crouch").unwrap(), 1.0, true);
                 }
 
                 PlayerState::Crouch => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), false);
+                        .play_once(character_animation.get("crouch").unwrap(), 1.0, false);
                 }
 
                 PlayerState::Crouching => {
                     self.animator
-                        .play(character_animation.get("crouching").unwrap(), false);
+                        .play(character_animation.get("crouching").unwrap(), 1.0, false);
                 }
 
                 PlayerState::DashingForward => {
                     self.animator
-                        .play_once(character_animation.get("dash").unwrap(), false);
+                        .play_once(character_animation.get("dash").unwrap(), 1.0, false);
                 }
 
                 PlayerState::DashingBackward => {
                     self.animator
-                        .play_once(character_animation.get("dash_back").unwrap(), false);
+                        .play_once(character_animation.get("dash_back").unwrap(), 1.0, false);
                 }
                 PlayerState::Grab => {
                     self.animator
-                        .play_once(character_animation.get("grab").unwrap(), false);
+                        .play_once(character_animation.get("grab").unwrap(), 1.0, false);
                 }
                 PlayerState::Grabbed => {}
                 PlayerState::Hurt => {
                     self.animator
-                        .play_once(character_animation.get("take_damage").unwrap(), false);
+                        .play_once(character_animation.get("take_damage").unwrap(), 1.0, false);
                 }
             }
         }
 
+        self.prev_velocity_x = self.velocity_x;
         self.animator.update();
     }
 

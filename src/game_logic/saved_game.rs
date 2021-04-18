@@ -105,7 +105,7 @@ impl SavedGame {
                 .unwrap()
                 .name
                 .clone(),
-            p1_speed: game.player1.animator.current_animation.unwrap().speed,
+            p1_speed: game.player1.animator.speed,
             p1_length: game.player1.animator.current_animation.unwrap().length,
             p1_character: game.player1.character.clone(),
 
@@ -136,7 +136,7 @@ impl SavedGame {
                 .unwrap()
                 .name
                 .clone(),
-            p2_speed: game.player2.animator.current_animation.unwrap().speed,
+            p2_speed: game.player2.animator.speed,
             p2_length: game.player2.animator.current_animation.unwrap().length,
             p2_character: game.player2.character.clone(),
 

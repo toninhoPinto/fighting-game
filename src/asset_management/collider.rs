@@ -78,7 +78,7 @@ impl ColliderAnimation {
 
         let position_at_frame = self.pos_animations.get(&original_collider.name).unwrap();
 
-        match position_at_frame.get(&(player.animator.animation_index as i32)) {
+        match position_at_frame.get(&(player.animator.sprite_shown as i32)) {
             Some(transformation) => {
                 current_collider.enabled = true;
                 let offset_x = transformation.pos.x as f32 * 2.0;

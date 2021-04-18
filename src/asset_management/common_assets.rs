@@ -35,19 +35,19 @@ impl<'a> CommonAssets<'a> {
         sounds.insert("hit".to_string(), hit_sound);
         sounds.insert("miss".to_string(), miss_sound);
 
-        let hit_anim: Vec<Texture> =
+        let hit_anim: Vec<(i32, Texture)> =
             asset_loader::load_anim_from_dir(&texture_creator, "assets/vfx/normal_hit");
-        let hit2_anim: Vec<Texture> =
+        let hit2_anim: Vec<(i32, Texture)> =
             asset_loader::load_anim_from_dir(&texture_creator, "assets/vfx/special_hit");
 
         let mut vfx = HashMap::new();
         vfx.insert(
             "normal_hit".to_string(),
-            Animation::new(hit_anim, "normal_hit".to_string(), 0.35),
+            Animation::new(hit_anim, "normal_hit".to_string()),
         );
         vfx.insert(
             "special_hit".to_string(),
-            Animation::new(hit2_anim, "special_hit".to_string(), 0.35),
+            Animation::new(hit2_anim, "special_hit".to_string()),
         );
 
         CommonAssets {
