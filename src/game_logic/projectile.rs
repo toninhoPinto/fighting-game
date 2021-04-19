@@ -1,12 +1,13 @@
+use parry2d::na::Vector2;
 use sdl2::rect::{Point, Rect};
 use std::string::String;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Projectile {
-    pub position: Point,
+    pub position: Vector2<f64>,
     pub sprite: Rect,
     pub direction: Point,
-    pub target_position: Option<Point>,
+    pub target_position: Option<Vector2<f64>>,
     pub speed: i32,
     pub damage: i32,
     pub flipped: bool,
@@ -17,7 +18,7 @@ pub struct Projectile {
 }
 
 impl Projectile {
-    pub fn new(player_owner: i32, spawn_point: Point) -> Self {
+    pub fn new(player_owner: i32, spawn_point: Vector2<f64>) -> Self {
         Self {
             position: spawn_point,
             sprite: Rect::new(0, 0, 100, 110),
@@ -39,11 +40,11 @@ impl Projectile {
                 if self.position.x <= self.target_position.unwrap().x
                     && self.position.y <= self.target_position.unwrap().y
                 {
-                    self.position = self.position.offset(self.speed, 0);
+                    self.position += Vector2::new(self.speed as f64, 0.0);
                 }
             }
             None => {
-                self.position = self.position.offset(self.speed, 0);
+                self.position += Vector2::new(self.speed as f64, 0.0);
             }
         }
     }

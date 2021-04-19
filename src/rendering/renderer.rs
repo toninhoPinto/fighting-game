@@ -78,7 +78,7 @@ pub fn render<'a, 'b>(
 
     for projectile in projectiles.iter() {
         let screen_rect_2 =
-            world_to_screen(projectile.sprite, projectile.position, screen_res, camera);
+            world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, camera);
         if projectile.player_owner == 1 {
             canvas.copy_ex(
                 &p1_assets
@@ -155,7 +155,7 @@ fn render_player(
     camera: &Camera,
     debug: bool,
 ) {
-    let screen_rect = world_to_screen(player.character.sprite, player.position, screen_res, camera);
+    let screen_rect = world_to_screen(player.character.sprite, Point::new(player.position.x as i32, player.position.y as i32), screen_res, camera);
     //println!("world{:?} screen{:?}",player.position, screen_rect);
     let sprite = player.character.sprite;
     let is_flipped = player.flipped;

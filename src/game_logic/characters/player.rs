@@ -1,3 +1,4 @@
+use parry2d::na::Vector2;
 use sdl2::rect::Point;
 use sdl2::render::Texture;
 
@@ -35,7 +36,7 @@ impl fmt::Display for PlayerState {
 
 pub struct Player<'a> {
     pub id: i32,
-    pub position: Point,
+    pub position: Vector2<f64>,
     pub ground_height: i32,
     pub velocity_y: f64,
 
@@ -65,7 +66,7 @@ impl<'a> Player<'a> {
     pub fn new(id: i32, character: Character, spawn_position: Point, flipped: bool) -> Self {
         Self {
             id,
-            position: spawn_position,
+            position: Vector2::new(spawn_position.x as f64, spawn_position.y  as f64),
             ground_height: spawn_position.y,
 
             direction_at_jump_time: 0,
@@ -120,7 +121,9 @@ impl<'a> Player<'a> {
         !(self.is_attacking
             || self.is_airborne
             || self.knock_back_distance > 0
-            || self.state == PlayerState::Dead)
+            || self.state == PlayerState::Dead
+            || self.state == PlayerState::DashingForward
+            || self.state == PlayerState::DashingBackward)
     }
 
     pub fn player_state_change(&mut self, new_state: PlayerState) {
@@ -166,7 +169,7 @@ impl<'a> Player<'a> {
         let speed = if player_pushing.state == PlayerState::DashingForward {
             player_pushing.character.dash_speed / 2.0
         } else if player_pushing.is_airborne {
-            let offset = if (player_pushing.position.x - self.position.x).abs() < 10 {
+            let offset = if (player_pushing.position.x - self.position.x).abs() < 10.0 {
                 player_width as f64
             } else {
                 player_width as f64 - (player_pushing.position.x - self.position.x).abs() as f64
@@ -175,8 +178,7 @@ impl<'a> Player<'a> {
         } else {
             player_pushing.character.speed / 2.0
         };
-
-        self.position = self.position.offset((dir as f64 * speed * dt) as i32, 0);
+        self.position += Vector2::new(dir as f64 * speed * dt, 0.0);
     }
 
     pub fn update(
@@ -184,7 +186,7 @@ impl<'a> Player<'a> {
         camera: &Camera,
         dt: f64,
         character_width: i32,
-        opponent_position_x: i32,
+        opponent_position_x: f64,
     ) {
         if self.state == PlayerState::Jump {
             self.velocity_y = self.jump_initial_velocity / 0.5;
@@ -197,7 +199,7 @@ impl<'a> Player<'a> {
 
         //TODO im just moving by an int instead of multiplying by dt, not sure if this is bad
         if self.knock_back_distance != 0 {
-            self.position = self.position.offset(self.knock_back_distance, 0);
+            self.position += Vector2::new(self.knock_back_distance as f64, 0.0);
             self.knock_back_distance = 0;
         }
 
@@ -214,7 +216,7 @@ impl<'a> Player<'a> {
             } else {
                 self.ground_height
             };
-            let should_land = self.position.y < ground;
+            let should_land = self.position.y < ground as f64;
 
             if !should_land {
                 let position_offset_x = self.direction_at_jump_time as f64
@@ -224,16 +226,14 @@ impl<'a> Player<'a> {
 
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
-                self.position = self
-                    .position
-                    .offset(position_offset_x as i32, position_offset_y as i32);
+                self.position += Vector2::new(position_offset_x, position_offset_y);
             }
 
             //reset position back to ground height
-            let should_land = self.position.y < ground;
+            let should_land = self.position.y < ground as f64;
             if should_land {
                 println!("LANDED");
-                self.position.y = self.ground_height;
+                self.position.y = self.ground_height as f64;
                 self.velocity_y = self.character.jump_height;
                 if self.state == PlayerState::Jumping {
                     self.state = PlayerState::Landing;
@@ -245,39 +245,31 @@ impl<'a> Player<'a> {
 
         if self.player_can_move() {
             if self.state == PlayerState::Standing {
-                self.position.y = self.ground_height;
-                self.position = self.position.offset(
-                    (self.velocity_x as f64 * self.character.speed * dt * speed_mod) as i32,
-                    0,
-                );
+                self.position.y = self.ground_height as f64;
+                self.position += Vector2::new(self.velocity_x as f64 * self.character.speed * dt * speed_mod, 0.0);
             }
-
-            let is_dashing = self.state == PlayerState::DashingForward
-                || self.state == PlayerState::DashingBackward;
-            if is_dashing {
-                self.velocity_x = self.dir_related_of_other.signum();
-                let dash_speed = (self.dir_related_of_other.signum() as f64
-                    * self.character.dash_speed as f64
-                    * dt
-                    * speed_mod) as i32;
-                if self.state == PlayerState::DashingForward {
-                    self.position = self.position.offset(dash_speed, 0);
-                } else {
-                    self.position = self.position.offset(-dash_speed, 0);
+        } else {
+            match &self.animator.current_animation.unwrap().offsets {
+                Some(offsets) => {
+                    let offset = offsets[self.animator.sprite_shown as usize];
+                    self.position += Vector2::new( self.dir_related_of_other as f64 * offset.x * dt, offset.y * dt)
                 }
+                None => { }
             }
+            
         }
 
-        if opponent_position_x - self.position.x != 0 {
-            self.dir_related_of_other = (opponent_position_x - self.position.x).signum();
+        //TODO float wiht != seems dangerous
+        if opponent_position_x - self.position.x != 0.0 {
+            self.dir_related_of_other = ((opponent_position_x - self.position.x) as i32).signum() ;
         }
 
-        if (self.position.x - character_width) < camera.rect.x() {
-            self.position.x = camera.rect.x() + character_width;
+        if (self.position.x  as i32 - character_width) < camera.rect.x() {
+            self.position.x = (camera.rect.x() + character_width) as f64;
         }
 
-        if (self.position.x + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
-            self.position.x = camera.rect.x() + camera.rect.width() as i32 - character_width;
+        if (self.position.x as i32 + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
+            self.position.x = (camera.rect.x() + camera.rect.width() as i32 - character_width) as f64;
         }
     }
 
@@ -345,7 +337,7 @@ impl<'a> Player<'a> {
 
         if self.has_hit && self.state == PlayerState::Landing {
             self.has_hit = false;
-            self.position.y = self.ground_height;
+            self.position.y = self.ground_height as f64;
             self.is_attacking = false;
         }
 

@@ -1,3 +1,4 @@
+use parry2d::na::Vector2;
 use sdl2::rect::Point;
 
 use crate::asset_management::{collider::Collider, vfx::particle::Particle};
@@ -11,7 +12,7 @@ use super::{
 
 pub struct SavedGame {
     pub p1_id: i32,
-    pub p1_position: Point,
+    pub p1_position: Vector2<f64>,
     pub p1_ground_height: i32,
     pub p1_velocity_y: f64,
     pub p1_direction_at_jump_time: i32,
@@ -39,7 +40,7 @@ pub struct SavedGame {
     pub p1_character: Character,
 
     pub p2_id: i32,
-    pub p2_position: Point,
+    pub p2_position: Vector2<f64>,
     pub p2_ground_height: i32,
     pub p2_velocity_y: f64,
     pub p2_direction_at_jump_time: i32,

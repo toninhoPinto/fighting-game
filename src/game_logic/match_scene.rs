@@ -433,13 +433,14 @@ impl Scene for Match {
                     Some(point) => point.aabb.half_extents().x,
                     None => p1_width,
                 };
+
+                game.player1.state_update(&p1_assets);
                 game.player1.update(
                     &camera,
                     logic_timestep,
                     pushbox1_right_x as i32,
                     game.player2.position.x,
                 );
-                game.player1.state_update(&p1_assets);
 
                 let pushbox2_right_x = match game
                     .p2_colliders
@@ -451,13 +452,13 @@ impl Scene for Match {
                     None => p2_width,
                 };
 
+                game.player2.state_update(&p2_assets);
                 game.player2.update(
                     &camera,
                     logic_timestep,
                     pushbox2_right_x as i32,
                     game.player1.position.x,
                 );
-                game.player2.state_update(&p2_assets);
 
                 game.update_collider_p1(&p1_assets);
                 game.update_collider_p2(&p2_assets);

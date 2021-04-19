@@ -1,17 +1,20 @@
+use parry2d::na::Vector2;
 use sdl2::render::Texture;
 
 pub struct Animation<'a> {
     pub name: String,
     pub length: i32,
     pub sprites: Vec<(i32, Texture<'a>)>,
+    pub offsets: Option<Vec<(Vector2<f64>)>>,
 }
 
 impl<'a> Animation<'a> {
-    pub fn new(sprites: Vec<(i32, Texture<'a>)>, name: String) -> Self {
+    pub fn new(sprites: Vec<(i32, Texture<'a>)>, name: String, offsets: Option<Vec<Vector2<f64>>>) -> Self {
         Self {
             name,
             length: sprites[sprites.len() - 1].0,
             sprites,
+            offsets,
         }
     }
 }
@@ -71,8 +74,6 @@ impl<'a> Animator<'a> {
             self.is_finished = false;
             self.rewind = play_rewind;
             self.speed = speed;
-
-            println!("START anim: {:?}",  new_animation.name);
         }
     }
 

@@ -1,5 +1,6 @@
 use super::characters::{player::Player, Attack, AttackType};
 use sdl2::rect::Point;
+use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
@@ -130,7 +131,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         GameAction::LightPunch as i32,
     ];
     specials_inputs.push((light_combo_string, "light_special_attack".to_string()));
-    let light_projectile = Projectile::new(0, Point::new(120, 5));
+    let light_projectile = Projectile::new(0, Vector2::new(120.0, 5.0));
 
     let med_combo_string = vec![
         GameAction::Down as i32,
@@ -139,7 +140,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         GameAction::MediumPunch as i32,
     ];
     specials_inputs.push((med_combo_string, "med_special_attack".to_string()));
-    let med_projectile = Projectile::new(0, Point::new(120, 105));
+    let med_projectile = Projectile::new(0, Vector2::new(120.0, 105.0));
 
     let heavy_combo_string: Vec<i32> = vec![
         GameAction::Down as i32,
@@ -148,7 +149,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         GameAction::HeavyPunch as i32,
     ];
     specials_inputs.push((heavy_combo_string, "heavy_special_attack".to_string()));
-    let heavy_projectile = Projectile::new(0, Point::new(120, 205));
+    let heavy_projectile = Projectile::new(0, Vector2::new(120.0, 205.0));
 
     let mut effects_of_abilities = HashMap::new();
     effects_of_abilities.insert("light_special_attack".to_string(), light_projectile);
@@ -232,76 +233,76 @@ fn load_keetar_anims(
 
     character_anims.insert(
         "idle".to_string(),
-        Animation::new(idle_anim, "idle".to_string()),
+        Animation::new(idle_anim, "idle".to_string(), None),
     );
     character_anims.insert(
         "dash".to_string(),
-        Animation::new(dash_anim, "dash".to_string()),
+        Animation::new(dash_anim, "dash".to_string(), None),
     );
     character_anims.insert(
         "dash_back".to_string(),
-        Animation::new(dash_back_anim, "dash_back".to_string()),
+        Animation::new(dash_back_anim, "dash_back".to_string(), None),
     );
     character_anims.insert(
         "walk".to_string(),
-        Animation::new(walk_anim, "walk".to_string()),
+        Animation::new(walk_anim, "walk".to_string(), None),
     );
     character_anims.insert(
         "walk_back".to_string(),
-        Animation::new(walk_back_anim, "walk_back".to_string()),
+        Animation::new(walk_back_anim, "walk_back".to_string(), None),
     );
     character_anims.insert(
         "light_punch".to_string(),
-        Animation::new(light_punch_anim, "light_punch".to_string()),
+        Animation::new(light_punch_anim, "light_punch".to_string(), None),
     );
     character_anims.insert(
         "medium_punch".to_string(),
-        Animation::new(medium_punch_anim, "medium_punch".to_string()),
+        Animation::new(medium_punch_anim, "medium_punch".to_string(), None),
     );
     character_anims.insert(
         "heavy_punch".to_string(),
-        Animation::new(heavy_punch_anim, "heavy_punch".to_string()),
+        Animation::new(heavy_punch_anim, "heavy_punch".to_string(), None),
     );
     character_anims.insert(
         "light_kick".to_string(),
-        Animation::new(light_kick_anim, "light_kick".to_string()),
+        Animation::new(light_kick_anim, "light_kick".to_string(), None),
     );
     character_anims.insert(
         "crouch".to_string(),
-        Animation::new(crouch_start_anim, "crouch".to_string()),
+        Animation::new(crouch_start_anim, "crouch".to_string(), None),
     );
     character_anims.insert(
         "crouching".to_string(),
-        Animation::new(crouch_idle_anim, "crouching".to_string()),
+        Animation::new(crouch_idle_anim, "crouching".to_string(), None),
     );
     character_anims.insert(
         "neutral_jump".to_string(),
-        Animation::new(neutral_jump_anim, "neutral_jump".to_string()),
+        Animation::new(neutral_jump_anim, "neutral_jump".to_string(), None),
     );
     character_anims.insert(
         "directional_jump".to_string(),
-        Animation::new(directional_jump_anim, "directional_jump".to_string()),
+        Animation::new(directional_jump_anim, "directional_jump".to_string(), None),
     );
     character_anims.insert(
         "directional_light_punch".to_string(),
-        Animation::new(special1_anim, "directional_light_punch".to_string()),
+        Animation::new(special1_anim, "directional_light_punch".to_string(), None),
     );
     character_anims.insert(
         "grab".to_string(),
-        Animation::new(grab_anim, "grab".to_string()),
+        Animation::new(grab_anim, "grab".to_string(), None),
     );
     character_anims.insert(
         "dead".to_string(),
-        Animation::new(dead_anim, "dead".to_string()),
+        Animation::new(dead_anim, "dead".to_string(), None),
     );
     character_anims.insert(
         "take_damage".to_string(),
-        Animation::new(take_damage_anim, "take_damage".to_string()),
+        Animation::new(take_damage_anim, "take_damage".to_string(), None),
     );
 
     character_anims.insert(
         "light_special_attack".to_string(),
-        Animation::new(special2_anim, "light_special_attack".to_string()),
+        Animation::new(special2_anim, "light_special_attack".to_string(), None),
     );
 
     //TODO DUPLICATED DATA, i think the only solution is to have a separate texture manager and character anims becomes a hashmap<string, id on texturemanager>
@@ -315,11 +316,11 @@ fn load_keetar_anims(
     );
     character_anims.insert(
         "med_special_attack".to_string(),
-        Animation::new(special3_anim, "med_special_attack".to_string()),
+        Animation::new(special3_anim, "med_special_attack".to_string(), None),
     );
     character_anims.insert(
         "heavy_special_attack".to_string(),
-        Animation::new(special4_anim, "heavy_special_attack".to_string()),
+        Animation::new(special4_anim, "heavy_special_attack".to_string(), None),
     );
 
     character_anims
@@ -515,72 +516,80 @@ fn load_foxgirl_anims(
 
     character_anims.insert(
         "idle".to_string(),
-        Animation::new(idle_anim, "idle".to_string()),
+        Animation::new(idle_anim, "idle".to_string(), None),
     );
     character_anims.insert(
         "take_damage".to_string(),
-        Animation::new(take_damage_anim, "take_damage".to_string()),
+        Animation::new(take_damage_anim, "take_damage".to_string(), None),
     );
     character_anims.insert(
         "dead".to_string(),
-        Animation::new(dead_anim, "dead".to_string()),
+        Animation::new(dead_anim, "dead".to_string(), None),
     );
     character_anims.insert(
         "dash".to_string(),
-        Animation::new(dash_anim, "dash".to_string()),
+        Animation::new(dash_anim, "dash".to_string(), 
+        Some(vec![Vector2::new(0.0, 0.0), Vector2::new(4000.0, 0.0), Vector2::new(2000.0, 0.0), 
+            Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0)]))
     );
     character_anims.insert(
         "dash_back".to_string(),
-        Animation::new(dash_back_anim, "dash_back".to_string()),
+        Animation::new(dash_back_anim, "dash_back".to_string(), 
+        Some(vec![Vector2::new(0.0, 0.0), Vector2::new(-1000.0, 0.0), Vector2::new(-600.0, 0.0), Vector2::new(0.0, 0.0)])),
     );
     character_anims.insert(
         "walk".to_string(),
-        Animation::new(walk_anim, "walk".to_string()),
+        Animation::new(walk_anim, "walk".to_string(), None),
     );
     character_anims.insert(
         "light_punch".to_string(),
-        Animation::new(light_punch_anim, "light_punch".to_string()),
+        Animation::new(light_punch_anim, "light_punch".to_string(), None),
     );
     
     character_anims.insert(
         "medium_punch".to_string(),
-        Animation::new(medium_punch_anim, "medium_punch".to_string()),
+        Animation::new(medium_punch_anim, "medium_punch".to_string(), Some(vec![Vector2::new(100.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(50.0, 0.0), 
+        Vector2::new(1000.0, 0.0), Vector2::new(400.0, 0.0),Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), 
+        Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0),  Vector2::new(0.0, 0.0),  Vector2::new(0.0, 0.0),  Vector2::new(0.0, 0.0)])),
     );
     character_anims.insert(
         "heavy_punch".to_string(),
-        Animation::new(heavy_punch_anim, "heavy_punch".to_string()),
+        Animation::new(heavy_punch_anim, "heavy_punch".to_string(), None),
     );
     character_anims.insert(
         "light_kick".to_string(),
-        Animation::new(light_kick_anim, "light_kick".to_string()),
+        Animation::new(light_kick_anim, "light_kick".to_string(),
+        Some(vec![Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0),
+        Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), 
+        Vector2::new(0.0, 0.0)])),
     );
     character_anims.insert(
         "airborne_light_kick".to_string(),
-        Animation::new(airborne_light_kick_anim,"airborne_light_kick".to_string()),
+        Animation::new(airborne_light_kick_anim,"airborne_light_kick".to_string(), None),
     );
     character_anims.insert(
         "crouched_light_kick".to_string(),
-        Animation::new(crouched_light_kick_anim,"crouched_light_kick".to_string()),
+        Animation::new(crouched_light_kick_anim,"crouched_light_kick".to_string(), None),
     );
     character_anims.insert(
         "crouch".to_string(),
-        Animation::new(crouch_start_anim, "crouch".to_string()),
+        Animation::new(crouch_start_anim, "crouch".to_string(), None),
     );
     character_anims.insert(
         "crouching".to_string(),
-        Animation::new(crouch_idle_anim, "crouching".to_string()),
+        Animation::new(crouch_idle_anim, "crouching".to_string(), None),
     );
     character_anims.insert(
         "neutral_jump".to_string(),
-        Animation::new(neutral_jump_anim, "neutral_jump".to_string()),
+        Animation::new(neutral_jump_anim, "neutral_jump".to_string(), None),
     );
     character_anims.insert(
         "directional_light_punch".to_string(),
-        Animation::new(special1_anim, "forward_light_punch".to_string()),
+        Animation::new(special1_anim, "forward_light_punch".to_string(), None),
     );
     character_anims.insert(
         "directional_heavy_punch".to_string(),
-        Animation::new(special2_anim, "forward_heavy_punch".to_string()),
+        Animation::new(special2_anim, "forward_heavy_punch".to_string(), None),
     );
 
     character_anims

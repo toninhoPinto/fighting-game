@@ -43,11 +43,11 @@ impl<'a> CommonAssets<'a> {
         let mut vfx = HashMap::new();
         vfx.insert(
             "normal_hit".to_string(),
-            Animation::new(hit_anim, "normal_hit".to_string()),
+            Animation::new(hit_anim, "normal_hit".to_string(), None),
         );
         vfx.insert(
             "special_hit".to_string(),
-            Animation::new(hit2_anim, "special_hit".to_string()),
+            Animation::new(hit2_anim, "special_hit".to_string(), None),
         );
 
         CommonAssets {

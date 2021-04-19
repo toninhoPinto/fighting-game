@@ -7,9 +7,9 @@
         "request": "launch",
         "name": "Launch",
         "args": [],
-        "program": "${workspaceFolder}/target/debug/FightingGame",
+        "program": "${workspaceFolder}/target/debug/fighting_game",
         "windows": {
-            "program": "${workspaceFolder}/target/debug/FightingGame.exe"
+            "program": "${workspaceFolder}/target/debug/fighting_game.exe"
         },
         "cwd": "${workspaceFolder}",
         "stopOnEntry": false,
@@ -22,7 +22,7 @@
         "name": "(Windows) Launch",
         "type": "cppvsdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/target/debug/FightingGame.exe",
+        "program": "${workspaceFolder}/target/debug/fighting_game.exe",
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "sourceFileMap": {
