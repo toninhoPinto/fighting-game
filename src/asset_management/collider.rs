@@ -44,6 +44,7 @@ impl ColliderAnimation {
             }
         }
         current_colliders.truncate(self.colliders.len());
+        println!("{:?}", self.colliders.iter().map(|c| c.collider_type).collect::<Vec<ColliderType>>());
     }
 
     // update offsets by player position

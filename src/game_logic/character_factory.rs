@@ -33,7 +33,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
             215 * 2,
             200,
             4,
-            350.0,
+            250.0,
             650.0,
             650.0,
             700.0,

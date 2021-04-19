@@ -1,9 +1,9 @@
 use sdl2::rect::Point;
 use sdl2::render::Texture;
 
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
-use crate::game_logic::characters::Character;
+use crate::{asset_management::animation::Animation, game_logic::characters::Character};
 use crate::{
     asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets,
     rendering::camera::Camera,
@@ -281,6 +281,26 @@ impl<'a> Player<'a> {
         }
     }
 
+    fn walk_anims(&mut self, character_animation: &'a HashMap<String, Animation>) {
+
+        let walk_forward = self.velocity_x * -self.dir_related_of_other < 0;
+        let changed_dir = self.prev_velocity_x != self.velocity_x;
+
+        if walk_forward {
+            self.animator
+            .play_animation(character_animation.get("walk").unwrap(), 1.0, false, false, changed_dir);
+        } else {
+            
+            if character_animation.contains_key("walk_back") {
+                self.animator
+                    .play_animation(character_animation.get("walk_back").unwrap(), 1.0, false, false, changed_dir);
+            } else {
+                self.animator
+                    .play_animation(character_animation.get("walk").unwrap(), 1.0, true, false, changed_dir);
+            }
+        }
+    }
+
     pub fn state_update(&mut self, character_data: &'a CharacterAssets) {
         let character_animation = &character_data.animations;
 
@@ -327,30 +347,20 @@ impl<'a> Player<'a> {
             self.has_hit = false;
             self.position.y = self.ground_height;
             self.is_attacking = false;
-            println!("new reset");
         }
 
         if !self.is_attacking {
             match self.state {
                 PlayerState::Standing => {
                     self.flipped = self.dir_related_of_other > 0;
-
-                    if self.velocity_x != self.prev_velocity_x {
-                        if self.velocity_x * -self.dir_related_of_other < 0 {
+                    if self.velocity_x != 0 {
+                        self.walk_anims(character_animation);
+                    } else {
+                        if self.animator.current_animation.unwrap().name != "idle" {
                             self.animator
-                                .play(character_animation.get("walk").unwrap(), 1.0, false);
-                        } else if self.velocity_x * -self.dir_related_of_other > 0 {
-                            if character_animation.contains_key("walk_back") {
-                                self.animator
-                                    .play(character_animation.get("walk_back").unwrap(), 1.0, false);
-                            } else {
-                                self.animator
-                                    .play(character_animation.get("walk").unwrap(), 1.0, true);
-                            }
-                        } else {
-                            self.animator
-                                .play(character_animation.get("idle").unwrap(), 1.0, false);
+                            .play(character_animation.get("idle").unwrap(), 1.0, false);
                         }
+                        
                     }
                 }
 
@@ -370,6 +380,7 @@ impl<'a> Player<'a> {
                 }
 
                 PlayerState::Landing => {
+                    self.flipped = self.dir_related_of_other > 0;
                     self.animator
                         .play_once(character_animation.get("crouch").unwrap(), 3.0, false);
                 }

@@ -461,7 +461,6 @@ impl Scene for Match {
 
                 game.update_collider_p1(&p1_assets);
                 game.update_collider_p2(&p2_assets);
-
                 detect_push(
                     &mut game.player1,
                     &mut game.player2,
@@ -504,7 +503,7 @@ impl Scene for Match {
                     None => {}
                 }
 
-                match detect_hit(game.player2, &game.p1_colliders, &game.p2_colliders) {
+                match detect_hit(game.player2, &game.p2_colliders, &game.p1_colliders) {
                     Some(point) => {
                         hit_opponent(
                             &general_assets, 
@@ -537,7 +536,6 @@ impl Scene for Match {
                     }
                     None => {}
                 }
-
                 game.update_vfx(&general_assets);
 
                 game.update_projectiles();

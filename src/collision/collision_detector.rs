@@ -9,7 +9,7 @@ use crate::game_logic::characters::player::Player;
 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
 
 pub fn detect_hit(player_hitting: &mut Player, player_hitting_colliders: &Vec<Collider>, player_hit_colliders: &Vec<Collider>) -> Option<Point<Real>>{
-
+    
     if !player_hitting.has_hit {
         for collider in player_hitting_colliders
             .iter()

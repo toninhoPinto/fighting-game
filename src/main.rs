@@ -26,13 +26,11 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//Finish making animations having a frame duration per sprite + having speed modifiers depending on the situation not per animation
-//backwalking with makoto seem to have some kind of overflow due to usize i believe
+
 //make character position into a float, and only round it when rendering, this means i can use dt for dashes and alike
-//colliders stop working
-//fix init colliders, its a mess
+//add a vector that has per-sprite a delta_X and delta-Y to have animations that move and dash -> use only for attacks and dashes so make vector optional
 
-
+//mash attacks like E.Honda palm strikes 
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
 //make dash have movcement only during some frames and not during others + lock in position
@@ -53,6 +51,7 @@ use input::translated_inputs::TranslatedInput;
 //projectile with a specific target location
 //specific projectile only live if keep holding button
 //VFX sprites are not centered, hard to place
+//fix init colliders, its a mess
 
 //add menu to change the controllers for each player
 //add menu to change the controller mapping of keys/buttons

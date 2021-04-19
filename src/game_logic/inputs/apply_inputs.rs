@@ -195,7 +195,6 @@ fn check_attack_inputs<'a, 'b>(
         player.is_attacking = false;
     } else {
         player.change_special_meter(0.1);
-        println!("{:?}", player.state);
         if !player.is_airborne && !(player.state == PlayerState::Crouching || player.state == PlayerState::Crouch) {
             player.attack(character_anims, animation_name);
         } else if player.is_airborne {

@@ -1,7 +1,7 @@
 use sdl2::{pixels::Color, rect::Rect};
 
 use crate::asset_management::{
-    collider::Collider, common_assets::CommonAssets, vfx::particle::Particle,
+    collider::{Collider, ColliderType}, common_assets::CommonAssets, vfx::particle::Particle,
 };
 
 use super::{
@@ -70,13 +70,13 @@ impl<'a> Game<'a> {
     pub fn update_vfx(&mut self, assets: &CommonAssets) {
         for i in 0..self.hit_vfx.len() {
             if self.hit_vfx[i].active {
-                self.hit_vfx[i].animation_index += 1; // multiply by dt and by animation speed i think, check animator code
+                self.hit_vfx[i].animation_index += 1;
                 if self.hit_vfx[i].animation_index
                     >= assets
                         .hit_effect_animations
                         .get(&self.hit_vfx[i].name)
                         .unwrap()
-                        .length
+                        .sprites.len() as i32
                 {
                     self.hit_vfx[i].active = false;
                     self.hit_vfx[i].animation_index = 0;
@@ -103,6 +103,7 @@ impl<'a> Game<'a> {
         let collider_animation2 = p2_assets
             .collider_animations
             .get(&self.player2.animator.current_animation.unwrap().name);
+              
         if collider_animation2.is_some() {
             //TODO ISTO VAI DAR PROBLEMAS MAIS TARDE OU MAIS CEDO,
             if collider_animation2.unwrap().colliders.len() != self.p2_colliders.len() {
