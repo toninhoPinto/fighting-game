@@ -26,10 +26,6 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-
-//make character position into a float, and only round it when rendering, this means i can use dt for dashes and alike
-//add a vector that has per-sprite a delta_X and delta-Y to have animations that move and dash -> use only for attacks and dashes so make vector optional
-
 //mash attacks like E.Honda palm strikes 
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
