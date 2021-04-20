@@ -338,6 +338,7 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             push_back: 5,
             attack_move: 10,
             attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Normal
         },
     );
 
