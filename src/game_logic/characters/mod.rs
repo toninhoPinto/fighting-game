@@ -22,10 +22,16 @@ pub struct Character {
     pub jump_distance: f64,
 }
 
-pub enum AttackType {
+pub enum AttackHeight {
     LOW,
     MIDDLE,
     HIGH,
+}
+
+pub enum AttackType {
+    Normal,
+    Special,
+    Ultra,
 }
 
 pub struct Attack {
@@ -34,6 +40,7 @@ pub struct Attack {
     pub stun_on_block: i32,
     pub push_back: i32,
     pub attack_move: i32,
+    pub attack_height: AttackHeight,
     pub attack_type: AttackType,
 }
 

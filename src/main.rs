@@ -28,11 +28,12 @@ use input::translated_inputs::TranslatedInput;
 //TODO list
 //decide which attacks can cancel into which 
 //how to handle light kick pivot weirdness (her left feet should stay in the same place)
+//add input buffer
 
 //mash attacks like E.Honda palm strikes 
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
-//make dash have movcement only during some frames and not during others + lock in position
+//make dash have movement only during some frames and not during others + lock in position
 //apply attacks struct values (knockback, hitstun, etc)
 //add movement to each attack
 //(e.g: if you jump and kick on the right side of the opponent, he should be pushed to the right)

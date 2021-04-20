@@ -1,4 +1,4 @@
-use super::characters::{player::Player, Attack, AttackType};
+use super::characters::{Attack, AttackHeight, AttackType, player::Player};
 use sdl2::rect::Point;
 use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
@@ -337,7 +337,7 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_block: 4,
             push_back: 5,
             attack_move: 10,
-            attack_type: AttackType::MIDDLE,
+            attack_height: AttackHeight::MIDDLE,
         },
     );
 
@@ -603,7 +603,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 4,
             push_back: 5,
             attack_move: 10,
-            attack_type: AttackType::MIDDLE,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Normal
         },
     );
 
@@ -615,7 +616,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 4,
             push_back: 30,
             attack_move: 10,
-            attack_type: AttackType::LOW,
+            attack_height: AttackHeight::LOW,
+            attack_type: AttackType::Normal
         },
     );
 
@@ -627,7 +629,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 4,
             push_back: 30,
             attack_move: 10,
-            attack_type: AttackType::HIGH,
+            attack_height: AttackHeight::HIGH,
+            attack_type: AttackType::Normal
         },
     );
 
@@ -639,7 +642,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 4,
             push_back: 5,
             attack_move: 10,
-            attack_type: AttackType::MIDDLE,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Normal
         },
     );
 
@@ -651,7 +655,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 4,
             push_back: 5,
             attack_move: 10,
-            attack_type: AttackType::MIDDLE,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Normal
         },
     );
 
@@ -663,7 +668,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 14,
             push_back: 10,
             attack_move: 10,
-            attack_type: AttackType::MIDDLE,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Normal
         },
     );
 
