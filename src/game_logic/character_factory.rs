@@ -558,10 +558,7 @@ fn load_foxgirl_anims(
     );
     character_anims.insert(
         "light_kick".to_string(),
-        Animation::new(light_kick_anim, "light_kick".to_string(),
-        Some(vec![Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0),
-        Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), 
-        Vector2::new(0.0, 0.0)])),
+        Animation::new(light_kick_anim, "light_kick".to_string(),None),
     );
     character_anims.insert(
         "airborne_light_kick".to_string(),

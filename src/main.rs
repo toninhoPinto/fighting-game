@@ -26,6 +26,9 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//decide which attacks can cancel into which 
+//how to handle light kick pivot weirdness (her left feet should stay in the same place)
+
 //mash attacks like E.Honda palm strikes 
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
