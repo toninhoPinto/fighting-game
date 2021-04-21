@@ -7,13 +7,6 @@ use crate::{
 use std::collections::VecDeque;
 use std::string::String;
 
-pub fn record_input(last_inputs: &mut VecDeque<GameAction>, input: GameAction) {
-    last_inputs.push_back(input);
-    if last_inputs.len() > 5 {
-        last_inputs.pop_front();
-    }
-}
-
 pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedInput, bool); 4]) {
     //in case you press forward, then press backwards, and then release backwards
     //since forward should still be applied
@@ -24,12 +17,6 @@ pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedIn
     } else {
         player.velocity_x = 0;
     }
-
-    //TODO FIX action_history based on current_directional_state
-    //in the case where you jump over character making the "forward is pressed" state invalid
-    //and change to backwards
-    //horizontal right
-    //------------------------------------
 
     if directional_state[2].1 {
         player.jump();
@@ -224,6 +211,7 @@ fn check_special_inputs(
     //if find match, play animation and remove that input from array
     let cleaned_history: VecDeque<i32> =
         action_history.iter().cloned().filter(|&z| z > 0).collect();
+    println!("{:?}", action_history);
     for possible_combo in character_anims.input_combination_anims.iter() {
         let size_of_combo = possible_combo.0.len();
         let size_of_history = cleaned_history.len();
@@ -239,7 +227,7 @@ fn check_special_inputs(
                     }
 
                     if j == size_of_combo {
-                        player.change_special_meter(-1.0); //TODO change special meter price per ability
+                        println!("SPECIAL ATTACK");
                         return Some(possible_combo.1.clone());
                     }
                 }

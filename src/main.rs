@@ -26,11 +26,13 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+
+//organize the character factory methods because its very messy
+//import attack animation frame duration
 //decide which attacks can cancel into which 
-//how to handle light kick pivot weirdness (her left feet should stay in the same place)
 //add input buffer- decide if multiple buffers for different things or not
 
-//mash attacks like E.Honda palm strikes 
+
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
 //apply attacks struct values (knockback, hitstun, etc)

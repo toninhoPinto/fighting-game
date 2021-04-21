@@ -358,6 +358,45 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
         },
     );
 
+    attacks.insert(
+        "light_special_attack".to_string(),
+        Attack {
+            damage: 0,
+            stun_on_hit: 0,
+            stun_on_block: 0,
+            push_back: 0,
+            attack_move: 0,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Special
+        },
+    );
+
+    attacks.insert(
+        "med_special_attack".to_string(),
+        Attack {
+            damage: 0,
+            stun_on_hit: 0,
+            stun_on_block: 0,
+            push_back: 0,
+            attack_move: 0,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Special
+        },
+    );
+
+    attacks.insert(
+        "heavy_special_attack".to_string(),
+        Attack {
+            damage: 0,
+            stun_on_hit: 0,
+            stun_on_block: 0,
+            push_back: 0,
+            attack_move: 0,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Special
+        },
+    );
+
     attacks
 }
 
@@ -460,7 +499,14 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
     directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
 
     let effects_of_abilities = HashMap::new();
-    let specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
+    let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
+    let spam_light_punch_inputs = vec![
+        GameAction::LightPunch as i32,
+        GameAction::LightPunch as i32,
+        GameAction::LightPunch as i32,
+    ];
+    specials_inputs.push((spam_light_punch_inputs, "spam_light_punch".to_string()));
+
     let projectile_anims = HashMap::new();
 
     CharacterAssets {
@@ -525,6 +571,10 @@ fn load_foxgirl_anims(
     let special2_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/specials/directionals/forward_heavy_punch",
+    );
+    let spam_light_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+        &texture_creator,
+        "assets/foxgirl/standing/attacks/specials/spam/spam_light_punch",
     );
     let dash_anim: Vec<(i32, Texture)> =
         asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/dash");
@@ -608,6 +658,10 @@ fn load_foxgirl_anims(
     character_anims.insert(
         "directional_heavy_punch".to_string(),
         Animation::new(special2_anim, "forward_heavy_punch".to_string(), None),
+    );
+    character_anims.insert(
+        "spam_light_punch".to_string(),
+        Animation::new(spam_light_punch_anim, "spam_light_punch".to_string(),None),
     );
 
     character_anims

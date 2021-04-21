@@ -4,7 +4,7 @@ use sdl2::render::Texture;
 
 use std::{collections::HashMap, fmt};
 
-use crate::{asset_management::animation::Animation, game_logic::characters::Character};
+use crate::{asset_management::animation::Animation, game_logic::characters::{AttackType, Character}};
 use crate::{
     asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets,
     rendering::camera::Camera,
@@ -156,16 +156,24 @@ impl<'a> Player<'a> {
         self.knock_back_distance = amount;
     }
 
-    pub fn attack(&mut self, character_anims: &'a CharacterAssets, attack_animation: String) {
+    pub fn attack(&mut self, character_assets: &'a CharacterAssets, attack_animation: String) {
         println!("ATTACK {}", attack_animation);
         if self.player_can_attack() {
             self.is_attacking = true;
-            let special_effect = character_anims.attack_effects.get(&attack_animation);
+            let special_effect = character_assets.attack_effects.get(&attack_animation);
             if special_effect.is_some() {
                 self.curr_special_effect = special_effect;
             }
-            if let Some(attack) = character_anims.animations.get(&attack_animation) {
-                self.animator.play_once(attack, 1.0, false);
+
+            if let Some(attack) = character_assets.attacks.get(&attack_animation) {
+                if attack.attack_type == AttackType::Special {
+                    self.change_special_meter(-1.0); 
+                }
+            }
+
+            if let Some(attack_anim) = character_assets.animations.get(&attack_animation) {
+                // TODO change special meter price per ability
+                self.animator.play_once(attack_anim, 1.0, false);
             };
         }
     }

@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::input::translated_inputs::TranslatedInput;
 
-const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 20;
+const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 60;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct AllInputManagement {

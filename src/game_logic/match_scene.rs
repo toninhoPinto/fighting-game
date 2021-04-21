@@ -423,6 +423,9 @@ impl Scene for Match {
 
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
+
+                println!("{:?}", self.p2_inputs.action_history);
+
                 let pushbox1_right_x = match game
                     .p1_colliders
                     .iter()

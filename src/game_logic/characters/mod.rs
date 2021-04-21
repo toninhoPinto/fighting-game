@@ -32,6 +32,7 @@ pub enum AttackHeight {
     HIGH,
 }
 
+#[derive(PartialEq)]
 pub enum AttackType {
     Normal,
     Special,
