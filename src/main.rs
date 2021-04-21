@@ -33,9 +33,7 @@ use input::translated_inputs::TranslatedInput;
 //mash attacks like E.Honda palm strikes 
 //add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
-//make dash have movement only during some frames and not during others + lock in position
 //apply attacks struct values (knockback, hitstun, etc)
-//add movement to each attack
 //(e.g: if you jump and kick on the right side of the opponent, he should be pushed to the right)
 //make an enum for with startup|active|recovery and use code to detect a hitbox and switch to active, and switch back to recovery ´
 //this is important to be able to cancel the recovery of attacks
