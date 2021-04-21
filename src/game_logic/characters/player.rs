@@ -12,6 +12,8 @@ use crate::{
 
 use crate::asset_management::animation::Animator;
 
+use super::Ability;
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PlayerState {
     Standing,
@@ -60,6 +62,7 @@ pub struct Player<'a> {
     pub character: Character,
 
     pub mid_jump_pos: f64,
+    pub curr_special_effect: Option<&'a(i32, Ability)>
 }
 
 impl<'a> Player<'a> {
@@ -88,6 +91,8 @@ impl<'a> Player<'a> {
             knock_back_distance: 0,
             flipped,
             character,
+
+            curr_special_effect: None,
         }
     }
 
@@ -155,6 +160,10 @@ impl<'a> Player<'a> {
         println!("ATTACK {}", attack_animation);
         if self.player_can_attack() {
             self.is_attacking = true;
+            let special_effect = character_anims.attack_effects.get(&attack_animation);
+            if special_effect.is_some() {
+                self.curr_special_effect = special_effect;
+            }
             if let Some(attack) = character_anims.animations.get(&attack_animation) {
                 self.animator.play_once(attack, 1.0, false);
             };

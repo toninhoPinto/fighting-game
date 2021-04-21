@@ -1,7 +1,7 @@
 use sdl2::{pixels::Color, rect::Rect};
 
 use crate::asset_management::{
-    collider::{Collider, ColliderType}, common_assets::CommonAssets, vfx::particle::Particle,
+    collider::Collider, common_assets::CommonAssets, vfx::particle::Particle,
 };
 
 use super::{
@@ -119,5 +119,9 @@ impl<'a> Game<'a> {
         for i in 0..self.projectiles.len() {
             self.projectiles[i].update();
         }
+    }
+
+    pub fn update_specials(&mut self, p1_asset: &CharacterAssets) {
+
     }
 }

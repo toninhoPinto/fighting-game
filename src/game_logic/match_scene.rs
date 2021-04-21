@@ -1,4 +1,3 @@
-use parry2d::math::Real;
 use sdl2::{rect::Rect, render::TextureQuery};
 use std::{
     collections::{HashMap, VecDeque},
@@ -27,7 +26,7 @@ use crate::{
     GameStateData,
 };
 
-use super::{character_factory::CharacterAssets, characters::player::Player, inputs::apply_inputs::apply_input_state};
+use super::{character_factory::CharacterAssets, characters::{keetar, player::Player}, inputs::apply_inputs::apply_input_state};
 use super::inputs::process_inputs::{
     released_joystick_reset_directional_state, update_directional_state,
 };
@@ -460,6 +459,20 @@ impl Scene for Match {
                     game.player1.position.x,
                 );
 
+                if let Some(ability) = game.player1.curr_special_effect {
+                    if ability.0 == game.player1.animator.sprite_shown {
+                        ability.1(&mut game, 1, &p1_assets);
+                        game.player1.curr_special_effect = None;
+                    }
+                }
+
+                if let Some(ability) = game.player2.curr_special_effect {
+                    if ability.0 == game.player2.animator.sprite_shown {
+                        ability.1(&mut game, 2, &p2_assets);
+                        game.player2.curr_special_effect = None;
+                    }
+                }
+
                 game.update_collider_p1(&p1_assets);
                 game.update_collider_p2(&p2_assets);
                 detect_push(
@@ -485,7 +498,7 @@ impl Scene for Match {
                             .1
                             .query();
 
-                        let texture_width = width * 2;
+                        let texture_width =width * 2;
                         let texture_height = height * 2;
                         //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
                         //this will have issues with other vfx
@@ -510,7 +523,6 @@ impl Scene for Match {
                             &general_assets, 
                             &mut game.player2, &mut game.player1, 
                             &p2_assets, &p1_assets);
-
 
                         let TextureQuery { width, height, .. } = general_assets
                             .hit_effect_animations

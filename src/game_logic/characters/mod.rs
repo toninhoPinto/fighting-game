@@ -1,9 +1,13 @@
 use sdl2::rect::Rect;
 use std::string::String;
 
+use super::{character_factory::CharacterAssets, game::Game};
+
 pub mod foxgirl;
 pub mod keetar;
 pub mod player;
+
+pub(crate) type Ability = fn(&mut Game, i32, &CharacterAssets) -> ();
 
 #[derive(Debug, Clone)]
 pub struct Character {

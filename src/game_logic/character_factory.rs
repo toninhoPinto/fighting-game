@@ -1,4 +1,4 @@
-use super::characters::{Attack, AttackHeight, AttackType, player::Player};
+use super::{characters::{Ability, Attack, AttackHeight, AttackType, keetar, player::Player}, game::Game};
 use sdl2::rect::Point;
 use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
@@ -19,6 +19,8 @@ pub struct CharacterAssets<'a> {
     pub effects: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<(i32, Texture<'a>)>>,
     pub collider_animations: HashMap<String, ColliderAnimation>,
+    pub attack_points: HashMap<String, Point>,
+    pub attack_effects: HashMap<String, (i32, Ability)>,
     pub attacks: HashMap<String, Attack>,
 }
 
@@ -116,6 +118,16 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations
 }
 
+fn load_keetar_abilities() -> HashMap<String, (i32, Ability)> {
+    let mut abilities = HashMap::new();
+
+    abilities.insert("light_special_attack".to_string(),  (3, keetar::spawn_note as Ability));
+    abilities.insert("med_special_attack".to_string(),  (3, keetar::spawn_note as Ability));
+    abilities.insert("heavy_special_attack".to_string(),  (3, keetar::spawn_note as Ability));
+
+    abilities
+}
+
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
     let anims = load_keetar_anims(texture_creator);
 
@@ -163,6 +175,8 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
     );
     projectile_anims.insert("note".to_string(), projectile_anim);
 
+    //TODO CHANGE THIS
+    
     CharacterAssets {
         animations: anims,
         input_combination_anims: specials_inputs,
@@ -171,6 +185,8 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         projectile_animation: projectile_anims,
         collider_animations: load_keetar_colliders(),
         attacks: load_keetar_attacks(),
+        attack_points: HashMap::new(),
+        attack_effects: load_keetar_abilities(),
     }
 }
 
@@ -455,6 +471,8 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
         projectile_animation: projectile_anims,
         collider_animations: load_foxgirl_colliders(),
         attacks: load_foxgirl_attacks(),
+        attack_points: HashMap::new(),
+        attack_effects: HashMap::new(),
     }
 }
 
