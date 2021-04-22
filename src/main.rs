@@ -27,8 +27,7 @@ use input::translated_inputs::TranslatedInput;
 
 //TODO list
 
-//organize the character factory methods because its very messy
-//import attack animation frame duration
+//import attack animation frame duration -> can use mainline, each key has a time: in miliseconds i assume
 //decide which attacks can cancel into which 
 //add input buffer- decide if multiple buffers for different things or not
 

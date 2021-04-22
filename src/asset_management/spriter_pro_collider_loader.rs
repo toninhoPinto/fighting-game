@@ -11,6 +11,11 @@ use super::{
 };
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Wrapper {
+    pub entity: Vec<BaseJson>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BaseJson {
     pub animation: Vec<Animation>,
     pub obj_info: Vec<ObjectInfo>,
@@ -57,8 +62,8 @@ pub struct HitboxKeyframes {
     pub id: u8,
     pub name: String,
     pub key: Vec<KeyframeHitbox>,
-    pub obj: u8,
-    pub object_type: String,
+    pub obj: Option<u8>,
+    pub object_type: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -70,8 +75,8 @@ pub struct KeyframeHitbox {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ObjectHitbox {
-    pub x: f64,
-    pub y: f64,
+    pub x: Option<f64>,
+    pub y: Option<f64>,
     pub scale_x: Option<f64>,
     pub scale_y: Option<f64>,
 }
@@ -80,10 +85,10 @@ pub fn load_hitboxes(
     file: std::string::String,
 ) -> (Vec<Collider>, HashMap<String, HashMap<i32, Transformation>>) {
     let json_string = fs::read_to_string(file).unwrap();
-    let v = serde_json::from_str::<BaseJson>(&json_string).unwrap();
+    let v = &serde_json::from_str::<Wrapper>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;
     let mainline = &v.animation[0].mainline;
-    let boxes = v.obj_info;
+    let boxes = &v.obj_info;
 
     let mut colliders: Vec<Collider> = Vec::new();
     for j in 0..boxes.len() {
@@ -98,14 +103,20 @@ pub fn load_hitboxes(
             ColliderType::Hurtbox
         };
 
+        let mut name = boxes[j].name.clone();
+        let split_offset = name.find('_').unwrap_or(name.len());
+
         let collider = Collider {
             aabb: AABB::new(min, max),
             collider_type,
-            name: boxes[j].name.clone(),
+            name: name.drain(..split_offset).collect(),
             enabled: false,
         };
         colliders.push(collider);
     }
+
+    //TODO this is only used for the render to show the pushbox under the other colliders, it does not change the hit detection
+    colliders.sort_by(|a, b| a.collider_type.partial_cmp(&b.collider_type).unwrap());
 
     let mut time_keys = HashMap::new();
     for i in 0..mainline.key.len() {
@@ -119,9 +130,10 @@ pub fn load_hitboxes(
 
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
     let mut final_transformations: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
-    for i in 0..timeline.len() {
+    for i in 1..timeline.len() {
         //for each  collider object
-        let name = timeline[i].name.clone();
+        let mut name = timeline[i].name.clone();
+        let split_offset = name.find('_').unwrap_or(name.len());
         let mut transformations_of_frame: HashMap<i32, Transformation> = HashMap::new();
 
         for j in 0..timeline[i].key.len() {
@@ -145,8 +157,8 @@ pub fn load_hitboxes(
             };
             let transformation_frame = Transformation {
                 pos: Point::new(
-                    timeline[i].key[j].object.x as i32,
-                    timeline[i].key[j].object.y as i32,
+                    timeline[i].key[j].object.x.unwrap() as i32,
+                    timeline[i].key[j].object.y.unwrap() as i32,
                 ),
                 scale: (scale_x as f32, scale_y as f32),
             };
@@ -156,7 +168,7 @@ pub fn load_hitboxes(
             }
         }
 
-        final_transformations.insert(name, transformations_of_frame);
+        final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
     }
 
     (colliders, final_transformations)

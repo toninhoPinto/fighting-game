@@ -1,4 +1,4 @@
-use super::{characters::{Ability, Attack, AttackHeight, AttackType, keetar, player::Player}, game::Game};
+use super::{characters::{Ability, Attack, AttackHeight, AttackType, keetar, player::Player}};
 use sdl2::rect::Point;
 use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
@@ -16,7 +16,7 @@ pub struct CharacterAssets<'a> {
     pub animations: HashMap<String, Animation<'a>>,
     pub input_combination_anims: Vec<(Vec<i32>, String)>,
     pub directional_variation_anims: Vec<((GameAction, GameAction), String)>,
-    pub effects: HashMap<String, Projectile>,
+    pub projectiles: HashMap<String, Projectile>,
     pub projectile_animation: HashMap<String, Vec<(i32, Texture<'a>)>>,
     pub collider_animations: HashMap<String, ColliderAnimation>,
     pub attack_points: HashMap<String, Point>,
@@ -79,13 +79,13 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
 
     collider_animations.insert(
         "idle".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "keetar")),
+        asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.scon", "keetar")),
     );
     collider_animations.insert(
         "light_punch".to_string(),
         asset_loader::load_hitboxes(
             format!(
-                "assets/{}/standing/attacks/light_punch/light_punch.json",
+                "assets/{}/standing/attacks/light_punch/light_punch.scon",
                 "keetar"
             )
             .to_string(),
@@ -93,24 +93,24 @@ fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
     );
     collider_animations.insert(
         "walk".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/walk/walk.json", "keetar")),
+        asset_loader::load_hitboxes(format!("assets/{}/standing/walk/walk.scon", "keetar")),
     );
     collider_animations.insert(
         "walk_back".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/walk_back/walk_back.json",
+            "assets/{}/standing/walk_back/walk_back.scon",
             "keetar"
         )),
     );
     collider_animations.insert(
         "dash".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/dash/dash.json", "keetar")),
+        asset_loader::load_hitboxes(format!("assets/{}/standing/dash/dash.scon", "keetar")),
     );
 
     collider_animations.insert(
         "neutral_jump".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/neutral_jump/jump.json",
+            "assets/{}/standing/neutral_jump/jump.scon",
             "keetar"
         )),
     );
@@ -128,13 +128,15 @@ fn load_keetar_abilities() -> HashMap<String, (i32, Ability)> {
     abilities
 }
 
-fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
-    let anims = load_keetar_anims(texture_creator);
-
+fn load_keetar_directional_inputs() -> Vec<((GameAction, GameAction), String)> {
     let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
     let directional_string = (GameAction::Forward, GameAction::LightPunch);
     directional_inputs.push((directional_string, "directional_light_punch".to_string()));
 
+    directional_inputs
+}
+
+fn load_keetar_special_inputs() -> Vec<(Vec<i32>, String)> {
     let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
     let light_combo_string: Vec<i32> = vec![
         GameAction::Down as i32,
@@ -143,8 +145,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         GameAction::LightPunch as i32,
     ];
     specials_inputs.push((light_combo_string, "light_special_attack".to_string()));
-    let light_projectile = Projectile::new(0, Vector2::new(120.0, 5.0));
-
+    
     let med_combo_string = vec![
         GameAction::Down as i32,
         GameAction::Down as i32 + GameAction::Forward as i32,
@@ -152,7 +153,6 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         GameAction::MediumPunch as i32,
     ];
     specials_inputs.push((med_combo_string, "med_special_attack".to_string()));
-    let med_projectile = Projectile::new(0, Vector2::new(120.0, 105.0));
 
     let heavy_combo_string: Vec<i32> = vec![
         GameAction::Down as i32,
@@ -161,13 +161,23 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
         GameAction::HeavyPunch as i32,
     ];
     specials_inputs.push((heavy_combo_string, "heavy_special_attack".to_string()));
+
+    specials_inputs
+}
+
+fn load_keetar_special_abilities() -> HashMap<String, Projectile> {
+    let mut effects_of_abilities = HashMap::new();
+    let light_projectile = Projectile::new(0, Vector2::new(120.0, 5.0));
+    let med_projectile = Projectile::new(0, Vector2::new(120.0, 105.0));
     let heavy_projectile = Projectile::new(0, Vector2::new(120.0, 205.0));
 
-    let mut effects_of_abilities = HashMap::new();
     effects_of_abilities.insert("light_special_attack".to_string(), light_projectile);
     effects_of_abilities.insert("med_special_attack".to_string(), med_projectile);
     effects_of_abilities.insert("heavy_special_attack".to_string(), heavy_projectile);
+    effects_of_abilities
+}
 
+fn load_keetar_projectile_anims<'a>(texture_creator: &'a TextureCreator<WindowContext>) -> HashMap<String, Vec<(i32, Texture<'a>)>> {
     let mut projectile_anims = HashMap::new();
     let projectile_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
         &texture_creator,
@@ -175,19 +185,7 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
     );
     projectile_anims.insert("note".to_string(), projectile_anim);
 
-    //TODO CHANGE THIS
-    
-    CharacterAssets {
-        animations: anims,
-        input_combination_anims: specials_inputs,
-        directional_variation_anims: directional_inputs,
-        effects: effects_of_abilities,
-        projectile_animation: projectile_anims,
-        collider_animations: load_keetar_colliders(),
-        attacks: load_keetar_attacks(),
-        attack_points: HashMap::new(),
-        attack_effects: load_keetar_abilities(),
-    }
+    projectile_anims
 }
 
 fn load_keetar_anims(
@@ -352,7 +350,6 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 5,
-            attack_move: 10,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
@@ -365,7 +362,6 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 0,
             stun_on_block: 0,
             push_back: 0,
-            attack_move: 0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
@@ -378,7 +374,6 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 0,
             stun_on_block: 0,
             push_back: 0,
-            attack_move: 0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
@@ -391,13 +386,26 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 0,
             stun_on_block: 0,
             push_back: 0,
-            attack_move: 0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
     );
 
     attacks
+}
+
+fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
+    CharacterAssets {
+        animations: load_keetar_anims(texture_creator),
+        input_combination_anims: load_keetar_special_inputs(),
+        directional_variation_anims: load_keetar_directional_inputs(),
+        projectiles: load_keetar_special_abilities(),
+        projectile_animation: load_keetar_projectile_anims(texture_creator),
+        collider_animations: load_keetar_colliders(),
+        attacks: load_keetar_attacks(),
+        attack_points: HashMap::new(),
+        attack_effects: load_keetar_abilities(),
+    }
 }
 
 //===========================================================
@@ -407,23 +415,31 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
 
     collider_animations.insert(
         "idle".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.json", "foxgirl")),
+        asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.scon", "foxgirl")),
     );
 
     collider_animations.insert(
         "walk".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/walk/walk.json", "foxgirl")),
+        asset_loader::load_hitboxes(format!("assets/{}/standing/walk/walk.scon", "foxgirl")),
     );
 
     collider_animations.insert(
         "dash".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/dash/dash.json", "foxgirl")),
+        asset_loader::load_hitboxes(format!("assets/{}/standing/dash/dash.scon", "foxgirl")),
     );
 
     collider_animations.insert(
         "light_punch".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/light_punch/light_punch.json",
+            "assets/{}/standing/attacks/light_punch/light_punch.scon",
+            "foxgirl"
+        )),
+    );
+
+    collider_animations.insert(
+        "spam_light_punch".to_string(),
+        asset_loader::load_hitboxes(format!(
+            "assets/{}/standing/attacks/specials/spam/spam_light_punch/spam_light_punch.scon",
             "foxgirl"
         )),
     );
@@ -431,7 +447,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "light_kick".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/light_kick/light_kick.json",
+            "assets/{}/standing/attacks/light_kick/light_kick.scon",
             "foxgirl"
         )),
     );
@@ -439,7 +455,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "crouched_light_kick".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/crouch/attacks/light_kick/crouched_light_kick.json",
+            "assets/{}/crouch/attacks/light_kick/crouched_light_kick.scon",
             "foxgirl"
         )),
     );
@@ -447,7 +463,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "airborne_light_kick".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/airborne/attacks/light_kick/airborne_light_kick.json",
+            "assets/{}/airborne/attacks/light_kick/airborne_light_kick.scon",
             "foxgirl"
         )),
     );
@@ -455,7 +471,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "medium_punch".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/medium_punch/medium_punch.json",
+            "assets/{}/standing/attacks/medium_punch/medium_punch.scon",
             "foxgirl"
         )),
     );
@@ -463,7 +479,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "heavy_punch".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/heavy_punch/heavy_punch.json",
+            "assets/{}/standing/attacks/heavy_punch/heavy_punch.scon",
             "foxgirl"
         )),
     );
@@ -471,7 +487,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "neutral_jump".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/neutral_jump/neutral_jump.json",
+            "assets/{}/standing/neutral_jump/neutral_jump.scon",
             "foxgirl"
         )),
     );
@@ -479,7 +495,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations.insert(
         "crouch".to_string(),
         asset_loader::load_hitboxes(format!(
-            "assets/{}/crouch/crouched/crouched.json",
+            "assets/{}/crouch/crouched/crouched.scon",
             "foxgirl"
         )),
     );
@@ -487,9 +503,7 @@ fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
     collider_animations
 }
 
-fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
-    let anims = load_foxgirl_anims(texture_creator);
-
+fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)>{
     let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
 
     let directional_string = (GameAction::Forward, GameAction::LightPunch);
@@ -498,7 +512,10 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
     let directional_string_2 = (GameAction::Forward, GameAction::HeavyPunch);
     directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
 
-    let effects_of_abilities = HashMap::new();
+    directional_inputs
+}
+
+fn load_foxgirl_special_inputs() ->   Vec<(Vec<i32>, String)>{
     let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
     let spam_light_punch_inputs = vec![
         GameAction::LightPunch as i32,
@@ -507,19 +524,7 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Chara
     ];
     specials_inputs.push((spam_light_punch_inputs, "spam_light_punch".to_string()));
 
-    let projectile_anims = HashMap::new();
-
-    CharacterAssets {
-        animations: anims,
-        input_combination_anims: specials_inputs,
-        directional_variation_anims: directional_inputs,
-        effects: effects_of_abilities,
-        projectile_animation: projectile_anims,
-        collider_animations: load_foxgirl_colliders(),
-        attacks: load_foxgirl_attacks(),
-        attack_points: HashMap::new(),
-        attack_effects: HashMap::new(),
-    }
+    specials_inputs
 }
 
 fn load_foxgirl_anims(
@@ -671,82 +676,128 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
     let mut attacks = HashMap::new();
 
     attacks.insert(
-        "light_kick".to_string(),
+        "lk".to_string(),
         Attack {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 5,
-            attack_move: 10,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
 
     attacks.insert(
-        "crouched_light_kick".to_string(),
+        "c.lk".to_string(),
         Attack {
             damage: 15,
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 30,
-            attack_move: 10,
             attack_height: AttackHeight::LOW,
             attack_type: AttackType::Normal
         },
     );
 
     attacks.insert(
-        "airborne_light_kick".to_string(),
+        "j.lk".to_string(),
         Attack {
             damage: 15,
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 30,
-            attack_move: 10,
             attack_height: AttackHeight::HIGH,
             attack_type: AttackType::Normal
         },
     );
 
     attacks.insert(
-        "light_punch".to_string(),
+        "lp".to_string(),
         Attack {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 5,
-            attack_move: 10,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
 
     attacks.insert(
-        "medium_punch".to_string(),
+        "mp".to_string(),
         Attack {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 5,
-            attack_move: 10,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
 
     attacks.insert(
-        "heavy_punch".to_string(),
+        "hp".to_string(),
         Attack {
             damage: 10,
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 10,
-            attack_move: 10,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
 
+    attacks.insert(
+        "first-spam-punch".to_string(),
+        Attack {
+            damage: 5,
+            stun_on_hit: 20,
+            stun_on_block: 14,
+            push_back: 10,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Special
+        },
+    );
+
+    attacks.insert(
+        "fast-spam-punch".to_string(),
+        Attack {
+            damage: 2,
+            stun_on_hit: 20,
+            stun_on_block: 14,
+            push_back: 10,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Special
+        },
+    );
+
+    attacks.insert(
+        "last-spam-punch".to_string(),
+        Attack {
+            damage: 20,
+            stun_on_hit: 20,
+            stun_on_block: 14,
+            push_back: 10,
+            attack_height: AttackHeight::MIDDLE,
+            attack_type: AttackType::Special
+        },
+    );
+
+
     attacks
+}
+
+fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
+
+    CharacterAssets {
+        animations: load_foxgirl_anims(texture_creator),
+        input_combination_anims: load_foxgirl_special_inputs(),
+        directional_variation_anims: load_foxgirl_directional_inputs(),
+        projectiles: HashMap::new(),
+        projectile_animation: HashMap::new(),
+        collider_animations: load_foxgirl_colliders(),
+        attacks: load_foxgirl_attacks(),
+        attack_points: HashMap::new(),
+        attack_effects: HashMap::new(),
+    }
 }

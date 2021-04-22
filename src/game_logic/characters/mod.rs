@@ -44,7 +44,6 @@ pub struct Attack {
     pub stun_on_hit: i32,
     pub stun_on_block: i32,
     pub push_back: i32,
-    pub attack_move: i32,
     pub attack_height: AttackHeight,
     pub attack_type: AttackType,
 }

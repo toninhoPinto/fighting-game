@@ -151,14 +151,14 @@ impl Match {
 }
 
 
-fn hit_opponent<'a>(general_assets: &CommonAssets, 
+fn hit_opponent<'a>(collider_name: String, general_assets: &CommonAssets, 
     player_hitting: &mut Player, player_hit: &mut Player<'a>, 
     player_hitting_assets: &CharacterAssets, player_hit_assets: &'a CharacterAssets){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
     let attack = player_hitting_assets
         .attacks
-        .get(&player_hitting.animator.current_animation.unwrap().name)
+        .get(&collider_name)
         .unwrap();
     player_hit.take_damage(attack.damage);
     player_hit.state_update(&player_hit_assets);
@@ -220,11 +220,20 @@ impl Scene for Match {
             .animator
             .play(p2_assets.animations.get("idle").unwrap(), 1.0,false);
 
-        game.update_collider_p1(&p1_assets);
-        game.update_collider_p2(&p2_assets);
+        let collider_animation = p1_assets
+            .collider_animations
+            .get(&game.player1.animator.current_animation.unwrap().name);
+        collider_animation.unwrap().init(&mut game.player1.colliders);
+
+
+        let collider_animation = p2_assets
+            .collider_animations
+            .get(&game.player2.animator.current_animation.unwrap().name);
+        collider_animation.unwrap().init(&mut game.player2.colliders);
+
 
         let p1_width = game
-            .p1_colliders
+            .player1.colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Pushbox)
             .last()
@@ -234,7 +243,7 @@ impl Scene for Match {
             .x;
 
         let p2_width = game
-            .p2_colliders
+            .player2.colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Pushbox)
             .last()
@@ -424,10 +433,8 @@ impl Scene for Match {
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
 
-                println!("{:?}", self.p2_inputs.action_history);
-
                 let pushbox1_right_x = match game
-                    .p1_colliders
+                    .player1.colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     .last()
@@ -445,7 +452,7 @@ impl Scene for Match {
                 );
 
                 let pushbox2_right_x = match game
-                    .p2_colliders
+                    .player2.colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     .last()
@@ -475,20 +482,20 @@ impl Scene for Match {
                         game.player2.curr_special_effect = None;
                     }
                 }
+                
+                //Game::update_player_colliders(&mut game.player1,  &p1_assets);
+                Game::update_player_colliders(&mut game.player2,  &p2_assets);
 
-                game.update_collider_p1(&p1_assets);
-                game.update_collider_p2(&p2_assets);
                 detect_push(
                     &mut game.player1,
                     &mut game.player2,
-                    &game.p1_colliders,
-                    &game.p2_colliders,
                     logic_timestep,
                 );
 
-                match detect_hit(game.player1, &game.p1_colliders, &game.p2_colliders) {
-                    Some(point) => {
+                match detect_hit(game.player1, &game.player2.colliders) {
+                    Some((point, name)) => {
                         hit_opponent(
+                            name,
                             &general_assets, 
                             &mut game.player1, &mut game.player2, 
                             &p1_assets, &p2_assets);
@@ -520,9 +527,10 @@ impl Scene for Match {
                     None => {}
                 }
 
-                match detect_hit(game.player2, &game.p2_colliders, &game.p1_colliders) {
-                    Some(point) => {
+                match detect_hit(game.player2, &game.player1.colliders) {
+                    Some((point, name)) => {
                         hit_opponent(
+                            name,
                             &general_assets, 
                             &mut game.player2, &mut game.player1, 
                             &p2_assets, &p1_assets);
@@ -582,8 +590,6 @@ impl Scene for Match {
                     &game.projectiles,
                     &mut game.hit_vfx,
                     &mut general_assets,
-                    &mut game.p1_colliders,
-                    &mut game.p2_colliders,
                     &hp_bars[0],
                     &hp_bars[1],
                     &special_bars[0],

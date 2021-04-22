@@ -8,10 +8,10 @@ use crate::game_logic::characters::player::Player;
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
 
-pub fn detect_hit(player_hitting: &mut Player, player_hitting_colliders: &Vec<Collider>, player_hit_colliders: &Vec<Collider>) -> Option<Point<Real>>{
+pub fn detect_hit(player_hitting: &mut Player, player_hit_colliders: &Vec<Collider>) -> Option<(Point<Real>, String)>{
     
     if !player_hitting.has_hit {
-        for collider in player_hitting_colliders
+        for collider in player_hitting.colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
         {
@@ -25,7 +25,7 @@ pub fn detect_hit(player_hitting: &mut Player, player_hitting_colliders: &Vec<Co
                     
                     return if polygon.len() > 0 {
                         player_hitting.has_hit = true;
-                        Some(polygon[0])
+                        Some((polygon[0], collider.name.clone()))
                     } else {
                         None
                     };
@@ -40,18 +40,16 @@ pub fn detect_hit(player_hitting: &mut Player, player_hitting_colliders: &Vec<Co
 pub fn detect_push(
     player1: &mut Player,
     player2: &mut Player,
-    p1_colliders: &Vec<Collider>,
-    p2_colliders: &Vec<Collider>,
     logic_timestep: f64,
 ) {
     player1.is_pushing = false;
     player2.is_pushing = false;
 
-    for p1_collider in p1_colliders
+    for p1_collider in player1.colliders
         .iter()
         .filter(|&c| c.collider_type == ColliderType::Pushbox)
     {
-        for p2_collider in p2_colliders
+        for p2_collider in player2.colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Pushbox)
         {
@@ -83,12 +81,12 @@ pub fn detect_push(
                 {
                     player1.position.x =
                         player1.position.x + player1.velocity_x as f64 * penetrating as f64;
-                    player2.push(player1.velocity_x, player1, p2_width, logic_timestep);
+                    player2.position += player2.push(player1.velocity_x, &*player1, p2_width, logic_timestep);
                     player1.is_pushing = true;
                 }
 
                 if player1.is_airborne {
-                    player2.push(
+                    player2.position += player2.push(
                         player1.dir_related_of_other,
                         player1,
                         p2_width,
@@ -102,12 +100,12 @@ pub fn detect_push(
                 {
                     player2.position.x =
                         player2.position.x + player2.velocity_x as f64 * penetrating as f64;
-                    player1.push(player2.velocity_x, player2, p1_width, logic_timestep);
+                        player1.position += player1.push(player2.velocity_x, player2, p1_width, logic_timestep);
                     player2.is_pushing = true;
                 }
 
                 if player2.is_airborne {
-                    player1.push(
+                    player1.position += player1.push(
                         player2.dir_related_of_other,
                         player2,
                         p1_width,

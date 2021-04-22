@@ -2,18 +2,19 @@ use super::transformation::Transformation;
 use crate::game_logic::characters::player::Player;
 use parry2d::bounding_volume::AABB;
 use std::collections::HashMap;
-
+#[derive(Debug)]
 pub struct ColliderAnimation {
     pub colliders: Vec<Collider>,
     pub pos_animations: HashMap<String, HashMap<i32, Transformation>>,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Debug)]
 pub enum ColliderType {
     Hitbox,  //attacking collider
     Hurtbox, //take damage
-    Pushbox, //push character
     Grabbox,
+    Grabbablebox,
+    Pushbox, //push character
 }
 #[derive(Debug, Clone)]
 pub struct Collider {
@@ -24,7 +25,6 @@ pub struct Collider {
 }
 
 impl ColliderAnimation {
-    //TODO INIT AND COLLIDER LIFE MANAGEMENT NEEDS TO BE CLEANED
     pub fn init(&self, current_colliders: &mut Vec<Collider>) {
         for i in 0..self.colliders.len() {
             if i < current_colliders.len() {
@@ -47,9 +47,9 @@ impl ColliderAnimation {
     }
 
     // update offsets by player position
-    pub fn update(&self, current_colliders: &mut Vec<Collider>, player: &Player) {
-        for i in 0..current_colliders.len() {
-            let aabb = &mut current_colliders[i].aabb;
+    pub fn update(&self, player: &mut Player) {
+        for i in 0..player.colliders.len() {
+            let aabb = &mut player.colliders[i].aabb;
 
             let left_player_pos =
                 player.position.x as f32 - player.character.sprite.width() as f32 / 2.0;
@@ -58,27 +58,24 @@ impl ColliderAnimation {
             aabb.mins.coords[1] = player.position.y as f32;
             aabb.maxs.coords[0] = left_player_pos;
             aabb.maxs.coords[1] = player.position.y as f32;
-            self.sync_with_character_animation(
-                &mut current_colliders[i],
-                &self.colliders[i],
-                player,
-            );
+            self.sync_with_character_animation(i, player);
         }
     }
 
     //render offsets by frame index
     fn sync_with_character_animation(
         &self,
-        current_collider: &mut Collider,
-        original_collider: &Collider,
-        player: &Player,
+        collider_index: usize,
+        player: &mut Player,
     ) {
+        let current_collider = &mut player.colliders[collider_index];
         let aabb = &mut current_collider.aabb;
+        let original_collider = &self.colliders[collider_index];
         let original_aabb = original_collider.aabb;
 
         let position_at_frame = self.pos_animations.get(&original_collider.name).unwrap();
 
-        match position_at_frame.get(&(player.animator.sprite_shown as i32)) {
+        match position_at_frame.get(&(player.animator.sprite_shown)) {
             Some(transformation) => {
                 current_collider.enabled = true;
                 let offset_x = transformation.pos.x as f32 * 2.0;

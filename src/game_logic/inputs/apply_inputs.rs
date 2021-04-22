@@ -211,13 +211,12 @@ fn check_special_inputs(
     //if find match, play animation and remove that input from array
     let cleaned_history: VecDeque<i32> =
         action_history.iter().cloned().filter(|&z| z > 0).collect();
-    println!("{:?}", action_history);
     for possible_combo in character_anims.input_combination_anims.iter() {
         let size_of_combo = possible_combo.0.len();
         let size_of_history = cleaned_history.len();
         let mut j = 0;
+        //TODO change special meter price per ability
         if player.character.special_curr >= 1.0 {
-            //TODO change special meter price per ability
             if size_of_combo <= size_of_history {
                 for i in (size_of_history - size_of_combo)..cleaned_history.len() {
                     if cleaned_history[i] & possible_combo.0[j] > 0 {

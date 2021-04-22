@@ -4,7 +4,7 @@ use sdl2::render::Texture;
 
 use std::{collections::HashMap, fmt};
 
-use crate::{asset_management::animation::Animation, game_logic::characters::{AttackType, Character}};
+use crate::{asset_management::{animation::Animation, collider::Collider}, game_logic::characters::{AttackType, Character}};
 use crate::{
     asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets,
     rendering::camera::Camera,
@@ -62,7 +62,9 @@ pub struct Player<'a> {
     pub character: Character,
 
     pub mid_jump_pos: f64,
-    pub curr_special_effect: Option<&'a(i32, Ability)>
+    pub curr_special_effect: Option<&'a(i32, Ability)>,
+
+    pub colliders: Vec<Collider>,
 }
 
 impl<'a> Player<'a> {
@@ -93,6 +95,8 @@ impl<'a> Player<'a> {
             character,
 
             curr_special_effect: None,
+
+            colliders: Vec::new(),
         }
     }
 
@@ -172,9 +176,10 @@ impl<'a> Player<'a> {
             }
 
             if let Some(attack_anim) = character_assets.animations.get(&attack_animation) {
-                // TODO change special meter price per ability
                 self.animator.play_once(attack_anim, 1.0, false);
             };
+
+            self.update_colliders(character_assets);
         }
     }
 
@@ -182,7 +187,7 @@ impl<'a> Player<'a> {
         self.state = PlayerState::Standing;
     }
 
-    pub fn push(&mut self, dir: i32, player_pushing: &Player, player_width: f32, dt: f64) {
+    pub fn push(&self, dir: i32, player_pushing: &Player, player_width: f32, dt: f64) -> Vector2<f64> {
         let speed = if player_pushing.state == PlayerState::DashingForward {
             player_pushing.character.dash_speed / 2.0
         } else if player_pushing.is_airborne {
@@ -195,7 +200,7 @@ impl<'a> Player<'a> {
         } else {
             player_pushing.character.speed / 2.0
         };
-        self.position += Vector2::new(dir as f64 * speed * dt, 0.0);
+        Vector2::new(dir as f64 * speed * dt, 0.0)
     }
 
     pub fn update(
@@ -249,7 +254,6 @@ impl<'a> Player<'a> {
             //reset position back to ground height
             let should_land = self.position.y < ground as f64;
             if should_land {
-                println!("LANDED");
                 self.position.y = self.ground_height as f64;
                 self.velocity_y = self.character.jump_height;
                 if self.state == PlayerState::Jumping {
@@ -310,8 +314,9 @@ impl<'a> Player<'a> {
         }
     }
 
-    pub fn state_update(&mut self, character_data: &'a CharacterAssets) {
-        let character_animation = &character_data.animations;
+    pub fn state_update(&mut self, assets: &'a CharacterAssets) {
+        let character_animation = &assets.animations;
+        let prev_animation = self.animator.current_animation.unwrap().name.clone();
 
         if self.animator.is_finished && self.state != PlayerState::Dead {
             self.has_hit = false;
@@ -432,6 +437,20 @@ impl<'a> Player<'a> {
 
         self.prev_velocity_x = self.velocity_x;
         self.animator.update();
+
+        if prev_animation != self.animator.current_animation.unwrap().name {
+            self.update_colliders(assets);
+        }
+    }
+
+    fn update_colliders(&mut self, assets: &CharacterAssets){
+        let collider_animation = assets
+        .collider_animations
+        .get(&self.animator.current_animation.unwrap().name);
+
+        if let Some(collider_animation) = collider_animation {
+            collider_animation.init(&mut self.colliders);
+        }
     }
 
     pub fn render(&mut self) -> &Texture {

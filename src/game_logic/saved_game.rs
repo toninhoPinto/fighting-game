@@ -142,8 +142,8 @@ impl SavedGame {
             p2_character: game.player2.character.clone(),
 
             projectiles: game.projectiles.clone(),
-            p1_colliders: game.p1_colliders.clone(),
-            p2_colliders: game.p2_colliders.clone(),
+            p1_colliders: game.player1.colliders.clone(),
+            p2_colliders: game.player2.colliders.clone(),
 
             hit_vfx: game.hit_vfx.clone(),
         }
@@ -201,9 +201,12 @@ impl SavedGame {
         game.player2.animator.current_animation = p2_assets.animations.get(&self.p2_name);
         game.player2.character = self.p2_character.clone();
 
+
+        game.player1.colliders = self.p1_colliders.clone();
+        game.player2.colliders = self.p2_colliders.clone();
+
         game.projectiles = self.projectiles.clone();
-        game.p1_colliders = self.p1_colliders.clone();
-        game.p2_colliders = self.p2_colliders.clone();
+
 
         game.hit_vfx = self.hit_vfx.clone();
     }

@@ -53,8 +53,6 @@ pub fn render<'a, 'b>(
     projectiles: &[Projectile],
     hit_vfx: &mut Vec<Particle>,
     common_assets: &mut CommonAssets,
-    p1_colliders: &mut Vec<Collider>,
-    p2_colliders: &mut Vec<Collider>,
     bar_ui_1: &Bar,
     bar_ui_2: &Bar,
     bar_ui_3: &SegmentedBar,
@@ -111,8 +109,8 @@ pub fn render<'a, 'b>(
     render_vfx(canvas, screen_res, camera, hit_vfx, common_assets, debug);
 
     if debug {
-        render_colliders(canvas, screen_res, camera, p1_colliders);
-        render_colliders(canvas, screen_res, camera, p2_colliders);
+        render_colliders(canvas, screen_res, camera, &mut player1.colliders);
+        render_colliders(canvas, screen_res, camera, &mut player2.colliders);
     }
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
@@ -156,7 +154,6 @@ fn render_player(
     debug: bool,
 ) {
     let screen_rect = world_to_screen(player.character.sprite, Point::new(player.position.x as i32, player.position.y as i32), screen_res, camera);
-    //println!("world{:?} screen{:?}",player.position, screen_rect);
     let sprite = player.character.sprite;
     let is_flipped = player.flipped;
     let texture = player.render();
