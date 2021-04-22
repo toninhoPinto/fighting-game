@@ -483,7 +483,7 @@ impl Scene for Match {
                     }
                 }
                 
-                //Game::update_player_colliders(&mut game.player1,  &p1_assets);
+                Game::update_player_colliders(&mut game.player1,  &p1_assets);
                 Game::update_player_colliders(&mut game.player2,  &p2_assets);
 
                 detect_push(
