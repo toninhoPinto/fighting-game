@@ -26,15 +26,11 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-
 //import attack animation frame duration -> can use mainline, each key has a time: in miliseconds i assume
 //decide which attacks can cancel into which 
 //add input buffer- decide if multiple buffers for different things or not
 
-
-//add hitstun in hurt animation
 //if there is a trade make the hitstun work during attack animation
-//apply attacks struct values (knockback, hitstun, etc)
 //(e.g: if you jump and kick on the right side of the opponent, he should be pushed to the right)
 //make an enum for with startup|active|recovery and use code to detect a hitbox and switch to active, and switch back to recovery ´
 //this is important to be able to cancel the recovery of attacks
@@ -44,7 +40,11 @@ use input::translated_inputs::TranslatedInput;
 //hit stun should only freeze two characters not everything else
 //define a ground height and a offset for each character to be at the correct ground height
 //add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
-//charge special attacks
+//charge special attacks like makoto where you can hold punch for a stronger attack
+//charge special attacks like guile where you have to hold a direction for 40 frames
+//rekka  special attacks where you can chain special attacks but as one
+//makoto has a knee that cancels into a kick -> attacks that only cancel for another specific attack
+
 //check how to pitch shift attacks sound chunks depending on frame advantage
 //dash attacks
 //projectile with a specific target location

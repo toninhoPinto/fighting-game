@@ -594,7 +594,7 @@ impl Scene for Match {
                     &hp_bars[1],
                     &special_bars[0],
                     &special_bars[1],
-                    true,
+                    false,
                 )
                 .unwrap();
 
