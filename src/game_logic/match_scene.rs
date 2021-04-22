@@ -156,6 +156,7 @@ fn hit_opponent<'a>(collider_name: String, general_assets: &CommonAssets,
     player_hitting_assets: &CharacterAssets, player_hit_assets: &'a CharacterAssets){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
+    println!("{}", collider_name);
     let attack = player_hitting_assets
         .attacks
         .get(&collider_name)

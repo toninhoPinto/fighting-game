@@ -5,10 +5,7 @@ use std::{collections::HashMap, fs};
 
 use sdl2::rect::Point;
 
-use super::{
-    collider::{Collider, ColliderType},
-    transformation::Transformation,
-};
+use super::{collider::{Collider, ColliderAnimation, ColliderType}, transformation::Transformation};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Wrapper {
@@ -81,9 +78,9 @@ pub struct ObjectHitbox {
     pub scale_y: Option<f64>,
 }
 
-pub fn load_hitboxes(
-    file: std::string::String,
-) -> (Vec<Collider>, HashMap<String, HashMap<i32, Transformation>>) {
+pub fn load_animation_data(
+    file: std::path::PathBuf,
+) -> (Vec<i32>, ColliderAnimation) {
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Wrapper>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;
@@ -119,6 +116,7 @@ pub fn load_hitboxes(
     colliders.sort_by(|a, b| a.collider_type.partial_cmp(&b.collider_type).unwrap());
 
     let mut time_keys = HashMap::new();
+    let mut time_vec = Vec::new();
     for i in 0..mainline.key.len() {
         let time = if mainline.key[i].time.is_some() {
             mainline.key[i].time.unwrap()
@@ -126,6 +124,7 @@ pub fn load_hitboxes(
             0
         };
         time_keys.insert(time, i);
+        time_vec.push(time);
     }
 
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
@@ -171,5 +170,9 @@ pub fn load_hitboxes(
         final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
     }
 
-    (colliders, final_transformations)
+    (time_vec,
+    ColliderAnimation {
+        colliders: colliders,
+        pos_animations: final_transformations,
+    })
 }

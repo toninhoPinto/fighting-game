@@ -37,7 +37,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
             200,
             4,
             250.0,
-            650.0,
+            350.0,
             650.0,
             700.0,
             600.0,
@@ -73,50 +73,6 @@ pub fn load_character_anim_data<'a, 'b>(
 }
 
 //===========================================================
-
-fn load_keetar_colliders() -> HashMap<String, ColliderAnimation> {
-    let mut collider_animations = HashMap::new();
-
-    collider_animations.insert(
-        "idle".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.scon", "keetar")),
-    );
-    collider_animations.insert(
-        "light_punch".to_string(),
-        asset_loader::load_hitboxes(
-            format!(
-                "assets/{}/standing/attacks/light_punch/light_punch.scon",
-                "keetar"
-            )
-            .to_string(),
-        ),
-    );
-    collider_animations.insert(
-        "walk".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/walk/walk.scon", "keetar")),
-    );
-    collider_animations.insert(
-        "walk_back".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/walk_back/walk_back.scon",
-            "keetar"
-        )),
-    );
-    collider_animations.insert(
-        "dash".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/dash/dash.scon", "keetar")),
-    );
-
-    collider_animations.insert(
-        "neutral_jump".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/neutral_jump/jump.scon",
-            "keetar"
-        )),
-    );
-
-    collider_animations
-}
 
 fn load_keetar_abilities() -> HashMap<String, (i32, Ability)> {
     let mut abilities = HashMap::new();
@@ -190,161 +146,324 @@ fn load_keetar_projectile_anims<'a>(texture_creator: &'a TextureCreator<WindowCo
 
 fn load_keetar_anims(
     texture_creator: &TextureCreator<WindowContext>,
-) -> HashMap<String, Animation> {
-    let mut character_anims = HashMap::new();
+) -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>) {
 
     //TODO iterate through folders and use folder name as key for hashmap
-    let idle_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/idle");
-    let walk_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/walk");
-    let walk_back_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/walk_back");
-    let crouch_start_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/crouch/crouched");
-    let crouch_idle_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/crouch/crouching");
-    let light_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (idle_anim, idle_colliders)  =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/idle");
+    let (walk_anim, walk_colliders)  =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/walk");
+    let (walk_back_anim, walk_back_colliders)  =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/walk_back");
+    let (crouch_start_anim, crouch_start_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/crouch/crouched");
+    let (crouch_idle_anim, crouch_idle_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/crouch/crouching");
+    let (light_punch_anim, light_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/light_punch",
     );
-    let medium_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (medium_punch_anim, medium_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/medium_punch",
     );
-    let heavy_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (heavy_punch_anim, heavy_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/heavy_punch",
     );
-    let light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (light_kick_anim, light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/light_kick",
     );
-    let special1_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (special1_anim, special1_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/directionals/directional_light_punch",
     );
-    let special2_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (special2_anim, special2_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/combinations",
     );
-    let dash_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/dash");
-    let dash_back_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/back_dash");
-    let neutral_jump_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/neutral_jump");
-    let directional_jump_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (dash_anim, dash_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/dash");
+    let (dash_back_anim, dash_back_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/back_dash");
+    let (neutral_jump_anim, neutral_jump_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/neutral_jump");
+    let (directional_jump_anim, directional_jump_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/directional_jump",
     );
-    let grab_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/attacks/grab");
-    let dead_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/dead");
-    let take_damage_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/keetar/standing/take_damage");
+    let (grab_anim, grab_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/attacks/grab");
+    let (dead_anim, dead_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/dead");
+    let (take_damage_anim, take_damage_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/take_damage");
 
+
+    let mut character_anims = HashMap::new();
+    let mut collider_anims = HashMap::new();
+    
+    let idle = "idle".to_string();
+    if let Some(idle_c) = idle_colliders {
+        collider_anims.insert(
+            idle.clone(),
+            idle_c
+        );
+    }
     character_anims.insert(
-        "idle".to_string(),
-        Animation::new(idle_anim, "idle".to_string(), None),
-    );
-    character_anims.insert(
-        "dash".to_string(),
-        Animation::new(dash_anim, "dash".to_string(), None),
-    );
-    character_anims.insert(
-        "dash_back".to_string(),
-        Animation::new(dash_back_anim, "dash_back".to_string(), None),
-    );
-    character_anims.insert(
-        "walk".to_string(),
-        Animation::new(walk_anim, "walk".to_string(), None),
-    );
-    character_anims.insert(
-        "walk_back".to_string(),
-        Animation::new(walk_back_anim, "walk_back".to_string(), None),
-    );
-    character_anims.insert(
-        "light_punch".to_string(),
-        Animation::new(light_punch_anim, "light_punch".to_string(), None),
-    );
-    character_anims.insert(
-        "medium_punch".to_string(),
-        Animation::new(medium_punch_anim, "medium_punch".to_string(), None),
-    );
-    character_anims.insert(
-        "heavy_punch".to_string(),
-        Animation::new(heavy_punch_anim, "heavy_punch".to_string(), None),
-    );
-    character_anims.insert(
-        "light_kick".to_string(),
-        Animation::new(light_kick_anim, "light_kick".to_string(), None),
-    );
-    character_anims.insert(
-        "crouch".to_string(),
-        Animation::new(crouch_start_anim, "crouch".to_string(), None),
-    );
-    character_anims.insert(
-        "crouching".to_string(),
-        Animation::new(crouch_idle_anim, "crouching".to_string(), None),
-    );
-    character_anims.insert(
-        "neutral_jump".to_string(),
-        Animation::new(neutral_jump_anim, "neutral_jump".to_string(), None),
-    );
-    character_anims.insert(
-        "directional_jump".to_string(),
-        Animation::new(directional_jump_anim, "directional_jump".to_string(), None),
-    );
-    character_anims.insert(
-        "directional_light_punch".to_string(),
-        Animation::new(special1_anim, "directional_light_punch".to_string(), None),
-    );
-    character_anims.insert(
-        "grab".to_string(),
-        Animation::new(grab_anim, "grab".to_string(), None),
-    );
-    character_anims.insert(
-        "dead".to_string(),
-        Animation::new(dead_anim, "dead".to_string(), None),
-    );
-    character_anims.insert(
-        "take_damage".to_string(),
-        Animation::new(take_damage_anim, "take_damage".to_string(), None),
+        idle.clone(),
+        Animation::new(idle_anim, idle, None),
     );
 
+    let dash = "dash".to_string();
+    if let Some(dash_c) = dash_colliders {
+        collider_anims.insert(
+            dash.clone(),
+            dash_c
+        );
+    }
     character_anims.insert(
-        "light_special_attack".to_string(),
-        Animation::new(special2_anim, "light_special_attack".to_string(), None),
+        dash.clone(),
+        Animation::new(dash_anim, dash, Some(vec![Vector2::new(1900.0, 0.0), Vector2::new(1700.0, 0.0)
+        , Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0)])),
     );
 
-    //TODO DUPLICATED DATA, i think the only solution is to have a separate texture manager and character anims becomes a hashmap<string, id on texturemanager>
-    let special3_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let dash_back = "dash_back".to_string();
+    if let Some(dash_back_c) = dash_back_colliders {
+        collider_anims.insert(
+            dash_back.clone(),
+            dash_back_c
+        );
+    }
+    character_anims.insert(
+        dash_back.clone(),
+        Animation::new(dash_back_anim, dash_back, Some(vec![Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(-1700.0, 0.0)
+        , Vector2::new(-1000.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0)])),
+    );
+
+    let walk = "walk".to_string();
+    if let Some(walk_c) = walk_colliders {
+        collider_anims.insert(
+            walk.clone(),
+            walk_c
+        );
+    }
+    character_anims.insert(
+        walk.clone(),
+        Animation::new(walk_anim, walk, None),
+    );
+
+    let walk_back = "walk_back".to_string();
+    if let Some(walk_back_c) = walk_back_colliders {
+        collider_anims.insert(
+            walk_back.clone(),
+            walk_back_c
+        );
+    }
+    character_anims.insert(
+        walk_back.clone(),
+        Animation::new(walk_back_anim, walk_back, None),
+    );
+
+    let light_punch = "light_punch".to_string();
+    if let Some(light_punch_c) = light_punch_colliders {
+        collider_anims.insert(
+            light_punch.clone(),
+            light_punch_c
+        );
+    }
+    character_anims.insert(
+        light_punch.clone(),
+        Animation::new(light_punch_anim, light_punch, None),
+    );
+
+    let medium_punch = "medium_punch".to_string();
+    if let Some(medium_punch_c) = medium_punch_colliders {
+        collider_anims.insert(
+            medium_punch.clone(),
+            medium_punch_c
+        );
+    }   
+    character_anims.insert(
+        medium_punch.clone(),
+        Animation::new(medium_punch_anim, medium_punch, None),
+    );
+
+    let heavy_punch = "heavy_punch".to_string();
+    if let Some(heavy_punch_c) = heavy_punch_colliders {
+        collider_anims.insert(
+            heavy_punch.clone(),
+            heavy_punch_c
+        );
+    }   
+    character_anims.insert(
+        heavy_punch.clone(),
+        Animation::new(heavy_punch_anim, heavy_punch, None),
+    );
+
+    let light_kick = "light_kick".to_string();
+    if let Some(light_kick_c) = light_kick_colliders {
+        collider_anims.insert(
+            light_kick.clone(),
+            light_kick_c
+        );
+    }
+    character_anims.insert(
+        light_kick.clone(),
+        Animation::new(light_kick_anim, light_kick, None),
+    );
+
+    let crouch = "crouch".to_string();
+    if let Some(crouch_start_c) = crouch_start_colliders {
+        collider_anims.insert(
+            crouch.clone(),
+            crouch_start_c
+        );
+    }
+    character_anims.insert(
+        crouch.clone(),
+        Animation::new(crouch_start_anim, crouch, None),
+    );
+
+    let crouching = "crouching".to_string();
+    if let Some(crouch_idle_c) = crouch_idle_colliders {
+        collider_anims.insert(
+            crouching.clone(),
+            crouch_idle_c
+        );
+    }
+    character_anims.insert(
+        crouching.clone(),
+        Animation::new(crouch_idle_anim, crouching, None),
+    );
+
+    let neutral_jump = "neutral_jump".to_string();
+    if let Some(neutral_jump_colliders) = neutral_jump_colliders {
+        collider_anims.insert(
+            neutral_jump.clone(),
+            neutral_jump_colliders
+        );
+    }
+    character_anims.insert(
+        neutral_jump.clone(),
+        Animation::new(neutral_jump_anim, neutral_jump, None),
+    );
+
+    let directional_jump = "directional_jump".to_string();
+    if let Some(directional_jump_colliders) = directional_jump_colliders {
+        collider_anims.insert(
+            directional_jump.clone(),
+            directional_jump_colliders
+        );
+    }
+    character_anims.insert(
+        directional_jump.clone(),
+        Animation::new(directional_jump_anim, directional_jump, None),
+    );
+
+    let directional_light_punch = "directional_light_punch".to_string();
+    if let Some(special1_colliders) = special1_colliders {
+        collider_anims.insert(
+            directional_light_punch.clone(),
+            special1_colliders
+        );
+    }
+    character_anims.insert(
+        directional_light_punch.clone(),
+        Animation::new(special1_anim, directional_light_punch, None),
+    );
+
+    let grab = "grab".to_string();
+    if let Some(grab_colliders) = grab_colliders {
+        collider_anims.insert(
+            grab.clone(),
+            grab_colliders
+        );
+    }
+    character_anims.insert(
+        grab.clone(),
+        Animation::new(grab_anim, grab, None),
+    );
+
+    let dead = "dead".to_string();
+    if let Some(dead_colliders) = dead_colliders {
+        collider_anims.insert(
+            dead.clone(),
+            dead_colliders
+        );
+    }
+    character_anims.insert(
+        dead.clone(),
+        Animation::new(dead_anim, dead, None),
+    );
+
+    let take_damage = "take_damage".to_string();
+    if let Some(take_damage_colliders) = take_damage_colliders {
+        collider_anims.insert(
+            take_damage.clone(),
+            take_damage_colliders
+        );
+    }
+    character_anims.insert(
+        take_damage.clone(),
+        Animation::new(take_damage_anim, take_damage, None),
+    );
+
+    let light_special_attack = "light_special_attack".to_string();
+    if let Some(special2_colliders) = special2_colliders {
+        collider_anims.insert(
+            light_special_attack.clone(),
+            special2_colliders
+        );
+    }
+    character_anims.insert(
+        light_special_attack.clone(),
+        Animation::new(special2_anim, light_special_attack, None),
+    );
+
+    //TODO DUPLICATED DATA, not very good because its duplicated textures which are not particularly light 
+    let (special3_anim,special3_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/combinations",
     );
-    let special4_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (special4_anim, special4_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/keetar/standing/attacks/specials/combinations",
     );
+
+    let med_special_attack = "med_special_attack".to_string();
+    if let Some(special3_colliders) = special3_colliders {
+        collider_anims.insert(
+            med_special_attack.clone(),
+            special3_colliders
+        );
+    }
     character_anims.insert(
-        "med_special_attack".to_string(),
+        med_special_attack.clone(),
         Animation::new(special3_anim, "med_special_attack".to_string(), None),
     );
+
+    let heavy_special_attack = "heavy_special_attack".to_string();
+    if let Some(special4_colliders) = special4_colliders {
+        collider_anims.insert(
+            heavy_special_attack.clone(),
+            special4_colliders
+        );
+    }
     character_anims.insert(
-        "heavy_special_attack".to_string(),
-        Animation::new(special4_anim, "heavy_special_attack".to_string(), None),
+        heavy_special_attack.clone(),
+        Animation::new(special4_anim, heavy_special_attack, None),
     );
 
-    character_anims
+    (character_anims, collider_anims)
 }
 
 fn load_keetar_attacks() -> HashMap<String, Attack> {
     let mut attacks = HashMap::new();
 
     attacks.insert(
-        "light_punch".to_string(),
+        "lp".to_string(),
         Attack {
             damage: 5,
             stun_on_hit: 10,
@@ -395,13 +514,14 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
 }
 
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
+    let animations_data = load_keetar_anims(texture_creator);
     CharacterAssets {
-        animations: load_keetar_anims(texture_creator),
+        animations: animations_data.0,
         input_combination_anims: load_keetar_special_inputs(),
         directional_variation_anims: load_keetar_directional_inputs(),
         projectiles: load_keetar_special_abilities(),
         projectile_animation: load_keetar_projectile_anims(texture_creator),
-        collider_animations: load_keetar_colliders(),
+        collider_animations: animations_data.1,
         attacks: load_keetar_attacks(),
         attack_points: HashMap::new(),
         attack_effects: load_keetar_abilities(),
@@ -410,98 +530,6 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
 
 //===========================================================
 
-fn load_foxgirl_colliders() -> HashMap<String, ColliderAnimation> {
-    let mut collider_animations = HashMap::new();
-
-    collider_animations.insert(
-        "idle".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/idle/idle.scon", "foxgirl")),
-    );
-
-    collider_animations.insert(
-        "walk".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/walk/walk.scon", "foxgirl")),
-    );
-
-    collider_animations.insert(
-        "dash".to_string(),
-        asset_loader::load_hitboxes(format!("assets/{}/standing/dash/dash.scon", "foxgirl")),
-    );
-
-    collider_animations.insert(
-        "light_punch".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/light_punch/light_punch.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "spam_light_punch".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/specials/spam/spam_light_punch/spam_light_punch.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "light_kick".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/light_kick/light_kick.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "crouched_light_kick".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/crouch/attacks/light_kick/crouched_light_kick.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "airborne_light_kick".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/airborne/attacks/light_kick/airborne_light_kick.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "medium_punch".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/medium_punch/medium_punch.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "heavy_punch".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/attacks/heavy_punch/heavy_punch.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "neutral_jump".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/standing/neutral_jump/neutral_jump.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations.insert(
-        "crouch".to_string(),
-        asset_loader::load_hitboxes(format!(
-            "assets/{}/crouch/crouched/crouched.scon",
-            "foxgirl"
-        )),
-    );
-
-    collider_animations
-}
 
 fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)>{
     let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
@@ -529,147 +557,291 @@ fn load_foxgirl_special_inputs() ->   Vec<(Vec<i32>, String)>{
 
 fn load_foxgirl_anims(
     texture_creator: &TextureCreator<WindowContext>,
-) -> HashMap<std::string::String, Animation> {
-    let mut character_anims = HashMap::new();
-
+) -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>) {
     //TODO iterate through folders and use folder name as key for hashmap
-    let idle_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/idle");
-    let take_damage_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/take_damage/1");
-    let dead_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/dead");
-    let walk_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/walk");
-    let crouch_start_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/crouch/crouched");
-    let crouch_idle_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/crouch/crouching");
-    let light_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (idle_anim, idle_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/idle");
+    let (take_damage_anim, take_damage_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/take_damage/1");
+    let (dead_anim, dead_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/dead");
+    let (walk_anim, walk_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/walk");
+    let (crouch_start_anim, crouch_start_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/crouch/crouched");
+    let (crouch_idle_anim, crouch_idle_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/crouch/crouching");
+    let (light_punch_anim, light_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/light_punch",
     );
-    let medium_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (medium_punch_anim, medium_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/medium_punch",
     );
-    let heavy_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (heavy_punch_anim, heavy_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/heavy_punch",
     );
-    let light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (light_kick_anim, light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/light_kick",
     );
-    let crouched_light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (crouched_light_kick_anim, crouched_light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/crouch/attacks/light_kick",
     );
-    let airborne_light_kick_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (airborne_light_kick_anim, airborne_light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/airborne/attacks/light_kick",
     );
-    let special1_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (special1_anim, special1_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/specials/directionals/forward_light_punch",
     );
-    let special2_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (special2_anim, special2_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/specials/directionals/forward_heavy_punch",
     );
-    let spam_light_punch_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
+    let (spam_light_punch_anim, spam_light_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
         &texture_creator,
         "assets/foxgirl/standing/attacks/specials/spam/spam_light_punch",
     );
-    let dash_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/dash");
-    let dash_back_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/back_dash");
-    let neutral_jump_anim: Vec<(i32, Texture)> =
-        asset_loader::load_anim_from_dir(&texture_creator, "assets/foxgirl/standing/neutral_jump");
+    let (dash_anim, dash_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/dash");
+    let (dash_back_anim, dash_back_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/back_dash");
+    let (neutral_jump_anim, neutral_jump_colliders) =
+        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/neutral_jump");
 
+
+    let mut character_anims = HashMap::new();
+    let mut collider_anims = HashMap::new();
+
+    let idle = "idle".to_string();
+    if let Some(idle_colliders) = idle_colliders {
+        collider_anims.insert(
+            idle.clone(),
+            idle_colliders,
+        );
+    }
     character_anims.insert(
-        "idle".to_string(),
-        Animation::new(idle_anim, "idle".to_string(), None),
+        idle.clone(),
+        Animation::new(idle_anim, idle, None),
     );
+
+    let take_damage = "take_damage".to_string();
+    if let Some(take_damage_colliders) = take_damage_colliders {
+        collider_anims.insert(
+            take_damage.clone(),
+            take_damage_colliders,
+        );
+    }
     character_anims.insert(
-        "take_damage".to_string(),
-        Animation::new(take_damage_anim, "take_damage".to_string(), None),
+        take_damage.clone(),
+        Animation::new(take_damage_anim, take_damage, None),
     );
+
+    let dead = "dead".to_string();
+    if let Some(dead_colliders) = dead_colliders {
+        collider_anims.insert(
+            dead.clone(),
+            dead_colliders,
+        );
+    }
     character_anims.insert(
-        "dead".to_string(),
-        Animation::new(dead_anim, "dead".to_string(), None),
+        dead.clone(),
+        Animation::new(dead_anim, dead, None),
     );
+
+    let dash = "dash".to_string();
+    if let Some(dash_colliders) = dash_colliders {
+        collider_anims.insert(
+            dash.clone(),
+            dash_colliders,
+        );
+    }
     character_anims.insert(
-        "dash".to_string(),
-        Animation::new(dash_anim, "dash".to_string(), 
+        dash.clone(),
+        Animation::new(dash_anim, dash, 
         Some(vec![Vector2::new(0.0, 0.0), Vector2::new(4000.0, 0.0), Vector2::new(2000.0, 0.0), 
             Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0)]))
     );
+
+    let dash_back = "dash_back".to_string();
+    if let Some(dash_back_colliders) = dash_back_colliders {
+        collider_anims.insert(
+            dash_back.clone(),
+            dash_back_colliders,
+        );
+    }
     character_anims.insert(
-        "dash_back".to_string(),
-        Animation::new(dash_back_anim, "dash_back".to_string(), 
+        dash_back.clone(),
+        Animation::new(dash_back_anim, dash_back, 
         Some(vec![Vector2::new(0.0, 0.0), Vector2::new(-1000.0, 0.0), Vector2::new(-600.0, 0.0), Vector2::new(0.0, 0.0)])),
     );
+
+    let walk = "walk".to_string();
+    if let Some(walk_colliders) = walk_colliders {
+        collider_anims.insert(
+            walk.clone(),
+            walk_colliders,
+        );
+    }
     character_anims.insert(
-        "walk".to_string(),
-        Animation::new(walk_anim, "walk".to_string(), None),
+        walk.clone(),
+        Animation::new(walk_anim, walk, None),
     );
+
+    let light_punch = "light_punch".to_string();
+    if let Some(light_punch_colliders) = light_punch_colliders {
+        collider_anims.insert(
+            light_punch.clone(),
+            light_punch_colliders,
+        );
+    }
     character_anims.insert(
-        "light_punch".to_string(),
-        Animation::new(light_punch_anim, "light_punch".to_string(), None),
+        light_punch.clone(),
+        Animation::new(light_punch_anim, light_punch, None),
     );
     
+    let medium_punch = "medium_punch".to_string();
+    if let Some(medium_punch_colliders) = medium_punch_colliders {
+        collider_anims.insert(
+            medium_punch.clone(),
+            medium_punch_colliders,
+        );
+    }
     character_anims.insert(
-        "medium_punch".to_string(),
-        Animation::new(medium_punch_anim, "medium_punch".to_string(), Some(vec![Vector2::new(100.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(50.0, 0.0), 
+        medium_punch.clone(),
+        Animation::new(medium_punch_anim, medium_punch, Some(vec![Vector2::new(100.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(50.0, 0.0), 
         Vector2::new(1000.0, 0.0), Vector2::new(400.0, 0.0),Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), Vector2::new(50.0, 0.0), 
         Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0),  Vector2::new(0.0, 0.0),  Vector2::new(0.0, 0.0),  Vector2::new(0.0, 0.0)])),
     );
+
+    let heavy_punch = "heavy_punch".to_string();
+    if let Some(heavy_punch_colliders) = heavy_punch_colliders {
+        collider_anims.insert(
+            heavy_punch.clone(),
+            heavy_punch_colliders,
+        );
+    }
     character_anims.insert(
-        "heavy_punch".to_string(),
-        Animation::new(heavy_punch_anim, "heavy_punch".to_string(), None),
+        heavy_punch.clone(),
+        Animation::new(heavy_punch_anim, heavy_punch.to_string(), None),
     );
+
+    let light_kick = "light_kick".to_string();
+    if let Some(light_kick_colliders) = light_kick_colliders {
+        collider_anims.insert(
+            light_kick.clone(),
+        light_kick_colliders,
+        );
+    }
     character_anims.insert(
-        "light_kick".to_string(),
-        Animation::new(light_kick_anim, "light_kick".to_string(),Some(vec![Vector2::new(400.0, 0.0), Vector2::new(100.0, 0.0), Vector2::new(0.0, 0.0), 
+        light_kick.clone(),
+        Animation::new(light_kick_anim, light_kick,Some(vec![Vector2::new(400.0, 0.0), Vector2::new(100.0, 0.0), Vector2::new(0.0, 0.0), 
         Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0),Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(300.0, 0.0), Vector2::new(300.0, 0.0), 
         Vector2::new(300.0, 0.0), Vector2::new(300.0, 0.0),  Vector2::new(0.0, 0.0)])),
     );
+
+    let airborne_light_kick = "airborne_light_kick".to_string();
+    if let Some(airborne_light_kick_colliders) = airborne_light_kick_colliders {
+        collider_anims.insert(
+            airborne_light_kick.clone(),
+            airborne_light_kick_colliders,
+        );
+    }
     character_anims.insert(
-        "airborne_light_kick".to_string(),
-        Animation::new(airborne_light_kick_anim,"airborne_light_kick".to_string(), None),
-    );
-    character_anims.insert(
-        "crouched_light_kick".to_string(),
-        Animation::new(crouched_light_kick_anim,"crouched_light_kick".to_string(), None),
-    );
-    character_anims.insert(
-        "crouch".to_string(),
-        Animation::new(crouch_start_anim, "crouch".to_string(), None),
-    );
-    character_anims.insert(
-        "crouching".to_string(),
-        Animation::new(crouch_idle_anim, "crouching".to_string(), None),
-    );
-    character_anims.insert(
-        "neutral_jump".to_string(),
-        Animation::new(neutral_jump_anim, "neutral_jump".to_string(), None),
-    );
-    character_anims.insert(
-        "directional_light_punch".to_string(),
-        Animation::new(special1_anim, "forward_light_punch".to_string(), None),
-    );
-    character_anims.insert(
-        "directional_heavy_punch".to_string(),
-        Animation::new(special2_anim, "forward_heavy_punch".to_string(), None),
-    );
-    character_anims.insert(
-        "spam_light_punch".to_string(),
-        Animation::new(spam_light_punch_anim, "spam_light_punch".to_string(),None),
+        airborne_light_kick.clone(),
+        Animation::new(airborne_light_kick_anim,airborne_light_kick, None),
     );
 
-    character_anims
+    let crouched_light_kick = "crouched_light_kick".to_string();
+    if let Some(crouched_light_kick_colliders) = crouched_light_kick_colliders {
+        collider_anims.insert(
+            crouched_light_kick.clone(),
+            crouched_light_kick_colliders,
+        );
+    }
+    character_anims.insert(
+        crouched_light_kick.clone(),
+        Animation::new(crouched_light_kick_anim,crouched_light_kick, None),
+    );
+
+    let crouch = "crouch".to_string();
+    if let Some(crouch_start_colliders) = crouch_start_colliders {
+        collider_anims.insert(
+            crouch.clone(),
+            crouch_start_colliders,
+        );
+    }
+    character_anims.insert(
+        crouch.clone(),
+        Animation::new(crouch_start_anim, crouch, None),
+    );
+
+    let crouching = "crouching".to_string();
+    if let Some(crouch_idle_colliders) = crouch_idle_colliders {
+        collider_anims.insert(
+            crouching.clone(),
+            crouch_idle_colliders,
+        );
+    }
+    character_anims.insert(
+        crouching.clone(),
+        Animation::new(crouch_idle_anim, crouching, None),
+    );
+
+    let neutral_jump = "neutral_jump".to_string();
+    if let Some(neutral_jump_colliders) = neutral_jump_colliders {
+        collider_anims.insert(
+            neutral_jump.clone(),
+            neutral_jump_colliders,
+        );
+    }
+    character_anims.insert(
+        neutral_jump.clone(),
+        Animation::new(neutral_jump_anim, neutral_jump, None),
+    );
+
+    let forward_light_punch = "forward_light_punch".to_string();
+    if let Some(special1_colliders) = special1_colliders {
+        collider_anims.insert(
+            forward_light_punch.clone(),
+            special1_colliders,
+        );
+    }
+    character_anims.insert(
+        forward_light_punch.clone(),
+        Animation::new(special1_anim, forward_light_punch, None),
+    );
+
+    let forward_heavy_punch = "forward_heavy_punch".to_string();
+    if let Some(special2_colliders) = special2_colliders {
+        collider_anims.insert(
+            forward_heavy_punch.clone(),
+            special2_colliders,
+        );
+    }
+    character_anims.insert(
+        forward_heavy_punch.clone(),
+        Animation::new(special2_anim, forward_heavy_punch, None),
+    );
+
+    let spam_light_punch = "spam_light_punch".to_string();
+    if let Some(spam_light_punch_colliders) = spam_light_punch_colliders {
+        collider_anims.insert(
+            spam_light_punch.clone(),
+            spam_light_punch_colliders,
+        );
+    }
+    character_anims.insert(
+        spam_light_punch.clone(),
+        Animation::new(spam_light_punch_anim, spam_light_punch,None),
+    );
+
+    (character_anims, collider_anims)
 }
 
 fn load_foxgirl_attacks() -> HashMap<String, Attack> {
@@ -788,14 +960,14 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
 }
 
 fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
-
+    let animations_data = load_foxgirl_anims(texture_creator);
     CharacterAssets {
-        animations: load_foxgirl_anims(texture_creator),
+        animations: animations_data.0,
         input_combination_anims: load_foxgirl_special_inputs(),
         directional_variation_anims: load_foxgirl_directional_inputs(),
         projectiles: HashMap::new(),
         projectile_animation: HashMap::new(),
-        collider_animations: load_foxgirl_colliders(),
+        collider_animations: animations_data.1,
         attacks: load_foxgirl_attacks(),
         attack_points: HashMap::new(),
         attack_effects: HashMap::new(),
