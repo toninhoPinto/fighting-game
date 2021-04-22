@@ -103,7 +103,7 @@ pub fn load_hitboxes(
             ColliderType::Hurtbox
         };
 
-        let mut name = boxes[j].name.clone();
+        let mut name = boxes[j].name.clone().replace("?", "");
         let split_offset = name.find('_').unwrap_or(name.len());
 
         let collider = Collider {
@@ -132,7 +132,7 @@ pub fn load_hitboxes(
     let mut final_transformations: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
     for i in 1..timeline.len() {
         //for each  collider object
-        let mut name = timeline[i].name.clone();
+        let mut name = timeline[i].name.clone().replace("?", "");
         let split_offset = name.find('_').unwrap_or(name.len());
         let mut transformations_of_frame: HashMap<i32, Transformation> = HashMap::new();
 
