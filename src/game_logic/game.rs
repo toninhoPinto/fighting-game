@@ -1,3 +1,4 @@
+use parry2d::na::Vector2;
 use sdl2::{pixels::Color, rect::Rect};
 
 use crate::asset_management::{
@@ -76,6 +77,19 @@ impl<'a> Game<'a> {
                     self.hit_vfx[i].animation_index = 0;
                 }
             }
+        }
+    }
+
+    pub fn update_player_colliders_position_only(player: &mut Player, prev_pos: Vector2<f64>) {
+        let offset = player.position - prev_pos;
+        println!("offset {}", offset.x);
+        for i in 0..player.colliders.len() {
+            let aabb = &mut player.colliders[i].aabb;
+
+            aabb.mins.coords[0] += offset.x as f32;
+            aabb.mins.coords[1] += offset.y as f32;
+            aabb.maxs.coords[0] += offset.x as f32;
+            aabb.maxs.coords[1] += offset.y as f32;
         }
     }
 

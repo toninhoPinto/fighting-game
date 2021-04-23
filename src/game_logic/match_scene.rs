@@ -534,6 +534,9 @@ impl Scene for Match {
                 Game::update_player_colliders(&mut game.player1,  &p1_assets);
                 Game::update_player_colliders(&mut game.player2,  &p2_assets);
 
+                let start_p1_pos = game.player1.position;
+                let start_p2_pos = game.player2.position;
+
                 detect_push(
                     &mut game.player1,
                     &mut game.player2,
@@ -594,6 +597,16 @@ impl Scene for Match {
                     None => {}
                 }
                 
+                if game.player1.position != start_p1_pos {
+                    println!("push colliders p1");
+                    Game::update_player_colliders_position_only(game.player1, start_p1_pos);
+                }
+                
+                if game.player2.position != start_p2_pos {
+                    println!("push colliders p2");
+                    Game::update_player_colliders_position_only(game.player2, start_p2_pos);
+                }
+
                 game.update_vfx(&general_assets);
 
                 game.update_projectiles();

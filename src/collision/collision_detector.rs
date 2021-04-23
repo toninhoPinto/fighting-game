@@ -1,6 +1,6 @@
 use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Vector2}, query::{self, Contact}, shape::Cuboid};
 
-use crate::{asset_management::collider::{Collider, ColliderType}, game_logic::characters::player::PlayerState};
+use crate::{asset_management::collider::{Collider, ColliderType}, game_logic::{characters::player::PlayerState, game::Game}};
 use crate::game_logic::characters::player::Player;
 
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
@@ -71,9 +71,6 @@ pub fn detect_push(
             .filter(|&c| c.collider_type == ColliderType::Pushbox)
         {
             if p1_collider.aabb.intersects(&p2_collider.aabb) {
-                let p1_width = p1_collider.aabb.half_extents().y;
-                let p2_width = p2_collider.aabb.half_extents().y;
-
                 let penetrating = contact(p1_collider, p2_collider).unwrap().dist;
 
                 let player1_is_pushing = player1.velocity_x != 0 && player1.velocity_x.signum() == player1.dir_related_of_other;
@@ -132,8 +129,8 @@ pub fn detect_push(
                     player2.position += player2.push(level_width, Vector2::new(player2.dir_related_of_other  as f64 * penetrating as f64, 0.0));
                     player1.position += player1.push(level_width, Vector2::new(player1.dir_related_of_other  as f64 * penetrating as f64, 0.0));
                 }
-
             }
         }
     }
+
 }
