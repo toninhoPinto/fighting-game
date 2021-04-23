@@ -664,7 +664,7 @@ fn load_foxgirl_anims(
     character_anims.insert(
         dash.clone(),
         Animation::new(dash_anim, dash, 
-        Some(vec![Vector2::new(0.0, 0.0), Vector2::new(4000.0, 0.0), Vector2::new(2000.0, 0.0), 
+        Some(vec![Vector2::new(0.0, 0.0), Vector2::new(3000.0, 0.0), Vector2::new(2000.0, 0.0), 
             Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0)]))
     );
 

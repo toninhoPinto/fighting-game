@@ -164,7 +164,8 @@ fn hit_opponent<'a>(attack: &Attack, general_assets: &CommonAssets,
     } else {
         player_hitting.dir_related_of_other
     };
-    player_hit.knock_back(attack.push_back * dir_to_push);
+    println!("{} {}", attack.push_back, dir_to_push.signum());
+    player_hit.knock_back(attack.push_back * dir_to_push.signum());
 }
 
 fn opponent_blocked<'a>(attack: &Attack, general_assets: &CommonAssets, 
@@ -176,7 +177,7 @@ fn opponent_blocked<'a>(attack: &Attack, general_assets: &CommonAssets,
     } else {
         player_hitting.dir_related_of_other
     };
-    player_hit.knock_back(attack.push_back * dir_to_push);
+    player_hit.knock_back(attack.push_back * dir_to_push.signum());
 }
 
 fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
@@ -204,15 +205,20 @@ fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &C
     );
 }
 
-fn did_sucessfully_block(attack: &Attack, player_blocking: &Player) -> bool{
+fn did_sucessfully_block(point: naPoint<f32, U2>, attack: &Attack, player_blocking: &Player) -> bool{
     
     let blocked_low = attack.attack_height == AttackHeight::LOW && (player_blocking.state == PlayerState::Crouch || player_blocking.state == PlayerState::Crouching);
 
     let blocked_middle = attack.attack_height == AttackHeight::MIDDLE;
 
-    let blocked_high = attack.attack_height == AttackHeight::HIGH && !(player_blocking.state == PlayerState::Crouch || player_blocking.state == PlayerState::Crouching);;
+    let blocked_high = attack.attack_height == AttackHeight::HIGH && !(player_blocking.state == PlayerState::Crouch || player_blocking.state == PlayerState::Crouching);
 
-    player_blocking.is_blocking && (blocked_low || blocked_middle || blocked_high)
+    let facing_correct_dir = (point.x > player_blocking.position.x as f32 && player_blocking.flipped) || 
+    (point.x < player_blocking.position.x as f32 && !player_blocking.flipped);
+    println!("hit {} blocking pos {}", point.x , player_blocking.position.x);
+
+    println!("is_blocking {} blocked height {} blocked side {}", player_blocking.is_blocking, (blocked_low || blocked_middle || blocked_high), facing_correct_dir);
+    player_blocking.is_blocking && (blocked_low || blocked_middle || blocked_high) && facing_correct_dir
 }
 
 impl Scene for Match {
@@ -544,7 +550,7 @@ impl Scene for Match {
                             .attacks
                             .get(&name)
                             .unwrap();
-                        if !did_sucessfully_block(attack, &game.player1){
+                        if !did_sucessfully_block(point, attack, &game.player1){
                             hit_opponent(
                                 attack,
                                 &general_assets, 
@@ -571,7 +577,7 @@ impl Scene for Match {
                             .get(&name)
                             .unwrap();
 
-                        if !did_sucessfully_block(attack, &game.player1){
+                        if !did_sucessfully_block(point, attack, &game.player1){
                             hit_opponent(
                                 attack,
                                 &general_assets, 
