@@ -189,22 +189,6 @@ impl<'a> Player<'a> {
         self.state = PlayerState::Standing;
     }
 
-    pub fn push(&self, dir: i32, player_pushing: &Player, player_width: f32, dt: f64) -> Vector2<f64> {
-        let speed = if player_pushing.state == PlayerState::DashingForward {
-            player_pushing.character.dash_speed / 2.0
-        } else if player_pushing.is_airborne {
-            let offset = if (player_pushing.position.x - self.position.x).abs() < 10.0 {
-                player_width as f64
-            } else {
-                player_width as f64 - (player_pushing.position.x - self.position.x).abs() as f64
-            };
-            offset * 20.0
-        } else {
-            player_pushing.character.speed / 2.0
-        };
-        Vector2::new(dir as f64 * speed * dt, 0.0)
-    }
-
     pub fn update(
         &mut self,
         camera: &Camera,
@@ -275,6 +259,7 @@ impl<'a> Player<'a> {
             match &self.animator.current_animation.unwrap().offsets {
                 Some(offsets) => {
                     let offset = offsets[self.animator.sprite_shown as usize];
+                    self.velocity_x = (self.dir_related_of_other as f64 * offset.x).signum() as i32;
                     self.position += Vector2::new( self.dir_related_of_other as f64 * offset.x * dt, offset.y * dt)
                 }
                 None => { }

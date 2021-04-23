@@ -1,6 +1,6 @@
-use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::Isometry2, query::{self, Contact}, shape::Cuboid};
+use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Vector2}, query::{self, Contact}, shape::Cuboid};
 
-use crate::asset_management::collider::{Collider, ColliderType};
+use crate::{asset_management::collider::{Collider, ColliderType}, game_logic::characters::player::PlayerState};
 use crate::game_logic::characters::player::Player;
 
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
@@ -35,9 +35,6 @@ pub fn detect_hit(player_hitting: &mut Player, player_hit_colliders: &Vec<Collid
 
 
 fn contact(p1_collider: &Collider, p2_collider: &Collider) -> Option<Contact> {
-    let p1_width = p1_collider.aabb.half_extents().y;
-    let p2_width = p2_collider.aabb.half_extents().y;
-
     let cuboid1 = Cuboid::new(p1_collider.aabb.half_extents());
     let cuboid2 = Cuboid::new(p2_collider.aabb.half_extents());
     let prediction = 1.0;
@@ -78,43 +75,59 @@ pub fn detect_push(
 
                 let penetrating = contact(p1_collider, p2_collider).unwrap().dist;
 
-                if player1.velocity_x != 0
-                    && player1.velocity_x.signum() == player1.dir_related_of_other
-                {
-                    player1.position.x =
-                        player1.position.x + player1.velocity_x as f64 * penetrating as f64;
-                    player2.position += player2.push(player1.velocity_x, &*player1, p2_width, logic_timestep);
+                let player1_is_pushing = player1.velocity_x != 0 && player1.velocity_x.signum() == player1.dir_related_of_other;
+                if player1_is_pushing {
+                    let speed = if player1.state == PlayerState::DashingForward {
+                        player1.character.dash_speed / 2.0
+                    } else {
+                        player1.character.speed / 2.0
+                    };
+
+                    player1.position.x += player1.velocity_x as f64 * penetrating as f64;
+                    player2.position += Vector2::new(player1.velocity_x as f64 * speed * logic_timestep, 0.0);
                     player1.is_pushing = true;
                 }
 
                 if player1.is_airborne {
-                    player2.position += player2.push(
-                        player1.dir_related_of_other,
-                        player1,
-                        p2_width,
-                        logic_timestep,
-                    );
+                    let offset = if (player1.position.x - player2.position.x).abs() < 10.0 {
+                        p2_width as f64
+                    } else {
+                        p2_width as f64 - (player1.position.x - player2.position.x).abs() as f64
+                    };
+                    
+                    player2.position +=  Vector2::new(player1.dir_related_of_other as f64 * offset * 20.0 * logic_timestep, 0.0);
                     player1.is_pushing = true;
                 }
 
-                if player2.velocity_x != 0
-                    && player2.velocity_x.signum() == player2.dir_related_of_other
-                {
-                    player2.position.x =
-                        player2.position.x + player2.velocity_x as f64 * penetrating as f64;
-                        player1.position += player1.push(player2.velocity_x, player2, p1_width, logic_timestep);
+
+                let player2_is_pushing = player2.velocity_x != 0 && player2.velocity_x.signum() == player2.dir_related_of_other;
+                println!("v_x {} v_x signum {} dir_to_other{}", player2.velocity_x != 0, player2.velocity_x.signum(), player2.dir_related_of_other);
+                if player2_is_pushing {
+                    let speed = if player2.state == PlayerState::DashingForward {
+                        player2.character.dash_speed / 2.0
+                    } else {
+                        player2.character.speed / 2.0
+                    };
+
+                    player2.position.x += player2.dir_related_of_other as f64 * penetrating as f64;
+                    player1.position += Vector2::new(player2.velocity_x as f64 * speed * logic_timestep, 0.0);
                     player2.is_pushing = true;
                 }
 
                 if player2.is_airborne {
-                    player1.position += player1.push(
-                        player2.dir_related_of_other,
-                        player2,
-                        p1_width,
-                        logic_timestep,
-                    );
+                    let offset = if (player2.position.x - player1.position.x).abs() < 10.0 {
+                        p1_width as f64
+                    } else {
+                        p1_width as f64 - (player2.position.x - player1.position.x).abs() as f64
+                    };
+                    
+                    player1.position +=  Vector2::new(player2.dir_related_of_other as f64 * offset * 20.0 * logic_timestep, 0.0);
                     player2.is_pushing = true;
                 }
+
+
+
+
             }
         }
     }

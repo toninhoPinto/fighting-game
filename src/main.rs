@@ -26,6 +26,7 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
+//improve depenetration
 //decide which attacks can cancel into which 
 //add input buffer- decide if multiple buffers for different things or not
 
