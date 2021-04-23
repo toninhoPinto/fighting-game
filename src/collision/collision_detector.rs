@@ -89,14 +89,16 @@ pub fn detect_push(
                     player1.is_pushing = true;
                 }
 
+
                 if player1.is_airborne {
-                    let offset = if (player1.position.x - player2.position.x).abs() < 10.0 {
-                        p2_width as f64
-                    } else {
-                        p2_width as f64 - (player1.position.x - player2.position.x).abs() as f64
-                    };
-                    
-                    player2.position +=  Vector2::new(player1.dir_related_of_other as f64 * offset * 20.0 * logic_timestep, 0.0);
+                    let center = -(player1.position.x - player2.position.x).signum();
+                    let original_push = Vector2::new(center as f64 * penetrating as f64, 0.0);
+                    let push_airborne_player = player2.push(level_width, original_push);
+                    //if player 2 lands on player 1, push both
+                    //if player 1 is on corner and the push is towards the corner, push player 2 fully and dont push player 1
+                    //if player 1 is on corner and the push is away from corner, push player 1 fully and dont push player 2
+                    player1.position += push_airborne_player;
+                    player2.position += player1.push(level_width, push_airborne_player - original_push);
                     player1.is_pushing = true;
                 }
 
@@ -116,9 +118,13 @@ pub fn detect_push(
 
                 if player2.is_airborne {
                     let center = -(player2.position.x - player1.position.x).signum();
-                                      
-                    player2.position += player2.push(level_width, Vector2::new(center as f64 * penetrating as f64, 0.0));
-                    player1.position += player1.push(level_width, Vector2::new(-center as f64 * penetrating as f64, 0.0));
+                    let original_push = Vector2::new(center as f64 * penetrating as f64, 0.0);
+                    let push_airborne_player = player2.push(level_width, original_push);
+                    //if player 2 lands on player 1, push both
+                    //if player 1 is on corner and the push is towards the corner, push player 2 fully and dont push player 1
+                    //if player 1 is on corner and the push is away from corner, push player 1 fully and dont push player 2
+                    player2.position += push_airborne_player;
+                    player1.position += player1.push(level_width, push_airborne_player - original_push);
                     player2.is_pushing = true;
                 }
 
