@@ -51,6 +51,7 @@ pub struct Player<'a> {
     pub dir_related_of_other: i32,
     pub state: PlayerState,
     pub is_attacking: bool,
+    pub is_blocking: bool,
     pub is_airborne: bool,
     pub is_pushing: bool,
     pub knock_back_distance: i32,
@@ -88,6 +89,7 @@ impl<'a> Player<'a> {
             animation_state: None,
             is_attacking: false,
             is_airborne: false,
+            is_blocking: false,
             has_hit: false,
             is_pushing: false,
             knock_back_distance: 0,
@@ -292,6 +294,13 @@ impl<'a> Player<'a> {
         if (self.position.x as i32 + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
             self.position.x = (camera.rect.x() + camera.rect.width() as i32 - character_width) as f64;
         }
+
+        if self.velocity_x * self.dir_related_of_other < 0 {
+            self.is_blocking = true;
+        } else {
+            self.is_blocking = false;
+        }
+
     }
 
     fn walk_anims(&mut self, character_animation: &'a HashMap<String, Animation>) {

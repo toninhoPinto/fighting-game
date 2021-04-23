@@ -4,6 +4,8 @@ use std::{
     time::Instant,
 };
 
+use parry2d::na::{Point as naPoint, U2};
+
 use sdl2::{
     event::Event,
     keyboard::Keycode,
@@ -26,7 +28,7 @@ use crate::{
     GameStateData,
 };
 
-use super::{character_factory::CharacterAssets, characters::{keetar, player::Player}, inputs::apply_inputs::apply_input_state};
+use super::{character_factory::CharacterAssets, characters::{Attack, AttackHeight, keetar, player::Player}, inputs::apply_inputs::apply_input_state};
 use super::inputs::process_inputs::{
     released_joystick_reset_directional_state, update_directional_state,
 };
@@ -151,15 +153,10 @@ impl Match {
 }
 
 
-fn hit_opponent<'a>(collider_name: String, general_assets: &CommonAssets, 
-    player_hitting: &mut Player, player_hit: &mut Player<'a>, 
-    player_hitting_assets: &CharacterAssets, player_hit_assets: &'a CharacterAssets){
+fn hit_opponent<'a>(attack: &Attack, general_assets: &CommonAssets, 
+    player_hitting: &mut Player, player_hit: &mut Player<'a>, player_hit_assets: &'a CharacterAssets){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-    let attack = player_hitting_assets
-        .attacks
-        .get(&collider_name)
-        .unwrap();
     player_hit.take_damage(attack.damage);
     player_hit.state_update(&player_hit_assets);
     let dir_to_push = if player_hitting.is_airborne {
@@ -168,6 +165,54 @@ fn hit_opponent<'a>(collider_name: String, general_assets: &CommonAssets,
         player_hitting.dir_related_of_other
     };
     player_hit.knock_back(attack.push_back * dir_to_push);
+}
+
+fn opponent_blocked<'a>(attack: &Attack, general_assets: &CommonAssets, 
+    player_hitting: &mut Player, player_hit: &mut Player<'a>, player_hit_assets: &'a CharacterAssets){
+    
+    audio_player::play_sound(general_assets.sound_effects.get("block").unwrap());
+    let dir_to_push = if player_hitting.is_airborne {
+        player_hitting.direction_at_jump_time
+    } else {
+        player_hitting.dir_related_of_other
+    };
+    player_hit.knock_back(attack.push_back * dir_to_push);
+}
+
+fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
+    let TextureQuery { width, height, .. } = general_assets
+                            .hit_effect_animations
+                            .get(hit_particle)
+                            .unwrap()
+                            .sprites[0]
+                            .1
+                            .query();
+
+    let texture_width =width * 2;
+    let texture_height = height * 2;
+    //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
+    //this will have issues with other vfx
+    game.spawn_vfx(
+        Rect::new(
+            point.x as i32 - texture_width as i32 / 2 - 80,
+            point.y as i32 - texture_height as i32 / 2 - 100,
+            texture_width,
+            texture_height,
+        ),
+        hit_particle.to_string(),
+        Some(Color::GREEN),
+    );
+}
+
+fn did_sucessfully_block(attack: &Attack, player_blocking: &Player) -> bool{
+    
+    let blocked_low = attack.attack_height == AttackHeight::LOW && (player_blocking.state == PlayerState::Crouch || player_blocking.state == PlayerState::Crouching);
+
+    let blocked_middle = attack.attack_height == AttackHeight::MIDDLE;
+
+    let blocked_high = attack.attack_height == AttackHeight::HIGH && !(player_blocking.state == PlayerState::Crouch || player_blocking.state == PlayerState::Crouching);;
+
+    player_blocking.is_blocking && (blocked_low || blocked_middle || blocked_high)
 }
 
 impl Scene for Match {
@@ -494,69 +539,53 @@ impl Scene for Match {
 
                 match detect_hit(game.player1, &game.player2.colliders) {
                     Some((point, name)) => {
-                        hit_opponent(
-                            name,
-                            &general_assets, 
-                            &mut game.player1, &mut game.player2, 
-                            &p1_assets, &p2_assets);
 
-                        let TextureQuery { width, height, .. } = general_assets
-                            .hit_effect_animations
-                            .get("normal_hit")
-                            .unwrap()
-                            .sprites[0]
-                            .1
-                            .query();
-
-                        let texture_width =width * 2;
-                        let texture_height = height * 2;
-                        //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
-                        //this will have issues with other vfx
-                        game.spawn_vfx(
-                            Rect::new(
-                                point.x as i32 - texture_width as i32 / 2 - 80,
-                                point.y as i32 - texture_height as i32 / 2 - 100,
-                                texture_width,
-                                texture_height,
-                            ),
-                            "special_hit".to_string(),
-                            Some(Color::GREEN),
-                        );
-                        hit_stop = 10;
+                        let attack = p1_assets
+                            .attacks
+                            .get(&name)
+                            .unwrap();
+                        if !did_sucessfully_block(attack, &game.player1){
+                            hit_opponent(
+                                attack,
+                                &general_assets, 
+                                &mut game.player1, &mut game.player2, &p2_assets);
+                            hit_particles(point, "special_hit", &general_assets, &mut game);
+                            hit_stop = 10;
+                        } else {
+                            opponent_blocked(
+                                attack,
+                                &general_assets, 
+                                &mut game.player1, &mut game.player2, &p2_assets);
+                            hit_particles(point, "block", &general_assets, &mut game);
+                            hit_stop = 5;
+                        }
                     }
                     None => {}
                 }
 
                 match detect_hit(game.player2, &game.player1.colliders) {
                     Some((point, name)) => {
-                        hit_opponent(
-                            name,
-                            &general_assets, 
-                            &mut game.player2, &mut game.player1, 
-                            &p2_assets, &p1_assets);
 
-                        let TextureQuery { width, height, .. } = general_assets
-                            .hit_effect_animations
-                            .get("normal_hit")
-                            .unwrap()
-                            .sprites[0]
-                            .1
-                            .query();
-                        let texture_width = width * 2;
-                        let texture_height = height * 2;
-                        //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
-                        //this will have issues with other vfx
-                        game.spawn_vfx(
-                            Rect::new(
-                                point.x as i32 - texture_width as i32 / 2 - 80,
-                                point.y as i32 - texture_height as i32 / 2 - 100,
-                                texture_width,
-                                texture_height,
-                            ),
-                            "special_hit".to_string(),
-                            Some(Color::GREEN),
-                        );
-                        hit_stop = 10;
+                        let attack = p2_assets
+                            .attacks
+                            .get(&name)
+                            .unwrap();
+
+                        if !did_sucessfully_block(attack, &game.player1){
+                            hit_opponent(
+                                attack,
+                                &general_assets, 
+                                &mut game.player2, &mut game.player1, &p1_assets);
+                            hit_particles(point, "special_hit", &general_assets, &mut game);
+                            hit_stop = 10;
+                        } else {
+                            opponent_blocked(
+                                attack,
+                                &general_assets, 
+                                &mut game.player2, &mut game.player1, &p1_assets);
+                            hit_particles(point, "block", &general_assets, &mut game);
+                            hit_stop = 5;
+                        }
                     }
                     None => {}
                 }

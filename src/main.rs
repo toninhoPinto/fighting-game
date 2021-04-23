@@ -26,7 +26,6 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//import attack animation frame duration -> can use mainline, each key has a time: in miliseconds i assume
 //decide which attacks can cancel into which 
 //add input buffer- decide if multiple buffers for different things or not
 
@@ -52,6 +51,7 @@ use input::translated_inputs::TranslatedInput;
 //VFX sprites are not centered, hard to place
 //fix init colliders, its a mess
 
+//save sound settings on config
 //add menu to change the controllers for each player
 //add menu to change the controller mapping of keys/buttons
 //refactor menu and maybe remove menu having a separate loop?

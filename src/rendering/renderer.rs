@@ -1,6 +1,6 @@
 use std::string::String;
 
-use sdl2::rect::{Point, Rect};
+use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
@@ -71,8 +71,19 @@ pub fn render<'a, 'b>(
 
     let screen_res = canvas.output_size()?;
 
+    let TextureQuery { width, height, .. } = common_assets.shadow.query();
+    let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
+    let screen_rect = world_to_screen(shadow_rect, Point::new(player1.position.x as i32, -5), screen_res, camera);
+    canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
+        .unwrap();
+
+    let screen_rect2 = world_to_screen(shadow_rect, Point::new(player2.position.x as i32, -5), screen_res, camera);
+    canvas.copy(&common_assets.shadow, shadow_rect, screen_rect2)
+        .unwrap();
+
     render_player(player1, canvas, screen_res, camera, debug);
     render_player(player2, canvas, screen_res, camera, debug);
+
 
     for projectile in projectiles.iter() {
         let screen_rect_2 =
