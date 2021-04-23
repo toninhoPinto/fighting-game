@@ -45,6 +45,7 @@ use input::translated_inputs::TranslatedInput;
 //rekka  special attacks where you can chain special attacks but as one
 //makoto has a knee that cancels into a kick -> attacks that only cancel for another specific attack
 
+//not a big fan on how character width is calculated
 //check how to pitch shift attacks sound chunks depending on frame advantage
 //dash attacks
 //projectile with a specific target location

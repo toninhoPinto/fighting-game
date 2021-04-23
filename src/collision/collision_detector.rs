@@ -56,6 +56,7 @@ fn contact(p1_collider: &Collider, p2_collider: &Collider) -> Option<Contact> {
 pub fn detect_push(
     player1: &mut Player,
     player2: &mut Player,
+    level_width: i32,
     logic_timestep: f64,
 ) {
     player1.is_pushing = false;
@@ -101,7 +102,6 @@ pub fn detect_push(
 
 
                 let player2_is_pushing = player2.velocity_x != 0 && player2.velocity_x.signum() == player2.dir_related_of_other;
-                println!("v_x {} v_x signum {} dir_to_other{}", player2.velocity_x != 0, player2.velocity_x.signum(), player2.dir_related_of_other);
                 if player2_is_pushing {
                     let speed = if player2.state == PlayerState::DashingForward {
                         player2.character.dash_speed / 2.0
@@ -115,18 +115,17 @@ pub fn detect_push(
                 }
 
                 if player2.is_airborne {
-                    let offset = if (player2.position.x - player1.position.x).abs() < 10.0 {
-                        p1_width as f64
-                    } else {
-                        p1_width as f64 - (player2.position.x - player1.position.x).abs() as f64
-                    };
-                    
-                    player1.position +=  Vector2::new(player2.dir_related_of_other as f64 * offset * 20.0 * logic_timestep, 0.0);
+                    let center = -(player2.position.x - player1.position.x).signum();
+                                      
+                    player2.position += player2.push(level_width, Vector2::new(center as f64 * penetrating as f64, 0.0));
+                    player1.position += player1.push(level_width, Vector2::new(-center as f64 * penetrating as f64, 0.0));
                     player2.is_pushing = true;
                 }
 
-
-
+                if !player2.is_airborne && !player1.is_airborne && player1.velocity_x == 0 && player2.velocity_x == 0{
+                    player2.position += player2.push(level_width, Vector2::new(player2.dir_related_of_other  as f64 * penetrating as f64, 0.0));
+                    player1.position += player1.push(level_width, Vector2::new(player1.dir_related_of_other  as f64 * penetrating as f64, 0.0));
+                }
 
             }
         }

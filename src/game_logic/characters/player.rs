@@ -60,6 +60,7 @@ pub struct Player<'a> {
     pub animation_state: Option<AnimationState>,
     pub flipped: bool,
     pub has_hit: bool,
+    pub character_width: f64,
     pub character: Character,
 
     pub mid_jump_pos: f64,
@@ -94,6 +95,7 @@ impl<'a> Player<'a> {
             is_pushing: false,
             knock_back_distance: 0,
             flipped,
+            character_width: 0.0,
             character,
 
             curr_special_effect: None,
@@ -160,6 +162,22 @@ impl<'a> Player<'a> {
 
     pub fn knock_back(&mut self, amount: i32) {
         self.knock_back_distance = amount;
+    }
+
+    pub fn push(&self, level_width: i32, push_vec: Vector2<f64>) -> Vector2<f64>{
+        //if player 2 lands on player 1, push both
+        //if player 1 is on corner and the push is towards the corner, push player 2 fully and dont push player 1
+        //if player 1 is on corner and the push is away from corner, push player 1 fully and dont push player 2
+        println!("{}", (self.position.x + push_vec.x - self.character_width) < 0.0);
+
+        if (self.position.x + push_vec.x - self.character_width) < 0.0 {
+            Vector2::new(push_vec.x - self.position.x + self.character_width, 0.0)
+        } else if (self.position.x + push_vec.x + self.character_width) > level_width as f64 {
+            Vector2::new(level_width  as f64 - (push_vec.x + self.position.x + self.character_width), 0.0)
+        } else {
+            push_vec
+        }
+        
     }
 
     pub fn attack(&mut self, character_assets: &'a CharacterAssets, attack_animation: String) {

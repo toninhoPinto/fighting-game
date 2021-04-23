@@ -164,7 +164,6 @@ fn hit_opponent<'a>(attack: &Attack, general_assets: &CommonAssets,
     } else {
         player_hitting.dir_related_of_other
     };
-    println!("{} {}", attack.push_back, dir_to_push.signum());
     player_hit.knock_back(attack.push_back * dir_to_push.signum());
 }
 
@@ -215,9 +214,7 @@ fn did_sucessfully_block(point: naPoint<f32, U2>, attack: &Attack, player_blocki
 
     let facing_correct_dir = (point.x > player_blocking.position.x as f32 && player_blocking.flipped) || 
     (point.x < player_blocking.position.x as f32 && !player_blocking.flipped);
-    println!("hit {} blocking pos {}", point.x , player_blocking.position.x);
 
-    println!("is_blocking {} blocked height {} blocked side {}", player_blocking.is_blocking, (blocked_low || blocked_middle || blocked_high), facing_correct_dir);
     player_blocking.is_blocking && (blocked_low || blocked_middle || blocked_high) && facing_correct_dir
 }
 
@@ -276,12 +273,10 @@ impl Scene for Match {
             .get(&game.player1.animator.current_animation.unwrap().name);
         collider_animation.unwrap().init(&mut game.player1.colliders);
 
-
         let collider_animation = p2_assets
             .collider_animations
             .get(&game.player2.animator.current_animation.unwrap().name);
         collider_animation.unwrap().init(&mut game.player2.colliders);
-
 
         let p1_width = game
             .player1.colliders
@@ -292,6 +287,7 @@ impl Scene for Match {
             .aabb
             .half_extents()
             .x;
+        game.player1.character_width = p1_width as f64;
 
         let p2_width = game
             .player2.colliders
@@ -302,6 +298,7 @@ impl Scene for Match {
             .aabb
             .half_extents()
             .x;
+            game.player2.character_width = p2_width as f64;
 
         let screen_res = canvas.output_size().unwrap();
         let mut hp_bars = Match::hp_bars_init(
@@ -484,39 +481,39 @@ impl Scene for Match {
                 self.p2_inputs.update_inputs_reset_timer();
                 self.p2_inputs.update_special_inputs_reset_timer();
 
-                let pushbox1_right_x = match game
+                game.player1.character_width = match game
                     .player1.colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     .last()
                 {
-                    Some(point) => point.aabb.half_extents().x,
-                    None => p1_width,
+                    Some(point) => point.aabb.half_extents().x as f64,
+                    None => { game.player1.character_width },
                 };
 
                 game.player1.state_update(&p1_assets);
                 game.player1.update(
                     &camera,
                     logic_timestep,
-                    pushbox1_right_x as i32,
+                    game.player1.character_width as i32,
                     game.player2.position.x,
                 );
 
-                let pushbox2_right_x = match game
+                game.player2.character_width = match game
                     .player2.colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     .last()
                 {
-                    Some(point) => point.aabb.half_extents().x,
-                    None => p2_width,
+                    Some(point) => point.aabb.half_extents().x as f64,
+                    None => { game.player2.character_width },
                 };
 
                 game.player2.state_update(&p2_assets);
                 game.player2.update(
                     &camera,
                     logic_timestep,
-                    pushbox2_right_x as i32,
+                    game.player2.character_width as i32,
                     game.player1.position.x,
                 );
 
@@ -540,6 +537,7 @@ impl Scene for Match {
                 detect_push(
                     &mut game.player1,
                     &mut game.player2,
+                    LEVEL_WIDTH,
                     logic_timestep,
                 );
 
@@ -548,7 +546,7 @@ impl Scene for Match {
 
                         let attack = p1_assets
                             .attacks
-                            .get(&name)
+                            .get(&name.replace("?", ""))
                             .unwrap();
                         if !did_sucessfully_block(point, attack, &game.player1){
                             hit_opponent(
@@ -574,7 +572,7 @@ impl Scene for Match {
 
                         let attack = p2_assets
                             .attacks
-                            .get(&name)
+                            .get(&name.replace("?", ""))
                             .unwrap();
 
                         if !did_sucessfully_block(point, attack, &game.player1){
@@ -595,6 +593,7 @@ impl Scene for Match {
                     }
                     None => {}
                 }
+                
                 game.update_vfx(&general_assets);
 
                 game.update_projectiles();
@@ -629,7 +628,7 @@ impl Scene for Match {
                     &hp_bars[1],
                     &special_bars[0],
                     &special_bars[1],
-                    false,
+                    true,
                 )
                 .unwrap();
 

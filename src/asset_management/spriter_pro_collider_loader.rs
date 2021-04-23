@@ -100,7 +100,7 @@ pub fn load_animation_data(
             ColliderType::Hurtbox
         };
 
-        let mut name = boxes[j].name.clone().replace("?", "");
+        let mut name = boxes[j].name.clone();
         let split_offset = name.find('_').unwrap_or(name.len());
 
         let collider = Collider {
@@ -131,7 +131,7 @@ pub fn load_animation_data(
     let mut final_transformations: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
     for i in 1..timeline.len() {
         //for each  collider object
-        let mut name = timeline[i].name.clone().replace("?", "");
+        let mut name = timeline[i].name.clone();
         let split_offset = name.find('_').unwrap_or(name.len());
         let mut transformations_of_frame: HashMap<i32, Transformation> = HashMap::new();
 
@@ -170,6 +170,7 @@ pub fn load_animation_data(
         final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
     }
 
+    println!(" colliders {:?} and movements {:?}", colliders.iter().map(|c| c.name.clone()).collect::<Vec<String>>(), final_transformations.keys());
     (time_vec,
     ColliderAnimation {
         colliders: colliders,
