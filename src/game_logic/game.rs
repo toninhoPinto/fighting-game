@@ -82,7 +82,6 @@ impl<'a> Game<'a> {
 
     pub fn update_player_colliders_position_only(player: &mut Player, prev_pos: Vector2<f64>) {
         let offset = player.position - prev_pos;
-        println!("offset {}", offset.x);
         for i in 0..player.colliders.len() {
             let aabb = &mut player.colliders[i].aabb;
 

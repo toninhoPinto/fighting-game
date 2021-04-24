@@ -16,7 +16,7 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::asset_management::collider::ColliderType;
+use crate::{asset_management::collider::ColliderType, game_logic::{character_factory::{CharacterAssets, load_character, load_character_anim_data, load_stage}, characters::{Attack, AttackHeight, player::{Player, PlayerState}}, game::Game, inputs::{apply_inputs::{apply_input, apply_input_state}, input_cycle::AllInputManagement, process_inputs::{released_joystick_reset_directional_state, update_directional_state}}, saved_game::SavedGame}, ui::ingame::end_match_ui::EndMatch};
 use crate::asset_management::sound::audio_player;
 use crate::{
     asset_management::common_assets::CommonAssets,
@@ -26,18 +26,6 @@ use crate::{
     rendering::{self, camera::Camera},
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
     GameStateData,
-};
-
-use super::{character_factory::CharacterAssets, characters::{Attack, AttackHeight, keetar, player::Player}, inputs::apply_inputs::apply_input_state};
-use super::inputs::process_inputs::{
-    released_joystick_reset_directional_state, update_directional_state,
-};
-use super::{
-    character_factory::{load_character, load_character_anim_data, load_stage},
-    characters::player::PlayerState,
-    game::Game,
-    inputs::{apply_inputs::apply_input, input_cycle::AllInputManagement},
-    saved_game::SavedGame,
 };
 
 const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
@@ -224,6 +212,7 @@ impl Scene for Match {
         game_state_stack: &mut Vec<Box<dyn Scene>>,
         game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
+
         event_pump: &mut EventPump,
         joystick: &JoystickSubsystem,
         controller: &GameControllerSubsystem,
@@ -322,6 +311,8 @@ impl Scene for Match {
         let mut debug_pause = false;
         let mut should_rollback = false;
         let mut rollback = 0;
+
+        //let end_game_match = EndMatch::new(Rect::new(0, 0, 600, 600), Point::new(0, 0), font);
 
         'running: loop {
             let current_time = Instant::now();
@@ -461,6 +452,7 @@ impl Scene for Match {
                 }
 
                 game.current_frame += 1;
+
                 if game.player1.state != PlayerState::Dead
                     && game.player2.state != PlayerState::Dead
                 {
@@ -598,12 +590,10 @@ impl Scene for Match {
                 }
                 
                 if game.player1.position != start_p1_pos {
-                    println!("push colliders p1");
                     Game::update_player_colliders_position_only(game.player1, start_p1_pos);
                 }
                 
                 if game.player2.position != start_p2_pos {
-                    println!("push colliders p2");
                     Game::update_player_colliders_position_only(game.player2, start_p2_pos);
                 }
 
@@ -630,17 +620,13 @@ impl Scene for Match {
                     canvas,
                     &mut camera,
                     (&stage, stage_rect),
-                    game.player1,
+                    &mut game,
                     &p1_assets,
-                    game.player2,
                     &p2_assets,
-                    &game.projectiles,
-                    &mut game.hit_vfx,
                     &mut general_assets,
-                    &hp_bars[0],
-                    &hp_bars[1],
-                    &special_bars[0],
-                    &special_bars[1],
+                    &hp_bars,
+                    &special_bars,
+                   // &end_game_match,
                     true,
                 )
                 .unwrap();

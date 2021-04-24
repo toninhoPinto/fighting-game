@@ -1,7 +1,7 @@
 use engine_traits::scene::Scene;
+use scenes::menu_scene::MenuScene;
 use sdl2::image::{self, InitFlag};
 use sdl2::render::BlendMode;
-use ui::menus::menu_scene::MenuScene;
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -17,6 +17,7 @@ mod game_logic;
 mod input;
 mod rendering;
 mod ui;
+mod scenes;
 
 use asset_management::sound::{init_sound, music_player};
 
@@ -26,8 +27,7 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO list
-//improve depenetration
-//decide which attacks can cancel into which 
+//decide which attacks can cancel into which they can cancel into types of attacks or specific attacks 
 //add input buffer- decide if multiple buffers for different things or not
 
 //if there is a trade make the hitstun work during attack animation

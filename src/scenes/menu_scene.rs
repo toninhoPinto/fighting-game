@@ -10,7 +10,6 @@
 //quit
 
 use crate::{
-    game_logic::match_scene::Match,
     input::{self, controller_handler::Controller, translated_inputs::TranslatedInput},
     GameStateData,
 };
@@ -29,6 +28,8 @@ use std::collections::HashMap;
 //character select
 //stage select
 use crate::engine_traits::scene::Scene;
+
+use super::match_scene::Match;
 
 macro_rules! rect(
     ($x:expr, $y:expr, $w:expr, $h:expr) => (
