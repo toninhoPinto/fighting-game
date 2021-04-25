@@ -284,7 +284,7 @@ impl Player {
             
         }
 
-        //TODO float wiht != seems dangerous
+        //TODO float with != seems dangerous
         if opponent_position_x - self.position.x != 0.0 {
             self.dir_related_of_other = ((opponent_position_x - self.position.x) as i32).signum() ;
         }
@@ -301,8 +301,7 @@ impl Player {
             self.is_blocking = true;
         } else {
             self.is_blocking = false;
-        }
-
+        }        
     }
 
     fn walk_anims(&mut self, character_animation: &HashMap<String, Animation>) {

@@ -28,7 +28,6 @@ use input::translated_inputs::TranslatedInput;
 
 //TODO TOMORROW
 //add colliders to projectiles
-//change texture keys to integers instead of strings
 
 //TODO FEATURES
 //decide which attacks can cancel into which they can cancel into types of attacks or specific attacks 
@@ -60,6 +59,8 @@ use input::translated_inputs::TranslatedInput;
 //check if game is deterministic <- THIS IS VITAL FOR ROLLBACK MULTIPLAYER
 
 //TODO TECH DEBT AND BUGS
+//change texture keys to integers instead of strings
+// fix duplicated code -> game::update_player_colliders_position_only and game::update_projectile_colliders_position_only change player and projectile to &Vec<Collider> and fuse both functions
 //refactor menu and maybe remove menu having a separate loop?
 //VFX sprites are not centered, hard to place
 //fix init colliders, its a mess

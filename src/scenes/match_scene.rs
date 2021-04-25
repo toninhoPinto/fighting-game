@@ -207,10 +207,12 @@ fn did_sucessfully_block(point: naPoint<f32, U2>, attack: &Attack, player_blocki
 
     let blocked_high = attack.attack_height == AttackHeight::HIGH && !(player_blocking.state == PlayerState::Crouch || player_blocking.state == PlayerState::Crouching);
 
+    let blocked_all = attack.attack_height == AttackHeight::ALL;
+
     let facing_correct_dir = (point.x > player_blocking.position.x as f32 && player_blocking.flipped) || 
     (point.x < player_blocking.position.x as f32 && !player_blocking.flipped);
 
-    player_blocking.is_blocking && (blocked_low || blocked_middle || blocked_high) && facing_correct_dir
+    player_blocking.is_blocking && (blocked_all || blocked_low || blocked_middle || blocked_high) && facing_correct_dir
 }
 
 impl Scene for Match {
@@ -581,7 +583,7 @@ impl Scene for Match {
                         match detect_hit(&game.projectiles[i].colliders, &game.player2.colliders) {
                             Some((point, name)) => {
                                 let attack = &game.projectiles[i].attack;
-                                if !did_sucessfully_block(point, attack, &game.player1) {
+                                if !did_sucessfully_block(point, attack, &game.player2) {
                                     hit_opponent(
                                         attack,
                                         logic_timestep,
