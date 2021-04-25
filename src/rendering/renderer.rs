@@ -99,6 +99,9 @@ pub fn render(
     render_vfx(canvas, screen_res, camera, &mut game.hit_vfx, common_assets, debug);
 
     if debug {
+        for i in 0..game.projectiles.len() {
+            render_colliders(canvas, screen_res, camera, &mut game.projectiles[i].colliders);
+        }
         render_colliders(canvas, screen_res, camera, &mut game.player1.colliders);
         render_colliders(canvas, screen_res, camera, &mut game.player2.colliders);
     }

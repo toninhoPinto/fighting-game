@@ -10,6 +10,7 @@ pub struct Projectile {
     pub sprite: Rect,
     pub direction: Point,
     pub target_position: Option<Vector2<f64>>,
+    pub dissapear_if_offscreen: bool,
     pub colliders: Vec<Collider>,
     pub speed: i32,
     pub damage: i32,
@@ -24,11 +25,12 @@ impl Projectile {
         Self {
             position: spawn_point,
             sprite: Rect::new(0, 0, 100, 110),
-            speed: 10,
+            speed: 0,
             direction: Point::new(0, 0),
             target_position: None,
             colliders: Vec::new(),
-            damage: 20,
+            dissapear_if_offscreen: false,
+            damage: 0,
             flipped: false,
             animator: Animator::new(),
             player_owner,
@@ -36,21 +38,41 @@ impl Projectile {
         }
     }
 
-    pub fn init(&mut self, animation: Animation) {
+    pub fn init(&mut self, animation: Animation, mut colliders: Vec<Collider>) {
         self.animator.play(animation, 1.0,false);
+
+
+        colliders.iter_mut().for_each(|c| {
+            c.enabled = true;
+
+            let aabb = &mut c.aabb;
+            aabb.mins.coords[0] += self.position.x as f32;
+            aabb.mins.coords[1] += self.position.y as f32;
+            aabb.maxs.coords[0] += self.position.x as f32;
+            aabb.maxs.coords[1] += self.position.y as f32;
+        });
+        self.colliders = colliders;
     }
 
     pub fn update(&mut self) {
         match self.target_position {
-            Some(_) => {
-                if self.position.x <= self.target_position.unwrap().x
-                    && self.position.y <= self.target_position.unwrap().y
+            Some(target) => {
+                let mut position_directionless = self.position;
+                position_directionless.x *= self.direction.x as f64;
+                position_directionless.y *= self.direction.y as f64;
+
+                let mut target_directionless = target;
+                target_directionless.x *= self.direction.x as f64;
+                target_directionless.y *= self.direction.y as f64;
+
+                if position_directionless.x <= target_directionless.x
+                    && position_directionless.y <= target_directionless.y
                 {
-                    self.position += Vector2::new(self.speed as f64, 0.0);
+                    self.position += Vector2::new((self.direction.x * self.speed) as f64, 0.0);
                 }
             }
             None => {
-                self.position += Vector2::new(self.speed as f64, 0.0);
+                self.position += Vector2::new((self.direction.x * self.speed) as f64, 0.0);
             }
         }
     }

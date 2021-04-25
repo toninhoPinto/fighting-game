@@ -611,6 +611,8 @@ impl Scene for Match {
 
                 game.update_projectiles();
 
+                
+
                 camera.update(LEVEL_WIDTH, &game.player1, &game.player2);
 
                 hp_bars[0].update(game.player1.character.hp);

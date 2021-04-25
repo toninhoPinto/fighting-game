@@ -48,11 +48,11 @@ impl ColliderAnimation {
 
     // update offsets by player position
     pub fn update(&self, player: &mut Player) {
+        let left_player_pos =
+            player.position.x as f32 - player.character.sprite.width() as f32 / 2.0;
+
         for i in 0..player.colliders.len() {
             let aabb = &mut player.colliders[i].aabb;
-
-            let left_player_pos =
-                player.position.x as f32 - player.character.sprite.width() as f32 / 2.0;
 
             aabb.mins.coords[0] = left_player_pos;
             aabb.mins.coords[1] = player.position.y as f32;

@@ -80,10 +80,24 @@ impl Game {
         }
     }
 
+
+    //TODO change player and projectile to &Vec<Collider> and fuse both functions
     pub fn update_player_colliders_position_only(player: &mut Player, prev_pos: Vector2<f64>) {
         let offset = player.position - prev_pos;
         for i in 0..player.colliders.len() {
             let aabb = &mut player.colliders[i].aabb;
+
+            aabb.mins.coords[0] += offset.x as f32;
+            aabb.mins.coords[1] += offset.y as f32;
+            aabb.maxs.coords[0] += offset.x as f32;
+            aabb.maxs.coords[1] += offset.y as f32;
+        }
+    }
+
+    pub fn update_projectile_colliders_position_only(projectile: &mut Projectile, prev_pos: Vector2<f64>) {
+        let offset = projectile.position - prev_pos;
+        for i in 0..projectile.colliders.len() {
+            let aabb = &mut projectile.colliders[i].aabb;
 
             aabb.mins.coords[0] += offset.x as f32;
             aabb.mins.coords[1] += offset.y as f32;
@@ -104,7 +118,9 @@ impl Game {
 
     pub fn update_projectiles(&mut self) {
         for i in 0..self.projectiles.len() {
+            let prev_pos =  self.projectiles[i].position;
             self.projectiles[i].update();
+            Game::update_projectile_colliders_position_only(&mut self.projectiles[i], prev_pos);
         }
     }
 

@@ -125,13 +125,15 @@ fn load_keetar_special_inputs() -> Vec<(Vec<i32>, String)> {
     specials_inputs
 }
 
-fn load_keetar_projectile_anims() -> HashMap<String, Animation> {
+fn load_keetar_projectile_anims() -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>){
     let mut projectile_anims = HashMap::new();
+    let mut projectile_colliders = HashMap::new();
     let (projectile_anim, colliders)= asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/projectiles");
     
     projectile_anims.insert("note".to_string(), Animation::new(projectile_anim, "note".to_string(), None));
+    projectile_colliders.insert("note".to_string(), colliders.unwrap());
 
-    projectile_anims
+    (projectile_anims, projectile_colliders)
 }
 
 fn load_keetar_anims() -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>) {
@@ -507,10 +509,12 @@ fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> Charac
 
 fn load_keetar_animations() -> CharacterAnimations {
     let animations_data = load_keetar_anims();
+    let projectile_data = load_keetar_projectile_anims();
     CharacterAnimations {
         animations: animations_data.0,
-        projectile_animation: load_keetar_projectile_anims(),
+        projectile_animation: projectile_data.0,
         collider_animations: animations_data.1,
+        projectile_collider_animations: projectile_data.1,
     }
 }
 
@@ -955,6 +959,7 @@ fn load_foxgirl_animations() -> CharacterAnimations {
         animations: anims,
         projectile_animation: HashMap::new(),
         collider_animations: collider_anims,
+        projectile_collider_animations: HashMap::new(),
     }
 }
 
