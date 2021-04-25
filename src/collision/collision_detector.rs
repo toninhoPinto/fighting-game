@@ -1,39 +1,33 @@
 use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Vector2}, query::{self, Contact}, shape::Cuboid};
 
-use crate::{asset_management::collider::{Collider, ColliderType}, game_logic::{characters::player::PlayerState, game::Game}};
+use crate::{asset_management::collider::{Collider, ColliderType}, game_logic::{characters::player::PlayerState}};
 use crate::game_logic::characters::player::Player;
 
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
 
-pub fn detect_hit(player_hitting: &mut Player, player_hit_colliders: &Vec<Collider>) -> Option<(Point<Real>, String)>{
-    
-    if !player_hitting.has_hit {
-        for collider in player_hitting.colliders
+pub fn detect_hit(player_hitting_colliders: &Vec<Collider>, player_hit_colliders: &Vec<Collider>) -> Option<(Point<Real>, String)>{
+    for collider in player_hitting_colliders
+        .iter()
+        .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
+    {
+        for collider_to_take_dmg in player_hit_colliders
             .iter()
-            .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
+            .filter(|&c| c.collider_type == ColliderType::Hurtbox && c.enabled)
         {
-            for collider_to_take_dmg in player_hit_colliders
-                .iter()
-                .filter(|&c| c.collider_type == ColliderType::Hurtbox && c.enabled)
-            {
-                if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
-                    let contact = contact(collider, collider_to_take_dmg);
-                    
-                    return if let Some(contact) = contact {
-                        player_hitting.has_hit = true;
-                        Some((contact.point2, collider.name.clone()))
-                    } else {
-                        None
-                    };
-                }
+            if collider.aabb.intersects(&collider_to_take_dmg.aabb) {
+                let contact = contact(collider, collider_to_take_dmg);
+                return if let Some(contact) = contact {
+                    Some((contact.point2, collider.name.clone()))
+                } else {
+                    None
+                };
             }
         }
     }
     None
 }
-
-
+ 
 fn contact(p1_collider: &Collider, p2_collider: &Collider) -> Option<Contact> {
     let cuboid1 = Cuboid::new(p1_collider.aabb.half_extents());
     let cuboid2 = Cuboid::new(p2_collider.aabb.half_extents());

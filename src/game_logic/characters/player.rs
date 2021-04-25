@@ -54,7 +54,7 @@ pub struct Player {
     pub is_blocking: bool,
     pub is_airborne: bool,
     pub is_pushing: bool,
-    pub knock_back_distance: i32,
+    pub knock_back_distance: f64,
 
     pub animator: Animator,
     pub animation_state: Option<AnimationState>,
@@ -93,7 +93,7 @@ impl Player {
             is_blocking: false,
             has_hit: false,
             is_pushing: false,
-            knock_back_distance: 0,
+            knock_back_distance: 0.0,
             flipped,
             character_width: 0.0,
             character,
@@ -133,7 +133,7 @@ impl Player {
     pub fn player_can_move(&self) -> bool {
         !(self.is_attacking
             || self.is_airborne
-            || self.knock_back_distance > 0
+            || self.knock_back_distance.abs() > 0.0
             || self.state == PlayerState::Dead
             || self.state == PlayerState::DashingForward
             || self.state == PlayerState::DashingBackward)
@@ -160,8 +160,9 @@ impl Player {
         }
     }
 
-    pub fn knock_back(&mut self, amount: i32) {
-        self.knock_back_distance = amount;
+    pub fn knock_back(&mut self, amount: f64, dt: f64) {
+        self.position += Vector2::new(amount * dt, 0.0);
+        self.knock_back_distance = amount - (amount * 10.0 * dt);
     }
 
     pub fn push(&self, level_width: i32, push_vec: Vector2<f64>) -> Vector2<f64>{
@@ -218,10 +219,13 @@ impl Player {
             self.is_airborne = true;
         }
 
-        //TODO im just moving by an int instead of multiplying by dt, not sure if this is bad
-        if self.knock_back_distance != 0 {
-            self.position += Vector2::new(self.knock_back_distance as f64, 0.0);
-            self.knock_back_distance = 0;
+        //TODO I KINDA HATE THIS
+        if self.knock_back_distance.abs() > 0.0 {
+            self.position += Vector2::new(self.knock_back_distance as f64 * dt, 0.0);
+            self.knock_back_distance -= self.knock_back_distance * 10.0 * dt;
+            if (self.knock_back_distance  * 100.0).round() / 100.0 <= 0.0 {
+                self.knock_back_distance = 0.0;
+            }
         }
 
         let speed_mod = if self.is_pushing { 0.5 } else { 1.0 };

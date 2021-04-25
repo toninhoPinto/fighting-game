@@ -31,6 +31,7 @@ pub enum AttackHeight {
     LOW,
     MIDDLE,
     HIGH,
+    ALL,
 }
 
 #[derive(PartialEq)]
@@ -44,7 +45,7 @@ pub struct Attack {
     pub damage: i32,
     pub stun_on_hit: i32,
     pub stun_on_block: i32,
-    pub push_back: i32,
+    pub push_back: f64,
     pub attack_height: AttackHeight,
     pub attack_type: AttackType,
 }

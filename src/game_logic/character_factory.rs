@@ -456,7 +456,7 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
-            push_back: 5,
+            push_back: 5.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
@@ -468,7 +468,7 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             damage: 0,
             stun_on_hit: 0,
             stun_on_block: 0,
-            push_back: 0,
+            push_back: 0.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
@@ -480,7 +480,7 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             damage: 0,
             stun_on_hit: 0,
             stun_on_block: 0,
-            push_back: 0,
+            push_back: 0.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
@@ -492,7 +492,7 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             damage: 0,
             stun_on_hit: 0,
             stun_on_block: 0,
-            push_back: 0,
+            push_back: 0.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
@@ -847,7 +847,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
-            push_back: 5,
+            push_back: 400.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
@@ -859,7 +859,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 15,
             stun_on_hit: 10,
             stun_on_block: 4,
-            push_back: 30,
+            push_back: 300.0,
             attack_height: AttackHeight::LOW,
             attack_type: AttackType::Normal
         },
@@ -871,7 +871,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 15,
             stun_on_hit: 10,
             stun_on_block: 4,
-            push_back: 30,
+            push_back: 300.0,
             attack_height: AttackHeight::HIGH,
             attack_type: AttackType::Normal
         },
@@ -883,7 +883,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
-            push_back: 5,
+            push_back: 50.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
@@ -895,7 +895,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
-            push_back: 5,
+            push_back: 50.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
@@ -907,7 +907,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 10,
             stun_on_hit: 20,
             stun_on_block: 14,
-            push_back: 10,
+            push_back: 50.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
@@ -919,7 +919,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 5,
             stun_on_hit: 20,
             stun_on_block: 14,
-            push_back: 10,
+            push_back: 70.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
@@ -931,7 +931,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 2,
             stun_on_hit: 20,
             stun_on_block: 14,
-            push_back: 10,
+            push_back: 70.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
@@ -943,7 +943,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 20,
             stun_on_hit: 20,
             stun_on_block: 14,
-            push_back: 10,
+            push_back: 70.0,
             attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },

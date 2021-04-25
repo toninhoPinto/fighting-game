@@ -149,7 +149,7 @@ impl Match {
 }
 
 
-fn hit_opponent(attack: &Attack, general_assets: &CommonAssets, 
+fn hit_opponent(attack: &Attack, time: f64, general_assets: &CommonAssets, 
     player_hitting: &mut Player, player_hit: &mut Player, player_hit_anims: &CharacterAnimations){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
@@ -160,10 +160,10 @@ fn hit_opponent(attack: &Attack, general_assets: &CommonAssets,
     } else {
         player_hitting.dir_related_of_other
     };
-    player_hit.knock_back(attack.push_back * dir_to_push.signum());
+    player_hit.knock_back(attack.push_back * dir_to_push.signum() as f64, time);
 }
 
-fn opponent_blocked(attack: &Attack, general_assets: &CommonAssets, 
+fn opponent_blocked(attack: &Attack, time: f64, general_assets: &CommonAssets, 
     player_hitting: &mut Player, player_hit: &mut Player, _player_hit_assets: &CharacterAnimations){
     
     audio_player::play_sound(general_assets.sound_effects.get("block").unwrap());
@@ -172,7 +172,7 @@ fn opponent_blocked(attack: &Attack, general_assets: &CommonAssets,
     } else {
         player_hitting.dir_related_of_other
     };
-    player_hit.knock_back(attack.push_back * dir_to_push.signum());
+    player_hit.knock_back(attack.push_back * dir_to_push.signum() as f64, time);
 }
 
 fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
@@ -536,8 +536,8 @@ impl Scene for Match {
                 Game::update_player_colliders(&mut game.player1,  &p1_anims);
                 Game::update_player_colliders(&mut game.player2,  &p2_anims);
 
-                let start_p1_pos = game.player1.position;
-                let start_p2_pos = game.player2.position;
+                let start_p1_pos = game.player1.position.clone();
+                let start_p2_pos = game.player2.position.clone();
 
                 detect_push(
                     &mut game.player1,
@@ -546,64 +546,119 @@ impl Scene for Match {
                     logic_timestep,
                 );
 
-                match detect_hit(&mut game.player1, &game.player2.colliders) {
-                    Some((point, name)) => {
-
-                        let attack = p1_data
-                            .attacks
-                            .get(&name.replace("?", ""))
-                            .unwrap();
-                        if !did_sucessfully_block(point, attack, &game.player1){
-                            hit_opponent(
-                                attack,
-                                &general_assets, 
-                                &mut game.player1, &mut game.player2, &p2_anims);
-                            hit_particles(point, "special_hit", &general_assets, &mut game);
-                            hit_stop = 10;
-                        } else {
-                            opponent_blocked(
-                                attack,
-                                &general_assets, 
-                                &mut game.player1, &mut game.player2, &p2_anims);
-                            hit_particles(point, "block", &general_assets, &mut game);
-                            hit_stop = 5;
+                if !game.player1.has_hit {
+                    match detect_hit(&game.player1.colliders, &game.player2.colliders) {
+                        Some((point, name)) => {
+                            game.player1.has_hit = true;
+                            let attack = p1_data
+                                .attacks
+                                .get(&name.replace("?", ""))
+                                .unwrap();
+                            if !did_sucessfully_block(point, attack, &game.player1){
+                                hit_opponent(
+                                    attack,
+                                    logic_timestep,
+                                    &general_assets, 
+                                    &mut game.player1, &mut game.player2, &p2_anims);
+                                hit_particles(point, "special_hit", &general_assets, &mut game);
+                                hit_stop = 10;
+                            } else {
+                                opponent_blocked(
+                                    attack,
+                                    logic_timestep,
+                                    &general_assets, 
+                                    &mut game.player1, &mut game.player2, &p2_anims);
+                                hit_particles(point, "block", &general_assets, &mut game);
+                                hit_stop = 5;
+                            }
                         }
+                        None => {}
                     }
-                    None => {}
                 }
 
-                match detect_hit(&mut game.player2, &game.player1.colliders) {
-                    Some((point, name)) => {
+                for i in 0..game.projectiles.len(){
+                    if game.projectiles[i].player_owner == 1 {
+                        match detect_hit(&game.projectiles[i].colliders, &game.player2.colliders) {
+                            Some((point, name)) => {
+                                let attack = &game.projectiles[i].attack;
+                                if !did_sucessfully_block(point, attack, &game.player1) {
+                                    hit_opponent(
+                                        attack,
+                                        logic_timestep,
+                                        &general_assets, 
+                                        &mut game.player1, &mut game.player2, &p2_anims);
+                                    hit_particles(point, "special_hit", &general_assets, &mut game);
+                                    hit_stop = 10;
+                                } else {
+                                    opponent_blocked(
+                                        attack,
+                                        logic_timestep,
+                                        &general_assets, 
+                                        &mut game.player1, &mut game.player2, &p2_anims);
+                                    hit_particles(point, "block", &general_assets, &mut game);
+                                    hit_stop = 5;
+                                }
+                                (game.projectiles[i].on_hit)(&mut game.projectiles[i]);
+                                break;
+                            }
+                            None => {}
+                        }
+                    } 
+                }
 
-                        let attack = p2_data
-                            .attacks
-                            .get(&name.replace("?", ""))
-                            .unwrap();
+                //TODO probably doesnt need to run unless there is a collision
+                game.projectiles.retain(|p| p.is_alive);
+                
+                if !game.player2.has_hit {
+                    match detect_hit(&game.player2.colliders, &game.player1.colliders) {
+                        Some((point, name)) => {
+                            game.player2.has_hit = true;
+                            let attack = p2_data
+                                .attacks
+                                .get(&name.replace("?", ""))
+                                .unwrap();
 
-                        if !did_sucessfully_block(point, attack, &game.player1){
-                            hit_opponent(
-                                attack,
-                                &general_assets, 
-                                &mut game.player2, &mut game.player1, &p1_anims);
-                            hit_particles(point, "special_hit", &general_assets, &mut game);
-                            hit_stop = 10;
-                        } else {
-                            opponent_blocked(
-                                attack,
-                                &general_assets, 
-                                &mut game.player2, &mut game.player1, &p1_anims);
-                            hit_particles(point, "block", &general_assets, &mut game);
-                            hit_stop = 5;
+                            if !did_sucessfully_block(point, attack, &game.player1){
+                                hit_opponent(
+                                    attack,
+                                    logic_timestep,
+                                    &general_assets, 
+                                    &mut game.player2, &mut game.player1, &p1_anims);
+                                hit_particles(point, "special_hit", &general_assets, &mut game);
+                                hit_stop = 10;
+                            } else {
+                                opponent_blocked(
+                                    attack,
+                                    logic_timestep,
+                                    &general_assets, 
+                                    &mut game.player2, &mut game.player1, &p1_anims);
+                                hit_particles(point, "block", &general_assets, &mut game);
+                                hit_stop = 5;
+                            }
+                        }
+                        None => {}
+                    }
+                }
+                
+                for i in 0..game.projectiles.len(){
+                    if game.projectiles[i].player_owner == 2 {
+                        match detect_hit(&game.projectiles[i].colliders, &game.player1.colliders) {
+                            Some((point, name)) => {
+
+                                break;
+                            }
+                            None => {}
                         }
                     }
-                    None => {}
                 }
                 
                 if game.player1.position != start_p1_pos {
+                    println!("update position p1");
                     Game::update_player_colliders_position_only(&mut game.player1, start_p1_pos);
                 }
                 
                 if game.player2.position != start_p2_pos {
+                    println!("update position p2");
                     Game::update_player_colliders_position_only(&mut game.player2, start_p2_pos);
                 }
 
@@ -611,7 +666,6 @@ impl Scene for Match {
 
                 game.update_projectiles();
 
-                
 
                 camera.update(LEVEL_WIDTH, &game.player1, &game.player2);
 

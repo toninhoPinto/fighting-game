@@ -1,9 +1,9 @@
 use parry2d::na::Vector2;
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::asset_management::{animation::{Animation, Animator}, collider::Collider};
+use crate::asset_management::{animation::{Animation, Animator}, collider::{Collider, ColliderAnimation}};
 
-use super::character_factory::CharacterAssets;
+use super::{character_factory::CharacterAssets, characters::Attack};
 
 pub struct Projectile {
     pub position: Vector2<f64>,
@@ -13,15 +13,17 @@ pub struct Projectile {
     pub dissapear_if_offscreen: bool,
     pub colliders: Vec<Collider>,
     pub speed: i32,
-    pub damage: i32,
+    pub attack: Attack,
     pub flipped: bool,
     pub animator: Animator,
     pub player_owner: i32,
     pub is_alive: bool,
+    pub on_hit: fn(&mut Projectile) -> (),
 }
 
 impl Projectile {
-    pub fn new(player_owner: i32, spawn_point: Vector2<f64>) -> Self {
+    pub fn new(player_owner: i32, spawn_point: Vector2<f64>, attack: Attack) -> Self {
+        let on_hit_die = |projectile: &mut Projectile| {projectile.is_alive = false};
         Self {
             position: spawn_point,
             sprite: Rect::new(0, 0, 100, 110),
@@ -30,28 +32,30 @@ impl Projectile {
             target_position: None,
             colliders: Vec::new(),
             dissapear_if_offscreen: false,
-            damage: 0,
+            attack,
             flipped: false,
             animator: Animator::new(),
             player_owner,
             is_alive: true,
+            on_hit: on_hit_die
         }
     }
 
-    pub fn init(&mut self, animation: Animation, mut colliders: Vec<Collider>) {
+    pub fn init(&mut self, animation: Animation, collider_data: &ColliderAnimation) {
         self.animator.play(animation, 1.0,false);
 
+        self.colliders = collider_data.colliders.clone();
 
-        colliders.iter_mut().for_each(|c| {
+        let projectile_pos = self.position;
+        self.colliders.iter_mut().for_each(|c| {
             c.enabled = true;
 
             let aabb = &mut c.aabb;
-            aabb.mins.coords[0] += self.position.x as f32;
-            aabb.mins.coords[1] += self.position.y as f32;
-            aabb.maxs.coords[0] += self.position.x as f32;
-            aabb.maxs.coords[1] += self.position.y as f32;
+            aabb.mins.coords[0] += projectile_pos.x as f32;
+            aabb.mins.coords[1] += projectile_pos.y as f32;
+            aabb.maxs.coords[0] += projectile_pos.x as f32;
+            aabb.maxs.coords[1] += projectile_pos.y as f32;
         });
-        self.colliders = colliders;
     }
 
     pub fn update(&mut self) {
