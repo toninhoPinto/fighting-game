@@ -26,9 +26,6 @@ use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
 
-//TODO TOMORROW
-//add colliders to projectiles
-
 //TODO FEATURES
 //decide which attacks can cancel into which they can cancel into types of attacks or specific attacks 
 //add input buffer- decide if multiple buffers for different things or not
@@ -59,6 +56,7 @@ use input::translated_inputs::TranslatedInput;
 //check if game is deterministic <- THIS IS VITAL FOR ROLLBACK MULTIPLAYER
 
 //TODO TECH DEBT AND BUGS
+//Projectiles offset is not correct when taking into account if the sprite is flipped, may need refactor of collider to make it more generic
 //change texture keys to integers instead of strings
 // fix duplicated code -> game::update_player_colliders_position_only and game::update_projectile_colliders_position_only change player and projectile to &Vec<Collider> and fuse both functions
 //refactor menu and maybe remove menu having a separate loop?
