@@ -1,5 +1,5 @@
 use super::{game_inputs::GameAction, input_cycle::AllInputManagement};
-use crate::game_logic::character_factory::CharacterAssets;
+use crate::game_logic::character_factory::{CharacterAnimations, CharacterData};
 use crate::{
     game_logic::characters::player::{Player, PlayerState},
     input::translated_inputs::TranslatedInput,
@@ -25,9 +25,10 @@ pub fn apply_input_state(player: &mut Player, directional_state: &[(TranslatedIn
     }
 }
 
-pub fn apply_input<'a, 'b>(
-    player: &'b mut Player<'a>,
-    character_anims: &'a CharacterAssets,
+pub fn apply_input(
+    player: &mut Player,
+    character_anims: &CharacterAnimations,
+    character_data: &CharacterData,
     inputs: &mut AllInputManagement,
 ) {
     let mut frame_state = if inputs.action_history.is_empty() {
@@ -90,6 +91,7 @@ pub fn apply_input<'a, 'b>(
                     check_attack_inputs(
                         player,
                         character_anims,
+                        character_data,
                         GameAction::LightPunch,
                         "light_punch".to_string(),
                         &inputs.directional_state_input,
@@ -102,6 +104,7 @@ pub fn apply_input<'a, 'b>(
                     check_attack_inputs(
                         player,
                         character_anims,
+                        character_data,
                         GameAction::MediumPunch,
                         "medium_punch".to_string(),
                         &inputs.directional_state_input,
@@ -114,6 +117,7 @@ pub fn apply_input<'a, 'b>(
                     check_attack_inputs(
                         player,
                         character_anims,
+                        character_data,
                         GameAction::HeavyPunch,
                         "heavy_punch".to_string(),
                         &inputs.directional_state_input,
@@ -126,6 +130,7 @@ pub fn apply_input<'a, 'b>(
                     check_attack_inputs(
                         player,
                         character_anims,
+                        character_data,
                         GameAction::LightKick,
                         "light_kick".to_string(),
                         &inputs.directional_state_input,
@@ -160,38 +165,41 @@ fn check_for_dash_inputs(
     }
 }
 
-fn check_attack_inputs<'a, 'b>(
-    player: &'b mut Player<'a>,
-    character_anims: &'a CharacterAssets,
+fn check_attack_inputs(
+    player: &mut Player,
+    character_anims: &CharacterAnimations,
+    character_data: &CharacterData,
     recent_input_as_game_action: GameAction,
     animation_name: String,
     directional_state: &[(TranslatedInput, bool); 4],
     action_history: &VecDeque<i32>,
 ) {
-    if let Some(special_input) = check_special_inputs(character_anims, player, action_history) {
-        player.attack(character_anims, special_input);
+    if let Some(special_input) = check_special_inputs(character_data, player, action_history) {
+        player.attack(character_anims, character_data, special_input);
     } else if let Some(directional_input) = check_directional_inputs(
         player,
-        character_anims,
+        character_data,
         directional_state,
         recent_input_as_game_action,
     ) {
-        player.attack(character_anims, directional_input);
+        player.attack(character_anims, character_data, directional_input);
     } else if check_grab_input(action_history[action_history.len() - 1]) {
         player.player_state_change(PlayerState::Grab);
         player.is_attacking = false;
     } else {
         player.change_special_meter(0.1);
         if !player.is_airborne && !(player.state == PlayerState::Crouching || player.state == PlayerState::Crouch) {
-            player.attack(character_anims, animation_name);
+            player.attack(character_anims, character_data, animation_name);
         } else if player.is_airborne {
             player.attack(
                 character_anims,
+                character_data, 
                 format!("{}_{}", "airborne", animation_name),
             );
         } else {
             player.attack(
                 character_anims,
+                character_data, 
                 format!("{}_{}", "crouched", animation_name),
             );
         }
@@ -199,7 +207,7 @@ fn check_attack_inputs<'a, 'b>(
 }
 
 fn check_special_inputs(
-    character_anims: &CharacterAssets,
+    character_data: &CharacterData,
     player: &mut Player,
     action_history: &VecDeque<i32>,
 ) -> Option<String> {
@@ -211,7 +219,7 @@ fn check_special_inputs(
     //if find match, play animation and remove that input from array
     let cleaned_history: VecDeque<i32> =
         action_history.iter().cloned().filter(|&z| z > 0).collect();
-    for possible_combo in character_anims.input_combination_anims.iter() {
+    for possible_combo in character_data.input_combination_anims.iter() {
         let size_of_combo = possible_combo.0.len();
         let size_of_history = cleaned_history.len();
         let mut j = 0;
@@ -238,11 +246,11 @@ fn check_special_inputs(
 
 fn check_directional_inputs(
     player: &mut Player,
-    character_anims: &CharacterAssets,
+    character_data: &CharacterData,
     directional_state: &[(TranslatedInput, bool); 4],
     recent_input_as_game_action: GameAction,
 ) -> Option<String> {
-    for possible_combo in character_anims.directional_variation_anims.iter() {
+    for possible_combo in character_data.directional_variation_anims.iter() {
         let (moves, name) = possible_combo;
 
         if TranslatedInput::is_currently_any_directional_input(directional_state)

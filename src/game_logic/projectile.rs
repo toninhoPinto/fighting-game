@@ -1,18 +1,20 @@
 use parry2d::na::Vector2;
-use sdl2::rect::{Point, Rect};
-use std::string::String;
+use sdl2::{rect::{Point, Rect}, render::Texture};
 
-#[derive(Clone, PartialEq, Debug)]
+use crate::asset_management::{animation::{Animation, Animator}, collider::Collider};
+
+use super::character_factory::CharacterAssets;
+
 pub struct Projectile {
     pub position: Vector2<f64>,
     pub sprite: Rect,
     pub direction: Point,
     pub target_position: Option<Vector2<f64>>,
+    pub colliders: Vec<Collider>,
     pub speed: i32,
     pub damage: i32,
     pub flipped: bool,
-    pub animation_index: f32,
-    pub animation_name: String,
+    pub animator: Animator,
     pub player_owner: i32,
     pub is_alive: bool,
 }
@@ -25,13 +27,17 @@ impl Projectile {
             speed: 10,
             direction: Point::new(0, 0),
             target_position: None,
+            colliders: Vec::new(),
             damage: 20,
             flipped: false,
-            animation_index: 0.0,
-            animation_name: "note".to_string(),
+            animator: Animator::new(),
             player_owner,
             is_alive: true,
         }
+    }
+
+    pub fn init(&mut self, animation: Animation) {
+        self.animator.play(animation, 1.0,false);
     }
 
     pub fn update(&mut self) {
@@ -47,5 +53,9 @@ impl Projectile {
                 self.position += Vector2::new(self.speed as f64, 0.0);
             }
         }
+    }
+
+    pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> &'a Texture {
+        assets.textures.get(&self.animator.render()).unwrap()
     }
 }

@@ -4,7 +4,7 @@ use sdl2::rect::Point;
 use crate::asset_management::{collider::Collider, vfx::particle::Particle};
 
 use super::{
-    character_factory::CharacterAssets,
+    character_factory::CharacterAnimations,
     characters::{player::PlayerState, Character},
     game::Game,
     projectile::Projectile,
@@ -33,9 +33,7 @@ pub struct SavedGame {
     p1_play_once: bool,
     p1_rewind: bool,
 
-    pub p1_name: String,
     pub p1_speed: f64,
-    pub p1_length: i32,
 
     pub p1_character: Character,
 
@@ -61,13 +59,11 @@ pub struct SavedGame {
     p2_play_once: bool,
     p2_rewind: bool,
 
-    pub p2_name: String,
     pub p2_speed: f64,
-    pub p2_length: i32,
 
     pub p2_character: Character,
 
-    pub projectiles: Vec<Projectile>,
+    //pub projectiles: Vec<Projectile>,
 
     pub p1_colliders: Vec<Collider>,
     pub p2_colliders: Vec<Collider>,
@@ -99,15 +95,8 @@ impl SavedGame {
             p1_is_finished: game.player1.animator.is_finished,
             p1_play_once: game.player1.animator.play_once,
             p1_rewind: game.player1.animator.rewind,
-            p1_name: game
-                .player1
-                .animator
-                .current_animation
-                .unwrap()
-                .name
-                .clone(),
+
             p1_speed: game.player1.animator.speed,
-            p1_length: game.player1.animator.current_animation.unwrap().length,
             p1_character: game.player1.character.clone(),
 
             p2_id: game.player2.id,
@@ -130,18 +119,11 @@ impl SavedGame {
             p2_is_finished: game.player2.animator.is_finished,
             p2_play_once: game.player2.animator.play_once,
             p2_rewind: game.player2.animator.rewind,
-            p2_name: game
-                .player2
-                .animator
-                .current_animation
-                .unwrap()
-                .name
-                .clone(),
+
             p2_speed: game.player2.animator.speed,
-            p2_length: game.player2.animator.current_animation.unwrap().length,
             p2_character: game.player2.character.clone(),
 
-            projectiles: game.projectiles.clone(),
+            //projectiles: game.projectiles.clone(),
             p1_colliders: game.player1.colliders.clone(),
             p2_colliders: game.player2.colliders.clone(),
 
@@ -149,11 +131,11 @@ impl SavedGame {
         }
     }
 
-    pub fn load<'a>(
+    pub fn load(
         &self,
-        game: &mut Game<'a>,
-        p1_assets: &'a CharacterAssets,
-        p2_assets: &'a CharacterAssets,
+        game: &mut Game,
+        p1_assets: &CharacterAnimations,
+        p2_assets: &CharacterAnimations,
     ) {
         game.player1.id = self.p1_id;
         game.player1.position = self.p1_position;
@@ -175,7 +157,7 @@ impl SavedGame {
         game.player1.animator.is_finished = self.p1_is_finished;
         game.player1.animator.play_once = self.p1_play_once;
         game.player1.animator.rewind = self.p1_rewind;
-        game.player1.animator.current_animation = p1_assets.animations.get(&self.p1_name);
+        //game.player1.animator.current_animation = p1_assets.animations.get(&self.p1_name);
         game.player1.character = self.p1_character.clone();
 
         game.player2.id = self.p2_id;
@@ -198,14 +180,11 @@ impl SavedGame {
         game.player2.animator.is_finished = self.p2_is_finished;
         game.player2.animator.play_once = self.p2_play_once;
         game.player2.animator.rewind = self.p2_rewind;
-        game.player2.animator.current_animation = p2_assets.animations.get(&self.p2_name);
         game.player2.character = self.p2_character.clone();
 
 
         game.player1.colliders = self.p1_colliders.clone();
         game.player2.colliders = self.p2_colliders.clone();
-
-        game.projectiles = self.projectiles.clone();
 
 
         game.hit_vfx = self.hit_vfx.clone();

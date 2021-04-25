@@ -6,20 +6,25 @@ use sdl2::video::WindowContext;
 
 use super::characters::Character;
 use super::inputs::game_inputs::GameAction;
-use super::projectile::Projectile;
-use crate::asset_management::animation::Animation;
+use crate::asset_management::{animation::Animation, asset_loader::load_textures_for_character};
 use crate::asset_management::{asset_loader, collider::ColliderAnimation};
 use std::collections::HashMap;
 use std::string::String;
 
 pub struct CharacterAssets<'a> {
-    pub animations: HashMap<String, Animation<'a>>,
+    pub textures: HashMap<String, Texture<'a>>
+}
+
+pub struct CharacterAnimations {
+    pub animations: HashMap<String, Animation>,
+    pub collider_animations: HashMap<String, ColliderAnimation>,
+    pub projectile_animation: HashMap<String, Animation>,
+    pub projectile_collider_animations: HashMap<String, ColliderAnimation>,
+}
+
+pub struct CharacterData {
     pub input_combination_anims: Vec<(Vec<i32>, String)>,
     pub directional_variation_anims: Vec<((GameAction, GameAction), String)>,
-    pub projectiles: HashMap<String, Projectile>,
-    pub projectile_animation: HashMap<String, Vec<(i32, Texture<'a>)>>,
-    pub collider_animations: HashMap<String, ColliderAnimation>,
-    pub attack_points: HashMap<String, Point>,
     pub attack_effects: HashMap<String, (i32, Ability)>,
     pub attacks: HashMap<String, Attack>,
 }
@@ -60,26 +65,25 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
     Player::new(id, fighter, spawn_pos, flipped)
 }
 
-pub fn load_character_anim_data<'a, 'b>(
+pub fn load_character_anim_data<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
-    name: &'b str,
-) -> CharacterAssets<'a> {
+    name: &str,
+) -> (CharacterAssets<'a>, CharacterAnimations, CharacterData) {
     match name {
-        "foxgirl" => Some(load_foxgirl_assets(texture_creator)),
-        "keetar" => Some(load_keetar_assets(texture_creator)),
+        "foxgirl" => Some((load_foxgirl_assets(texture_creator), load_foxgirl_animations(), load_foxgirl_data())),
+        "keetar" => Some((load_keetar_assets(texture_creator), load_keetar_animations(), load_keetar_data())),
         _ => None,
-    }
-    .unwrap()
+    }.unwrap()
 }
 
 //===========================================================
 
-fn load_keetar_abilities() -> HashMap<String, (i32, Ability)> {
+fn load_keetar_abilities<'a>() -> HashMap<String, (i32, Ability)> {
     let mut abilities = HashMap::new();
 
-    abilities.insert("light_special_attack".to_string(),  (3, keetar::spawn_note as Ability));
-    abilities.insert("med_special_attack".to_string(),  (3, keetar::spawn_note as Ability));
-    abilities.insert("heavy_special_attack".to_string(),  (3, keetar::spawn_note as Ability));
+    abilities.insert("light_special_attack".to_string(),  (3, keetar::spawn_light_note as Ability));
+    abilities.insert("med_special_attack".to_string(),  (3, keetar::spawn_medium_note as Ability));
+    abilities.insert("heavy_special_attack".to_string(),  (3, keetar::spawn_heavy_note as Ability));
 
     abilities
 }
@@ -121,85 +125,71 @@ fn load_keetar_special_inputs() -> Vec<(Vec<i32>, String)> {
     specials_inputs
 }
 
-fn load_keetar_special_abilities() -> HashMap<String, Projectile> {
-    let mut effects_of_abilities = HashMap::new();
-    let light_projectile = Projectile::new(0, Vector2::new(120.0, 5.0));
-    let med_projectile = Projectile::new(0, Vector2::new(120.0, 105.0));
-    let heavy_projectile = Projectile::new(0, Vector2::new(120.0, 205.0));
-
-    effects_of_abilities.insert("light_special_attack".to_string(), light_projectile);
-    effects_of_abilities.insert("med_special_attack".to_string(), med_projectile);
-    effects_of_abilities.insert("heavy_special_attack".to_string(), heavy_projectile);
-    effects_of_abilities
-}
-
-fn load_keetar_projectile_anims<'a>(texture_creator: &'a TextureCreator<WindowContext>) -> HashMap<String, Vec<(i32, Texture<'a>)>> {
+fn load_keetar_projectile_anims() -> HashMap<String, Animation> {
     let mut projectile_anims = HashMap::new();
-    let projectile_anim: Vec<(i32, Texture)> = asset_loader::load_anim_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/projectiles",
-    );
-    projectile_anims.insert("note".to_string(), projectile_anim);
+    let (projectile_anim, colliders)= asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/projectiles");
+    
+    projectile_anims.insert("note".to_string(), Animation::new(projectile_anim, "note".to_string(), None));
 
     projectile_anims
 }
 
-fn load_keetar_anims(
-    texture_creator: &TextureCreator<WindowContext>,
-) -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>) {
+fn load_keetar_anims() -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>) {
 
     //TODO iterate through folders and use folder name as key for hashmap
     let (idle_anim, idle_colliders)  =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/idle");
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/idle");
+    
     let (walk_anim, walk_colliders)  =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/walk");
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/walk");
+    
     let (walk_back_anim, walk_back_colliders)  =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/walk_back");
-    let (crouch_start_anim, crouch_start_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/crouch/crouched");
-    let (crouch_idle_anim, crouch_idle_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/crouch/crouching");
-    let (light_punch_anim, light_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/light_punch",
-    );
-    let (medium_punch_anim, medium_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/medium_punch",
-    );
-    let (heavy_punch_anim, heavy_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/heavy_punch",
-    );
-    let (light_kick_anim, light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/light_kick",
-    );
-    let (special1_anim, special1_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/specials/directionals/directional_light_punch",
-    );
-    let (special2_anim, special2_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/specials/combinations",
-    );
-    let (dash_anim, dash_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/dash");
-    let (dash_back_anim, dash_back_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/back_dash");
-    let (neutral_jump_anim, neutral_jump_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/neutral_jump");
-    let (directional_jump_anim, directional_jump_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/directional_jump",
-    );
-    let (grab_anim, grab_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/attacks/grab");
-    let (dead_anim, dead_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/dead");
-    let (take_damage_anim, take_damage_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/keetar/standing/take_damage");
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/walk_back");
 
+    let (crouch_start_anim, crouch_start_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/crouch/crouched");
+
+    let (crouch_idle_anim, crouch_idle_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/crouch/crouching");
+
+    let (light_punch_anim, light_punch_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/light_punch");
+
+    let (medium_punch_anim, medium_punch_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/medium_punch");
+
+    let (heavy_punch_anim, heavy_punch_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/heavy_punch");
+    
+    let (light_kick_anim, light_kick_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/light_kick");
+
+    let (special1_anim, special1_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/specials/directionals/directional_light_punch");
+
+    let (special2_anim, special2_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/specials/combinations");
+
+    let (dash_anim, dash_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/dash");
+
+    let (dash_back_anim, dash_back_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/back_dash");
+
+    let (neutral_jump_anim, neutral_jump_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/neutral_jump");
+
+    let (directional_jump_anim, directional_jump_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/directional_jump");
+
+    let (grab_anim, grab_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/grab");
+
+    let (dead_anim, dead_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/dead");
+
+    let (take_damage_anim, take_damage_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/take_damage");
 
     let mut character_anims = HashMap::new();
     let mut collider_anims = HashMap::new();
@@ -422,15 +412,11 @@ fn load_keetar_anims(
         Animation::new(special2_anim, light_special_attack, None),
     );
 
-    //TODO DUPLICATED DATA, not very good because its duplicated textures which are not particularly light 
-    let (special3_anim,special3_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/specials/combinations",
-    );
-    let (special4_anim, special4_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/keetar/standing/attacks/specials/combinations",
-    );
+    let (special3_anim,special3_colliders) = 
+    asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/specials/combinations");
+
+    let (special4_anim, special4_colliders) = 
+    asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/specials/combinations");
 
     let med_special_attack = "med_special_attack".to_string();
     if let Some(special3_colliders) = special3_colliders {
@@ -514,16 +500,25 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
 }
 
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
-    let animations_data = load_keetar_anims(texture_creator);
     CharacterAssets {
+        textures: load_textures_for_character(texture_creator, "assets/keetar"),
+    }
+}
+
+fn load_keetar_animations() -> CharacterAnimations {
+    let animations_data = load_keetar_anims();
+    CharacterAnimations {
         animations: animations_data.0,
+        projectile_animation: load_keetar_projectile_anims(),
+        collider_animations: animations_data.1,
+    }
+}
+
+fn load_keetar_data() -> CharacterData {
+    CharacterData {
         input_combination_anims: load_keetar_special_inputs(),
         directional_variation_anims: load_keetar_directional_inputs(),
-        projectiles: load_keetar_special_abilities(),
-        projectile_animation: load_keetar_projectile_anims(texture_creator),
-        collider_animations: animations_data.1,
         attacks: load_keetar_attacks(),
-        attack_points: HashMap::new(),
         attack_effects: load_keetar_abilities(),
     }
 }
@@ -543,7 +538,7 @@ fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)
     directional_inputs
 }
 
-fn load_foxgirl_special_inputs() ->   Vec<(Vec<i32>, String)>{
+fn load_foxgirl_special_inputs() -> Vec<(Vec<i32>, String)>{
     let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
     let spam_light_punch_inputs = vec![
         GameAction::LightPunch as i32,
@@ -555,65 +550,60 @@ fn load_foxgirl_special_inputs() ->   Vec<(Vec<i32>, String)>{
     specials_inputs
 }
 
-fn load_foxgirl_anims(
-    texture_creator: &TextureCreator<WindowContext>,
-) -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>) {
+fn load_foxgirl_anims() -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>) {
     //TODO iterate through folders and use folder name as key for hashmap
-    let (idle_anim, idle_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/idle");
-    let (take_damage_anim, take_damage_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/take_damage/1");
-    let (dead_anim, dead_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/dead");
-    let (walk_anim, walk_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/walk");
-    let (crouch_start_anim, crouch_start_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/crouch/crouched");
-    let (crouch_idle_anim, crouch_idle_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/crouch/crouching");
-    let (light_punch_anim, light_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/standing/attacks/light_punch",
-    );
-    let (medium_punch_anim, medium_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/standing/attacks/medium_punch",
-    );
-    let (heavy_punch_anim, heavy_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/standing/attacks/heavy_punch",
-    );
-    let (light_kick_anim, light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/standing/attacks/light_kick",
-    );
-    let (crouched_light_kick_anim, crouched_light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/crouch/attacks/light_kick",
-    );
-    let (airborne_light_kick_anim, airborne_light_kick_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/airborne/attacks/light_kick",
-    );
-    let (special1_anim, special1_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/standing/attacks/specials/directionals/forward_light_punch",
-    );
-    let (special2_anim, special2_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/standing/attacks/specials/directionals/forward_heavy_punch",
-    );
-    let (spam_light_punch_anim, spam_light_punch_colliders) = asset_loader::load_anim_and_data_from_dir(
-        &texture_creator,
-        "assets/foxgirl/standing/attacks/specials/spam/spam_light_punch",
-    );
-    let (dash_anim, dash_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/dash");
-    let (dash_back_anim, dash_back_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/back_dash");
-    let (neutral_jump_anim, neutral_jump_colliders) =
-        asset_loader::load_anim_and_data_from_dir(&texture_creator, "assets/foxgirl/standing/neutral_jump");
 
+    let (idle_anim, idle_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/idle");
+
+    let (take_damage_anim, take_damage_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/take_damage/1");
+
+    let (dead_anim, dead_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/dead");
+
+    let (walk_anim, walk_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/walk");
+
+    let (crouch_start_anim, crouch_start_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/crouch/crouched");
+
+    let (crouch_idle_anim, crouch_idle_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/crouch/crouching");
+
+    let (light_punch_anim, light_punch_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/light_punch");
+
+    let (medium_punch_anim, medium_punch_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/medium_punch");
+
+    let (heavy_punch_anim, heavy_punch_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/heavy_punch");
+
+    let (light_kick_anim, light_kick_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/light_kick");
+
+    let (crouched_light_kick_anim, crouched_light_kick_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/crouch/attacks/light_kick");
+
+    let (airborne_light_kick_anim, airborne_light_kick_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/light_kick");
+
+    let (special1_anim, special1_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/specials/directionals/forward_light_punch");
+
+    let (special2_anim, special2_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/specials/directionals/forward_heavy_punch");
+
+    let (spam_light_punch_anim, spam_light_punch_colliders) = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/specials/spam/spam_light_punch");
+
+    let (dash_anim, dash_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/dash");
+    let (dash_back_anim, dash_back_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/back_dash");
+    let (neutral_jump_anim, neutral_jump_colliders) =
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/neutral_jump");
 
     let mut character_anims = HashMap::new();
     let mut collider_anims = HashMap::new();
@@ -959,17 +949,26 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
     attacks
 }
 
+fn load_foxgirl_animations() -> CharacterAnimations {
+    let (anims, collider_anims) = load_foxgirl_anims();
+    CharacterAnimations {
+        animations: anims,
+        projectile_animation: HashMap::new(),
+        collider_animations: collider_anims,
+    }
+}
+
 fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
-    let animations_data = load_foxgirl_anims(texture_creator);
     CharacterAssets {
-        animations: animations_data.0,
+        textures: load_textures_for_character(texture_creator, "assets/foxgirl")
+    }
+}
+
+fn load_foxgirl_data() -> CharacterData {
+    CharacterData {
         input_combination_anims: load_foxgirl_special_inputs(),
         directional_variation_anims: load_foxgirl_directional_inputs(),
-        projectiles: HashMap::new(),
-        projectile_animation: HashMap::new(),
-        collider_animations: animations_data.1,
         attacks: load_foxgirl_attacks(),
-        attack_points: HashMap::new(),
         attack_effects: HashMap::new(),
     }
 }

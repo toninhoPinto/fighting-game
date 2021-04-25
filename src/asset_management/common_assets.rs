@@ -16,7 +16,8 @@ pub struct CommonAssets<'a> {
     pub sound_effects: HashMap<String, Chunk>,
 
     //hit effects
-    pub hit_effect_animations: HashMap<String, Animation<'a>>,
+    pub hit_effect_textures: HashMap<String, Texture<'a>>,
+    pub hit_effect_animations: HashMap<String, Animation>,
     pub shadow: Texture<'a>
 }
 
@@ -38,17 +39,20 @@ impl<'a> CommonAssets<'a> {
         hit_sound.set_volume(SFX_VOLUME);
         miss_sound.set_volume(SFX_VOLUME);
         block_sound.set_volume(SFX_VOLUME);
+        
         let mut sounds = HashMap::new();
         sounds.insert("hit".to_string(), hit_sound);
         sounds.insert("miss".to_string(), miss_sound);
         sounds.insert("block".to_string(), block_sound);
 
-        let hit_anim: Vec<(i32, Texture)> =
-            asset_loader::load_anim_from_dir(&texture_creator, "assets/vfx/normal_hit");
-        let hit2_anim: Vec<(i32, Texture)> =
-            asset_loader::load_anim_from_dir(&texture_creator, "assets/vfx/special_hit");
-        let block_anim: Vec<(i32, Texture)> =
-            asset_loader::load_anim_from_dir(&texture_creator, "assets/vfx/block");
+        let textures = asset_loader::load_textures_for_character(&texture_creator, "assets/vfx");
+
+        let hit_anim = 
+            asset_loader::load_anim_from_dir("assets/vfx/normal_hit");
+        let hit2_anim =
+            asset_loader::load_anim_from_dir("assets/vfx/special_hit");
+        let block_anim =
+            asset_loader::load_anim_from_dir("assets/vfx/block");
 
         let mut vfx = HashMap::new();
         vfx.insert(
@@ -67,6 +71,7 @@ impl<'a> CommonAssets<'a> {
 
         CommonAssets {
             sound_effects: sounds,
+            hit_effect_textures: textures,
             hit_effect_animations: vfx,
             shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png")
         }

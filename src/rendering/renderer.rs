@@ -4,15 +4,14 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{game_logic::game::Game, ui::ingame::end_match_ui::EndMatch};
+use crate::{game_logic::{character_factory::CharacterAssets, game::Game}, ui::ingame::end_match_ui::EndMatch};
 use crate::{
     asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };
 use crate::{
-    asset_management::{common_assets::CommonAssets, vfx::particle::Particle},
-    game_logic::character_factory::CharacterAssets,
+    asset_management::{common_assets::CommonAssets, vfx::particle::Particle}
 };
 
 use super::camera::Camera;
@@ -42,13 +41,13 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
     canvas.fill_rect(rect_to_debug).unwrap();
 }
 
-pub fn render<'a, 'b>(
+pub fn render(
     canvas: &mut WindowCanvas,
     camera: &mut Camera,
     stage: (&Texture, Rect),
     game: &mut Game,
-    p1_assets: &'a CharacterAssets,
-    p2_assets: &'a CharacterAssets,
+    p1_assets: &CharacterAssets,
+    p2_assets: &CharacterAssets,
     common_assets: &mut CommonAssets,
     hp_bars: &[Bar; 2],
     special_bars:  &[SegmentedBar; 2],
@@ -77,40 +76,24 @@ pub fn render<'a, 'b>(
     canvas.copy(&common_assets.shadow, shadow_rect, screen_rect2)
         .unwrap();
 
-    render_player(game.player1, canvas, screen_res, camera, debug);
-    render_player(game.player2, canvas, screen_res, camera, debug);
-
+    render_player(&mut game.player1, p1_assets, canvas, screen_res, camera, debug);
+    render_player(&mut game.player2, p2_assets, canvas, screen_res, camera, debug);
 
     for projectile in game.projectiles.iter() {
         let screen_rect_2 =
             world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, camera);
-        if projectile.player_owner == 1 {
-            canvas.copy_ex(
-                &p1_assets
-                    .projectile_animation
-                    .get(&projectile.animation_name)
-                    .unwrap()[projectile.animation_index as usize].1,
-                projectile.sprite,
-                screen_rect_2,
-                0.0,
-                None,
-                projectile.flipped,
-                false,
-            )?;
-        } else if projectile.player_owner == 2 {
-            canvas.copy_ex(
-                &p2_assets
-                    .projectile_animation
-                    .get(&projectile.animation_name).unwrap()
-                    [projectile.animation_index as usize].1,
-                projectile.sprite,
-                screen_rect_2,
-                0.0,
-                None,
-                projectile.flipped,
-                false,
-            )?;
-        }
+
+        let assets = if projectile.player_owner == 1 {p1_assets} else {p2_assets};
+        canvas.copy_ex(
+            projectile.render(assets),
+            projectile.sprite,
+            screen_rect_2,
+            0.0,
+            None,
+            projectile.flipped,
+            false,
+        )?;
+
     }
 
     render_vfx(canvas, screen_res, camera, &mut game.hit_vfx, common_assets, debug);
@@ -140,14 +123,13 @@ pub fn render<'a, 'b>(
         }
     }
 
-    
-
     canvas.present();
     Ok(())
 }
 
 fn render_player(
     player: &mut Player,
+    assets: &CharacterAssets,
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
     camera: &Camera,
@@ -156,7 +138,7 @@ fn render_player(
     let screen_rect = world_to_screen(player.character.sprite, Point::new(player.position.x as i32, player.position.y as i32), screen_res, camera);
     let sprite = player.character.sprite;
     let is_flipped = player.flipped;
-    let texture = player.render();
+    let texture = player.render(assets);
     canvas
         .copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)
         .unwrap();
@@ -182,14 +164,14 @@ fn render_vfx(
             );
             let screen_rect = world_to_screen(rect_size, vfx_position, screen_res, camera);
 
-            let texture = &mut common_assets
+            let (frame, texture_id) = &common_assets
                 .hit_effect_animations
                 .get_mut(&vfx.name)
                 .unwrap()
                 .sprites[vfx.animation_index as usize];
 
             canvas
-                .copy_ex(&texture.1, rect_size, screen_rect, 0.0, None, false, false)
+                .copy_ex(common_assets.hit_effect_textures.get(texture_id).unwrap(), rect_size, screen_rect, 0.0, None, false, false)
                 .unwrap();
 
             if debug {

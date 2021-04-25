@@ -1,15 +1,15 @@
 use parry2d::na::Vector2;
-use sdl2::render::Texture;
 
-pub struct Animation<'a> {
+#[derive(Clone)]
+pub struct Animation {
     pub name: String,
     pub length: i32,
-    pub sprites: Vec<(i32, Texture<'a>)>,
-    pub offsets: Option<Vec<(Vector2<f64>)>>,
+    pub sprites: Vec<(i32, String)>,
+    pub offsets: Option<Vec<Vector2<f64>>>,
 }
 
-impl<'a> Animation<'a> {
-    pub fn new(sprites: Vec<(i32, Texture<'a>)>, name: String, offsets: Option<Vec<Vector2<f64>>>) -> Self {
+impl Animation {
+    pub fn new(sprites: Vec<(i32, String)>, name: String, offsets: Option<Vec<Vector2<f64>>>) -> Self {
         Self {
             name,
             length: sprites[sprites.len() - 1].0,
@@ -19,24 +19,26 @@ impl<'a> Animation<'a> {
     }
 }
 
+#[derive(Clone)]
 pub enum AnimationState {
     Startup,
     Active,
     Recovery,
 }
 
-pub struct Animator<'a> {
+#[derive(Clone)]
+pub struct Animator {
     pub animation_index: f64,
     pub sprite_shown: i32,
     pub speed: f64,
-    pub current_animation: Option<&'a Animation<'a>>,
+    pub current_animation: Option<Animation>,
     pub is_playing: bool,
     pub is_finished: bool,
     pub play_once: bool,
     pub rewind: bool,
 }
 
-impl<'a> Animator<'a> {
+impl Animator {
     pub fn new() -> Self {
         Self {
             animation_index: 0.0,
@@ -50,16 +52,16 @@ impl<'a> Animator<'a> {
         }
     }
 
-    pub fn play(&mut self, new_animation: &'a Animation<'a>, speed: f64, play_rewind: bool) {
+    pub fn play(&mut self, new_animation: Animation, speed: f64, play_rewind: bool) {
         self.play_animation(new_animation, speed, play_rewind,  false, false);
     }
 
-    pub fn play_once(&mut self, new_animation: &'a Animation<'a>, speed: f64, play_rewind: bool) {
+    pub fn play_once(&mut self, new_animation: Animation, speed: f64, play_rewind: bool) {
         self.play_animation(new_animation, speed, play_rewind,  true, false);
     }
 
-    pub fn play_animation(&mut self, new_animation: &'a Animation<'a>, speed: f64, play_rewind: bool, play_once: bool, interrupt_self: bool){
-        if interrupt_self || self.current_animation.is_none() || (self.current_animation.unwrap().name != new_animation.name)
+    pub fn play_animation(&mut self, new_animation: Animation, speed: f64, play_rewind: bool, play_once: bool, interrupt_self: bool){
+        if interrupt_self || self.current_animation.is_none() || (self.current_animation.as_ref().unwrap().name != new_animation.name)
         {
             if !play_rewind {
                 self.animation_index = 0.0;
@@ -84,7 +86,7 @@ impl<'a> Animator<'a> {
 
     //VERY UGLY CODE 
     pub fn update(&mut self) {
-        let playing_animation = self.current_animation.unwrap();
+        let playing_animation = self.current_animation.as_ref().unwrap();
         let n_sprites = playing_animation.sprites.len() as i32;
 
         if self.is_playing {
@@ -134,8 +136,7 @@ impl<'a> Animator<'a> {
         }
     }
 
-    pub fn render(&mut self) -> &Texture {
-        let playing_animation = self.current_animation.unwrap();
-        &playing_animation.sprites[self.sprite_shown as usize].1
+    pub fn render(&self) -> String {
+        self.current_animation.as_ref().unwrap().sprites[self.sprite_shown as usize].1.clone()
     }
 }

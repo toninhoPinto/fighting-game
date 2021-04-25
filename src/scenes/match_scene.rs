@@ -16,7 +16,15 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::{asset_management::collider::ColliderType, game_logic::{character_factory::{CharacterAssets, load_character, load_character_anim_data, load_stage}, characters::{Attack, AttackHeight, player::{Player, PlayerState}}, game::Game, inputs::{apply_inputs::{apply_input, apply_input_state}, input_cycle::AllInputManagement, process_inputs::{released_joystick_reset_directional_state, update_directional_state}}, saved_game::SavedGame}, ui::ingame::end_match_ui::EndMatch};
+use crate::{
+    asset_management::collider::ColliderType, game_logic::{character_factory::{CharacterAnimations, load_character, load_character_anim_data, load_stage}, 
+    characters::{Attack, AttackHeight, player::{Player, PlayerState}}, 
+    game::Game, 
+    inputs::{apply_inputs::{apply_input, apply_input_state},
+     input_cycle::AllInputManagement, 
+     process_inputs::{released_joystick_reset_directional_state, update_directional_state}}, saved_game::SavedGame}, 
+    ui::ingame::end_match_ui::EndMatch,
+};
 use crate::asset_management::sound::audio_player;
 use crate::{
     asset_management::common_assets::CommonAssets,
@@ -141,12 +149,12 @@ impl Match {
 }
 
 
-fn hit_opponent<'a>(attack: &Attack, general_assets: &CommonAssets, 
-    player_hitting: &mut Player, player_hit: &mut Player<'a>, player_hit_assets: &'a CharacterAssets){
+fn hit_opponent(attack: &Attack, general_assets: &CommonAssets, 
+    player_hitting: &mut Player, player_hit: &mut Player, player_hit_anims: &CharacterAnimations){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
     player_hit.take_damage(attack.damage);
-    player_hit.state_update(&player_hit_assets);
+    player_hit.state_update(&player_hit_anims);
     let dir_to_push = if player_hitting.is_airborne {
         player_hitting.direction_at_jump_time
     } else {
@@ -155,8 +163,8 @@ fn hit_opponent<'a>(attack: &Attack, general_assets: &CommonAssets,
     player_hit.knock_back(attack.push_back * dir_to_push.signum());
 }
 
-fn opponent_blocked<'a>(attack: &Attack, general_assets: &CommonAssets, 
-    player_hitting: &mut Player, player_hit: &mut Player<'a>, player_hit_assets: &'a CharacterAssets){
+fn opponent_blocked(attack: &Attack, general_assets: &CommonAssets, 
+    player_hitting: &mut Player, player_hit: &mut Player, _player_hit_assets: &CharacterAnimations){
     
     audio_player::play_sound(general_assets.sound_effects.get("block").unwrap());
     let dir_to_push = if player_hitting.is_airborne {
@@ -168,12 +176,11 @@ fn opponent_blocked<'a>(attack: &Attack, general_assets: &CommonAssets,
 }
 
 fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
+    let texture_id = &general_assets.hit_effect_animations.get(hit_particle).unwrap().sprites[0].1;
     let TextureQuery { width, height, .. } = general_assets
-                            .hit_effect_animations
-                            .get(hit_particle)
+                            .hit_effect_textures
+                            .get(texture_id)
                             .unwrap()
-                            .sprites[0]
-                            .1
                             .query();
 
     let texture_width =width * 2;
@@ -222,8 +229,8 @@ impl Scene for Match {
     ) {
         let mut general_assets = CommonAssets::load(&texture_creator);
 
-        let p1_assets = load_character_anim_data(texture_creator, &self.p1_character);
-        let p2_assets = load_character_anim_data(texture_creator, &self.p2_character);
+        let (p1_assets, p1_anims, p1_data) = load_character_anim_data(texture_creator, &self.p1_character);
+        let (p2_assets, p2_anims, p2_data) = load_character_anim_data(texture_creator, &self.p2_character);
 
         let stage = load_stage(texture_creator);
         let stage_rect = Rect::new(0, 0, LEVEL_WIDTH as u32, LEVEL_HEIGHT as u32);
@@ -235,36 +242,36 @@ impl Scene for Match {
             SCREEN_HEIGHT,
         );
 
-        let mut player1 = load_character(
+        let player1 = load_character(
             &self.p1_character,
             Point::new(camera.rect.center().x - 200, 0),
             false,
             1,
         );
-        let mut player2 = load_character(
+        let player2 = load_character(
             &self.p2_character,
             Point::new(camera.rect.center().x + 200, -50),
             true,
             2,
         );
 
-        let mut game = Game::new(&mut player1, &mut player2);
+        let mut game = Game::new(player1.clone(), player2.clone());
 
         game.player1
             .animator
-            .play(p1_assets.animations.get("idle").unwrap(), 1.0,false);
+            .play(p1_anims.animations.get("idle").unwrap().clone(), 1.0,false);
         game.player2
             .animator
-            .play(p2_assets.animations.get("idle").unwrap(), 1.0,false);
+            .play(p2_anims.animations.get("idle").unwrap().clone(), 1.0,false);
 
-        let collider_animation = p1_assets
+        let collider_animation = p1_anims
             .collider_animations
-            .get(&game.player1.animator.current_animation.unwrap().name);
+            .get(&(&game.player1).animator.current_animation.as_ref().unwrap().name);
         collider_animation.unwrap().init(&mut game.player1.colliders);
 
-        let collider_animation = p2_assets
+        let collider_animation = p2_anims
             .collider_animations
-            .get(&game.player2.animator.current_animation.unwrap().name);
+            .get(&(&game.player2).animator.current_animation.as_ref().unwrap().name);
         collider_animation.unwrap().init(&mut game.player2.colliders);
 
         let p1_width = game
@@ -429,10 +436,13 @@ impl Scene for Match {
                 }
                 if should_rollback && rollback == 0 {
                     rollback = FRAME_AMOUNT_CAN_ROLLBACK;
+                    //TODO IM LEAVING THE ROLLBACK SERIALIZATION TO THE END SO IT IS EASIER AND I DONT NEED TO KEEP CHANGING IT
+                    /*
                     self.game_rollback
                         .get(0)
                         .unwrap()
                         .load(&mut game, &p1_assets, &p2_assets);
+                    */
                     self.p1_inputs = self.p1_input_history.get(0).unwrap().clone();
                     should_rollback = false;
                 }
@@ -457,11 +467,11 @@ impl Scene for Match {
                     && game.player2.state != PlayerState::Dead
                 {
                     if !self.p1_inputs.input_new_frame.is_empty() {
-                        apply_input(&mut game.player1, &p1_assets, &mut self.p1_inputs);
+                        apply_input(&mut game.player1, &p1_anims, &p1_data, &mut self.p1_inputs);
                     }
 
                     if !self.p2_inputs.input_new_frame.is_empty() {
-                        apply_input(&mut game.player2, &p2_assets, &mut self.p2_inputs);
+                        apply_input(&mut game.player2, &p2_anims, &p2_data, &mut self.p2_inputs);
                     }
 
                     apply_input_state(&mut game.player1, &self.p1_inputs.directional_state_input);
@@ -483,7 +493,7 @@ impl Scene for Match {
                     None => { game.player1.character_width },
                 };
 
-                game.player1.state_update(&p1_assets);
+                game.player1.state_update(&p1_anims);
                 game.player1.update(
                     &camera,
                     logic_timestep,
@@ -501,7 +511,7 @@ impl Scene for Match {
                     None => { game.player2.character_width },
                 };
 
-                game.player2.state_update(&p2_assets);
+                game.player2.state_update(&p2_anims);
                 game.player2.update(
                     &camera,
                     logic_timestep,
@@ -511,20 +521,20 @@ impl Scene for Match {
 
                 if let Some(ability) = game.player1.curr_special_effect {
                     if ability.0 == game.player1.animator.sprite_shown {
-                        ability.1(&mut game, 1, &p1_assets);
+                        ability.1(&mut game, 1, &p1_anims);
                         game.player1.curr_special_effect = None;
                     }
                 }
 
                 if let Some(ability) = game.player2.curr_special_effect {
                     if ability.0 == game.player2.animator.sprite_shown {
-                        ability.1(&mut game, 2, &p2_assets);
+                        ability.1(&mut game, 2, &p2_anims);
                         game.player2.curr_special_effect = None;
                     }
                 }
                 
-                Game::update_player_colliders(&mut game.player1,  &p1_assets);
-                Game::update_player_colliders(&mut game.player2,  &p2_assets);
+                Game::update_player_colliders(&mut game.player1,  &p1_anims);
+                Game::update_player_colliders(&mut game.player2,  &p2_anims);
 
                 let start_p1_pos = game.player1.position;
                 let start_p2_pos = game.player2.position;
@@ -536,10 +546,10 @@ impl Scene for Match {
                     logic_timestep,
                 );
 
-                match detect_hit(game.player1, &game.player2.colliders) {
+                match detect_hit(&mut game.player1, &game.player2.colliders) {
                     Some((point, name)) => {
 
-                        let attack = p1_assets
+                        let attack = p1_data
                             .attacks
                             .get(&name.replace("?", ""))
                             .unwrap();
@@ -547,14 +557,14 @@ impl Scene for Match {
                             hit_opponent(
                                 attack,
                                 &general_assets, 
-                                &mut game.player1, &mut game.player2, &p2_assets);
+                                &mut game.player1, &mut game.player2, &p2_anims);
                             hit_particles(point, "special_hit", &general_assets, &mut game);
                             hit_stop = 10;
                         } else {
                             opponent_blocked(
                                 attack,
                                 &general_assets, 
-                                &mut game.player1, &mut game.player2, &p2_assets);
+                                &mut game.player1, &mut game.player2, &p2_anims);
                             hit_particles(point, "block", &general_assets, &mut game);
                             hit_stop = 5;
                         }
@@ -562,10 +572,10 @@ impl Scene for Match {
                     None => {}
                 }
 
-                match detect_hit(game.player2, &game.player1.colliders) {
+                match detect_hit(&mut game.player2, &game.player1.colliders) {
                     Some((point, name)) => {
 
-                        let attack = p2_assets
+                        let attack = p2_data
                             .attacks
                             .get(&name.replace("?", ""))
                             .unwrap();
@@ -574,14 +584,14 @@ impl Scene for Match {
                             hit_opponent(
                                 attack,
                                 &general_assets, 
-                                &mut game.player2, &mut game.player1, &p1_assets);
+                                &mut game.player2, &mut game.player1, &p1_anims);
                             hit_particles(point, "special_hit", &general_assets, &mut game);
                             hit_stop = 10;
                         } else {
                             opponent_blocked(
                                 attack,
                                 &general_assets, 
-                                &mut game.player2, &mut game.player1, &p1_assets);
+                                &mut game.player2, &mut game.player1, &p1_anims);
                             hit_particles(point, "block", &general_assets, &mut game);
                             hit_stop = 5;
                         }
@@ -590,18 +600,18 @@ impl Scene for Match {
                 }
                 
                 if game.player1.position != start_p1_pos {
-                    Game::update_player_colliders_position_only(game.player1, start_p1_pos);
+                    Game::update_player_colliders_position_only(&mut game.player1, start_p1_pos);
                 }
                 
                 if game.player2.position != start_p2_pos {
-                    Game::update_player_colliders_position_only(game.player2, start_p2_pos);
+                    Game::update_player_colliders_position_only(&mut game.player2, start_p2_pos);
                 }
 
                 game.update_vfx(&general_assets);
 
                 game.update_projectiles();
 
-                camera.update(LEVEL_WIDTH, game.player1, game.player2);
+                camera.update(LEVEL_WIDTH, &game.player1, &game.player2);
 
                 hp_bars[0].update(game.player1.character.hp);
                 hp_bars[1].update(game.player2.character.hp);

@@ -170,7 +170,6 @@ pub fn load_animation_data(
         final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
     }
 
-    println!(" colliders {:?} and movements {:?}", colliders.iter().map(|c| c.name.clone()).collect::<Vec<String>>(), final_transformations.keys());
     (time_vec,
     ColliderAnimation {
         colliders: colliders,

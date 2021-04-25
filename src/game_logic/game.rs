@@ -2,26 +2,26 @@ use parry2d::na::Vector2;
 use sdl2::{pixels::Color, rect::Rect};
 
 use crate::asset_management::{
-    collider::Collider, common_assets::CommonAssets, vfx::particle::Particle,
+    common_assets::CommonAssets, vfx::particle::Particle,
 };
 
 use super::{
-    character_factory::CharacterAssets, characters::player::Player, projectile::Projectile,
+    character_factory::CharacterAnimations, characters::player::Player, projectile::Projectile,
 };
 
 const LIMIT_NUMBER_OF_VFX: usize = 5;
-pub struct Game<'a> {
+pub struct Game {
     pub current_frame: i32,
-    pub player1: &'a mut Player<'a>,
-    pub player2: &'a mut Player<'a>,
+    pub player1: Player,
+    pub player2: Player,
 
     pub projectiles: Vec<Projectile>,
 
     pub hit_vfx: Vec<Particle>,
 }
 
-impl<'a> Game<'a> {
-    pub fn new(player1: &'a mut Player<'a>, player2: &'a mut Player<'a>) -> Self {
+impl Game {
+    pub fn new(player1: Player, player2: Player) -> Self {
         Self {
             current_frame: 0,
 
@@ -92,10 +92,10 @@ impl<'a> Game<'a> {
         }
     }
 
-    pub fn update_player_colliders(player: &mut Player, assets: &CharacterAssets) {
+    pub fn update_player_colliders(player: &mut Player, assets: &CharacterAnimations) {
         let collider_animation = assets
             .collider_animations
-            .get(&player.animator.current_animation.unwrap().name);
+            .get(&player.animator.current_animation.as_ref().unwrap().name);
 
             if let Some(collider_anim) = collider_animation {
                 collider_anim.update(player);

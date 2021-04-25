@@ -4,9 +4,9 @@ use sdl2::render::Texture;
 
 use std::{collections::HashMap, fmt};
 
-use crate::{asset_management::{animation::Animation, collider::Collider}, game_logic::characters::{AttackType, Character}};
+use crate::{asset_management::{animation::Animation, collider::Collider}, game_logic::{character_factory::{CharacterAssets, CharacterData}, characters::{AttackType, Character}}};
 use crate::{
-    asset_management::animation::AnimationState, game_logic::character_factory::CharacterAssets,
+    asset_management::animation::AnimationState, game_logic::character_factory::CharacterAnimations,
     rendering::camera::Camera,
 };
 
@@ -35,8 +35,8 @@ impl fmt::Display for PlayerState {
         write!(f, "{:?}", self)
     }
 }
-
-pub struct Player<'a> {
+#[derive(Clone)]
+pub struct Player {
     pub id: i32,
     pub position: Vector2<f64>,
     pub ground_height: i32,
@@ -56,7 +56,7 @@ pub struct Player<'a> {
     pub is_pushing: bool,
     pub knock_back_distance: i32,
 
-    pub animator: Animator<'a>,
+    pub animator: Animator,
     pub animation_state: Option<AnimationState>,
     pub flipped: bool,
     pub has_hit: bool,
@@ -64,12 +64,12 @@ pub struct Player<'a> {
     pub character: Character,
 
     pub mid_jump_pos: f64,
-    pub curr_special_effect: Option<&'a(i32, Ability)>,
+    pub curr_special_effect: Option<(i32, Ability)>,
 
     pub colliders: Vec<Collider>,
 }
 
-impl<'a> Player<'a> {
+impl Player {
     pub fn new(id: i32, character: Character, spawn_position: Point, flipped: bool) -> Self {
         Self {
             id,
@@ -175,24 +175,24 @@ impl<'a> Player<'a> {
         
     }
 
-    pub fn attack(&mut self, character_assets: &'a CharacterAssets, attack_animation: String) {
+    pub fn attack(&mut self, character_assets: &CharacterAnimations, character_data: &CharacterData, attack_animation: String) {
         println!("ATTACK {}", attack_animation);
         if self.player_can_attack() {
             self.is_attacking = true;
-            let special_effect = character_assets.attack_effects.get(&attack_animation);
-            if special_effect.is_some() {
-                self.curr_special_effect = special_effect;
+            let special_effect = character_data.attack_effects.get(&attack_animation);
+            if let Some(&special_effect) = special_effect {
+                self.curr_special_effect = Some(special_effect);
             }
 
-            if let Some(attack) = character_assets.attacks.get(&attack_animation) {
+            if let Some(attack) = character_data.attacks.get(&attack_animation) {
                 if attack.attack_type == AttackType::Special {
                     self.change_special_meter(-1.0); 
                 }
             }
 
-            if let Some(attack_anim) = character_assets.animations.get(&attack_animation) {
-                self.animator.play_once(attack_anim, 1.0, false);
-            };
+            if let Some(attack_anim) = character_assets.animations.get(&attack_animation) { 
+                self.animator.play_once(attack_anim.clone(), 1.0, false);
+            }
 
             self.update_colliders(character_assets);
         }
@@ -269,7 +269,7 @@ impl<'a> Player<'a> {
                 self.position += Vector2::new(self.velocity_x as f64 * self.character.speed * dt * speed_mod, 0.0);
             }
         } else {
-            match &self.animator.current_animation.unwrap().offsets {
+            match &self.animator.current_animation.as_ref().unwrap().offsets {
                 Some(offsets) => {
                     let offset = offsets[self.animator.sprite_shown as usize];
                     self.velocity_x = (self.dir_related_of_other as f64 * offset.x).signum() as i32;
@@ -301,29 +301,29 @@ impl<'a> Player<'a> {
 
     }
 
-    fn walk_anims(&mut self, character_animation: &'a HashMap<String, Animation>) {
+    fn walk_anims(&mut self, character_animation: &HashMap<String, Animation>) {
 
         let walk_forward = self.velocity_x * -self.dir_related_of_other < 0;
         let changed_dir = self.prev_velocity_x != self.velocity_x;
 
         if walk_forward {
             self.animator
-            .play_animation(character_animation.get("walk").unwrap(), 1.0, false, false, changed_dir);
+            .play_animation(character_animation.get("walk").unwrap().clone(), 1.0, false, false, changed_dir);
         } else {
             
             if character_animation.contains_key("walk_back") {
                 self.animator
-                    .play_animation(character_animation.get("walk_back").unwrap(), 1.0, false, false, changed_dir);
+                    .play_animation(character_animation.get("walk_back").unwrap().clone(), 1.0, false, false, changed_dir);
             } else {
                 self.animator
-                    .play_animation(character_animation.get("walk").unwrap(), 1.0, true, false, changed_dir);
+                    .play_animation(character_animation.get("walk").unwrap().clone(), 1.0, true, false, changed_dir);
             }
         }
     }
 
-    pub fn state_update(&mut self, assets: &'a CharacterAssets) {
+    pub fn state_update(&mut self, assets: &CharacterAnimations) {
         let character_animation = &assets.animations;
-        let prev_animation = self.animator.current_animation.unwrap().name.clone();
+        let prev_animation = self.animator.current_animation.as_ref().unwrap().name.clone();
 
         if self.animator.is_finished && self.state != PlayerState::Dead {
             self.has_hit = false;
@@ -377,9 +377,9 @@ impl<'a> Player<'a> {
                     if self.velocity_x != 0 {
                         self.walk_anims(character_animation);
                     } else {
-                        if self.animator.current_animation.unwrap().name != "idle" {
+                        if self.animator.current_animation.as_ref().unwrap().name != "idle" {
                             self.animator
-                            .play(character_animation.get("idle").unwrap(), 1.0, false);
+                            .play(character_animation.get("idle").unwrap().clone(), 1.0, false);
                         }
                         
                     }
@@ -387,57 +387,57 @@ impl<'a> Player<'a> {
 
                 PlayerState::Dead => {
                     self.animator
-                        .play_once(character_animation.get("dead").unwrap(), 1.0, false);
+                        .play_once(character_animation.get("dead").unwrap().clone(), 1.0, false);
                 }
 
                 PlayerState::Jump => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), 3.0, true);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
                 }
 
                 PlayerState::Jumping => {
                     self.animator
-                        .play_once(character_animation.get("neutral_jump").unwrap(), 1.0, false);
+                        .play_once(character_animation.get("neutral_jump").unwrap().clone(), 1.0, false);
                 }
 
                 PlayerState::Landing => {
                     self.flipped = self.dir_related_of_other > 0;
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), 3.0, false);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
                 }
 
                 PlayerState::UnCrouch => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), 1.0, true);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 1.0, true);
                 }
 
                 PlayerState::Crouch => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap(), 1.0, false);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 1.0, false);
                 }
 
                 PlayerState::Crouching => {
                     self.animator
-                        .play(character_animation.get("crouching").unwrap(), 1.0, false);
+                        .play(character_animation.get("crouching").unwrap().clone(), 1.0, false);
                 }
 
                 PlayerState::DashingForward => {
                     self.animator
-                        .play_once(character_animation.get("dash").unwrap(), 1.0, false);
+                        .play_once(character_animation.get("dash").unwrap().clone(), 1.0, false);
                 }
 
                 PlayerState::DashingBackward => {
                     self.animator
-                        .play_once(character_animation.get("dash_back").unwrap(), 1.0, false);
+                        .play_once(character_animation.get("dash_back").unwrap().clone(), 1.0, false);
                 }
                 PlayerState::Grab => {
                     self.animator
-                        .play_once(character_animation.get("grab").unwrap(), 1.0, false);
+                        .play_once(character_animation.get("grab").unwrap().clone(), 1.0, false);
                 }
                 PlayerState::Grabbed => {}
                 PlayerState::Hurt => {
                     self.animator
-                        .play_once(character_animation.get("take_damage").unwrap(), 1.0, false);
+                        .play_once(character_animation.get("take_damage").unwrap().clone(), 1.0, false);
                 }
             }
         }
@@ -445,22 +445,22 @@ impl<'a> Player<'a> {
         self.prev_velocity_x = self.velocity_x;
         self.animator.update();
 
-        if prev_animation != self.animator.current_animation.unwrap().name {
+        if prev_animation != self.animator.current_animation.as_ref().unwrap().name {
             self.update_colliders(assets);
         }
     }
 
-    fn update_colliders(&mut self, assets: &CharacterAssets){
+    fn update_colliders(&mut self, assets: &CharacterAnimations){
         let collider_animation = assets
         .collider_animations
-        .get(&self.animator.current_animation.unwrap().name);
+        .get(&self.animator.current_animation.as_ref().unwrap().name);
 
         if let Some(collider_animation) = collider_animation {
             collider_animation.init(&mut self.colliders);
         }
     }
 
-    pub fn render(&mut self) -> &Texture {
-        self.animator.render()
+    pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> &'a Texture {
+        assets.textures.get(&self.animator.render()).unwrap()
     }
 }
