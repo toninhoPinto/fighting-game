@@ -28,9 +28,10 @@ use input::translated_inputs::TranslatedInput;
 
 //TODO features tomorrow
 //add particles on the ground when dashing (dust cloud)
-//add particles on the ground when jumping and landing
+//add particles on the ground when jumping and landing -> needs to be able to import POINTs from spriter pro
 //add particles on feet ground when doing some attacks or receiving damage
 //add particles to projectile destruction on hit (or other reasons)
+//make end game UI work
 
 //TODO FEATURES
 //decide which attacks can cancel into which they can cancel into types of attacks or specific attacks 
