@@ -8,7 +8,7 @@ use super::{character_factory::CharacterAssets, characters::Attack};
 pub struct Projectile {
     pub position: Vector2<f64>,
     pub sprite: Rect,
-    pub direction: Point,
+    pub direction: Vector2<f64>,
     pub target_position: Option<Vector2<f64>>,
     pub dissapear_if_offscreen: bool,
     pub colliders: Vec<Collider>,
@@ -31,7 +31,7 @@ impl Projectile {
             position: spawn_point,
             sprite: Rect::new(0, 0, 100, 110),
             speed: 0,
-            direction: Point::new(0, 0),
+            direction: Vector2::new(0.0, 0.0),
             target_position: None,
             colliders: Vec::new(),
             dissapear_if_offscreen: false,
@@ -83,11 +83,11 @@ impl Projectile {
                 if position_directionless.x <= target_directionless.x
                     && position_directionless.y <= target_directionless.y
                 {
-                    self.position += Vector2::new((self.direction.x * self.speed) as f64, 0.0);
+                    self.position += Vector2::new(self.direction.x * self.speed as f64, 0.0);
                 }
             }
             None => {
-                self.position += Vector2::new((self.direction.x * self.speed) as f64, 0.0);
+                self.position += Vector2::new(self.direction.x * self.speed as f64, self.direction.y * self.speed as f64);
             }
         }
     }
