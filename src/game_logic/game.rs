@@ -5,9 +5,7 @@ use crate::{asset_management::{
     common_assets::CommonAssets, vfx::particle::Particle,
 }, rendering::camera::Camera};
 
-use super::{
-    character_factory::CharacterAnimations, characters::player::Player, projectile::Projectile,
-};
+use super::{character_factory::CharacterAnimations, characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game {
@@ -118,11 +116,14 @@ impl Game {
             }
     }
 
-    pub fn update_projectiles(&mut self) {
+    pub fn update_projectiles(&mut self, inputs: &AllInputManagement) {
         for i in 0..self.projectiles.len() {
             let prev_pos =  self.projectiles[i].position;
             self.projectiles[i].update(&self.camera);
             Game::update_projectile_colliders_position_only(&mut self.projectiles[i], prev_pos);
+            if let Some(on_update) = self.projectiles[i].on_update {
+                on_update(inputs, &mut self.projectiles[i]);
+            }
         }
     }
 

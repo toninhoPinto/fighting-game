@@ -26,10 +26,11 @@ use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
 
-//TODO tomorrow 
-//make projectiles that only stay alive if you keep pressing button
-//make projectiles that only stay alive for a few frames
-//(may need to separate inputs to another structure that is not Match to be able to feed into a projectile_update: fn(&new_struct_inputs, &Game)->())
+//TODO features tomorrow
+//add particles on the ground when dashing (dust cloud)
+//add particles on the ground when jumping and landing
+//add particles on feet ground when doing some attacks or receiving damage
+//add particles to projectile destruction on hit (or other reasons)
 
 //TODO FEATURES
 //decide which attacks can cancel into which they can cancel into types of attacks or specific attacks 

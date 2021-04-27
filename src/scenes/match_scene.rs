@@ -237,7 +237,7 @@ impl Scene for Match {
         let stage = load_stage(texture_creator);
         let stage_rect = Rect::new(0, 0, LEVEL_WIDTH as u32, LEVEL_HEIGHT as u32);
 
-        let mut camera: Camera = Camera::new(
+        let camera: Camera = Camera::new(
             LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2,
             0,
             SCREEN_WIDTH,
@@ -479,6 +479,7 @@ impl Scene for Match {
                     apply_input_state(&mut game.player1, &self.p1_inputs.directional_state_input);
                     apply_input_state(&mut game.player2, &self.p2_inputs.directional_state_input);
                 }
+                
                 self.p1_inputs.update_inputs_reset_timer();
                 self.p1_inputs.update_special_inputs_reset_timer();
 
@@ -666,7 +667,7 @@ impl Scene for Match {
 
                 game.update_vfx(&general_assets);
 
-                game.update_projectiles();
+                game.update_projectiles(&self.p1_inputs);
 
                 game.camera.update(LEVEL_WIDTH, &game.player1, &game.player2);
 

@@ -1,4 +1,4 @@
-use crate::{game_logic::{character_factory::CharacterAnimations, game::Game, projectile::Projectile}, rendering::camera::Camera};
+use crate::{game_logic::{character_factory::CharacterAnimations, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, projectile::Projectile}, rendering::camera::Camera};
 
 use parry2d::na::Vector2;
 
@@ -7,19 +7,44 @@ use super::{Attack, AttackHeight, AttackType};
 //logic only module, no struct
 
 pub fn spawn_light_note(game: &mut Game, id: i32, assets: &CharacterAnimations) {
-    spawn_note(game, id, Vector2::new(120.0, 5.0), assets);
+    spawn_note(game, id, Vector2::new(120.0, 5.0), assets, update_note_light);
 }
+
+pub fn update_note_light(p1_inputs: &AllInputManagement, projectile: &mut Projectile) {
+    update_note(p1_inputs, projectile, GameAction::LightPunch)
+}
+
+//====================================================================================
 
 pub fn spawn_medium_note(game: &mut Game, id: i32, assets: &CharacterAnimations) {
-    spawn_note(game, id, Vector2::new(120.0, 105.0), assets);
+    spawn_note(game, id, Vector2::new(120.0, 105.0), assets, update_note_medium);
 }
+
+pub fn update_note_medium(p1_inputs: &AllInputManagement, projectile: &mut Projectile) {
+    update_note(p1_inputs, projectile, GameAction::MediumPunch)
+}
+
+//====================================================================================
 
 pub fn spawn_heavy_note(game: &mut Game, id: i32, assets: &CharacterAnimations) {
-    spawn_note(game, id,  Vector2::new(120.0, 205.0), assets);
+    spawn_note(game, id,  Vector2::new(120.0, 205.0), assets, update_note_heavy);
 }
 
+pub fn update_note_heavy(p1_inputs: &AllInputManagement, projectile: &mut Projectile) {
+    update_note(p1_inputs, projectile, GameAction::HeavyPunch)
+}
 
-fn spawn_note(game: &mut Game, id: i32, position: Vector2<f64>, assets: &CharacterAnimations) {
+//====================================================================================
+
+pub fn update_note(p1_inputs: &AllInputManagement, projectile: &mut Projectile, keep_alive_action: GameAction) {
+    if let Some(&input) = p1_inputs.action_history.back() {
+        if projectile.has_reached_target && (input & keep_alive_action as i32) == 0 {
+            projectile.is_alive = false;
+        }
+    }
+}
+
+fn spawn_note(game: &mut Game, id: i32, position: Vector2<f64>, assets: &CharacterAnimations, update_fn: fn(&AllInputManagement, &mut Projectile) -> ()) {
     let (player,opponent) = if id == 1 { 
         (&game.player1, &game.player2) 
     } else { 
@@ -45,6 +70,8 @@ fn spawn_note(game: &mut Game, id: i32, position: Vector2<f64>, assets: &Charact
         projectile.player_owner = player.id;
         projectile.speed = 15;
 
+        projectile.on_update = Some(update_fn);
+
         let target_pos = Vector2::new(
             opponent.position.x + projectile.direction.x * 100.0,
             projectile.position.y,
@@ -56,6 +83,3 @@ fn spawn_note(game: &mut Game, id: i32, position: Vector2<f64>, assets: &Charact
     }
 }
 
-pub fn update_note(projectile: &Projectile, camera: &Camera) {
-    
-}
