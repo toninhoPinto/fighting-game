@@ -257,7 +257,7 @@ impl Scene for Match {
             2,
         );
 
-        let mut game = Game::new(player1.clone(), player2.clone());
+        let mut game = Game::new(player1.clone(), player2.clone(), camera);
 
         game.player1
             .animator
@@ -497,7 +497,7 @@ impl Scene for Match {
 
                 game.player1.state_update(&p1_anims);
                 game.player1.update(
-                    &camera,
+                    &game.camera,
                     logic_timestep,
                     game.player1.character_width as i32,
                     game.player2.position.x,
@@ -515,7 +515,7 @@ impl Scene for Match {
 
                 game.player2.state_update(&p2_anims);
                 game.player2.update(
-                    &camera,
+                    &game.camera,
                     logic_timestep,
                     game.player2.character_width as i32,
                     game.player1.position.x,
@@ -668,8 +668,7 @@ impl Scene for Match {
 
                 game.update_projectiles();
 
-
-                camera.update(LEVEL_WIDTH, &game.player1, &game.player2);
+                game.camera.update(LEVEL_WIDTH, &game.player1, &game.player2);
 
                 hp_bars[0].update(game.player1.character.hp);
                 hp_bars[1].update(game.player2.character.hp);
@@ -686,7 +685,6 @@ impl Scene for Match {
             if update_counter >= 0 {
                 rendering::renderer::render(
                     canvas,
-                    &mut camera,
                     (&stage, stage_rect),
                     &mut game,
                     &p1_assets,

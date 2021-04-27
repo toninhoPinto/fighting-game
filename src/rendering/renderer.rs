@@ -43,7 +43,6 @@ fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug
 
 pub fn render(
     canvas: &mut WindowCanvas,
-    camera: &mut Camera,
     stage: (&Texture, Rect),
     game: &mut Game,
     p1_assets: &CharacterAssets,
@@ -59,8 +58,8 @@ pub fn render(
     canvas
         .copy(
             stage.0,
-            camera.rect,
-            Rect::new(0, 0, camera.rect.width(), camera.rect.height()),
+            game.camera.rect,
+            Rect::new(0, 0, game.camera.rect.width(), game.camera.rect.height()),
         )
         .unwrap();
 
@@ -68,20 +67,20 @@ pub fn render(
 
     let TextureQuery { width, height, .. } = common_assets.shadow.query();
     let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
-    let screen_rect = world_to_screen(shadow_rect, Point::new(game.player1.position.x as i32, -5), screen_res, camera);
+    let screen_rect = world_to_screen(shadow_rect, Point::new(game.player1.position.x as i32, -5), screen_res, &game.camera);
     canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
         .unwrap();
 
-    let screen_rect2 = world_to_screen(shadow_rect, Point::new(game.player2.position.x as i32, -5), screen_res, camera);
+    let screen_rect2 = world_to_screen(shadow_rect, Point::new(game.player2.position.x as i32, -5), screen_res, &game.camera);
     canvas.copy(&common_assets.shadow, shadow_rect, screen_rect2)
         .unwrap();
 
-    render_player(&mut game.player1, p1_assets, canvas, screen_res, camera, debug);
-    render_player(&mut game.player2, p2_assets, canvas, screen_res, camera, debug);
+    render_player(&mut game.player1, p1_assets, canvas, screen_res, &game.camera, debug);
+    render_player(&mut game.player2, p2_assets, canvas, screen_res, &game.camera, debug);
 
     for projectile in game.projectiles.iter() {
         let screen_rect_2 =
-            world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, camera);
+            world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, &game.camera);
 
         let assets = if projectile.player_owner == 1 {p1_assets} else {p2_assets};
         canvas.copy_ex(
@@ -96,14 +95,14 @@ pub fn render(
 
     }
 
-    render_vfx(canvas, screen_res, camera, &mut game.hit_vfx, common_assets, debug);
+    render_vfx(canvas, screen_res, &game.camera, &mut game.hit_vfx, common_assets, debug);
 
     if debug {
         for i in 0..game.projectiles.len() {
-            render_colliders(canvas, screen_res, camera, &mut game.projectiles[i].colliders);
+            render_colliders(canvas, screen_res, &game.camera, &mut game.projectiles[i].colliders);
         }
-        render_colliders(canvas, screen_res, camera, &mut game.player1.colliders);
-        render_colliders(canvas, screen_res, camera, &mut game.player2.colliders);
+        render_colliders(canvas, screen_res, &game.camera, &mut game.player1.colliders);
+        render_colliders(canvas, screen_res, &game.camera, &mut game.player2.colliders);
     }
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead

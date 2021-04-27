@@ -1,9 +1,9 @@
 use parry2d::na::Vector2;
 use sdl2::{pixels::Color, rect::Rect};
 
-use crate::asset_management::{
+use crate::{asset_management::{
     common_assets::CommonAssets, vfx::particle::Particle,
-};
+}, rendering::camera::Camera};
 
 use super::{
     character_factory::CharacterAnimations, characters::player::Player, projectile::Projectile,
@@ -14,6 +14,7 @@ pub struct Game {
     pub current_frame: i32,
     pub player1: Player,
     pub player2: Player,
+    pub camera: Camera,
 
     pub projectiles: Vec<Projectile>,
 
@@ -21,12 +22,13 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(player1: Player, player2: Player) -> Self {
+    pub fn new(player1: Player, player2: Player, camera: Camera) -> Self {
         Self {
             current_frame: 0,
 
             player1,
             player2,
+            camera,
 
             projectiles: Vec::new(),
 
@@ -119,7 +121,7 @@ impl Game {
     pub fn update_projectiles(&mut self) {
         for i in 0..self.projectiles.len() {
             let prev_pos =  self.projectiles[i].position;
-            self.projectiles[i].update();
+            self.projectiles[i].update(&self.camera);
             Game::update_projectile_colliders_position_only(&mut self.projectiles[i], prev_pos);
         }
     }

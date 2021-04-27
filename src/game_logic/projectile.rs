@@ -1,7 +1,7 @@
 use parry2d::na::Vector2;
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::asset_management::{animation::{Animation, Animator}, collider::{Collider, ColliderAnimation}};
+use crate::{asset_management::{animation::{Animation, Animator}, collider::{Collider, ColliderAnimation}}, rendering::camera::Camera};
 
 use super::{character_factory::CharacterAssets, characters::Attack};
 
@@ -18,7 +18,10 @@ pub struct Projectile {
     pub animator: Animator,
     pub player_owner: i32,
     pub is_alive: bool,
+    pub die_out_of_camera: bool,
     pub on_hit: fn(&mut Projectile) -> (),
+    pub on_update: Option<fn(&mut Projectile) -> ()>,
+    pub on_death: Option<fn(&mut Projectile) -> ()>,
 }
 
 impl Projectile {
@@ -37,7 +40,10 @@ impl Projectile {
             animator: Animator::new(),
             player_owner,
             is_alive: true,
-            on_hit: on_hit_die
+            die_out_of_camera: true,
+            on_hit: on_hit_die,
+            on_update:None,
+            on_death: None,
         }
     }
 
@@ -58,9 +64,14 @@ impl Projectile {
         });
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, camera: &Camera) {
         match self.target_position {
             Some(target) => {
+
+                if self.position.x < camera.rect.x as f64 || self.position.x > (camera.rect.x as u32 + camera.rect.width()) as f64 {
+                    self.is_alive = false;
+                }
+
                 let mut position_directionless = self.position;
                 position_directionless.x *= self.direction.x as f64;
                 position_directionless.y *= self.direction.y as f64;

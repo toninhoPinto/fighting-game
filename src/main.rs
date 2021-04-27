@@ -26,6 +26,12 @@ use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
 
+//TODO tomorrow 
+//make projectiles that only stay alive if you keep pressing button
+//make projectiles that only stay alive for a few frames
+//(may need to separate inputs to another structure that is not Match to be able to feed into a projectile_update: fn(&new_struct_inputs, &Game)->())
+//change direction to a vector so that diagonal projectiles become possible
+
 //TODO FEATURES
 //decide which attacks can cancel into which they can cancel into types of attacks or specific attacks 
 //add input buffer- decide if multiple buffers for different things or not
