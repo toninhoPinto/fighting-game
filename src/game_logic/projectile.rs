@@ -1,9 +1,9 @@
-use parry2d::na::Vector2;
-use sdl2::{rect::{Point, Rect}, render::Texture};
+use parry2d::{math::{Point, Real}, na::Vector2};
+use sdl2::{rect::Rect, render::Texture};
 
 use crate::{asset_management::{animation::{Animation, Animator}, collider::{Collider, ColliderAnimation}}, rendering::camera::Camera};
 
-use super::{character_factory::CharacterAssets, characters::Attack, inputs::input_cycle::AllInputManagement};
+use super::{character_factory::{CharacterAnimations, CharacterAssets}, characters::Attack, inputs::input_cycle::AllInputManagement};
 
 pub struct Projectile {
     pub position: Vector2<f64>,
@@ -18,19 +18,32 @@ pub struct Projectile {
     pub flipped: bool,
     pub animator: Animator,
     pub player_owner: i32,
+    pub kill_at_animation_end: bool,
     pub is_alive: bool,
     pub die_out_of_camera: bool,
-    pub on_hit: fn(&mut Projectile) -> (),
-    pub on_update: Option<fn(&AllInputManagement, &mut Projectile) -> ()>,
+    pub on_hit: fn(Point<Real>, &mut Projectile, &CharacterAnimations) -> (),
+    pub on_update: Option<fn(&AllInputManagement, &CharacterAnimations, &mut Projectile) -> ()>,
     pub on_death: Option<fn(&mut Projectile) -> ()>,
 }
 
 impl Projectile {
     pub fn new(player_owner: i32, spawn_point: Vector2<f64>, attack: Attack) -> Self {
-        let on_hit_die = |projectile: &mut Projectile| {projectile.is_alive = false};
+        let on_hit_die = |hit_point: Point<Real>, projectile: &mut Projectile, animations: &CharacterAnimations| {
+            if let Some(hit_anim) = animations.projectile_animation.get("hit") {
+                projectile.animator.play_once(hit_anim.clone(), 1.0, false);
+                projectile.colliders.clear();
+            }
+            projectile.position.x = hit_point.x as f64;
+            projectile.position.y = hit_point.y as f64;
+            projectile.sprite.set_width(100);
+            projectile.sprite.set_height(80);
+            projectile.direction = Vector2::new(0.0, 0.0);
+            projectile.target_position = None;
+            projectile.kill_at_animation_end = true
+        };
         Self {
             position: spawn_point,
-            sprite: Rect::new(0, 0, 100, 110),
+            sprite: Rect::new(0, 0, 50, 70),
             speed: 0,
             direction: Vector2::new(0.0, 0.0),
             target_position: None,
@@ -42,6 +55,7 @@ impl Projectile {
             animator: Animator::new(),
             player_owner,
             is_alive: true,
+            kill_at_animation_end: false,
             die_out_of_camera: true,
             on_hit: on_hit_die,
             on_update:None,
@@ -94,6 +108,10 @@ impl Projectile {
                 self.position += Vector2::new(self.direction.x * self.speed as f64, self.direction.y * self.speed as f64);
             }
         }
+        if self.kill_at_animation_end && self.animator.is_finished {
+            self.is_alive = false;
+        }
+        self.animator.update();
     }
 
     pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> &'a Texture {

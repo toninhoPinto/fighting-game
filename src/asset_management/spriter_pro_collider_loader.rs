@@ -6,83 +6,147 @@ use std::{collections::HashMap, fs};
 use sdl2::rect::Point;
 
 use super::{collider::{Collider, ColliderAnimation, ColliderType}, transformation::Transformation};
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Wrapper {
-    pub entity: Vec<BaseJson>,
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Root {
+    pub entity: Vec<Entity>,
+    pub folder: Vec<Folder>,
+    pub generator: String,
+    #[serde(rename = "generator_version")]
+    pub generator_version: String,
+    #[serde(rename = "scon_version")]
+    pub scon_version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct BaseJson {
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Entity {
     pub animation: Vec<Animation>,
-    pub obj_info: Vec<ObjectInfo>,
+    #[serde(rename = "character_map")]
+    pub character_map: Vec<::serde_json::Value>,
+    pub id: i64,
+    pub name: String,
+    #[serde(rename = "obj_info")]
+    pub obj_info: Vec<ObjInfo>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Animation {
+    pub id: i64,
+    pub interval: i64,
+    pub length: i64,
     pub mainline: Mainline,
-    pub timeline: Vec<HitboxKeyframes>,
-    pub interval: i32,
-    pub length: i32,
+    pub name: String,
+    pub timeline: Vec<Timeline>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Mainline {
-    pub key: Vec<MainlineKey>,
+    pub key: Vec<Key>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MainlineKey {
-    pub id: u8,
-    pub time: Option<i32>,
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Key {
+    #[serde(rename = "bone_ref")]
+    pub bone_ref: Vec<::serde_json::Value>,
+    pub id: i64,
+    #[serde(rename = "object_ref")]
     pub object_ref: Vec<ObjectRef>,
+    pub time: Option<i64>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ObjectRef {
-    pub id: u8,
-    pub key: u8,
+    pub id: i64,
+    pub key: i64,
     pub timeline: String,
+    #[serde(rename = "z_index")]
+    pub z_index: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ObjectInfo {
-    pub h: f64,
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Timeline {
+    pub id: i64,
+    pub key: Vec<Key2>,
     pub name: String,
-    #[serde(rename = "type")]
-    pub object_type: String,
-    pub w: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct HitboxKeyframes {
-    pub id: u8,
-    pub name: String,
-    pub key: Vec<KeyframeHitbox>,
-    pub obj: Option<u8>,
+    pub obj: Option<i64>,
+    #[serde(rename = "object_type")]
     pub object_type: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct KeyframeHitbox {
-    pub id: u8,
-    pub object: ObjectHitbox,
-    pub time: Option<i32>,
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Key2 {
+    pub id: i64,
+    pub object: Object,
+    pub spin: i64,
+    pub time: Option<i64>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ObjectHitbox {
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Object {
+    pub angle: Option<f64>,
+    pub file: Option<i64>,
+    pub folder: Option<i64>,
+    #[serde(rename = "pivot_x")]
+    pub pivot_x: Option<f64>,
+    #[serde(rename = "pivot_y")]
+    pub pivot_y: Option<f64>,
+    #[serde(rename = "scale_x")]
+    pub scale_x: Option<f64>,
+    #[serde(rename = "scale_y")]
+    pub scale_y: Option<f64>,
     pub x: Option<f64>,
     pub y: Option<f64>,
-    pub scale_x: Option<f64>,
-    pub scale_y: Option<f64>,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ObjInfo {
+    pub h: f64,
+    pub name: String,
+    #[serde(rename = "pivot_x")]
+    pub pivot_x: i64,
+    #[serde(rename = "pivot_y")]
+    pub pivot_y: i64,
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub w: f64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Folder {
+    pub file: Vec<File>,
+    pub id: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct File {
+    pub height: i64,
+    pub id: i64,
+    pub name: String,
+    #[serde(rename = "pivot_x")]
+    pub pivot_x: i64,
+    #[serde(rename = "pivot_y")]
+    pub pivot_y: i64,
+    pub width: i64,
+}
+
 
 pub fn load_animation_data(
     file: std::path::PathBuf,
-) -> (Vec<i32>, ColliderAnimation) {
+) -> (Vec<i64>, ColliderAnimation) {
+    println!("{:?}", file);
     let json_string = fs::read_to_string(file).unwrap();
-    let v = &serde_json::from_str::<Wrapper>(&json_string).unwrap().entity[0];
+    let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;
     let mainline = &v.animation[0].mainline;
     let boxes = &v.obj_info;
@@ -129,43 +193,93 @@ pub fn load_animation_data(
 
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
     let mut final_transformations: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
-    for i in 1..timeline.len() {
+    for i in 0..timeline.len() {
         //for each  collider object
         let mut name = timeline[i].name.clone();
         let split_offset = name.find('_').unwrap_or(name.len());
         let mut transformations_of_frame: HashMap<i32, Transformation> = HashMap::new();
 
-        for j in 0..timeline[i].key.len() {
-            //for each frame of the specific object
-            let key_time = &timeline[i].key[j];
-            let time = if key_time.time.is_some() {
-                key_time.time.unwrap()
-            } else {
-                0
-            };
+        
+        match &timeline[i].object_type {
+            std::option::Option::Some(obj_type) => {
+                if obj_type == "box" {
+                    for j in 0..timeline[i].key.len() {
+                        //for each frame of the specific object
+            
+                        let key_time = &timeline[i].key[j];
+                        let time = if key_time.time.is_some() {
+                            key_time.time.unwrap()
+                        } else {
+                            0
+                        };
+            
+                        let scale_x = if timeline[i].key[j].object.scale_x.is_some() {
+                            timeline[i].key[j].object.scale_x.unwrap().abs()
+                        } else {
+                            1.0
+                        };
+                        let scale_y = if timeline[i].key[j].object.scale_y.is_some() {
+                            timeline[i].key[j].object.scale_y.unwrap().abs()
+                        } else {
+                            1.0
+                        };
+                        let transformation_frame = Transformation {
+                            pos: Point::new(
+                                timeline[i].key[j].object.x.unwrap() as i32,
+                                timeline[i].key[j].object.y.unwrap() as i32,
+                            ),
+                            scale: (scale_x as f32, scale_y as f32),
+                        };
+                        if time_keys.contains_key(&time) {
+                            transformations_of_frame
+                                .insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
+                        }
+                    }
+                    for j in 0..timeline[i].key.len() {
+                        //for each frame of the specific object
+            
+                        let key_time = &timeline[i].key[j];
+                        let time = if key_time.time.is_some() {
+                            key_time.time.unwrap()
+                        } else {
+                            0
+                        };
+            
+                        let scale_x = if timeline[i].key[j].object.scale_x.is_some() {
+                            timeline[i].key[j].object.scale_x.unwrap().abs()
+                        } else {
+                            1.0
+                        };
+                        let scale_y = if timeline[i].key[j].object.scale_y.is_some() {
+                            timeline[i].key[j].object.scale_y.unwrap().abs()
+                        } else {
+                            1.0
+                        };
+                        let transformation_frame = Transformation {
+                            pos: Point::new(
+                                timeline[i].key[j].object.x.unwrap() as i32,
+                                timeline[i].key[j].object.y.unwrap() as i32,
+                            ),
+                            scale: (scale_x as f32, scale_y as f32),
+                        };
+                        if time_keys.contains_key(&time) {
+                            transformations_of_frame
+                                .insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
+                        }
+                    }
+                        
+                } else if obj_type == "point" {
 
-            let scale_x = if timeline[i].key[j].object.scale_x.is_some() {
-                timeline[i].key[j].object.scale_x.unwrap().abs()
-            } else {
-                1.0
-            };
-            let scale_y = if timeline[i].key[j].object.scale_y.is_some() {
-                timeline[i].key[j].object.scale_y.unwrap().abs()
-            } else {
-                1.0
-            };
-            let transformation_frame = Transformation {
-                pos: Point::new(
-                    timeline[i].key[j].object.x.unwrap() as i32,
-                    timeline[i].key[j].object.y.unwrap() as i32,
-                ),
-                scale: (scale_x as f32, scale_y as f32),
-            };
-            if time_keys.contains_key(&time) {
-                transformations_of_frame
-                    .insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
+                } else {
+                    println!("Bones are not supported yet")
+                }
+            }
+            std::option::Option::None => {
+                //sprite data here
+                
             }
         }
+
 
         final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
     }

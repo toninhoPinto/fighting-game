@@ -10,8 +10,8 @@ pub fn spawn_light_note(game: &mut Game, id: i32, assets: &CharacterAnimations) 
     spawn_note(game, id, Vector2::new(120.0, 5.0), assets, update_note_light);
 }
 
-pub fn update_note_light(p1_inputs: &AllInputManagement, projectile: &mut Projectile) {
-    update_note(p1_inputs, projectile, GameAction::LightPunch)
+pub fn update_note_light(p1_inputs: &AllInputManagement, animations: &CharacterAnimations, projectile: &mut Projectile) {
+    update_note(p1_inputs, projectile, animations, GameAction::LightPunch)
 }
 
 //====================================================================================
@@ -20,8 +20,8 @@ pub fn spawn_medium_note(game: &mut Game, id: i32, assets: &CharacterAnimations)
     spawn_note(game, id, Vector2::new(120.0, 105.0), assets, update_note_medium);
 }
 
-pub fn update_note_medium(p1_inputs: &AllInputManagement, projectile: &mut Projectile) {
-    update_note(p1_inputs, projectile, GameAction::MediumPunch)
+pub fn update_note_medium(p1_inputs: &AllInputManagement, animations: &CharacterAnimations, projectile: &mut Projectile) {
+    update_note(p1_inputs, projectile, animations, GameAction::MediumPunch)
 }
 
 //====================================================================================
@@ -30,21 +30,30 @@ pub fn spawn_heavy_note(game: &mut Game, id: i32, assets: &CharacterAnimations) 
     spawn_note(game, id,  Vector2::new(120.0, 205.0), assets, update_note_heavy);
 }
 
-pub fn update_note_heavy(p1_inputs: &AllInputManagement, projectile: &mut Projectile) {
-    update_note(p1_inputs, projectile, GameAction::HeavyPunch)
+pub fn update_note_heavy(p1_inputs: &AllInputManagement, animations: &CharacterAnimations, projectile: &mut Projectile) {
+    update_note(p1_inputs, projectile, animations, GameAction::HeavyPunch)
 }
 
 //====================================================================================
 
-pub fn update_note(p1_inputs: &AllInputManagement, projectile: &mut Projectile, keep_alive_action: GameAction) {
+pub fn update_note(p1_inputs: &AllInputManagement, projectile: &mut Projectile, animations: &CharacterAnimations, keep_alive_action: GameAction) {
     if let Some(&input) = p1_inputs.action_history.back() {
         if projectile.has_reached_target && (input & keep_alive_action as i32) == 0 {
-            projectile.is_alive = false;
+            if let Some(hit_anim) = animations.projectile_animation.get("bloop") {
+                projectile.animator.play_once(hit_anim.clone(), 1.0, false);
+                projectile.colliders.clear();
+                projectile.sprite.set_width(100);
+                projectile.sprite.set_height(80);
+            }
+            projectile.direction = Vector2::new(0.0, 0.0);
+            projectile.target_position = None;
+            projectile.kill_at_animation_end = true
         }
     }
 }
 
-fn spawn_note(game: &mut Game, id: i32, position: Vector2<f64>, assets: &CharacterAnimations, update_fn: fn(&AllInputManagement, &mut Projectile) -> ()) {
+fn spawn_note(game: &mut Game, id: i32, position: Vector2<f64>, assets: &CharacterAnimations,
+     update_fn: fn(&AllInputManagement, &CharacterAnimations, &mut Projectile) -> ()) {
     let (player,opponent) = if id == 1 { 
         (&game.player1, &game.player2) 
     } else { 

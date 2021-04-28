@@ -28,12 +28,13 @@ use input::translated_inputs::TranslatedInput;
 
 //TODO features tomorrow
 //add particles on the ground when dashing (dust cloud)
-//add particles on the ground when jumping and landing -> needs to be able to import POINTs from spriter pro
-//add particles on feet ground when doing some attacks or receiving damage
-//add particles to projectile destruction on hit (or other reasons)
+//add particles on the ground when jumping and landing 
+//add particles on feet ground when doing some attacks or receiving damage -> needs to be able to import POINTs from spriter pro
 //make end game UI work
+//backup sprites and attempt to switch to skullgirls sprites
 
 //TODO FEATURES
+//play block animation while standing and crouching
 //decide which attacks can cancel into which they can cancel into types of attacks or specific attacks 
 //add input buffer- decide if multiple buffers for different things or not
 //if there is a trade make the hitstun work during attack animation
@@ -63,17 +64,22 @@ use input::translated_inputs::TranslatedInput;
 //check if game is deterministic <- THIS IS VITAL FOR ROLLBACK MULTIPLAYER
 
 //TODO TECH DEBT AND BUGS
-//Projectiles offset is not correct when taking into account if the sprite is flipped, may need refactor of collider to make it more generic
-//change texture keys to integers instead of strings
-// fix duplicated code -> game::update_player_colliders_position_only and game::update_projectile_colliders_position_only change player and projectile to &Vec<Collider> and fuse both functions
-//refactor menu and maybe remove menu having a separate loop?
-//VFX sprites are not centered, hard to place
-//fix init colliders, its a mess
-//depenetration needs cleanup
-//not a big fan on how character width is calculated
-//define a ground height and a offset for each character to be at the correct ground height
-//hit stun should only freeze two characters not everything else
-//Since Animator now holds Option<Animation> and Animation has a Vec, it doesnt implement Copy trait, so there are lots of clone()
+//16 
+//15 so much duplicated code inside match_scene
+//14 some functions in keetar.rs could be inlined #[inline]
+//13 the placement of the particles spawned at the moment of a projectile hit are a bit weird
+//12 For the animation import the texture names from the scon file instead of iterating through the dir 
+//11 Projectiles offset is not correct when taking into account if the sprite is flipped, may need refactor of collider to make it more generic
+//10 change texture keys to integers instead of strings
+//9 fix duplicated code -> game::update_player_colliders_position_only and game::update_projectile_colliders_position_only change player and projectile to &Vec<Collider> and fuse both functions
+//8 refactor menu and maybe remove menu having a separate loop?
+//7 VFX sprites are not centered, hard to place
+//6 fix init colliders, its a mess
+//5 depenetration needs cleanup
+//4 not a big fan on how character width is calculated
+//3 define a ground height and a offset for each character to be at the correct ground height
+//2 hit stun should only freeze two characters not everything else
+//1 Since Animator now holds Option<Animation> and Animation has a Vec, it doesnt implement Copy trait, so there are lots of clone()
 //^^^^^possibly bad, and its a bit ugly, maybe have Animator only hold a handle to the animation just like the Textures?
 
 pub struct GameStateData<'a> {

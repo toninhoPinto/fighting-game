@@ -116,13 +116,16 @@ impl Game {
             }
     }
 
-    pub fn update_projectiles(&mut self, inputs: &AllInputManagement) {
+    pub fn update_projectiles(&mut self, inputs: &AllInputManagement, p1_anims: &CharacterAnimations, p2_anims: &CharacterAnimations) {
         for i in 0..self.projectiles.len() {
             let prev_pos =  self.projectiles[i].position;
             self.projectiles[i].update(&self.camera);
             Game::update_projectile_colliders_position_only(&mut self.projectiles[i], prev_pos);
+
+            let animations = if self.projectiles[i].player_owner == 1 { p1_anims } else { p2_anims };
+
             if let Some(on_update) = self.projectiles[i].on_update {
-                on_update(inputs, &mut self.projectiles[i]);
+                on_update(inputs, animations, &mut self.projectiles[i]);
             }
         }
     }

@@ -53,6 +53,14 @@ impl<'a> CommonAssets<'a> {
             asset_loader::load_anim_from_dir("assets/vfx/special_hit");
         let block_anim =
             asset_loader::load_anim_from_dir("assets/vfx/block");
+        let dash_ground_anim =
+            asset_loader::load_anim_from_dir("assets/vfx/dash_ground");
+        let landing_ground_anim =
+            asset_loader::load_anim_from_dir("assets/vfx/landing_ground");
+        let jumping_ground_anim =
+            asset_loader::load_anim_from_dir("assets/vfx/jumping_ground");
+        let feet_dust_ground_anim =
+            asset_loader::load_anim_from_dir("assets/vfx/feet_dust_cloud");
 
         let mut vfx = HashMap::new();
         vfx.insert(
@@ -63,10 +71,25 @@ impl<'a> CommonAssets<'a> {
             "special_hit".to_string(),
             Animation::new(hit2_anim, "special_hit".to_string(), None),
         );
-
         vfx.insert(
             "block".to_string(),
             Animation::new(block_anim, "block".to_string(), None),
+        );
+        vfx.insert(
+            "dash".to_string(),
+            Animation::new(dash_ground_anim, "dash".to_string(), None),
+        );
+        vfx.insert(
+            "landing".to_string(),
+            Animation::new(landing_ground_anim, "landing".to_string(), None),
+        );
+        vfx.insert(
+            "jumping".to_string(),
+            Animation::new(jumping_ground_anim, "jumping".to_string(), None),
+        );
+        vfx.insert(
+            "feet_dust".to_string(),
+            Animation::new(feet_dust_ground_anim, "feet_dust".to_string(), None),
         );
 
         CommonAssets {

@@ -347,7 +347,9 @@ impl Scene for Match {
                             should_rollback ^= true;
                         }
                         if input == Keycode::P {
-                            debug_pause ^= true
+                            debug_pause ^= true;
+                            logic_time_accumulated = 0.0;
+                            update_counter = 0;
                         }
                         if input == Keycode::Right && debug_pause {
                             logic_time_accumulated += logic_timestep;
@@ -580,7 +582,7 @@ impl Scene for Match {
                 }
 
                 for i in 0..game.projectiles.len(){
-                    if game.projectiles[i].player_owner == 1 {
+                    if game.projectiles[i].player_owner == 1 && game.projectiles[i].colliders.len() > 0 {
                         match detect_hit(&game.projectiles[i].colliders, &game.player2.colliders) {
                             Some((point, name)) => {
                                 let attack = &game.projectiles[i].attack;
@@ -601,7 +603,7 @@ impl Scene for Match {
                                     hit_particles(point, "block", &general_assets, &mut game);
                                     hit_stop = 5;
                                 }
-                                (game.projectiles[i].on_hit)(&mut game.projectiles[i]);
+                                (game.projectiles[i].on_hit)(point, &mut game.projectiles[i], &p1_anims);
                                 break;
                             }
                             None => {}
@@ -647,7 +649,6 @@ impl Scene for Match {
                     if game.projectiles[i].player_owner == 2 {
                         match detect_hit(&game.projectiles[i].colliders, &game.player1.colliders) {
                             Some((point, name)) => {
-
                                 break;
                             }
                             None => {}
@@ -667,7 +668,7 @@ impl Scene for Match {
 
                 game.update_vfx(&general_assets);
 
-                game.update_projectiles(&self.p1_inputs);
+                game.update_projectiles(&self.p1_inputs, &p1_anims, &p2_anims);
 
                 game.camera.update(LEVEL_WIDTH, &game.player1, &game.player2);
 
@@ -683,7 +684,7 @@ impl Scene for Match {
             }
 
             // Render
-            if update_counter >= 0 {
+            if update_counter > 0 {
                 rendering::renderer::render(
                     canvas,
                     (&stage, stage_rect),

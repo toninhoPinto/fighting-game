@@ -3,13 +3,13 @@ use parry2d::na::Vector2;
 #[derive(Clone)]
 pub struct Animation {
     pub name: String,
-    pub length: i32,
-    pub sprites: Vec<(i32, String)>,
+    pub length: i64,
+    pub sprites: Vec<(i64, String)>,
     pub offsets: Option<Vec<Vector2<f64>>>,
 }
 
 impl Animation {
-    pub fn new(sprites: Vec<(i32, String)>, name: String, offsets: Option<Vec<Vector2<f64>>>) -> Self {
+    pub fn new(sprites: Vec<(i64, String)>, name: String, offsets: Option<Vec<Vector2<f64>>>) -> Self {
         Self {
             name,
             length: sprites[sprites.len() - 1].0,

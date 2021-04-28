@@ -79,19 +79,23 @@ pub fn render(
     render_player(&mut game.player2, p2_assets, canvas, screen_res, &game.camera, debug);
 
     for projectile in game.projectiles.iter() {
-        let screen_rect_2 =
+        let screen_rect =
             world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, &game.camera);
 
         let assets = if projectile.player_owner == 1 {p1_assets} else {p2_assets};
         canvas.copy_ex(
             projectile.render(assets),
             projectile.sprite,
-            screen_rect_2,
+            screen_rect,
             0.0,
             None,
             projectile.flipped,
             false,
         )?;
+
+        if debug {
+            debug_points(canvas, screen_rect.center(), screen_rect);
+        }
 
     }
 

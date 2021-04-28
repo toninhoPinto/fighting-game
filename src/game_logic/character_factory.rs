@@ -128,9 +128,14 @@ fn load_keetar_special_inputs() -> Vec<(Vec<i32>, String)> {
 fn load_keetar_projectile_anims() -> (HashMap<String, Animation>, HashMap<String, ColliderAnimation>){
     let mut projectile_anims = HashMap::new();
     let mut projectile_colliders = HashMap::new();
-    let (projectile_anim, colliders)= asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/projectiles");
+    let (projectile_anim, colliders)= asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/projectiles/normal");
+    let bloop_anim = asset_loader::load_anim_from_dir("assets/keetar/standing/attacks/projectiles/bloop");
+    let hit_anim = asset_loader::load_anim_from_dir("assets/keetar/standing/attacks/projectiles/hit");
     
     projectile_anims.insert("note".to_string(), Animation::new(projectile_anim, "note".to_string(), None));
+    projectile_anims.insert("bloop".to_string(), Animation::new(bloop_anim, "bloop".to_string(), None));
+    projectile_anims.insert("hit".to_string(), Animation::new(hit_anim, "hit".to_string(), None));
+    
     projectile_colliders.insert("note".to_string(), colliders.unwrap());
 
     (projectile_anims, projectile_colliders)
