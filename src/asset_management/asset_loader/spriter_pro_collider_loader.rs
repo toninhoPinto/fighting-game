@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs};
 
 use sdl2::rect::Point;
 
-use super::{collider::{Collider, ColliderAnimation, ColliderType}, transformation::Transformation};
+use crate::asset_management::{animation::{ColliderAnimation, Transformation}, collider::{Collider, ColliderType}};
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
@@ -144,7 +144,7 @@ pub struct File {
 pub fn load_animation_data(
     file: std::path::PathBuf,
 ) -> (Vec<i64>, ColliderAnimation) {
-    println!("{:?}", file);
+
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;

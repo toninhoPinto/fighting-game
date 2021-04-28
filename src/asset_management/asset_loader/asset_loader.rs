@@ -4,7 +4,9 @@ use sdl2::image::LoadTexture;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
-use super::{cast_point::CastPoint, collider::ColliderAnimation, spriter_pro_collider_loader};
+use crate::asset_management::animation::{Animation, ColliderAnimation};
+
+use super::spriter_pro_collider_loader;
 
 
 pub fn load_texture<'a>(
@@ -49,7 +51,7 @@ fn look_for_textures<'a>(
     }
 }
 
-pub fn load_anim_from_dir(dir: &str) -> Vec<(i64, String)> {
+pub fn load_anim_from_dir(dir: &str, name: &str) -> Animation {
     let paths = fs::read_dir(dir).unwrap();
 
     let mut vec: Vec<(i64, String)> = Vec::new();
@@ -64,10 +66,10 @@ pub fn load_anim_from_dir(dir: &str) -> Vec<(i64, String)> {
             vec.push((sprites_length, file_name));
         }
     }
-    vec
+    Animation::new(vec, name.to_string(), None)
 }
 
-pub fn load_anim_and_data_from_dir(dir: &str) -> (Vec<(i64, String)>, Option<ColliderAnimation>) {
+pub fn load_anim_and_data_from_dir(dir: &str, name: &str) -> Animation {
     let paths = fs::read_dir(dir).unwrap();
 
     let mut vec: Vec<(i64, String)> = Vec::new();
@@ -86,13 +88,12 @@ pub fn load_anim_and_data_from_dir(dir: &str) -> (Vec<(i64, String)>, Option<Col
         }
     }
 
-    match data {
-        Some(colliders) => {
-            for i in 0..vec.len() {
-                vec[i].0 = colliders.0[i] / 16;
-            }
-            (vec, Some(colliders.1))
-        }
-        _ => (vec, None)
+    let mut collider_animation = None;
+    if let Some(colliders) = data {
+        for i in 0..vec.len() {
+            vec[i].0 = colliders.0[i] / 16;
+        } 
+        collider_animation = Some(colliders.1)
     }
+    Animation::new_with_data(vec, name.to_string(), None, HashMap::new(), collider_animation)
 }

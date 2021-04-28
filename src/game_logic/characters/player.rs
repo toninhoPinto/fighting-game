@@ -4,13 +4,11 @@ use sdl2::render::Texture;
 
 use std::{collections::HashMap, fmt};
 
-use crate::{asset_management::{animation::Animation, collider::Collider}, game_logic::{character_factory::{CharacterAssets, CharacterData}, characters::{AttackType, Character}}};
+use crate::{asset_management::{animation::{Animation, ColliderAnimation}, animator::Animator, collider::Collider}, game_logic::{character_factory::{CharacterAssets, CharacterData}, characters::{AttackType, Character}}};
 use crate::{
     asset_management::animation::AnimationState, game_logic::character_factory::CharacterAnimations,
     rendering::camera::Camera,
 };
-
-use crate::asset_management::animation::Animator;
 
 use super::Ability;
 
@@ -195,7 +193,9 @@ impl Player {
                 self.animator.play_once(attack_anim.clone(), 1.0, false);
             }
 
-            self.update_colliders(character_assets);
+            if let Some(_) = self.animator.current_animation.as_ref().unwrap().collider_animation {
+                self.init_colliders();
+            }
         }
     }
 
@@ -448,20 +448,101 @@ impl Player {
         self.prev_velocity_x = self.velocity_x;
         self.animator.update();
 
-        if prev_animation != self.animator.current_animation.as_ref().unwrap().name {
-            self.update_colliders(assets);
+        if let Some(_) = self.animator.current_animation.as_ref().unwrap().collider_animation {
+            if prev_animation != self.animator.current_animation.as_ref().unwrap().name {
+                self.init_colliders();
+            }
+            self.update_colliders();
         }
     }
 
-    fn update_colliders(&mut self, assets: &CharacterAnimations){
-        let collider_animation = assets
-        .collider_animations
-        .get(&self.animator.current_animation.as_ref().unwrap().name);
 
-        if let Some(collider_animation) = collider_animation {
-            collider_animation.init(&mut self.colliders);
+
+
+    pub fn init_colliders(&mut self) {
+        let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap();
+        for i in 0..collider_animation.colliders.len() {
+            if i < self.colliders.len() {
+                //modify current
+                self.colliders[i].collider_type = collider_animation.colliders[i].collider_type;
+                self.colliders[i].name = collider_animation.colliders[i].name.clone();
+                self.colliders[i].aabb = collider_animation.colliders[i].aabb;
+                self.colliders[i].enabled = collider_animation.colliders[i].enabled;
+            } else {
+                //push
+                self.colliders.push(Collider {
+                    collider_type: collider_animation.colliders[i].collider_type,
+                    name: collider_animation.colliders[i].name.clone(),
+                    aabb: collider_animation.colliders[i].aabb,
+                    enabled: collider_animation.colliders[i].enabled,
+                });
+            }
+        }
+        self.colliders.truncate(collider_animation.colliders.len());
+    }
+    
+    // update offsets by player position
+    pub fn update_colliders(&mut self) {
+        let left_player_pos =
+        self.position.x as f32 - self.character.sprite.width() as f32 / 2.0;
+    
+        let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
+
+        for i in 0..self.colliders.len() {
+            let aabb = &mut self.colliders[i].aabb;
+    
+            aabb.mins.coords[0] = left_player_pos;
+            aabb.mins.coords[1] = self.position.y as f32;
+            aabb.maxs.coords[0] = left_player_pos;
+            aabb.maxs.coords[1] = self.position.y as f32;
+            self.sync_with_character_animation(&collider_animation, i);
         }
     }
+    
+    //render offsets by frame index
+    fn sync_with_character_animation(
+        &mut self,
+        collider_animation: &ColliderAnimation,
+        collider_index: usize,
+    ) {
+        let current_collider = &mut self.colliders[collider_index];
+        let aabb = &mut current_collider.aabb;
+        let original_collider = &collider_animation.colliders[collider_index];
+        let original_aabb = original_collider.aabb;
+    
+        let position_at_frame = collider_animation.pos_animations.get(&original_collider.name).unwrap();
+    
+        match position_at_frame.get(&(self.animator.sprite_shown)) {
+            Some(transformation) => {
+                current_collider.enabled = true;
+                let offset_x = transformation.pos.x as f32 * 2.0;
+                let offset_y = transformation.pos.y as f32 * 2.0;
+    
+                if self.flipped {
+                    aabb.mins.coords[0] = (self.position.x as f32
+                        + self.character.sprite.width() as f32 / 2.0)
+                        - (offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0);
+                    aabb.maxs.coords[0] = (self.position.x as f32
+                        + self.character.sprite.width() as f32 / 2.0)
+                        - offset_x;
+                } else {
+                    aabb.mins.coords[0] += offset_x;
+                    aabb.maxs.coords[0] +=
+                        offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0;
+                }
+    
+                aabb.mins.coords[1] += offset_y;
+                aabb.maxs.coords[1] +=
+                    offset_y + original_aabb.maxs.y * 2.0 * transformation.scale.1;
+            }
+            //collider doesnt exist at this frame
+            None => {
+                current_collider.enabled = false;
+            }
+        }
+    }
+
+
 
     pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> &'a Texture {
         assets.textures.get(&self.animator.render()).unwrap()

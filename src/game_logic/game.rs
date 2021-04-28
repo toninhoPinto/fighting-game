@@ -106,16 +106,6 @@ impl Game {
         }
     }
 
-    pub fn update_player_colliders(player: &mut Player, assets: &CharacterAnimations) {
-        let collider_animation = assets
-            .collider_animations
-            .get(&player.animator.current_animation.as_ref().unwrap().name);
-
-            if let Some(collider_anim) = collider_animation {
-                collider_anim.update(player);
-            }
-    }
-
     pub fn update_projectiles(&mut self, inputs: &AllInputManagement, p1_anims: &CharacterAnimations, p2_anims: &CharacterAnimations) {
         for i in 0..self.projectiles.len() {
             let prev_pos =  self.projectiles[i].position;

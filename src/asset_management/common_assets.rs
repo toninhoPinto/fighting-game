@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use super::asset_loader;
+use super::asset_loader::asset_loader;
 use super::{animation::Animation, sound::audio_player};
 use sdl2::{
     mixer::Chunk,
@@ -48,49 +48,28 @@ impl<'a> CommonAssets<'a> {
         let textures = asset_loader::load_textures_for_character(&texture_creator, "assets/vfx");
 
         let hit_anim = 
-            asset_loader::load_anim_from_dir("assets/vfx/normal_hit");
+            asset_loader::load_anim_from_dir("assets/vfx/normal_hit", "normal_hit");
         let hit2_anim =
-            asset_loader::load_anim_from_dir("assets/vfx/special_hit");
+            asset_loader::load_anim_from_dir("assets/vfx/special_hit", "special_hit");
         let block_anim =
-            asset_loader::load_anim_from_dir("assets/vfx/block");
+            asset_loader::load_anim_from_dir("assets/vfx/block", "block");
         let dash_ground_anim =
-            asset_loader::load_anim_from_dir("assets/vfx/dash_ground");
+            asset_loader::load_anim_from_dir("assets/vfx/dash_ground", "dash");
         let landing_ground_anim =
-            asset_loader::load_anim_from_dir("assets/vfx/landing_ground");
+            asset_loader::load_anim_from_dir("assets/vfx/landing_ground", "landing");
         let jumping_ground_anim =
-            asset_loader::load_anim_from_dir("assets/vfx/jumping_ground");
+            asset_loader::load_anim_from_dir("assets/vfx/jumping_ground", "jumping");
         let feet_dust_ground_anim =
-            asset_loader::load_anim_from_dir("assets/vfx/feet_dust_cloud");
+            asset_loader::load_anim_from_dir("assets/vfx/feet_dust_cloud", "feet_dust");
 
         let mut vfx = HashMap::new();
-        vfx.insert(
-            "normal_hit".to_string(),
-            Animation::new(hit_anim, "normal_hit".to_string(), None),
-        );
-        vfx.insert(
-            "special_hit".to_string(),
-            Animation::new(hit2_anim, "special_hit".to_string(), None),
-        );
-        vfx.insert(
-            "block".to_string(),
-            Animation::new(block_anim, "block".to_string(), None),
-        );
-        vfx.insert(
-            "dash".to_string(),
-            Animation::new(dash_ground_anim, "dash".to_string(), None),
-        );
-        vfx.insert(
-            "landing".to_string(),
-            Animation::new(landing_ground_anim, "landing".to_string(), None),
-        );
-        vfx.insert(
-            "jumping".to_string(),
-            Animation::new(jumping_ground_anim, "jumping".to_string(), None),
-        );
-        vfx.insert(
-            "feet_dust".to_string(),
-            Animation::new(feet_dust_ground_anim, "feet_dust".to_string(), None),
-        );
+        vfx.insert(hit_anim.name.clone(),hit_anim);
+        vfx.insert(hit2_anim.name.clone(),hit2_anim);
+        vfx.insert(block_anim.name.clone(),block_anim);
+        vfx.insert(dash_ground_anim.name.clone(),dash_ground_anim);
+        vfx.insert(landing_ground_anim.name.clone(),landing_ground_anim);
+        vfx.insert(jumping_ground_anim.name.clone(),jumping_ground_anim);
+        vfx.insert(feet_dust_ground_anim.name.clone(),feet_dust_ground_anim);
 
         CommonAssets {
             sound_effects: sounds,

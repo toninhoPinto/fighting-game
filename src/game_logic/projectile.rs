@@ -1,7 +1,7 @@
 use parry2d::{math::{Point, Real}, na::Vector2};
 use sdl2::{rect::Rect, render::Texture};
 
-use crate::{asset_management::{animation::{Animation, Animator}, collider::{Collider, ColliderAnimation}}, rendering::camera::Camera};
+use crate::{asset_management::{animation::{Animation, ColliderAnimation}, animator::Animator, collider::Collider}, rendering::camera::Camera};
 
 use super::{character_factory::{CharacterAnimations, CharacterAssets}, characters::Attack, inputs::input_cycle::AllInputManagement};
 
@@ -63,10 +63,12 @@ impl Projectile {
         }
     }
 
-    pub fn init(&mut self, animation: Animation, collider_data: &ColliderAnimation) {
+    pub fn init(&mut self, animation: Animation) {
+        if let Some(cd) = &animation.collider_animation {
+            self.colliders = cd.colliders.clone();
+        }
+        
         self.animator.play(animation, 1.0,false);
-
-        self.colliders = collider_data.colliders.clone();
 
         let projectile_pos = self.position;
         self.colliders.iter_mut().for_each(|c| {

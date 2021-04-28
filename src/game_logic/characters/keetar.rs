@@ -87,7 +87,7 @@ fn spawn_note(game: &mut Game, id: i32, position: Vector2<f64>, assets: &Charact
         );
 
         projectile.target_position = Some(target_pos);
-        projectile.init(assets.projectile_animation.get("note").unwrap().clone(), assets.projectile_collider_animations.get("note").unwrap());
+        projectile.init(assets.projectile_animation.get("note").unwrap().clone());
         game.projectiles.push(projectile);
     }
 }

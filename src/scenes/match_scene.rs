@@ -266,15 +266,8 @@ impl Scene for Match {
             .animator
             .play(p2_anims.animations.get("idle").unwrap().clone(), 1.0,false);
 
-        let collider_animation = p1_anims
-            .collider_animations
-            .get(&(&game.player1).animator.current_animation.as_ref().unwrap().name);
-        collider_animation.unwrap().init(&mut game.player1.colliders);
-
-        let collider_animation = p2_anims
-            .collider_animations
-            .get(&(&game.player2).animator.current_animation.as_ref().unwrap().name);
-        collider_animation.unwrap().init(&mut game.player2.colliders);
+        game.player1.init_colliders();
+        game.player2.init_colliders();
 
         let p1_width = game
             .player1.colliders
@@ -538,9 +531,6 @@ impl Scene for Match {
                     }
                 }
                 
-                Game::update_player_colliders(&mut game.player1,  &p1_anims);
-                Game::update_player_colliders(&mut game.player2,  &p2_anims);
-
                 let start_p1_pos = game.player1.position.clone();
                 let start_p2_pos = game.player2.position.clone();
 
