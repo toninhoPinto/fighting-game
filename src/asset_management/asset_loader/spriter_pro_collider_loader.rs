@@ -235,39 +235,7 @@ pub fn load_animation_data(
                                 .insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
                         }
                     }
-                    for j in 0..timeline[i].key.len() {
-                        //for each frame of the specific object
-            
-                        let key_time = &timeline[i].key[j];
-                        let time = if key_time.time.is_some() {
-                            key_time.time.unwrap()
-                        } else {
-                            0
-                        };
-            
-                        let scale_x = if timeline[i].key[j].object.scale_x.is_some() {
-                            timeline[i].key[j].object.scale_x.unwrap().abs()
-                        } else {
-                            1.0
-                        };
-                        let scale_y = if timeline[i].key[j].object.scale_y.is_some() {
-                            timeline[i].key[j].object.scale_y.unwrap().abs()
-                        } else {
-                            1.0
-                        };
-                        let transformation_frame = Transformation {
-                            pos: Point::new(
-                                timeline[i].key[j].object.x.unwrap() as i32,
-                                timeline[i].key[j].object.y.unwrap() as i32,
-                            ),
-                            scale: (scale_x as f32, scale_y as f32),
-                        };
-                        if time_keys.contains_key(&time) {
-                            transformations_of_frame
-                                .insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
-                        }
-                    }
-                        
+
                 } else if obj_type == "point" {
 
                 } else {
@@ -275,11 +243,9 @@ pub fn load_animation_data(
                 }
             }
             std::option::Option::None => {
-                //sprite data here
-                
+                //sprite data here 
             }
         }
-
 
         final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
     }
