@@ -178,13 +178,13 @@ fn load_keetar_anims() -> HashMap<String, Animation> {
         asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/neutral_jump","neutral_jump");
 
     let directional_jump_anim = 
-        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/directional_jump", "directional_jump");
+        asset_loader::load_anim_from_dir("assets/keetar/standing/directional_jump", "directional_jump");
 
     let grab_anim =
-        asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/attacks/grab", "grab");
+        asset_loader::load_anim_from_dir("assets/keetar/standing/attacks/grab", "grab");
 
     let dead_anim =
-        asset_loader::load_anim_and_data_from_dir("assets/keetar/dead", "dead");
+        asset_loader::load_anim_from_dir("assets/keetar/dead", "dead");
 
     let take_damage_anim =
         asset_loader::load_anim_and_data_from_dir("assets/keetar/standing/take_damage", "take_damage");

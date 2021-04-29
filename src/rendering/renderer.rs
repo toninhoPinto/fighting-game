@@ -174,7 +174,7 @@ fn render_vfx(
                 .hit_effect_animations
                 .get_mut(&vfx.name)
                 .unwrap()
-                .sprites[vfx.animation_index as usize];
+                .sprites[vfx.sprite_shown as usize];
 
             canvas
                 .copy_ex(common_assets.hit_effect_textures.get(texture_id).unwrap(), rect_size, screen_rect, 0.0, None, false, false)

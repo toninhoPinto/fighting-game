@@ -1,11 +1,11 @@
-use parry2d::bounding_volume::AABB;
+use parry2d::{bounding_volume::AABB, na::Vector2};
 use parry2d::math::Point as aabbPoint;
 
 use std::{collections::HashMap, fs};
 
 use sdl2::rect::Point;
 
-use crate::asset_management::{animation::{ColliderAnimation, Transformation}, collider::{Collider, ColliderType}};
+use crate::asset_management::{animation::{ColliderAnimation, Transformation}, cast_point::CastPoint, collider::{Collider, ColliderType}};
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
@@ -140,18 +140,21 @@ pub struct File {
     pub width: i64,
 }
 
+const FREQUENCY_OF_FPS: i64 = 16;
 
 pub fn load_animation_data(
     file: std::path::PathBuf,
-) -> (Vec<i64>, ColliderAnimation) {
+) -> (Vec<i64>, ColliderAnimation, HashMap<i64, CastPoint>, i64) {
 
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;
     let mainline = &v.animation[0].mainline;
     let boxes = &v.obj_info;
+    let duration = &v.animation[0].length / FREQUENCY_OF_FPS;
 
     let mut colliders: Vec<Collider> = Vec::new();
+    let mut cast_points: HashMap<i64, CastPoint> =  HashMap::new();
     for j in 0..boxes.len() {
         let min = aabbPoint::new(0.0, 0.0);
         let max = aabbPoint::new(boxes[j].w as f32, boxes[j].h as f32);
@@ -187,8 +190,8 @@ pub fn load_animation_data(
         } else {
             0
         };
-        time_keys.insert(time, i);
-        time_vec.push(time);
+        time_keys.insert(time/FREQUENCY_OF_FPS, i);
+        time_vec.push(time/FREQUENCY_OF_FPS);
     }
 
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
@@ -197,9 +200,9 @@ pub fn load_animation_data(
         //for each  collider object
         let mut name = timeline[i].name.clone();
         let split_offset = name.find('_').unwrap_or(name.len());
+        
         let mut transformations_of_frame: HashMap<i32, Transformation> = HashMap::new();
 
-        
         match &timeline[i].object_type {
             std::option::Option::Some(obj_type) => {
                 if obj_type == "box" {
@@ -230,14 +233,29 @@ pub fn load_animation_data(
                             ),
                             scale: (scale_x as f32, scale_y as f32),
                         };
-                        if time_keys.contains_key(&time) {
+                        if time_keys.contains_key(&(time / FREQUENCY_OF_FPS)) {
                             transformations_of_frame
-                                .insert(*time_keys.get(&time).unwrap() as i32, transformation_frame);
+                                .insert(*time_keys.get(&(time / FREQUENCY_OF_FPS)).unwrap() as i32, transformation_frame);
                         }
                     }
-
                 } else if obj_type == "point" {
+                    for j in 0..timeline[i].key.len() {
+                        //for each frame of the specific object
+            
+                        let key_time = &timeline[i].key[j];
+                        let time = if key_time.time.is_some() {
+                            key_time.time.unwrap()
+                        } else {
+                            0
+                        };
 
+                        let point = CastPoint {
+                            frame: time,
+                            name: timeline[i].name.clone(),
+                            point: Vector2::new(key_time.object.x.unwrap(), key_time.object.y.unwrap()),
+                        };
+                        cast_points.insert(time / FREQUENCY_OF_FPS, point);
+                    }
                 } else {
                     println!("Bones are not supported yet")
                 }
@@ -246,7 +264,6 @@ pub fn load_animation_data(
                 //sprite data here 
             }
         }
-
         final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
     }
 
@@ -254,5 +271,7 @@ pub fn load_animation_data(
     ColliderAnimation {
         colliders: colliders,
         pos_animations: final_transformations,
-    })
+    },
+     cast_points,
+     duration)
 }

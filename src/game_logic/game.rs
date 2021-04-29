@@ -1,11 +1,9 @@
 use parry2d::na::Vector2;
-use sdl2::{pixels::Color, rect::Rect};
+use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{
-    common_assets::CommonAssets, vfx::particle::Particle,
-}, rendering::camera::Camera};
+use crate::{asset_management::{cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, rendering::camera::Camera};
 
-use super::{character_factory::CharacterAnimations, characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
+use super::{character_factory::{CharacterAnimations, CharacterData}, characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game {
@@ -42,6 +40,7 @@ impl Game {
                 sprite: rect,
                 name: type_of_animation,
                 animation_index: 0,
+                sprite_shown: 0,
                 tint,
             });
         } else {
@@ -57,6 +56,7 @@ impl Game {
                 self.hit_vfx[disabled_index.unwrap()].sprite = rect;
                 self.hit_vfx[disabled_index.unwrap()].name = type_of_animation;
                 self.hit_vfx[disabled_index.unwrap()].animation_index = 0;
+                self.hit_vfx[disabled_index.unwrap()].sprite_shown = 0;
                 self.hit_vfx[disabled_index.unwrap()].tint = tint;
             }
         }
@@ -64,17 +64,32 @@ impl Game {
 
     pub fn update_vfx(&mut self, assets: &CommonAssets) {
         for i in 0..self.hit_vfx.len() {
-            if self.hit_vfx[i].active {
-                self.hit_vfx[i].animation_index += 1;
-                if self.hit_vfx[i].animation_index
-                    >= assets
-                        .hit_effect_animations
-                        .get(&self.hit_vfx[i].name)
-                        .unwrap()
-                        .sprites.len() as i32
+            let vfx = &mut self.hit_vfx[i];
+
+            if vfx.active {
+                vfx.animation_index += 1;
+                
+                let curr_animation = assets
+                .hit_effect_animations
+                .get(&vfx.name)
+                .unwrap();
+
+                if vfx.animation_index >= curr_animation.sprites[vfx.sprite_shown as usize].0 as i32
                 {
-                    self.hit_vfx[i].active = false;
-                    self.hit_vfx[i].animation_index = 0;
+                    vfx.sprite_shown += 1;
+                }
+                let time_over_animation_length = vfx.animation_index >= curr_animation.length as i32;
+                let time_to_switch_to_next_sprite = vfx.sprite_shown < (curr_animation.sprites.len() - 1) as i32 
+                && (curr_animation.sprites[vfx.sprite_shown as usize + 1].0 ) <= vfx.animation_index as i64;
+
+                if time_over_animation_length || time_to_switch_to_next_sprite {
+                    vfx.sprite_shown += 1;
+                }
+
+
+                if vfx.sprite_shown >= curr_animation.sprites.len() as i32 {
+                    vfx.active = false;
+                    vfx.animation_index = 0;
                 }
             }
         }
@@ -120,4 +135,66 @@ impl Game {
         }
     }
 
+    pub fn fx(&mut self, general_assets: &CommonAssets) {
+        
+        let spawn = |cast_point: &CastPoint, game: &mut Game, general_assets: &CommonAssets| {
+            let texture_id = &general_assets.hit_effect_animations.get(&cast_point.name.replace("?", "")).unwrap().sprites[0].1;
+            let TextureQuery { width, height, .. } = general_assets
+                                    .hit_effect_textures
+                                    .get(texture_id)
+                                    .unwrap()
+                                    .query();
+        
+            let texture_width = width * 2;
+            let texture_height = height * 2;
+            //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
+            //this will have issues with other vfx
+            game.spawn_vfx(
+                Rect::new(
+                    cast_point.point.x as i32 - texture_width as i32 / 2 - 80,
+                    cast_point.point.y as i32 - texture_height as i32 / 2 - 100,
+                    texture_width,
+                    texture_height,
+                ),
+                cast_point.name.to_string(),
+                Some(Color::GREEN),
+            );
+        };
+
+        let mut points = Vec::new();
+        let hash_points = &self.player1.animator.current_animation.as_ref().unwrap().cast_point;
+
+        if hash_points.keys().len() > 0 {
+            match hash_points.get(&(self.player1.animator.animation_index as i64 -1)) {
+                Some(point) => {
+                    let mut point_position_fixed = point.clone();
+                    point_position_fixed.point += self.player1.position;
+                    points.push(point_position_fixed);
+                    println!("POINT p1");
+                }
+                None => {}
+            }
+        }
+
+        let hash_points2 = &self.player2.animator.current_animation.as_ref().unwrap().cast_point;
+        if hash_points2.keys().len() > 0 {
+            match hash_points2.get(&(self.player2.animator.animation_index as i64 -1)) {
+                Some(point) => {
+                    let mut point_position_fixed = point.clone();
+                    point_position_fixed.point = self.player2.position;
+                    points.push(point_position_fixed);
+                    println!("POINT p2");
+                }
+                None => {}
+            }
+        }
+
+        //println!("p1_sprite {:?} p2_sprite {:?}", self.player2.animator.sprite_shown, self.player2.animator.sprite_shown);
+        //println!("p1_anim {:?} p2_anim {:?} points {:?}", self.player1.animator.current_animation.as_ref().unwrap().name, self.player2.animator.current_animation.as_ref().unwrap().name, points);
+        for point in points {
+            spawn(&point, self, general_assets);
+        }
+        
+        //println!("{:?}", self.hit_vfx);
+    }
 }

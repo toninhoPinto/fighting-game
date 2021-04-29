@@ -454,6 +454,7 @@ impl Player {
             }
             self.update_colliders();
         }
+
     }
 
 
@@ -510,9 +511,9 @@ impl Player {
         let original_collider = &collider_animation.colliders[collider_index];
         let original_aabb = original_collider.aabb;
     
-        let position_at_frame = collider_animation.pos_animations.get(&original_collider.name).unwrap();
-    
-        match position_at_frame.get(&(self.animator.sprite_shown)) {
+        let positions_at_frame = collider_animation.pos_animations.get(&original_collider.name).unwrap();
+
+        match positions_at_frame.get(&(self.animator.sprite_shown)) {
             Some(transformation) => {
                 current_collider.enabled = true;
                 let offset_x = transformation.pos.x as f32 * 2.0;

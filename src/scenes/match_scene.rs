@@ -183,7 +183,7 @@ fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &C
                             .unwrap()
                             .query();
 
-    let texture_width =width * 2;
+    let texture_width = width * 2;
     let texture_height = height * 2;
     //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
     //this will have issues with other vfx
@@ -656,6 +656,7 @@ impl Scene for Match {
                     Game::update_player_colliders_position_only(&mut game.player2, start_p2_pos);
                 }
 
+                game.fx(&general_assets);
                 game.update_vfx(&general_assets);
 
                 game.update_projectiles(&self.p1_inputs, &p1_anims, &p2_anims);

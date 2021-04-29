@@ -66,7 +66,12 @@ impl Animator {
 
             if !self.rewind {
                 self.animation_index += self.speed;
-                if (playing_animation.sprites[self.sprite_shown as usize].0 as f64) <= self.animation_index {
+
+                let time_over_animation_length = self.animation_index >= playing_animation.length as f64;
+                let time_to_switch_to_next_sprite = self.sprite_shown < (playing_animation.sprites.len() - 1) as i32 
+                && (playing_animation.sprites[self.sprite_shown as usize + 1].0 as f64) <= self.animation_index;
+
+                if time_over_animation_length || time_to_switch_to_next_sprite {
                     self.sprite_shown += 1;
                 }
             } else {

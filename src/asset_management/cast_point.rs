@@ -1,7 +1,8 @@
 use parry2d::na::Vector2;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct CastPoint {
-    pub frame: i32,
-    pub point: Vector2<f64>
+    pub frame: i64,
+    pub point: Vector2<f64>,
+    pub name: String,
 }

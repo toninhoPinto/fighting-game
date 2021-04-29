@@ -34,10 +34,10 @@ pub struct Transformation {
 }
 
 impl Animation {
-    pub fn new(sprites: Vec<(i64, String)>, name: String, offsets: Option<Vec<Vector2<f64>>>) -> Self {
+    pub fn new(sprites: Vec<(i64, String)>, length: i64, name: String, offsets: Option<Vec<Vector2<f64>>>) -> Self {
         Self {
             name,
-            length: sprites[sprites.len() - 1].0,
+            length,
             sprites,
             offsets,
             cast_point: HashMap::new(),
@@ -45,10 +45,10 @@ impl Animation {
         }
     }
 
-    pub fn new_with_data(sprites: Vec<(i64, String)>, name: String, offsets: Option<Vec<Vector2<f64>>>, cast_point: HashMap<i64, CastPoint>, collider_animation: Option<ColliderAnimation>) -> Self {
+    pub fn new_with_data(sprites: Vec<(i64, String)>, length: i64, name: String, offsets: Option<Vec<Vector2<f64>>>, cast_point: HashMap<i64, CastPoint>, collider_animation: Option<ColliderAnimation>) -> Self {
         Self {
             name,
-            length: sprites[sprites.len() - 1].0,
+            length,
             sprites,
             offsets,
             cast_point,
