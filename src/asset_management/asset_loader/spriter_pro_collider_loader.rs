@@ -252,7 +252,7 @@ pub fn load_animation_data(
                         let point = CastPoint {
                             frame: time,
                             name: timeline[i].name.clone(),
-                            point: Vector2::new(key_time.object.x.unwrap(), key_time.object.y.unwrap()),
+                            point: Vector2::new(key_time.object.x.unwrap(), key_time.object.y.unwrap().abs()),
                         };
                         cast_points.insert(time / FREQUENCY_OF_FPS, point);
                     }

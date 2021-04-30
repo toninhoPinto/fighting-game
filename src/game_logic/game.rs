@@ -32,7 +32,7 @@ impl Game {
         }
     }
 
-    pub fn spawn_vfx(&mut self, rect: Rect, type_of_animation: String, tint: Option<Color>) {
+    pub fn spawn_vfx(&mut self, rect: Rect, flipped: bool, type_of_animation: String, tint: Option<Color>) {
         if self.hit_vfx.len() < LIMIT_NUMBER_OF_VFX {
             //push with bool as true
             self.hit_vfx.push(Particle {
@@ -41,6 +41,7 @@ impl Game {
                 name: type_of_animation,
                 animation_index: 0,
                 sprite_shown: 0,
+                flipped,
                 tint,
             });
         } else {
@@ -57,6 +58,7 @@ impl Game {
                 self.hit_vfx[disabled_index.unwrap()].name = type_of_animation;
                 self.hit_vfx[disabled_index.unwrap()].animation_index = 0;
                 self.hit_vfx[disabled_index.unwrap()].sprite_shown = 0;
+                self.hit_vfx[disabled_index.unwrap()].flipped = flipped;
                 self.hit_vfx[disabled_index.unwrap()].tint = tint;
             }
         }
@@ -137,7 +139,7 @@ impl Game {
 
     pub fn fx(&mut self, general_assets: &CommonAssets) {
         
-        let spawn = |cast_point: &CastPoint, game: &mut Game, general_assets: &CommonAssets| {
+        let spawn = |cast_point: &mut CastPoint, flipped: bool, game: &mut Game, general_assets: &CommonAssets| {
             let texture_id = &general_assets.hit_effect_animations.get(&cast_point.name.replace("?", "")).unwrap().sprites[0].1;
             let TextureQuery { width, height, .. } = general_assets
                                     .hit_effect_textures
@@ -147,18 +149,35 @@ impl Game {
         
             let texture_width = width * 2;
             let texture_height = height * 2;
-            //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
-            //this will have issues with other vfx
+            //^ * 2 above is to make the sprite bigger
+
+            let rect = Rect::new(
+                cast_point.point.x as i32,
+                cast_point.point.y as i32,
+                texture_width,
+                texture_height,
+            );
+            
             game.spawn_vfx(
-                Rect::new(
-                    cast_point.point.x as i32 - texture_width as i32 / 2 - 80,
-                    cast_point.point.y as i32 - texture_height as i32 / 2 - 100,
-                    texture_width,
-                    texture_height,
-                ),
+                rect,
+                flipped,
                 cast_point.name.to_string(),
                 Some(Color::GREEN),
             );
+            
+        };
+
+        let process_point_offset = |player: &Player, point: &CastPoint| -> Vector2<f64> {
+            let mut final_pos = player.position;
+            if player.flipped {
+                final_pos.x += player.character.sprite.width() as f64 / 2.0;
+                final_pos.x -= point.point.x * 2.0;
+                final_pos.y += point.point.y * 2.0;
+            } else {
+                final_pos.x -= player.character.sprite.width() as f64 / 2.0;
+                final_pos += point.point * 2.0;
+            }
+            final_pos
         };
 
         let mut points = Vec::new();
@@ -168,9 +187,8 @@ impl Game {
             match hash_points.get(&(self.player1.animator.animation_index as i64 -1)) {
                 Some(point) => {
                     let mut point_position_fixed = point.clone();
-                    point_position_fixed.point += self.player1.position;
-                    points.push(point_position_fixed);
-                    println!("POINT p1");
+                    point_position_fixed.point = process_point_offset(&self.player1, &point_position_fixed);
+                    points.push((point_position_fixed, self.player1.flipped));
                 }
                 None => {}
             }
@@ -181,20 +199,16 @@ impl Game {
             match hash_points2.get(&(self.player2.animator.animation_index as i64 -1)) {
                 Some(point) => {
                     let mut point_position_fixed = point.clone();
-                    point_position_fixed.point = self.player2.position;
-                    points.push(point_position_fixed);
-                    println!("POINT p2");
+                    point_position_fixed.point = process_point_offset(&self.player2, &point_position_fixed);
+                    points.push((point_position_fixed, self.player2.flipped));
                 }
                 None => {}
             }
         }
 
-        //println!("p1_sprite {:?} p2_sprite {:?}", self.player2.animator.sprite_shown, self.player2.animator.sprite_shown);
-        //println!("p1_anim {:?} p2_anim {:?} points {:?}", self.player1.animator.current_animation.as_ref().unwrap().name, self.player2.animator.current_animation.as_ref().unwrap().name, points);
-        for point in points {
-            spawn(&point, self, general_assets);
+        for point in &mut points {
+            spawn(&mut point.0, point.1, self, general_assets);
         }
         
-        //println!("{:?}", self.hit_vfx);
     }
 }

@@ -165,9 +165,10 @@ fn render_vfx(
         if vfx.active {
             let rect_size = Rect::new(0, 0, vfx.sprite.width(), vfx.sprite.height());
             let vfx_position = Point::new(
-                vfx.sprite.center().x,
-                vfx.sprite.center().y - vfx.sprite.bottom() / 2,
+                vfx.sprite.center().x  - vfx.sprite.width() as i32 / 2,
+                vfx.sprite.center().y - vfx.sprite.height() as i32 / 2,
             );
+
             let screen_rect = world_to_screen(rect_size, vfx_position, screen_res, camera);
 
             let (frame, texture_id) = &common_assets
@@ -177,7 +178,7 @@ fn render_vfx(
                 .sprites[vfx.sprite_shown as usize];
 
             canvas
-                .copy_ex(common_assets.hit_effect_textures.get(texture_id).unwrap(), rect_size, screen_rect, 0.0, None, false, false)
+                .copy_ex(common_assets.hit_effect_textures.get(texture_id).unwrap(), rect_size, screen_rect, 0.0, None, vfx.flipped, false)
                 .unwrap();
 
             if debug {

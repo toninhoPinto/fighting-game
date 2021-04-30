@@ -7,5 +7,6 @@ pub struct Particle {
     pub name: String,
     pub animation_index: i32,
     pub sprite_shown: i32,
+    pub flipped: bool,
     pub tint: Option<Color>,
 }

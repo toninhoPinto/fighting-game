@@ -189,11 +189,12 @@ fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &C
     //this will have issues with other vfx
     game.spawn_vfx(
         Rect::new(
-            point.x as i32 - texture_width as i32 / 2 - 80,
-            point.y as i32 - texture_height as i32 / 2 - 100,
+            point.x as i32,
+            point.y as i32 - texture_height as i32 / 2,
             texture_width,
             texture_height,
         ),
+        false,
         hit_particle.to_string(),
         Some(Color::GREEN),
     );
@@ -647,12 +648,10 @@ impl Scene for Match {
                 }
                 
                 if game.player1.position != start_p1_pos {
-                    println!("update position p1");
                     Game::update_player_colliders_position_only(&mut game.player1, start_p1_pos);
                 }
                 
                 if game.player2.position != start_p2_pos {
-                    println!("update position p2");
                     Game::update_player_colliders_position_only(&mut game.player2, start_p2_pos);
                 }
 
@@ -686,7 +685,7 @@ impl Scene for Match {
                     &hp_bars,
                     &special_bars,
                    // &end_game_match,
-                    true,
+                    false,
                 )
                 .unwrap();
 
