@@ -55,8 +55,6 @@ impl<'a> CommonAssets<'a> {
             asset_loader::load_anim_from_dir("assets/vfx/block", "block");
         let dash_ground_anim =
             asset_loader::load_anim_from_dir("assets/vfx/dash_ground", "dash");
-        let landing_ground_anim =
-            asset_loader::load_anim_from_dir("assets/vfx/landing_ground", "landing");
         let jumping_ground_anim =
             asset_loader::load_anim_from_dir("assets/vfx/jumping_ground", "jumping");
         let feet_dust_ground_anim =
@@ -67,7 +65,6 @@ impl<'a> CommonAssets<'a> {
         vfx.insert(hit2_anim.name.clone(),hit2_anim);
         vfx.insert(block_anim.name.clone(),block_anim);
         vfx.insert(dash_ground_anim.name.clone(),dash_ground_anim);
-        vfx.insert(landing_ground_anim.name.clone(),landing_ground_anim);
         vfx.insert(jumping_ground_anim.name.clone(),jumping_ground_anim);
         vfx.insert(feet_dust_ground_anim.name.clone(),feet_dust_ground_anim);
 

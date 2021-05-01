@@ -27,8 +27,6 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO features tomorrow
-//add particles on the ground when jumping and landing 
-//make end game UI work
 //backup sprites and attempt to switch to skullgirls sprites
 
 //TODO FEATURES
