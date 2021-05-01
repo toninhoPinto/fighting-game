@@ -27,9 +27,7 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO features tomorrow
-//add particles on the ground when dashing (dust cloud)
 //add particles on the ground when jumping and landing 
-//add particles on feet ground when doing some attacks or receiving damage -> needs to be able to import POINTs from spriter pro
 //make end game UI work
 //backup sprites and attempt to switch to skullgirls sprites
 
