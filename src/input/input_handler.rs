@@ -4,6 +4,7 @@ use sdl2::event::Event;
 use std::collections::HashMap;
 
 use super::translated_inputs::TranslatedInput;
+use super::controller_handler::KEYBOARD_ID;
 
 pub fn rcv_input(
     event: &Event,
@@ -58,7 +59,7 @@ pub fn rcv_input(
             let key_down = keycode.unwrap();
             if game_controls.contains_key(&key_down.to_string()) && !repeat {
                 let input = *game_controls.get(&key_down.to_string()).unwrap();
-                Some((666, input, true))
+                Some((KEYBOARD_ID, input, true))
             } else {
                 None
             }
@@ -67,7 +68,7 @@ pub fn rcv_input(
             let key_up = keycode.unwrap();
             if game_controls.contains_key(&key_up.to_string()) {
                 let input = *game_controls.get(&key_up.to_string()).unwrap();
-                Some((666, input, false))
+                Some((KEYBOARD_ID, input, false))
             } else {
                 None
             }

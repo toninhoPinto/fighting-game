@@ -185,19 +185,16 @@ impl<'a> Scene for MenuScene<'a> {
                                 % self.text.len() as i32;
                         } else if translated_input == TranslatedInput::Vertical(-1) {
                             self.selected_btn = (self.selected_btn + 1) % self.text.len() as i32;
-                        } else if translated_input == TranslatedInput::LightPunch {
+                        } else if translated_input == TranslatedInput::Punch {
                             //confirm
                             if self.selected_btn == 2 {
                                 //must leave and make main use match scene instead
                                 game_state_stack.push(Box::new(Match::new(
-                                    false,
-                                    true,
-                                    "keetar".to_string(),
                                     "foxgirl".to_string(),
                                 )));
                                 return;
                             }
-                        } else if translated_input == TranslatedInput::LightKick {
+                        } else if translated_input == TranslatedInput::Kick {
                             //go back
                             if self.prev_screen.is_some() {
                                 self.curr_screen = self.prev_screen.unwrap();

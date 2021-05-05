@@ -67,16 +67,16 @@ pub fn detect_push(
             if p1_collider.aabb.intersects(&p2_collider.aabb) {
                 let penetrating = contact(p1_collider, p2_collider).unwrap().dist;
 
-                let player1_is_pushing = player1.velocity_x != 0 && player1.velocity_x.signum() == player1.dir_related_of_other;
+                let player1_is_pushing = player1.walking_dir.x != 0 && player1.walking_dir.x.signum() == player1.facing_dir;
                 if player1_is_pushing {
-                    let speed = if player1.state == PlayerState::DashingForward {
+                    let speed = if player1.state == PlayerState::Dashing {
                         player1.character.dash_speed / 2.0
                     } else {
                         player1.character.speed / 2.0
                     };
 
-                    player1.position.x += player1.velocity_x as f64 * penetrating as f64;
-                    player2.position += Vector2::new(player1.velocity_x as f64 * speed * logic_timestep, 0.0);
+                    player1.position.x += player1.walking_dir.x as f64 * penetrating as f64;
+                    player2.position += Vector2::new(player1.walking_dir.x as f64 * speed * logic_timestep, 0.0);
                     player1.is_pushing = true;
                 }
 
@@ -94,16 +94,16 @@ pub fn detect_push(
                 }
 
 
-                let player2_is_pushing = player2.velocity_x != 0 && player2.velocity_x.signum() == player2.dir_related_of_other;
+                let player2_is_pushing = player2.walking_dir.x != 0 && player2.walking_dir.x.signum() == player2.facing_dir;
                 if player2_is_pushing {
-                    let speed = if player2.state == PlayerState::DashingForward {
+                    let speed = if player2.state == PlayerState::Dashing {
                         player2.character.dash_speed / 2.0
                     } else {
                         player2.character.speed / 2.0
                     };
 
-                    player2.position.x += player2.dir_related_of_other as f64 * penetrating as f64;
-                    player1.position += Vector2::new(player2.velocity_x as f64 * speed * logic_timestep, 0.0);
+                    player2.position.x += player2.facing_dir as f64 * penetrating as f64;
+                    player1.position += Vector2::new(player2.walking_dir.x as f64 * speed * logic_timestep, 0.0);
                     player2.is_pushing = true;
                 }
 
@@ -119,9 +119,9 @@ pub fn detect_push(
                     player2.is_pushing = true;
                 }
 
-                if !player2.is_airborne && !player1.is_airborne && player1.velocity_x == 0 && player2.velocity_x == 0{
-                    player2.position += player2.push(level_width, Vector2::new(player2.dir_related_of_other  as f64 * penetrating as f64, 0.0));
-                    player1.position += player1.push(level_width, Vector2::new(player1.dir_related_of_other  as f64 * penetrating as f64, 0.0));
+                if !player2.is_airborne && !player1.is_airborne && player1.walking_dir.x == 0 && player2.walking_dir.x == 0{
+                    player2.position += player2.push(level_width, Vector2::new(player2.facing_dir  as f64 * penetrating as f64, 0.0));
+                    player1.position += player1.push(level_width, Vector2::new(player1.facing_dir  as f64 * penetrating as f64, 0.0));
                 }
             }
         }

@@ -32,15 +32,15 @@ pub fn load_controls() -> HashMap<String, TranslatedInput> {
     } else {
         let mut controls: HashMap<String, TranslatedInput> = HashMap::new();
 
-        controls.insert(0.to_string(), TranslatedInput::LightPunch);
-        controls.insert(3.to_string(), TranslatedInput::MediumPunch);
-        controls.insert(5.to_string(), TranslatedInput::HeavyPunch);
-        controls.insert(1.to_string(), TranslatedInput::LightKick);
+        controls.insert(1.to_string(), TranslatedInput::Jump);
+        controls.insert(0.to_string(), TranslatedInput::Punch);
+        controls.insert(3.to_string(), TranslatedInput::Kick);
+        controls.insert(2.to_string(), TranslatedInput::Block);
 
-        controls.insert("U".to_string(), TranslatedInput::LightPunch);
-        controls.insert("I".to_string(), TranslatedInput::MediumPunch);
-        controls.insert("O".to_string(), TranslatedInput::HeavyPunch);
-        controls.insert("J".to_string(), TranslatedInput::LightKick);
+        controls.insert("U".to_string(), TranslatedInput::Punch);
+        controls.insert("I".to_string(), TranslatedInput::Kick);
+        controls.insert("J".to_string(), TranslatedInput::Jump);
+        controls.insert("K".to_string(), TranslatedInput::Block);
 
         controls.insert("W".to_string(), TranslatedInput::Vertical(1));
         controls.insert("S".to_string(), TranslatedInput::Vertical(-1));

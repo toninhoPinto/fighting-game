@@ -5,7 +5,7 @@ use std::{collections::HashMap, fs};
 
 use sdl2::rect::Point;
 
-use crate::asset_management::{animation::{ColliderAnimation, Transformation}, cast_point::CastPoint, collider::{Collider, ColliderType}};
+use crate::asset_management::{animation::{ColliderAnimation, Transformation}, cast_point::CastPoint, collider::{Collider, ColliderType}, sprite_data::SpriteData};
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
@@ -112,9 +112,9 @@ pub struct ObjInfo {
     pub h: f64,
     pub name: String,
     #[serde(rename = "pivot_x")]
-    pub pivot_x: i64,
+    pub pivot_x: f64,
     #[serde(rename = "pivot_y")]
-    pub pivot_y: i64,
+    pub pivot_y: f64,
     #[serde(rename = "type")]
     pub type_field: String,
     pub w: f64,
@@ -130,17 +130,38 @@ pub struct Folder {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
-    pub height: i64,
+    pub height: u32,
     pub id: i64,
     pub name: String,
     #[serde(rename = "pivot_x")]
-    pub pivot_x: i64,
+    pub pivot_x: f64,
     #[serde(rename = "pivot_y")]
-    pub pivot_y: i64,
-    pub width: i64,
+    pub pivot_y: f64,
+    pub width: u32,
 }
 
 const FREQUENCY_OF_FPS: i64 = 16;
+
+pub fn load_frame_data(file: std::path::PathBuf) -> Vec<SpriteData> {
+    let mut sprites: Vec<SpriteData> = Vec::new();
+    
+    let json_string = fs::read_to_string(file).unwrap();
+    let json = serde_json::from_str::<Root>(&json_string).unwrap();
+    
+    for file in &json.folder[0].file {
+        sprites.push(SpriteData {
+                sprite_name: file.name.clone().replace(".png", ""),
+                height: file.height,
+                width: file.width,
+                pivot_x: file.pivot_x,
+                pivot_y: file.pivot_y,
+            }
+        );
+    }
+
+    sprites
+}
+
 
 pub fn load_animation_data(
     file: std::path::PathBuf,

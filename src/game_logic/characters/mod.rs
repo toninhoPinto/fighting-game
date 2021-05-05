@@ -26,13 +26,6 @@ pub struct Character {
     pub jump_distance: f64,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum AttackHeight {
-    LOW,
-    MIDDLE,
-    HIGH,
-    ALL,
-}
 
 #[derive(Debug, PartialEq)]
 pub enum AttackType {
@@ -46,7 +39,6 @@ pub struct Attack {
     pub stun_on_hit: i32,
     pub stun_on_block: i32,
     pub push_back: f64,
-    pub attack_height: AttackHeight,
     pub attack_type: AttackType,
 }
 

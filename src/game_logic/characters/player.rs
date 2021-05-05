@@ -2,9 +2,9 @@ use parry2d::na::Vector2;
 use sdl2::rect::Point;
 use sdl2::render::Texture;
 
-use std::{collections::HashMap, fmt};
+use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::{animation::{Animation, ColliderAnimation}, animator::Animator, collider::Collider}, game_logic::{character_factory::{CharacterAssets, CharacterData}, characters::{AttackType, Character}}};
+use crate::{asset_management::{animation::ColliderAnimation, animator::Animator, collider::Collider, sprite_data::SpriteData}, game_logic::{character_factory::{CharacterAssets, CharacterData}, characters::{AttackType, Character}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::translated_inputs::TranslatedInput};
 use crate::{
     asset_management::animation::AnimationState, game_logic::character_factory::CharacterAnimations,
     rendering::camera::Camera,
@@ -15,16 +15,10 @@ use super::Ability;
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PlayerState {
     Standing,
-    Crouch,
-    Crouching,
-    UnCrouch,
     Jump,
     Jumping,
     Landing,
-    DashingForward,
-    DashingBackward,
-    Grab,
-    Grabbed,
+    Dashing,
     Hurt,
     Dead,
 }
@@ -37,16 +31,15 @@ impl fmt::Display for PlayerState {
 pub struct Player {
     pub id: i32,
     pub position: Vector2<f64>,
+    pub walking_dir: Vector2<i8>,
     pub ground_height: i32,
     pub velocity_y: f64,
 
-    pub direction_at_jump_time: i32,
+    pub direction_at_jump_time: i8,
     pub jump_initial_velocity: f64,
     pub extra_gravity: Option<f64>,
 
-    pub prev_velocity_x: i32,
-    pub velocity_x: i32,
-    pub dir_related_of_other: i32,
+    pub facing_dir: i8,
     pub state: PlayerState,
     pub is_attacking: bool,
     pub is_blocking: bool,
@@ -56,8 +49,6 @@ pub struct Player {
 
     pub animator: Animator,
     pub animation_state: Option<AnimationState>,
-    pub flipped: bool,
-    pub has_hit: bool,
     pub character_width: f64,
     pub character: Character,
 
@@ -68,7 +59,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(id: i32, character: Character, spawn_position: Point, flipped: bool) -> Self {
+    pub fn new(id: i32, character: Character, spawn_position: Point) -> Self {
         Self {
             id,
             position: Vector2::new(spawn_position.x as f64, spawn_position.y  as f64),
@@ -80,19 +71,16 @@ impl Player {
             velocity_y: 0.0,
             extra_gravity: None,
 
-            prev_velocity_x: 0,
-            velocity_x: 0,
-            dir_related_of_other: 0,
+            facing_dir: 1,
+            walking_dir: Vector2::new(0,0),
             state: PlayerState::Standing,
             animator: Animator::new(),
             animation_state: None,
             is_attacking: false,
             is_airborne: false,
             is_blocking: false,
-            has_hit: false,
             is_pushing: false,
             knock_back_distance: 0.0,
-            flipped,
             character_width: 0.0,
             character,
 
@@ -100,6 +88,13 @@ impl Player {
 
             colliders: Vec::new(),
         }
+    }
+
+    pub fn set_velocity_x(&mut self, vec_x: i8) {
+        if vec_x != 0 {
+            self.facing_dir = vec_x;
+        }
+        self.walking_dir.x = vec_x;
     }
 
     pub fn take_damage(&mut self, damage: i32) {
@@ -123,8 +118,7 @@ impl Player {
 
     pub fn player_can_attack(&self) -> bool {
         !(self.is_attacking
-            || self.state == PlayerState::DashingForward
-            || self.state == PlayerState::DashingBackward
+            || self.state == PlayerState::Dashing
             || self.state == PlayerState::Dead)
     }
 
@@ -133,21 +127,15 @@ impl Player {
             || self.is_airborne
             || self.knock_back_distance.abs() > 0.0
             || self.state == PlayerState::Dead
-            || self.state == PlayerState::DashingForward
-            || self.state == PlayerState::DashingBackward)
+            || self.state == PlayerState::Dashing)
     }
 
     pub fn player_state_change(&mut self, new_state: PlayerState) {
-        let is_interruptable = self.state != PlayerState::DashingForward
-            && self.state != PlayerState::DashingBackward
+        let is_interruptable = self.state != PlayerState::Dashing
             && self.state != PlayerState::Jumping
             && self.state != PlayerState::Jump;
 
-        let already_crouching = (new_state == PlayerState::Crouch
-            || new_state == PlayerState::Crouching)
-            && (self.state == PlayerState::Crouch || self.state == PlayerState::Crouching);
-
-        if is_interruptable && !already_crouching && self.state != PlayerState::Dead {
+        if is_interruptable && self.state != PlayerState::Dead {
             self.state = new_state;
         }
     }
@@ -203,16 +191,222 @@ impl Player {
         self.state = PlayerState::Standing;
     }
 
+    pub fn apply_input_state(&mut self, action_history: &VecDeque<i32>) {
+        if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Right as i32) {
+            self.walking_dir.x = 1;
+        }
+        if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Left as i32) {
+            self.walking_dir.x = -1;
+        }
+
+        if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Jump as i32) {
+            self.jump();
+        }
+    }
+
+    pub fn apply_input(&mut self,   
+        character_anims: &CharacterAnimations,
+        character_data: &CharacterData,
+        inputs: &mut AllInputManagement) {
+            
+        let mut inputs_for_current_frame = if let Some(&last_action) = inputs.action_history.back() {last_action} else {0};
+
+        if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
+            inputs_for_current_frame ^= GameAction::Dash as i32;
+        }
+
+        for &(recent_input, is_pressed) in inputs.input_new_frame.iter() {
+            let recent_input_as_game_action = GameAction::from_translated_input(
+                recent_input,
+                inputs_for_current_frame,
+                self.facing_dir,
+            )
+            .unwrap();
+            inputs_for_current_frame = GameAction::update_state(inputs_for_current_frame, (recent_input_as_game_action, is_pressed));
+        }
+
+        if Player::check_for_dash_inputs(inputs_for_current_frame, &inputs.action_history) {
+            inputs_for_current_frame |= GameAction::Dash as i32;
+        }
+    
+        let moving_horizontally = GameAction::Right as i32 | GameAction::Left as i32;
+        let moving_vertically = GameAction::Up as i32 | GameAction::Down as i32;
+        
+        if inputs_for_current_frame & moving_horizontally == 0 {
+            self.set_velocity_x(0);
+        } else {
+            if inputs_for_current_frame & GameAction::Right as i32 > 0 {
+                self.set_velocity_x(1);
+            }
+            if inputs_for_current_frame & GameAction::Left as i32 > 0 {
+                self.set_velocity_x(-1);
+            }
+        }
+        //100 0010
+
+        if inputs_for_current_frame & moving_vertically == 0 {
+            self.walking_dir.y = 0;
+        } else {
+            if inputs_for_current_frame & GameAction::Up as i32 > 0 {
+                self.walking_dir.y = 1;
+            }
+            if inputs_for_current_frame & GameAction::Down as i32 > 0 {
+                self.walking_dir.y = -1;
+            }
+        }
+
+        if inputs_for_current_frame & GameAction::Jump as i32 > 0 {
+            self.jump();
+        }
+        if inputs_for_current_frame & GameAction::Punch as i32 > 0 {
+            self.check_attack_inputs(
+                character_anims,
+                character_data,
+                GameAction::Punch,
+                "light_punch".to_string(),
+                &inputs.action_history,
+            );
+        }
+        if inputs_for_current_frame & GameAction::Kick as i32 > 0 {
+            self.check_attack_inputs(
+                character_anims,
+                character_data,
+                GameAction::Kick,
+                "light_kick".to_string(),
+                &inputs.action_history,
+            );
+            }
+        if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.is_blocking = true }
+        if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
+            self.player_state_change(PlayerState::Dashing);
+        }
+        if inputs_for_current_frame & GameAction::Slide as i32 > 0 {}
+
+        inputs.action_history.push_back(inputs_for_current_frame);
+        inputs.input_reset_timer.push(0);
+        inputs.input_new_frame.clear();
+    }
+
+    //TODO kinda yikes but should work for now
+    fn check_for_dash_inputs(current_actions: i32, last_inputs: &VecDeque<i32>) -> bool {
+        let len = last_inputs.len();
+        if len > 3 {
+            let curr_input_right = GameAction::check_if_pressed(current_actions, GameAction::Right as i32);
+            let curr_input_left = GameAction::check_if_pressed(current_actions, GameAction::Left as i32);
+            if !(curr_input_right || curr_input_left) {
+                return false;
+            }
+
+            if !(GameAction::check_if_pressed(last_inputs[len-1], GameAction::Right as i32) || 
+            GameAction::check_if_pressed(last_inputs[len-1], GameAction::Left as i32)){
+                
+                return GameAction::check_if_pressed(last_inputs[len-2], GameAction::Right as i32) || 
+                     GameAction::check_if_pressed(last_inputs[len-2], GameAction::Left as i32);
+            }
+        }
+        return false;
+    }
+    
+    fn check_attack_inputs(
+        &mut self,
+        character_anims: &CharacterAnimations,
+        character_data: &CharacterData,
+        recent_input_as_game_action: GameAction,
+        animation_name: String,
+        action_history: &VecDeque<i32>,
+    ) {
+        if let Some(special_input) = self.check_special_inputs(character_data, action_history) {
+            self.attack(character_anims, character_data, special_input);
+        } else if let Some(directional_input) = self.check_directional_inputs(
+            character_data,
+            action_history[action_history.len() - 1],
+        ) {
+            self.attack(character_anims, character_data, directional_input);
+        } else {
+            self.change_special_meter(0.1);
+            if !self.is_airborne {
+                self.attack(character_anims, character_data, animation_name);
+            } else if self.is_airborne {
+                self.attack(
+                    character_anims,
+                    character_data, 
+                    format!("{}_{}", "airborne", animation_name),
+                );
+            } else {
+                self.attack(
+                    character_anims,
+                    character_data, 
+                    format!("{}_{}", "crouched", animation_name),
+                );
+            }
+        }
+    }
+    
+    fn check_special_inputs(
+        &mut self,
+        character_data: &CharacterData,
+        action_history: &VecDeque<i32>,
+    ) -> Option<String> {
+        //iterate over last inputs starting from the end
+        //check of matches against each of the player.input_combination_anims
+        //if no match
+        // iterate over last inputs starting from the end -1
+        //etc
+        //if find match, play animation and remove that input from array
+        let cleaned_history: VecDeque<i32> =
+            action_history.iter().cloned().filter(|&z| z > 0).collect();
+        for possible_combo in character_data.input_combination_anims.iter() {
+            let size_of_combo = possible_combo.0.len();
+            let size_of_history = cleaned_history.len();
+            let mut j = 0;
+            //TODO change special meter price per ability
+            if self.character.special_curr >= 1.0 {
+                if size_of_combo <= size_of_history {
+                    for i in (size_of_history - size_of_combo)..cleaned_history.len() {
+                        if cleaned_history[i] & possible_combo.0[j] > 0 {
+                            j += 1;
+                        } else {
+                            break;
+                        }
+    
+                        if j == size_of_combo {
+                            println!("SPECIAL ATTACK");
+                            return Some(possible_combo.1.clone());
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
+    
+    fn check_directional_inputs(
+        &mut self,
+        character_data: &CharacterData,
+        recent_inputs: i32
+    ) -> Option<String> {
+        for possible_combo in character_data.directional_variation_anims.iter() {
+            let (moves, name) = possible_combo;
+    
+            if GameAction::check_if_pressed(recent_inputs,moves.0  as i32) &&
+                GameAction::check_if_pressed(recent_inputs,moves.1  as i32) 
+            {
+                return Some(name.to_string());
+            }
+        }
+        None
+    }
+
     pub fn update(
         &mut self,
         camera: &Camera,
         dt: f64,
         character_width: i32,
-        opponent_position_x: f64,
     ) {
         if self.state == PlayerState::Jump {
+            self.ground_height = self.position.y as i32;
             self.velocity_y = self.jump_initial_velocity / 0.5;
-            self.direction_at_jump_time = self.velocity_x;
+            self.direction_at_jump_time = self.walking_dir.x;
         }
 
         if self.state == PlayerState::Jumping {
@@ -236,11 +430,7 @@ impl Player {
                 None => -2.0 * self.jump_initial_velocity / 0.25,
             };
 
-            let ground = if self.is_attacking && !self.has_hit {
-                self.ground_height - 100
-            } else {
-                self.ground_height
-            };
+            let ground = self.ground_height;
             let should_land = self.position.y < ground as f64;
 
             if !should_land {
@@ -269,26 +459,26 @@ impl Player {
 
         if self.player_can_move() {
             if self.state == PlayerState::Standing {
-                self.position.y = self.ground_height as f64;
-                self.position += Vector2::new(self.velocity_x as f64 * self.character.speed * dt * speed_mod, 0.0);
+                //self.position.y = self.ground_height as f64;
+                let position_move = Vector2::new(
+                    self.walking_dir.x as f64, 
+                    self.walking_dir.y as f64
+                );
+                let normalized_movement = if position_move.magnitude() > 0f64 { position_move.normalize() } else {position_move};
+                self.position += normalized_movement * self.character.speed * dt * speed_mod;
             }
         } else {
             match &self.animator.current_animation.as_ref().unwrap().offsets {
                 Some(offsets) => {
                     let offset = offsets[self.animator.sprite_shown as usize];
-                    self.velocity_x = (self.dir_related_of_other as f64 * offset.x).signum() as i32;
-                    self.position += Vector2::new( self.dir_related_of_other as f64 * offset.x * dt, offset.y * dt)
+                    self.walking_dir.x = (self.facing_dir as f64 * offset.x).signum() as i8;
+                    self.position += Vector2::new( self.facing_dir as f64 * offset.x, offset.y) * dt
                 }
                 None => { }
             }
-            
         }
 
-        //TODO float with != seems dangerous
-        if opponent_position_x - self.position.x != 0.0 {
-            self.dir_related_of_other = ((opponent_position_x - self.position.x) as i32).signum() ;
-        }
-
+        /*
         if (self.position.x  as i32 - character_width) < camera.rect.x() {
             self.position.x = (camera.rect.x() + character_width) as f64;
         }
@@ -296,41 +486,16 @@ impl Player {
         if (self.position.x as i32 + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
             self.position.x = (camera.rect.x() + camera.rect.width() as i32 - character_width) as f64;
         }
+        */  
 
-        if self.velocity_x * self.dir_related_of_other < 0 {
-            self.is_blocking = true;
-        } else {
-            self.is_blocking = false;
-        }        
     }
 
-    fn walk_anims(&mut self, character_animation: &HashMap<String, Animation>) {
-
-        let walk_forward = self.velocity_x * -self.dir_related_of_other < 0;
-        let changed_dir = self.prev_velocity_x != self.velocity_x;
-
-        if walk_forward {
-            self.animator
-            .play_animation(character_animation.get("walk").unwrap().clone(), 1.0, false, false, changed_dir);
-        } else {
-            
-            if character_animation.contains_key("walk_back") {
-                self.animator
-                    .play_animation(character_animation.get("walk_back").unwrap().clone(), 1.0, false, false, changed_dir);
-            } else {
-                self.animator
-                    .play_animation(character_animation.get("walk").unwrap().clone(), 1.0, true, false, changed_dir);
-            }
-        }
-    }
-
-    pub fn state_update(&mut self, assets: &CharacterAnimations) {
+    pub fn state_update(&mut self, assets: &CharacterAnimations, sprite_data: &HashMap<String, SpriteData>) {
         let character_animation = &assets.animations;
         let prev_animation = self.animator.current_animation.as_ref().unwrap().name.clone();
 
         if self.animator.is_finished && self.state != PlayerState::Dead {
-            self.has_hit = false;
-            self.flipped = self.dir_related_of_other > 0;
+            self.walking_dir.x = 0;
 
             if self.is_attacking {
                 self.is_attacking = false;
@@ -340,19 +505,7 @@ impl Player {
                 self.state = PlayerState::Jumping;
             }
 
-            if self.state == PlayerState::Crouch {
-                self.state = PlayerState::Crouching;
-            }
-
             if self.state == PlayerState::Landing {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::UnCrouch {
-                self.state = PlayerState::Standing;
-            }
-
-            if self.state == PlayerState::Grab {
                 self.state = PlayerState::Standing;
             }
 
@@ -360,15 +513,13 @@ impl Player {
                 self.state = PlayerState::Standing;
             }
 
-            if self.state == PlayerState::DashingForward
-                || self.state == PlayerState::DashingBackward
+            if self.state == PlayerState::Dashing
             {
                 self.state = PlayerState::Standing;
             }
         }
 
-        if self.has_hit && self.state == PlayerState::Landing {
-            self.has_hit = false;
+        if self.state == PlayerState::Landing {
             self.position.y = self.ground_height as f64;
             self.is_attacking = false;
         }
@@ -376,9 +527,9 @@ impl Player {
         if !self.is_attacking {
             match self.state {
                 PlayerState::Standing => {
-                    self.flipped = self.dir_related_of_other > 0;
-                    if self.velocity_x != 0 {
-                        self.walk_anims(character_animation);
+                    if self.walking_dir.x != 0 || self.walking_dir.y != 0 {
+                        self.animator
+                            .play(character_animation.get("walk").unwrap().clone(), 1.0, false);
                     } else {
                         if self.animator.current_animation.as_ref().unwrap().name != "idle" {
                             self.animator
@@ -404,40 +555,14 @@ impl Player {
                 }
 
                 PlayerState::Landing => {
-                    self.flipped = self.dir_related_of_other > 0;
                     self.animator
                         .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
                 }
 
-                PlayerState::UnCrouch => {
-                    self.animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 1.0, true);
-                }
-
-                PlayerState::Crouch => {
-                    self.animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 1.0, false);
-                }
-
-                PlayerState::Crouching => {
-                    self.animator
-                        .play(character_animation.get("crouching").unwrap().clone(), 1.0, false);
-                }
-
-                PlayerState::DashingForward => {
+                PlayerState::Dashing => {
                     self.animator
                         .play_once(character_animation.get("dash").unwrap().clone(), 1.0, false);
                 }
-
-                PlayerState::DashingBackward => {
-                    self.animator
-                        .play_once(character_animation.get("dash_back").unwrap().clone(), 1.0, false);
-                }
-                PlayerState::Grab => {
-                    self.animator
-                        .play_once(character_animation.get("grab").unwrap().clone(), 1.0, false);
-                }
-                PlayerState::Grabbed => {}
                 PlayerState::Hurt => {
                     self.animator
                         .play_once(character_animation.get("take_damage").unwrap().clone(), 1.0, false);
@@ -445,14 +570,18 @@ impl Player {
             }
         }
 
-        self.prev_velocity_x = self.velocity_x;
         self.animator.update();
 
-        if let Some(_) = self.animator.current_animation.as_ref().unwrap().collider_animation {
-            if prev_animation != self.animator.current_animation.as_ref().unwrap().name {
-                self.init_colliders();
+        if let Some(animation) = self.animator.current_animation.as_ref() {
+            if let Some(_) = animation.collider_animation {
+                let animation_id = self.animator.sprite_shown as usize;
+                let sprite_handle = animation.sprites[animation_id].1.clone();
+                if prev_animation != self.animator.current_animation.as_ref().unwrap().name {
+                    self.init_colliders();
+                }
+                
+                self.update_colliders(sprite_data.get(&sprite_handle).unwrap());
             }
-            self.update_colliders();
         }
 
     }
@@ -483,19 +612,20 @@ impl Player {
     }
     
     // update offsets by player position
-    pub fn update_colliders(&mut self) {
-        let left_player_pos =
-        self.position.x as f32 - self.character.sprite.width() as f32 / 2.0;
-    
+    pub fn update_colliders(&mut self, sprite_data: &SpriteData) {  
+        let pivot_x_offset = if self.facing_dir > 0 {(1f64-sprite_data.pivot_x) * 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
+        let player_X = self.position.x + pivot_x_offset;
+        let player_Y = self.position.y + (1f64 - sprite_data.pivot_y) * 2.0 * sprite_data.height as f64;
+
         let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
 
         for i in 0..self.colliders.len() {
             let aabb = &mut self.colliders[i].aabb;
     
-            aabb.mins.coords[0] = left_player_pos;
-            aabb.mins.coords[1] = self.position.y as f32;
-            aabb.maxs.coords[0] = left_player_pos;
-            aabb.maxs.coords[1] = self.position.y as f32;
+            aabb.mins.coords[0] = player_X as f32;
+            aabb.mins.coords[1] = player_Y as f32;
+            aabb.maxs.coords[0] = player_X as f32;
+            aabb.maxs.coords[1] = player_Y as f32;
             self.sync_with_character_animation(&collider_animation, i);
         }
     }
@@ -519,7 +649,7 @@ impl Player {
                 let offset_x = transformation.pos.x as f32 * 2.0;
                 let offset_y = transformation.pos.y as f32 * 2.0;
     
-                if self.flipped {
+                if self.facing_dir > 0 {
                     aabb.mins.coords[0] = (self.position.x as f32
                         + self.character.sprite.width() as f32 / 2.0)
                         - (offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0);
@@ -545,7 +675,8 @@ impl Player {
 
 
 
-    pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> &'a Texture {
-        assets.textures.get(&self.animator.render()).unwrap()
+    pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> (&'a Texture, Option<&SpriteData>) {
+        let key = &self.animator.render();
+        (assets.textures.get(key).unwrap(), assets.texture_data.get(key))
     }
 }

@@ -3,13 +3,12 @@ use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
 use crate::{asset_management::{cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, rendering::camera::Camera};
 
-use super::{character_factory::{CharacterAnimations, CharacterData}, characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
+use super::{character_factory::CharacterAnimations, characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game {
     pub current_frame: i32,
-    pub player1: Player,
-    pub player2: Player,
+    pub player: Player,
     pub camera: Camera,
 
     pub projectiles: Vec<Projectile>,
@@ -18,12 +17,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(player1: Player, player2: Player, camera: Camera) -> Self {
+    pub fn new(player: Player, camera: Camera) -> Self {
         Self {
             current_frame: 0,
 
-            player1,
-            player2,
+            player,
             camera,
 
             projectiles: Vec::new(),
@@ -123,16 +121,14 @@ impl Game {
         }
     }
 
-    pub fn update_projectiles(&mut self, inputs: &AllInputManagement, p1_anims: &CharacterAnimations, p2_anims: &CharacterAnimations) {
+    pub fn update_projectiles(&mut self, inputs: &AllInputManagement, p1_anims: &CharacterAnimations) {
         for i in 0..self.projectiles.len() {
             let prev_pos =  self.projectiles[i].position;
             self.projectiles[i].update(&self.camera);
             Game::update_projectile_colliders_position_only(&mut self.projectiles[i], prev_pos);
 
-            let animations = if self.projectiles[i].player_owner == 1 { p1_anims } else { p2_anims };
-
             if let Some(on_update) = self.projectiles[i].on_update {
-                on_update(inputs, animations, &mut self.projectiles[i]);
+                on_update(inputs, p1_anims, &mut self.projectiles[i]);
             }
         }
     }
@@ -169,7 +165,7 @@ impl Game {
 
         let process_point_offset = |player: &Player, point: &CastPoint| -> Vector2<f64> {
             let mut final_pos = player.position;
-            if player.flipped {
+            if player.facing_dir > 0 {
                 final_pos.x += player.character.sprite.width() as f64 / 2.0;
                 final_pos.x -= point.point.x * 2.0;
                 final_pos.y += point.point.y * 2.0;
@@ -181,33 +177,21 @@ impl Game {
         };
 
         let mut points = Vec::new();
-        let hash_points = &self.player1.animator.current_animation.as_ref().unwrap().cast_point;
+        let hash_points = &self.player.animator.current_animation.as_ref().unwrap().cast_point;
 
         if hash_points.keys().len() > 0 {
-            match hash_points.get(&(self.player1.animator.animation_index as i64 -1)) {
+            match hash_points.get(&(self.player.animator.animation_index as i64 -1)) {
                 Some(point) => {
                     let mut point_position_fixed = point.clone();
-                    point_position_fixed.point = process_point_offset(&self.player1, &point_position_fixed);
-                    points.push((point_position_fixed, self.player1.flipped));
-                }
-                None => {}
-            }
-        }
-
-        let hash_points2 = &self.player2.animator.current_animation.as_ref().unwrap().cast_point;
-        if hash_points2.keys().len() > 0 {
-            match hash_points2.get(&(self.player2.animator.animation_index as i64 -1)) {
-                Some(point) => {
-                    let mut point_position_fixed = point.clone();
-                    point_position_fixed.point = process_point_offset(&self.player2, &point_position_fixed);
-                    points.push((point_position_fixed, self.player2.flipped));
+                    point_position_fixed.point = process_point_offset(&self.player, &point_position_fixed);
+                    points.push((point_position_fixed, self.player.facing_dir));
                 }
                 None => {}
             }
         }
 
         for point in &mut points {
-            spawn(&mut point.0, point.1, self, general_assets);
+            spawn(&mut point.0, point.1 > 0, self, general_assets);
         }
         
     }

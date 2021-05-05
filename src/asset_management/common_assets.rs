@@ -45,7 +45,7 @@ impl<'a> CommonAssets<'a> {
         sounds.insert("miss".to_string(), miss_sound);
         sounds.insert("block".to_string(), block_sound);
 
-        let textures = asset_loader::load_textures_for_character(&texture_creator, "assets/vfx");
+        let (textures, texture_data) = asset_loader::load_textures_for_character(&texture_creator, "assets/vfx");
 
         let hit_anim = 
             asset_loader::load_anim_from_dir("assets/vfx/normal_hit", "normal_hit");

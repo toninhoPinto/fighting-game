@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{game_logic::{character_factory::CharacterAssets, game::Game}, ui::ingame::end_match_ui::EndMatch};
+use crate::game_logic::{character_factory::CharacterAssets, game::Game};
 use crate::{
     asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
@@ -16,20 +16,31 @@ use crate::{
 
 use super::camera::Camera;
 
-fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), camera: &Camera) -> Rect {
+fn pos_world_to_screen(position: Point, screen_size: (u32, u32), camera: &Camera) -> Point {
     let (_, height) = screen_size;
     let mut inverted_pos = position;
     //make world coordinates Y increase as we go up
     //and make Y = 0 as the bottom of the screen
     inverted_pos.y = -inverted_pos.y + height as i32;
-    inverted_pos.x -= camera.rect.x();
+    inverted_pos.x -= camera.rect.x(); //make camera as its own little space coordinates
 
-    //make the bottom center of a rect as the position
-    let screen_position = inverted_pos - Point::new(0, (rect.height() as i32) / 2);
-    Rect::from_center(screen_position, rect.width(), rect.height())
+    inverted_pos
 }
 
-fn debug_points(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug: Rect) {
+fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), camera: &Camera) -> Rect {
+    let screen_position = pos_world_to_screen(position, screen_size, camera);
+    Rect::new(screen_position.x, screen_position.y, rect.width(), rect.height())
+}
+
+fn debug_point(canvas: &mut WindowCanvas, screen_position: Point, color: Color) {
+    canvas.set_draw_color(color);
+    let debug_rect = Rect::new(screen_position.x as i32, screen_position.y as i32, 4, 4);
+
+    canvas.draw_rect(debug_rect).unwrap();
+    canvas.fill_rect(debug_rect).unwrap();
+}
+
+fn debug_rect(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug: Rect) {
     canvas.set_draw_color(Color::RGB(255, 100, 100));
     let debug_rect = Rect::new(screen_position.x as i32, screen_position.y as i32, 4, 4);
 
@@ -46,10 +57,9 @@ pub fn render(
     stage: (&Texture, Rect),
     game: &mut Game,
     p1_assets: &CharacterAssets,
-    p2_assets: &CharacterAssets,
     common_assets: &mut CommonAssets,
-    hp_bars: &[Bar; 2],
-    special_bars:  &[SegmentedBar; 2],
+    hp_bars: &Bar,
+    special_bars:  &SegmentedBar,
     //end_match_menu: &EndMatch,
     debug: bool,
 ) -> Result<(), String> {
@@ -67,22 +77,17 @@ pub fn render(
 
     let TextureQuery { width, height, .. } = common_assets.shadow.query();
     let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
-    let screen_rect = world_to_screen(shadow_rect, Point::new(game.player1.position.x as i32, -5), screen_res, &game.camera);
+    let screen_rect = world_to_screen(shadow_rect, Point::new(game.player.position.x as i32, -5), screen_res, &game.camera);
     canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
         .unwrap();
 
-    let screen_rect2 = world_to_screen(shadow_rect, Point::new(game.player2.position.x as i32, -5), screen_res, &game.camera);
-    canvas.copy(&common_assets.shadow, shadow_rect, screen_rect2)
-        .unwrap();
-
-    render_player(&mut game.player1, p1_assets, canvas, screen_res, &game.camera, debug);
-    render_player(&mut game.player2, p2_assets, canvas, screen_res, &game.camera, debug);
+    render_player(&mut game.player, p1_assets, canvas, screen_res, &game.camera, debug);
 
     for projectile in game.projectiles.iter() {
         let screen_rect =
             world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, &game.camera);
 
-        let assets = if projectile.player_owner == 1 {p1_assets} else {p2_assets};
+        let assets = p1_assets;
         canvas.copy_ex(
             projectile.render(assets),
             projectile.sprite,
@@ -94,7 +99,7 @@ pub fn render(
         )?;
 
         if debug {
-            debug_points(canvas, screen_rect.center(), screen_rect);
+            debug_rect(canvas, screen_rect.center(), screen_rect);
         }
 
     }
@@ -105,27 +110,22 @@ pub fn render(
         for i in 0..game.projectiles.len() {
             render_colliders(canvas, screen_res, &game.camera, &mut game.projectiles[i].colliders);
         }
-        render_colliders(canvas, screen_res, &game.camera, &mut game.player1.colliders);
-        render_colliders(canvas, screen_res, &game.camera, &mut game.player2.colliders);
+        render_colliders(canvas, screen_res, &game.camera, &mut game.player.colliders);
     }
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
-    for i in 0..2{
-        if hp_bars[i].fill_value > 0.0 {
-            canvas.draw_rect(hp_bars[i].rect).unwrap();
-            canvas.set_draw_color(hp_bars[i].color.unwrap());
-            canvas.fill_rect(hp_bars[i].rect).unwrap();
-        }
-    
+    if hp_bars.fill_value > 0.0 {
+        canvas.draw_rect(hp_bars.rect).unwrap();
+        canvas.set_draw_color(hp_bars.color.unwrap());
+        canvas.fill_rect(hp_bars.rect).unwrap();
     }
+    
 
-    for i in 0..2 {
-        if special_bars[i].curr_value > 0.0 {
-            for j in 0..special_bars[i].render().len() {
-                canvas.draw_rect(special_bars[i].rects[j]).unwrap();
-                canvas.set_draw_color(special_bars[i].color.unwrap());
-                canvas.fill_rect(special_bars[i].rects[j]).unwrap();
-            }
+    if special_bars.curr_value > 0.0 {
+        for j in 0..special_bars.render().len() {
+            canvas.draw_rect(special_bars.rects[j]).unwrap();
+            canvas.set_draw_color(special_bars.color.unwrap());
+            canvas.fill_rect(special_bars.rects[j]).unwrap();
         }
     }
 
@@ -141,15 +141,36 @@ fn render_player(
     camera: &Camera,
     debug: bool,
 ) {
-    let screen_rect = world_to_screen(player.character.sprite, Point::new(player.position.x as i32, player.position.y as i32), screen_res, camera);
+    let (texture, data) = player.render(assets);
+    let mut rect = player.character.sprite.clone();
+    let is_flipped = player.facing_dir > 0;
+    
+    let position = if let Some(pivot) = data
+    {    
+        rect.resize(pivot.width * 2 , pivot.height * 2 );
+        let pivot_x_offset = if is_flipped {(1f64-pivot.pivot_x) * 2.0 * pivot.width as f64} else {pivot.pivot_x * 2.0 * pivot.width as f64};
+
+        //Point::new(player.position.x as i32, player.position.y as i32)
+        Point::new((player.position.x - pivot_x_offset) as i32, (player.position.y + (1f64 - pivot.pivot_y) * 2.0 * pivot.height as f64) as i32)
+    } else {
+        Point::new(player.position.x as i32, player.position.y as i32)
+    };
+    
+    let screen_rect = world_to_screen(rect, position, screen_res, camera);
+
     let sprite = player.character.sprite;
-    let is_flipped = player.flipped;
-    let texture = player.render(assets);
+
+
     canvas
         .copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)
         .unwrap();
     if debug {
-        debug_points(canvas, screen_rect.center(), screen_rect);
+        if let Some(pivot) = data
+    {    
+        let point = Point::new(player.position.x as i32, player.position.y as i32);
+        debug_point(canvas, pos_world_to_screen(point,screen_res, camera), Color::RGB(50, 250, 255));
+    }
+        debug_rect(canvas, screen_rect.center(), screen_rect);
     }
 }
 
@@ -165,7 +186,7 @@ fn render_vfx(
         if vfx.active {
             let rect_size = Rect::new(0, 0, vfx.sprite.width(), vfx.sprite.height());
             let vfx_position = Point::new(
-                vfx.sprite.center().x  - vfx.sprite.width() as i32 / 2,
+                vfx.sprite.center().x - vfx.sprite.width() as i32 / 2,
                 vfx.sprite.center().y - vfx.sprite.height() as i32 / 2,
             );
 
@@ -182,7 +203,7 @@ fn render_vfx(
                 .unwrap();
 
             if debug {
-                debug_points(canvas, screen_rect.center(), screen_rect);
+                debug_rect(canvas, screen_rect.center(), screen_rect);
             }
         }
     }

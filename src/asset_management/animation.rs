@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use parry2d::na::Vector2;
-use super::{cast_point::CastPoint, collider::Collider};
+use super::{cast_point::CastPoint, collider::Collider, sprite_data::SpriteData};
 use sdl2::rect::Point;
 
 #[derive(Clone)]

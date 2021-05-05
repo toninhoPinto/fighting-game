@@ -1,4 +1,4 @@
-use super::{characters::{Ability, Attack, AttackHeight, AttackType, keetar, player::Player}};
+use super::{characters::{Ability, Attack, AttackType, keetar, player::Player}};
 use sdl2::rect::Point;
 use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
@@ -6,13 +6,14 @@ use sdl2::video::WindowContext;
 
 use super::characters::Character;
 use super::inputs::game_inputs::GameAction;
-use crate::asset_management::{animation::Animation, asset_loader::asset_loader::load_textures_for_character};
+use crate::asset_management::{animation::Animation, asset_loader::asset_loader::load_textures_for_character, sprite_data::SpriteData};
 use crate::asset_management::asset_loader::asset_loader;
 use std::collections::HashMap;
 use std::string::String;
 
 pub struct CharacterAssets<'a> {
-    pub textures: HashMap<String, Texture<'a>>
+    pub textures: HashMap<String, Texture<'a>>,
+    pub texture_data: HashMap<String, SpriteData>
 }
 
 pub struct CharacterAnimations {
@@ -35,8 +36,8 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
     let fighter = match character_name {
         "foxgirl" => Some(Character::new(
             character_name.to_string(),
-            406 * 2,
-            215 * 2,
+            240,
+            200,
             200,
             4,
             250.0,
@@ -47,8 +48,8 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
         )),
         "keetar" => Some(Character::new(
             character_name.to_string(),
-            580,
-            356,
+            240,
+            240,
             100,
             3,
             350.0,
@@ -60,7 +61,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, flipped: bool, id:
         _ => None,
     }
     .unwrap();
-    Player::new(id, fighter, spawn_pos, flipped)
+    Player::new(id, fighter, spawn_pos)
 }
 
 pub fn load_character_anim_data<'a>(
@@ -79,47 +80,28 @@ pub fn load_character_anim_data<'a>(
 fn load_keetar_abilities<'a>() -> HashMap<String, (i32, Ability)> {
     let mut abilities = HashMap::new();
 
-    abilities.insert("light_special_attack".to_string(),  (3, keetar::spawn_light_note as Ability));
-    abilities.insert("med_special_attack".to_string(),  (3, keetar::spawn_medium_note as Ability));
-    abilities.insert("heavy_special_attack".to_string(),  (3, keetar::spawn_heavy_note as Ability));
-
     abilities
 }
 
 fn load_keetar_directional_inputs() -> Vec<((GameAction, GameAction), String)> {
     let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
-    let directional_string = (GameAction::Forward, GameAction::LightPunch);
-    directional_inputs.push((directional_string, "directional_light_punch".to_string()));
+    directional_inputs.push(((GameAction::Right, GameAction::Punch), "directional_light_punch".to_string()));
+    directional_inputs.push(((GameAction::Left, GameAction::Punch), "directional_light_punch".to_string()));
 
     directional_inputs
 }
 
 fn load_keetar_special_inputs() -> Vec<(Vec<i32>, String)> {
     let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
+
     let light_combo_string: Vec<i32> = vec![
         GameAction::Down as i32,
-        GameAction::Down as i32 + GameAction::Forward as i32,
-        GameAction::Forward as i32,
-        GameAction::LightPunch as i32,
+        GameAction::Down as i32 + GameAction::Right as i32,
+        GameAction::Right as i32,
+        GameAction::Punch as i32,
     ];
     specials_inputs.push((light_combo_string, "light_special_attack".to_string()));
     
-    let med_combo_string = vec![
-        GameAction::Down as i32,
-        GameAction::Down as i32 + GameAction::Forward as i32,
-        GameAction::Forward as i32,
-        GameAction::MediumPunch as i32,
-    ];
-    specials_inputs.push((med_combo_string, "med_special_attack".to_string()));
-
-    let heavy_combo_string: Vec<i32> = vec![
-        GameAction::Down as i32,
-        GameAction::Down as i32 + GameAction::Forward as i32,
-        GameAction::Forward as i32,
-        GameAction::HeavyPunch as i32,
-    ];
-    specials_inputs.push((heavy_combo_string, "heavy_special_attack".to_string()));
-
     specials_inputs
 }
 
@@ -246,7 +228,6 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 5.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
@@ -258,7 +239,6 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 0,
             stun_on_block: 0,
             push_back: 0.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
     );
@@ -270,7 +250,6 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 0,
             stun_on_block: 0,
             push_back: 0.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
     );
@@ -282,7 +261,6 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 0,
             stun_on_block: 0,
             push_back: 0.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
     );
@@ -291,8 +269,10 @@ fn load_keetar_attacks() -> HashMap<String, Attack> {
 }
 
 fn load_keetar_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
+    let (textures, data) = load_textures_for_character(texture_creator, "assets/keetar");
     CharacterAssets {
-        textures: load_textures_for_character(texture_creator, "assets/keetar"),
+        textures,
+        texture_data: data
     }
 }
 
@@ -320,11 +300,11 @@ fn load_keetar_data() -> CharacterData {
 fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)>{
     let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
 
-    let directional_string = (GameAction::Forward, GameAction::LightPunch);
-    directional_inputs.push((directional_string, "directional_light_punch".to_string()));
+    directional_inputs.push(((GameAction::Right, GameAction::Punch), "directional_light_punch".to_string()));
+    directional_inputs.push(((GameAction::Left, GameAction::Punch), "directional_light_punch".to_string()));
 
-    let directional_string_2 = (GameAction::Forward, GameAction::HeavyPunch);
-    directional_inputs.push((directional_string_2, "directional_heavy_punch".to_string()));
+    directional_inputs.push(( (GameAction::Right, GameAction::Kick), "directional_heavy_punch".to_string()));
+    directional_inputs.push(( (GameAction::Left, GameAction::Kick), "directional_heavy_punch".to_string()));
 
     directional_inputs
 }
@@ -332,9 +312,9 @@ fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)
 fn load_foxgirl_special_inputs() -> Vec<(Vec<i32>, String)>{
     let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
     let spam_light_punch_inputs = vec![
-        GameAction::LightPunch as i32,
-        GameAction::LightPunch as i32,
-        GameAction::LightPunch as i32,
+        GameAction::Punch as i32,
+        GameAction::Punch as i32,
+        GameAction::Punch as i32,
     ];
     specials_inputs.push((spam_light_punch_inputs, "spam_light_punch".to_string()));
 
@@ -449,7 +429,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 400.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
@@ -461,7 +440,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_height: AttackHeight::LOW,
             attack_type: AttackType::Normal
         },
     );
@@ -473,7 +451,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_height: AttackHeight::HIGH,
             attack_type: AttackType::Normal
         },
     );
@@ -485,7 +462,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 50.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
@@ -497,7 +473,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 50.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
@@ -509,7 +484,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 50.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Normal
         },
     );
@@ -521,7 +495,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 70.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
     );
@@ -533,7 +506,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 70.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
     );
@@ -545,7 +517,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 70.0,
-            attack_height: AttackHeight::MIDDLE,
             attack_type: AttackType::Special
         },
     );
@@ -563,8 +534,10 @@ fn load_foxgirl_animations() -> CharacterAnimations {
 }
 
 fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
+    let (textures, data) = load_textures_for_character(texture_creator, "assets/foxgirl");
     CharacterAssets {
-        textures: load_textures_for_character(texture_creator, "assets/foxgirl")
+        textures,
+        texture_data: data,
     }
 }
 

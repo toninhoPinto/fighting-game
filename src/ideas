@@ -1,4 +1,27 @@
+Roguelite where each level is a time in 
+1st is caveman time
+2nd is medieval
+3rd is victorian era
+4th modern times
+5th sci fi
+
 Mutants vs Cyborgs vs Perfect Humans
+
+inputs
+    left
+    right
+    down (moves down)
+    up (moves up)
+    jump
+    punch
+    kick
+    forward attack
+    down attack for downed ai
+    jump attack
+    dashing attack
+
+
+
 
 abilities to steal from other games
 

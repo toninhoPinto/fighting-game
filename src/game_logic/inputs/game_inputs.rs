@@ -4,16 +4,16 @@ use crate::input::translated_inputs::TranslatedInput;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum GameAction {
-    Forward = 0b00001,      // 1
-    Backward = 0b00010,     // 2
-    Up = 0b00100,           // 4
-    Down = 0b01000,         // 8
-    LightPunch = 0b10000,   // 16
-    MediumPunch = 0b100000, // 32
-    HeavyPunch = 0b1000000, // 64
-    LightKick = 0b10000000, // 128
-    MediumKick = 0b100000000,
-    HeavyKick = 0b1000000000,
+    Right =   0b0000000001,     // 1
+    Left =  0b0000000010,     // 2
+    Up =        0b0000000100,     // 4
+    Down =      0b0000001000,     // 8
+    Punch =     0b0000010000,     // 16
+    Kick =      0b0000100000,     // 32
+    Jump =      0b0001000000,     // 64
+    Block =     0b0010000000,     // 128
+    Dash =      0b0100000000,     
+    Slide =     0b1000000000,
 }
 
 impl Display for GameAction {
@@ -23,53 +23,66 @@ impl Display for GameAction {
 }
 
 impl GameAction {
-    pub fn update_state(curr_state: &mut i32, update: (GameAction, bool)) {
-        if update.1 {
-            *curr_state |= update.0 as i32;
-        } else if *curr_state & (update.0 as i32) > 0 {
-            *curr_state ^= update.0 as i32;
+
+    pub fn combinate_states(curr_state: &mut i32){
+        if GameAction::check_if_pressed(*curr_state, GameAction::Dash as i32) && GameAction::check_if_pressed(*curr_state, GameAction::Down as i32) {
+            *curr_state ^= GameAction::Slide as i32
         }
     }
 
-    pub fn check_if_pressed(curr_state: &mut i32, check: i32) -> bool {
-        *curr_state & check > 0
+    pub fn update_state(curr_state: i32, update: (GameAction, bool)) -> i32 {
+        if update.1 {
+            curr_state | update.0 as i32
+        } else if curr_state & (update.0 as i32) > 0 {
+            curr_state ^ (update.0 as i32)
+        } else {
+            curr_state
+        }
+    }
+
+    pub fn check_if_pressed(curr_state: i32, check: i32) -> bool {
+        curr_state & check > 0
+    }
+
+    pub fn check_if_pressed_direction(curr_state: i32) -> bool {
+        curr_state & GameAction::Right as i32 > 0 || 
+        curr_state & GameAction::Left as i32 > 0 || 
+        curr_state & GameAction::Up as i32 > 0 ||
+        curr_state & GameAction::Down as i32 > 0
     }
 
     pub fn from_translated_input(
         original_input: TranslatedInput,
-        current_input_state: &[(TranslatedInput, bool); 4],
-        player_facing_dir: i32,
+        curr_state: i32,
+        player_facing_dir: i8,
     ) -> Result<GameAction, String> {
         match original_input {
-            TranslatedInput::LightPunch => Ok(GameAction::LightPunch),
-            TranslatedInput::MediumPunch => Ok(GameAction::MediumPunch),
-            TranslatedInput::HeavyPunch => Ok(GameAction::HeavyPunch),
-            TranslatedInput::LightKick => Ok(GameAction::LightKick),
-            TranslatedInput::MediumKick => Ok(GameAction::MediumKick),
-            TranslatedInput::HeavyKick => Ok(GameAction::HeavyKick),
-            TranslatedInput::Horizontal(h) => {
-                if h != 0 {
-                    let right_dir = if h * player_facing_dir > 0 {
-                        GameAction::Forward
-                    } else {
-                        GameAction::Backward
-                    };
-                    Ok(right_dir)
+            TranslatedInput::Punch => Ok(GameAction::Punch),
+            TranslatedInput::Kick => Ok(GameAction::Kick),
+            TranslatedInput::Jump => Ok(GameAction::Jump),
+            TranslatedInput::Block => Ok(GameAction::Block),
+            TranslatedInput::Horizontal(h) if h != 0 => {
+                let right_dir = if h > 0 {
+                    GameAction::Right
                 } else {
+                    GameAction::Left
+                };
+                Ok(right_dir)
+            },
+            TranslatedInput::Horizontal(h) if h == 0 => {
                     //Specifically for joysticks that do not inform what was once pressed and then released for the axis
                     //so whatever was once pressed is the direction that was released (this works because joystick only lets you have 1 direction at a time)
-                    if current_input_state[1].1 {
-                        Ok(GameAction::Backward)
+                    if GameAction::check_if_pressed(curr_state, GameAction::Right as i32){
+                        Ok(GameAction::Right)
                     } else {
-                        Ok(GameAction::Forward)
+                        Ok(GameAction::Left)
                     }
-                }
             }
             TranslatedInput::Vertical(v) if v > 0 => Ok(GameAction::Up),
             TranslatedInput::Vertical(v) if v < 0 => Ok(GameAction::Down),
 
             TranslatedInput::Vertical(v) if v == 0 => {
-                if current_input_state[2].1 {
+                if GameAction::check_if_pressed(curr_state, GameAction::Up as i32) {
                     Ok(GameAction::Up)
                 } else {
                     Ok(GameAction::Down)

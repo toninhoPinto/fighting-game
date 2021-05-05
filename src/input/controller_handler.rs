@@ -7,7 +7,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::GameControllerSubsystem;
 use sdl2::JoystickSubsystem;
 
-const KEYBOARD_ID: i32 = 666;
+pub(crate) const KEYBOARD_ID: u32 = 666;
 
 pub enum ControllerType {
     Keyboard,

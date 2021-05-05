@@ -14,9 +14,9 @@ impl Camera {
         }
     }
 
-    pub fn update(&mut self, level_size: i32, player: &Player, player2: &Player) {
+    pub fn update(&mut self, level_size: i32, player: &Player) {
         let mut proposed_x =
-            (player.position.x + player2.position.x) as i32 / 2 - self.rect.width() as i32 / 2;
+            player.position.x as i32 - self.rect.width() as i32 / 2;
         if proposed_x < 0 {
             proposed_x = 0;
         }

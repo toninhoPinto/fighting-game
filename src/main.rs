@@ -27,7 +27,8 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO features tomorrow
-//backup sprites and attempt to switch to skullgirls sprites
+//fix input system for beat em up (no need for forward and backward)
+//separate json for animation offsets and animation states (startup, active, recovery)
 
 //TODO FEATURES
 //play block animation while standing and crouching
@@ -79,8 +80,7 @@ use input::translated_inputs::TranslatedInput;
 //^^^^^possibly bad, and its a bit ugly, maybe have Animator only hold a handle to the animation just like the Textures?
 
 pub struct GameStateData<'a> {
-    p1_character: &'a str,
-    p2_character: &'a str,
+    character: &'a str,
 }
 
 fn main() -> Result<(), String> {
@@ -127,8 +127,7 @@ fn main() -> Result<(), String> {
     state_stack.push(Box::new(scene2)); //menu state
 
     let mut game_state_data = GameStateData {
-        p1_character: "",
-        p2_character: "",
+        character: "",
     };
 
     while !state_stack.is_empty() {
