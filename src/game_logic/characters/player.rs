@@ -459,7 +459,7 @@ impl Player {
 
         if self.player_can_move() {
             if self.state == PlayerState::Standing {
-                //self.position.y = self.ground_height as f64;
+                self.ground_height = self.position.y as i32;
                 let position_move = Vector2::new(
                     self.walking_dir.x as f64, 
                     self.walking_dir.y as f64
@@ -570,7 +570,32 @@ impl Player {
             }
         }
 
+        let prev_sprite = self.animator.current_animation.as_ref().unwrap().sprites[self.animator.sprite_shown as usize].1.clone();
         self.animator.update();
+        let new_sprite = self.animator.current_animation.as_ref().unwrap().sprites[self.animator.sprite_shown as usize].1.clone();
+        if prev_sprite != new_sprite {
+            let prev_data = sprite_data.get(&prev_sprite);
+            let data = sprite_data.get(&new_sprite);
+            
+                if let Some(pivot) = data {
+                    self.character.sprite.resize(pivot.width * 2 , pivot.height * 2 );
+
+                    let mut prev_pivot_x_offset = 0f64;
+                    let mut prev_pivot_y_offset = 0f64;
+                    if let Some(prev_pivot) = prev_data {
+                        prev_pivot_x_offset = if self.facing_dir > 0 {(1f64-prev_pivot.pivot_x) * 2.0 * prev_pivot.width as f64} else {prev_pivot.pivot_x * 2.0 * prev_pivot.width as f64};
+                        prev_pivot_y_offset = (1f64 - prev_pivot.pivot_y) * pivot.height as f64;
+                    }
+
+                    let pivot_x_offset = if self.facing_dir > 0 {(1f64-pivot.pivot_x) * 2.0 * pivot.width as f64} else {pivot.pivot_x * 2.0 * pivot.width as f64};
+                    let pivot_y_offset = (1f64 - pivot.pivot_y) * pivot.height as f64;
+            
+                    self.position = Vector2::new(
+                        self.position.x + (prev_pivot_x_offset - pivot_x_offset), 
+                        self.position.y + (prev_pivot_y_offset - pivot_y_offset))
+                }
+
+        }
 
         if let Some(animation) = self.animator.current_animation.as_ref() {
             if let Some(_) = animation.collider_animation {
@@ -585,8 +610,6 @@ impl Player {
         }
 
     }
-
-
 
 
     pub fn init_colliders(&mut self) {
@@ -614,18 +637,18 @@ impl Player {
     // update offsets by player position
     pub fn update_colliders(&mut self, sprite_data: &SpriteData) {  
         let pivot_x_offset = if self.facing_dir > 0 {(1f64-sprite_data.pivot_x) * 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
-        let player_X = self.position.x + pivot_x_offset;
-        let player_Y = self.position.y + (1f64 - sprite_data.pivot_y) * 2.0 * sprite_data.height as f64;
+        let player_x = self.position.x + pivot_x_offset;
+        let player_y = self.position.y + (1f64 - sprite_data.pivot_y) * 2.0 * sprite_data.height as f64;
 
         let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
 
         for i in 0..self.colliders.len() {
             let aabb = &mut self.colliders[i].aabb;
     
-            aabb.mins.coords[0] = player_X as f32;
-            aabb.mins.coords[1] = player_Y as f32;
-            aabb.maxs.coords[0] = player_X as f32;
-            aabb.maxs.coords[1] = player_Y as f32;
+            aabb.mins.coords[0] = player_x as f32;
+            aabb.mins.coords[1] = player_y as f32;
+            aabb.maxs.coords[0] = player_x as f32;
+            aabb.maxs.coords[1] = player_y as f32;
             self.sync_with_character_animation(&collider_animation, i);
         }
     }

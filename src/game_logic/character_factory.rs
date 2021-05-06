@@ -316,7 +316,7 @@ fn load_foxgirl_special_inputs() -> Vec<(Vec<i32>, String)>{
         GameAction::Punch as i32,
         GameAction::Punch as i32,
     ];
-    specials_inputs.push((spam_light_punch_inputs, "spam_light_punch".to_string()));
+    //specials_inputs.push((spam_light_punch_inputs, "spam_light_punch".to_string()));
 
     specials_inputs
 }

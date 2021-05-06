@@ -1,3 +1,5 @@
+use parry2d::na::Vector2;
+
 use super::{animation::Animation};
 
 #[derive(Clone)]

@@ -29,7 +29,7 @@ fn pos_world_to_screen(position: Point, screen_size: (u32, u32), camera: &Camera
 
 fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), camera: &Camera) -> Rect {
     let screen_position = pos_world_to_screen(position, screen_size, camera);
-    Rect::new(screen_position.x, screen_position.y, rect.width(), rect.height())
+    Rect::new(screen_position.x, screen_position.y - rect.height() as i32, rect.width(), rect.height())
 }
 
 fn debug_point(canvas: &mut WindowCanvas, screen_position: Point, color: Color) {
@@ -77,7 +77,11 @@ pub fn render(
 
     let TextureQuery { width, height, .. } = common_assets.shadow.query();
     let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
-    let screen_rect = world_to_screen(shadow_rect, Point::new(game.player.position.x as i32, -5), screen_res, &game.camera);
+
+    let shadow_height = game.player.ground_height as i32 - (shadow_rect.height() / 3) as i32;
+
+    let screen_rect = world_to_screen(shadow_rect, Point::new(game.player.position.x as i32, 
+        shadow_height), screen_res, &game.camera);
     canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
         .unwrap();
 
@@ -142,19 +146,10 @@ fn render_player(
     debug: bool,
 ) {
     let (texture, data) = player.render(assets);
-    let mut rect = player.character.sprite.clone();
+    let rect = player.character.sprite.clone();
     let is_flipped = player.facing_dir > 0;
     
-    let position = if let Some(pivot) = data
-    {    
-        rect.resize(pivot.width * 2 , pivot.height * 2 );
-        let pivot_x_offset = if is_flipped {(1f64-pivot.pivot_x) * 2.0 * pivot.width as f64} else {pivot.pivot_x * 2.0 * pivot.width as f64};
-
-        //Point::new(player.position.x as i32, player.position.y as i32)
-        Point::new((player.position.x - pivot_x_offset) as i32, (player.position.y + (1f64 - pivot.pivot_y) * 2.0 * pivot.height as f64) as i32)
-    } else {
-        Point::new(player.position.x as i32, player.position.y as i32)
-    };
+    let position = Point::new(player.position.x as i32, player.position.y as i32);
     
     let screen_rect = world_to_screen(rect, position, screen_res, camera);
 
@@ -167,7 +162,10 @@ fn render_player(
     if debug {
         if let Some(pivot) = data
     {    
-        let point = Point::new(player.position.x as i32, player.position.y as i32);
+        let pivot_x_offset = if is_flipped {(1f64-pivot.pivot_x) * 2.0 * pivot.width as f64} else {pivot.pivot_x * 2.0 * pivot.width as f64};
+        let pivot_y_offset =  pivot.pivot_y * 2.0 * pivot.height as f64;
+        
+        let point = Point::new((player.position.x + pivot_x_offset) as i32, (player.position.y + pivot_y_offset) as i32);
         debug_point(canvas, pos_world_to_screen(point,screen_res, camera), Color::RGB(50, 250, 255));
     }
         debug_rect(canvas, screen_rect.center(), screen_rect);

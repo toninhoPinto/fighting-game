@@ -180,7 +180,7 @@ impl Scene for Match {
 
         let player = load_character(
             &self.character,
-            Point::new(600, 50),
+            Point::new(200, 50),
             false,
             1,
         );
