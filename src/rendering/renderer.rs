@@ -78,9 +78,10 @@ pub fn render(
     let TextureQuery { width, height, .. } = common_assets.shadow.query();
     let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
 
-    let shadow_height = game.player.ground_height as i32 - (shadow_rect.height() / 3) as i32;
+    let shadow_height = game.player.ground_height as i32 - (shadow_rect.height() / 4) as i32;
 
-    let screen_rect = world_to_screen(shadow_rect, Point::new(game.player.position.x as i32, 
+    let screen_rect = world_to_screen(shadow_rect, Point::new(
+        game.player.position.x as i32 - (shadow_rect.width() / 2) as i32, 
         shadow_height), screen_res, &game.camera);
     canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
         .unwrap();
@@ -145,29 +146,25 @@ fn render_player(
     camera: &Camera,
     debug: bool,
 ) {
-    let (texture, data) = player.render(assets);
-    let rect = player.character.sprite.clone();
+
     let is_flipped = player.facing_dir > 0;
     
-    let position = Point::new(player.position.x as i32, player.position.y as i32);
-    
-    let screen_rect = world_to_screen(rect, position, screen_res, camera);
-
     let sprite = player.character.sprite;
+
+    let player_pos = player.position;
+    let (texture, data) = player.render(assets);
+    let pos = Point::new((player_pos.x - data.1.0) as i32, (player_pos.y + data.1.1 )as i32 );
+
+    let screen_rect = world_to_screen(data.0,pos , screen_res, camera);
+
 
 
     canvas
         .copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)
         .unwrap();
     if debug {
-        if let Some(pivot) = data
-    {    
-        let pivot_x_offset = if is_flipped {(1f64-pivot.pivot_x) * 2.0 * pivot.width as f64} else {pivot.pivot_x * 2.0 * pivot.width as f64};
-        let pivot_y_offset =  pivot.pivot_y * 2.0 * pivot.height as f64;
-        
-        let point = Point::new((player.position.x + pivot_x_offset) as i32, (player.position.y + pivot_y_offset) as i32);
+        let point = Point::new(player.position.x as i32, player.position.y as i32);
         debug_point(canvas, pos_world_to_screen(point,screen_res, camera), Color::RGB(50, 250, 255));
-    }
         debug_rect(canvas, screen_rect.center(), screen_rect);
     }
 }

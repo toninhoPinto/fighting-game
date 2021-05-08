@@ -1,5 +1,5 @@
 use parry2d::na::Vector2;
-use sdl2::rect::Point;
+use sdl2::rect::{Point, Rect};
 use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
@@ -570,32 +570,7 @@ impl Player {
             }
         }
 
-        let prev_sprite = self.animator.current_animation.as_ref().unwrap().sprites[self.animator.sprite_shown as usize].1.clone();
         self.animator.update();
-        let new_sprite = self.animator.current_animation.as_ref().unwrap().sprites[self.animator.sprite_shown as usize].1.clone();
-        if prev_sprite != new_sprite {
-            let prev_data = sprite_data.get(&prev_sprite);
-            let data = sprite_data.get(&new_sprite);
-            
-                if let Some(pivot) = data {
-                    self.character.sprite.resize(pivot.width * 2 , pivot.height * 2 );
-
-                    let mut prev_pivot_x_offset = 0f64;
-                    let mut prev_pivot_y_offset = 0f64;
-                    if let Some(prev_pivot) = prev_data {
-                        prev_pivot_x_offset = if self.facing_dir > 0 {(1f64-prev_pivot.pivot_x) * 2.0 * prev_pivot.width as f64} else {prev_pivot.pivot_x * 2.0 * prev_pivot.width as f64};
-                        prev_pivot_y_offset = (1f64 - prev_pivot.pivot_y) * pivot.height as f64;
-                    }
-
-                    let pivot_x_offset = if self.facing_dir > 0 {(1f64-pivot.pivot_x) * 2.0 * pivot.width as f64} else {pivot.pivot_x * 2.0 * pivot.width as f64};
-                    let pivot_y_offset = (1f64 - pivot.pivot_y) * pivot.height as f64;
-            
-                    self.position = Vector2::new(
-                        self.position.x + (prev_pivot_x_offset - pivot_x_offset), 
-                        self.position.y + (prev_pivot_y_offset - pivot_y_offset))
-                }
-
-        }
 
         if let Some(animation) = self.animator.current_animation.as_ref() {
             if let Some(_) = animation.collider_animation {
@@ -698,8 +673,28 @@ impl Player {
 
 
 
-    pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> (&'a Texture, Option<&SpriteData>) {
+    pub fn render<'a>(&'a mut self, assets: &'a CharacterAssets<'a>) -> (&'a Texture, (Rect, (f64, f64))) {
         let key = &self.animator.render();
-        (assets.textures.get(key).unwrap(), assets.texture_data.get(key))
+
+        let sprite_data = assets.texture_data.get(key);
+        
+        let rect = &mut self.character.sprite;
+        let mut pos =  Point::new(self.position.x as i32, self.position.y as i32);
+        let mut offset = (0f64, 0f64);
+
+        if let Some(sprite_data) = sprite_data {
+            rect.resize(sprite_data.width * 2 , sprite_data.height * 2 );
+
+            let pivot_x_offset = if self.facing_dir > 0 {(1f64 - sprite_data.pivot_x)* 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
+            let pivot_y_offset = sprite_data.pivot_y * 2.0 * sprite_data.height as f64;
+
+            offset = if let Some(sprite_alignment) = self.animator.current_animation.as_ref().unwrap().sprite_alignments.get(&self.animator.sprite_shown) {
+                (pivot_x_offset + self.facing_dir as f64 * sprite_alignment.pos.x * 2.0, pivot_y_offset + sprite_alignment.pos.y * 2.0)
+            } else {
+                (pivot_x_offset, pivot_y_offset)
+            };
+
+        }
+        (assets.textures.get(key).unwrap(), (rect.clone(), offset))
     }
 }
