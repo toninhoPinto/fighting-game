@@ -1,5 +1,5 @@
 use parry2d::na::Vector2;
-use sdl2::rect::Point;
+use sdl2::rect::{Point, Rect};
 use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
@@ -546,7 +546,7 @@ impl Player {
 
                 PlayerState::Jump => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
                 }
 
                 PlayerState::Jumping => {
@@ -556,7 +556,7 @@ impl Player {
 
                 PlayerState::Landing => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
                 }
 
                 PlayerState::Dashing => {
@@ -570,32 +570,7 @@ impl Player {
             }
         }
 
-        let prev_sprite = self.animator.current_animation.as_ref().unwrap().sprites[self.animator.sprite_shown as usize].1.clone();
         self.animator.update();
-        let new_sprite = self.animator.current_animation.as_ref().unwrap().sprites[self.animator.sprite_shown as usize].1.clone();
-        if prev_sprite != new_sprite {
-            let prev_data = sprite_data.get(&prev_sprite);
-            let data = sprite_data.get(&new_sprite);
-            
-                if let Some(pivot) = data {
-                    self.character.sprite.resize(pivot.width * 2 , pivot.height * 2 );
-
-                    let mut prev_pivot_x_offset = 0f64;
-                    let mut prev_pivot_y_offset = 0f64;
-                    if let Some(prev_pivot) = prev_data {
-                        prev_pivot_x_offset = if self.facing_dir > 0 {(1f64-prev_pivot.pivot_x) * 2.0 * prev_pivot.width as f64} else {prev_pivot.pivot_x * 2.0 * prev_pivot.width as f64};
-                        prev_pivot_y_offset = (1f64 - prev_pivot.pivot_y) * pivot.height as f64;
-                    }
-
-                    let pivot_x_offset = if self.facing_dir > 0 {(1f64-pivot.pivot_x) * 2.0 * pivot.width as f64} else {pivot.pivot_x * 2.0 * pivot.width as f64};
-                    let pivot_y_offset = (1f64 - pivot.pivot_y) * pivot.height as f64;
-            
-                    self.position = Vector2::new(
-                        self.position.x + (prev_pivot_x_offset - pivot_x_offset), 
-                        self.position.y + (prev_pivot_y_offset - pivot_y_offset))
-                }
-
-        }
 
         if let Some(animation) = self.animator.current_animation.as_ref() {
             if let Some(_) = animation.collider_animation {
@@ -635,20 +610,18 @@ impl Player {
     }
     
     // update offsets by player position
-    pub fn update_colliders(&mut self, sprite_data: &SpriteData) {  
-        let pivot_x_offset = if self.facing_dir > 0 {(1f64-sprite_data.pivot_x) * 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
-        let player_x = self.position.x + pivot_x_offset;
-        let player_y = self.position.y + (1f64 - sprite_data.pivot_y) * 2.0 * sprite_data.height as f64;
-
+    pub fn update_colliders(&mut self, sprite_data: &SpriteData) {
         let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
 
         for i in 0..self.colliders.len() {
             let aabb = &mut self.colliders[i].aabb;
     
-            aabb.mins.coords[0] = player_x as f32;
-            aabb.mins.coords[1] = player_y as f32;
-            aabb.maxs.coords[0] = player_x as f32;
-            aabb.maxs.coords[1] = player_y as f32;
+            aabb.mins.coords[0] = self.position.x as f32;
+            aabb.maxs.coords[0] = self.position.x as f32;
+
+            aabb.mins.coords[1] = self.position.y as f32;
+            aabb.maxs.coords[1] = self.position.y as f32;
+
             self.sync_with_character_animation(&collider_animation, i);
         }
     }
@@ -671,20 +644,15 @@ impl Player {
                 current_collider.enabled = true;
                 let offset_x = transformation.pos.x as f32 * 2.0;
                 let offset_y = transformation.pos.y as f32 * 2.0;
-    
+
                 if self.facing_dir > 0 {
-                    aabb.mins.coords[0] = (self.position.x as f32
-                        + self.character.sprite.width() as f32 / 2.0)
-                        - (offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0);
-                    aabb.maxs.coords[0] = (self.position.x as f32
-                        + self.character.sprite.width() as f32 / 2.0)
-                        - offset_x;
+                    aabb.mins.coords[0] = self.position.x as f32 - (offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0);
+                    aabb.maxs.coords[0] = self.position.x as f32 - offset_x;
                 } else {
-                    aabb.mins.coords[0] += offset_x;
-                    aabb.maxs.coords[0] +=
-                        offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0;
+                    aabb.mins.coords[0] = self.position.x as f32 + offset_x;
+                    aabb.maxs.coords[0] = self.position.x as f32 + offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0;
                 }
-    
+
                 aabb.mins.coords[1] += offset_y;
                 aabb.maxs.coords[1] +=
                     offset_y + original_aabb.maxs.y * 2.0 * transformation.scale.1;
@@ -698,8 +666,27 @@ impl Player {
 
 
 
-    pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> (&'a Texture, Option<&SpriteData>) {
+    pub fn render<'a>(&'a mut self, assets: &'a CharacterAssets<'a>) -> (&'a Texture, (Rect, (f64, f64))) {
         let key = &self.animator.render();
-        (assets.textures.get(key).unwrap(), assets.texture_data.get(key))
+
+        let sprite_data = assets.texture_data.get(key);
+        
+        let rect = &mut self.character.sprite;
+        let mut offset = (0f64, 0f64);
+
+        if let Some(sprite_data) = sprite_data {
+            rect.resize(sprite_data.width * 2 , sprite_data.height * 2 );
+
+            let pivot_x_offset = if self.facing_dir > 0 {(1f64 - sprite_data.pivot_x)* 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
+            let pivot_y_offset = sprite_data.pivot_y * 2.0 * sprite_data.height as f64;
+
+            offset = if let Some(sprite_alignment) = self.animator.current_animation.as_ref().unwrap().sprite_alignments.get(&self.animator.sprite_shown) {
+                (pivot_x_offset + self.facing_dir as f64 * sprite_alignment.pos.x * 2.0, pivot_y_offset + sprite_alignment.pos.y * 2.0)
+            } else {
+                (pivot_x_offset, pivot_y_offset)
+            };
+
+        }
+        (assets.textures.get(key).unwrap(), (rect.clone(), offset))
     }
 }

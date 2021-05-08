@@ -82,10 +82,16 @@ pub struct Timeline {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Key2 {
-    pub id: i64,
+    pub id: i32,
     pub object: Object,
     pub spin: i64,
     pub time: Option<i64>,
+    #[serde(rename = "scale_x")]
+    pub scale_x: Option<f64>,
+    #[serde(rename = "scale_y")]
+    pub scale_y: Option<f64>,
+    pub x: Option<f64>,
+    pub y: Option<f64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -165,8 +171,9 @@ pub fn load_frame_data(file: std::path::PathBuf) -> Vec<SpriteData> {
 
 pub fn load_animation_data(
     file: std::path::PathBuf,
-) -> (Vec<i64>, ColliderAnimation, HashMap<i64, CastPoint>, i64) {
+) -> (Vec<i64>, ColliderAnimation, HashMap<i32, Transformation>, HashMap<i64, CastPoint>, i64) {
 
+    println!("Loading animation data: {:?}", file);
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;
@@ -215,6 +222,7 @@ pub fn load_animation_data(
         time_vec.push(time/FREQUENCY_OF_FPS);
     }
 
+    let mut sprite_transformations: HashMap<i32, Transformation> = HashMap::new();
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
     let mut final_transformations: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
     for i in 0..timeline.len() {
@@ -247,10 +255,23 @@ pub fn load_animation_data(
                         } else {
                             1.0
                         };
+
+                        let x = if let Some(x) = timeline[i].key[j].object.x {
+                            x
+                        } else {
+                            0f64
+                        };
+    
+                        let y = if let Some(y) = timeline[i].key[j].object.y {
+                            y
+                        } else {
+                            0f64
+                        };
+
                         let transformation_frame = Transformation {
-                            pos: Point::new(
-                                timeline[i].key[j].object.x.unwrap() as i32,
-                                timeline[i].key[j].object.y.unwrap() as i32,
+                            pos: Vector2::new(
+                                x,
+                                y,
                             ),
                             scale: (scale_x as f32, scale_y as f32),
                         };
@@ -283,6 +304,41 @@ pub fn load_animation_data(
             }
             std::option::Option::None => {
                 //sprite data here 
+                for sprite_frame in &timeline[i].key {
+
+                    let scale_x = if sprite_frame.object.scale_x.is_some() {
+                        sprite_frame.object.scale_x.unwrap().abs()
+                    } else {
+                        1.0
+                    };
+                    let scale_y = if sprite_frame.object.scale_y.is_some() {
+                        sprite_frame.object.scale_y.unwrap().abs()
+                    } else {
+                        1.0
+                    };
+
+                    let x = if let Some(x) = sprite_frame.object.x {
+                        x
+                    } else {
+                        0f64
+                    };
+
+                    let y = if let Some(y) = sprite_frame.object.y {
+                        y
+                    } else {
+                        0f64
+                    };
+
+                    let transformation_frame = Transformation {
+                        pos: Vector2::new(
+                            x,
+                            y,
+                        ),
+                        scale: (scale_x as f32, scale_y as f32),
+                    };
+
+                    sprite_transformations.insert(sprite_frame.id, transformation_frame);
+                }
             }
         }
         final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
@@ -293,6 +349,7 @@ pub fn load_animation_data(
         colliders: colliders,
         pos_animations: final_transformations,
     },
+     sprite_transformations,
      cast_points,
      duration)
 }
