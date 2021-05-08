@@ -610,20 +610,18 @@ impl Player {
     }
     
     // update offsets by player position
-    pub fn update_colliders(&mut self, sprite_data: &SpriteData) {  
-        let pivot_x_offset = if self.facing_dir > 0 {(1f64-sprite_data.pivot_x) * 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
-        let player_x = self.position.x + pivot_x_offset;
-        let player_y = self.position.y + (1f64 - sprite_data.pivot_y) * 2.0 * sprite_data.height as f64;
-
+    pub fn update_colliders(&mut self, sprite_data: &SpriteData) {
         let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
 
         for i in 0..self.colliders.len() {
             let aabb = &mut self.colliders[i].aabb;
     
-            aabb.mins.coords[0] = player_x as f32;
-            aabb.mins.coords[1] = player_y as f32;
-            aabb.maxs.coords[0] = player_x as f32;
-            aabb.maxs.coords[1] = player_y as f32;
+            aabb.mins.coords[0] = self.position.x as f32;
+            aabb.maxs.coords[0] = self.position.x as f32;
+
+            aabb.mins.coords[1] = self.position.y as f32;
+            aabb.maxs.coords[1] = self.position.y as f32;
+
             self.sync_with_character_animation(&collider_animation, i);
         }
     }
@@ -646,20 +644,15 @@ impl Player {
                 current_collider.enabled = true;
                 let offset_x = transformation.pos.x as f32 * 2.0;
                 let offset_y = transformation.pos.y as f32 * 2.0;
-    
+
                 if self.facing_dir > 0 {
-                    aabb.mins.coords[0] = (self.position.x as f32
-                        + self.character.sprite.width() as f32 / 2.0)
-                        - (offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0);
-                    aabb.maxs.coords[0] = (self.position.x as f32
-                        + self.character.sprite.width() as f32 / 2.0)
-                        - offset_x;
+                    aabb.mins.coords[0] = self.position.x as f32 - (offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0);
+                    aabb.maxs.coords[0] = self.position.x as f32 - offset_x;
                 } else {
-                    aabb.mins.coords[0] += offset_x;
-                    aabb.maxs.coords[0] +=
-                        offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0;
+                    aabb.mins.coords[0] = self.position.x as f32 + offset_x;
+                    aabb.maxs.coords[0] = self.position.x as f32 + offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0;
                 }
-    
+
                 aabb.mins.coords[1] += offset_y;
                 aabb.maxs.coords[1] +=
                     offset_y + original_aabb.maxs.y * 2.0 * transformation.scale.1;
@@ -679,7 +672,6 @@ impl Player {
         let sprite_data = assets.texture_data.get(key);
         
         let rect = &mut self.character.sprite;
-        let mut pos =  Point::new(self.position.x as i32, self.position.y as i32);
         let mut offset = (0f64, 0f64);
 
         if let Some(sprite_data) = sprite_data {

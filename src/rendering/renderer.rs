@@ -153,11 +153,9 @@ fn render_player(
 
     let player_pos = player.position;
     let (texture, data) = player.render(assets);
-    let pos = Point::new((player_pos.x - data.1.0) as i32, (player_pos.y + data.1.1 )as i32 );
+    let pos = Point::new((player_pos.x - data.1.0) as i32, (player_pos.y - data.1.1 )as i32 );
 
     let screen_rect = world_to_screen(data.0,pos , screen_res, camera);
-
-
 
     canvas
         .copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)
@@ -165,6 +163,7 @@ fn render_player(
     if debug {
         let point = Point::new(player.position.x as i32, player.position.y as i32);
         debug_point(canvas, pos_world_to_screen(point,screen_res, camera), Color::RGB(50, 250, 255));
+        debug_point(canvas, pos_world_to_screen(Point::new(player_pos.x as i32, player_pos.y as i32),screen_res, camera), Color::RGB(150, 255, 100));
         debug_rect(canvas, screen_rect.center(), screen_rect);
     }
 }
@@ -220,7 +219,7 @@ fn render_colliders(
         let semi_transparent_red = Color::RGBA(200, 50, 100, 150);
         let semi_transparent_blue = Color::RGBA(100, 50, 200, 150);
         let collider_position = Point::new(
-            aabb.center().x as i32,
+            aabb.center().x as i32 - aabb.half_extents().x as i32,
             aabb.center().y as i32 - aabb.half_extents().y as i32,
         );
         let collider_rect_size = Rect::new(0, 0, aabb.extents().x as u32, aabb.extents().y as u32);
