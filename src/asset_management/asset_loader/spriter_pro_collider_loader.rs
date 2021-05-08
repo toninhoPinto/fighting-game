@@ -173,6 +173,7 @@ pub fn load_animation_data(
     file: std::path::PathBuf,
 ) -> (Vec<i64>, ColliderAnimation, HashMap<i32, Transformation>, HashMap<i64, CastPoint>, i64) {
 
+    println!("Loading animation data: {:?}", file);
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;
@@ -254,10 +255,23 @@ pub fn load_animation_data(
                         } else {
                             1.0
                         };
+
+                        let x = if let Some(x) = timeline[i].key[j].object.x {
+                            x
+                        } else {
+                            0f64
+                        };
+    
+                        let y = if let Some(y) = timeline[i].key[j].object.y {
+                            y
+                        } else {
+                            0f64
+                        };
+
                         let transformation_frame = Transformation {
                             pos: Vector2::new(
-                                timeline[i].key[j].object.x.unwrap(),
-                                timeline[i].key[j].object.y.unwrap(),
+                                x,
+                                y,
                             ),
                             scale: (scale_x as f32, scale_y as f32),
                         };
