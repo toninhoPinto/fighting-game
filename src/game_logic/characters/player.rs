@@ -546,7 +546,7 @@ impl Player {
 
                 PlayerState::Jump => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
                 }
 
                 PlayerState::Jumping => {
@@ -556,7 +556,7 @@ impl Player {
 
                 PlayerState::Landing => {
                     self.animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
+                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
                 }
 
                 PlayerState::Dashing => {
