@@ -112,6 +112,5 @@ pub fn load_anim_and_data_from_dir(dir: &str, name: &str) -> Animation {
         points = colliders.3;
         length = colliders.4;
     }
-    println!("animation name {:?} sprite_alignments {:?}", dir, sprite_alignments);
     Animation::new_with_data(vec, length, name.to_string(), None, points, sprite_alignments, collider_animation)
 }

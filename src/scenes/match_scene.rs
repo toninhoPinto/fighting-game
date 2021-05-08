@@ -449,7 +449,7 @@ impl Scene for Match {
                     &hp_bars,
                     &special_bars,
                    // &end_game_match,
-                    false,
+                    true,
                 )
                 .unwrap();
 

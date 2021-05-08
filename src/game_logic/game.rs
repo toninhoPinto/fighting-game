@@ -166,7 +166,7 @@ impl Game {
         let process_point_offset = |player: &Player, point: &CastPoint| -> Vector2<f64> {
             let mut final_pos = player.position;
             if player.facing_dir > 0 {
-                final_pos.x += player.character.sprite.width() as f64 / 2.0;
+                final_pos.x -= player.character.sprite.width() as f64 / 2.0;
                 final_pos.x -= point.point.x * 2.0;
                 final_pos.y += point.point.y * 2.0;
             } else {
