@@ -78,7 +78,7 @@ pub fn render(
     let TextureQuery { width, height, .. } = common_assets.shadow.query();
     let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
 
-    let shadow_height = game.player.ground_height as i32 - (shadow_rect.height() / 4) as i32;
+    let shadow_height = game.player.ground_height as i32 - (shadow_rect.height() / 2) as i32;
 
     let screen_rect = world_to_screen(shadow_rect, Point::new(
         game.player.position.x as i32 - (shadow_rect.width() / 2) as i32, 
