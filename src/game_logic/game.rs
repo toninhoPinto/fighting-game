@@ -1,7 +1,7 @@
 use parry2d::na::Vector2;
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, rendering::camera::Camera};
+use crate::{asset_management::{cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, rendering::camera::Camera};
 
 use super::{character_factory::CharacterAnimations, characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
@@ -9,6 +9,7 @@ const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game {
     pub current_frame: i32,
     pub player: Player,
+    pub enemies: EnemyManager,
     pub camera: Camera,
 
     pub projectiles: Vec<Projectile>,
@@ -22,6 +23,7 @@ impl Game {
             current_frame: 0,
 
             player,
+            enemies: EnemyManager::new(),
             camera,
 
             projectiles: Vec::new(),

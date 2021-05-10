@@ -4,7 +4,6 @@ use std::string::String;
 use super::{character_factory::CharacterAnimations, game::Game};
 
 pub mod foxgirl;
-pub mod keetar;
 pub mod player;
 
 pub(crate) type Ability = fn(&mut Game, i32, &CharacterAnimations) -> ();
@@ -21,7 +20,6 @@ pub struct Character {
     pub special_curr: f32,
     pub speed: f64,
     pub dash_speed: f64,
-    pub dash_back_speed: f64,
     pub jump_height: f64,
     pub jump_distance: f64,
 }
@@ -51,7 +49,6 @@ impl Character {
         special_max: i32,
         speed: f64,
         dash_speed: f64,
-        dash_back_speed: f64,
         jump_height: f64,
         jump_distance: f64,
     ) -> Self {
@@ -60,7 +57,6 @@ impl Character {
             sprite: Rect::new(0, 0, height, width),
             speed,
             dash_speed,
-            dash_back_speed,
             hp,
             special_max,
             special_curr: special_max as f32,

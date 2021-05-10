@@ -1,10 +1,10 @@
-use std::string::String;
+use std::{collections::HashMap, string::String};
 
 use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::game_logic::{character_factory::CharacterAssets, game::Game};
+use crate::{ecs_system::enemy_manager::EnemyManager, game_logic::{character_factory::CharacterAssets, enemy_factory::EnemyAssets, game::Game}};
 use crate::{
     asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
@@ -57,6 +57,7 @@ pub fn render(
     stage: (&Texture, Rect),
     game: &mut Game,
     p1_assets: &CharacterAssets,
+    enemy_assets: &HashMap<&str, EnemyAssets>,
     common_assets: &mut CommonAssets,
     hp_bars: &Bar,
     special_bars:  &SegmentedBar,
@@ -87,6 +88,7 @@ pub fn render(
         .unwrap();
 
     render_player(&mut game.player, p1_assets, canvas, screen_res, &game.camera, debug);
+    render_enemies(&mut game.enemies, enemy_assets, canvas, screen_res, &game.camera, debug);
 
     for projectile in game.projectiles.iter() {
         let screen_rect =
@@ -166,6 +168,29 @@ fn render_player(
         debug_point(canvas, pos_world_to_screen(Point::new(player_pos.x as i32, player_pos.y as i32),screen_res, camera), Color::RGB(150, 255, 100));
         debug_rect(canvas, screen_rect.center(), screen_rect);
     }
+}
+
+fn render_enemies(enemies: &EnemyManager,   
+    enemy_assets: &HashMap<&str, EnemyAssets>,
+    canvas: &mut WindowCanvas,
+    screen_res: (u32, u32),
+    camera: &Camera,
+    debug: bool,) {
+    
+    let render_data = crate::ecs_system::enemy_systems::render_enemies(enemies, enemy_assets);
+
+    for enemy in render_data {
+        let screen_rect = world_to_screen(enemy.1,enemy.2 , screen_res, camera);
+
+        canvas
+            .copy_ex(enemy.0, enemy.1, screen_rect, 0.0, None, enemy.3, false)
+            .unwrap();
+
+        if debug {
+            debug_rect(canvas, screen_rect.center(), screen_rect);
+        }
+    }
+
 }
 
 fn render_vfx(

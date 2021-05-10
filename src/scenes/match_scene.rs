@@ -1,6 +1,6 @@
 use sdl2::{rect::Rect, render::TextureQuery};
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::HashMap,
     time::Instant,
 };
 
@@ -16,7 +16,7 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::{asset_management::{collider::ColliderType, sound::audio_player}, game_logic::{character_factory::{CharacterAnimations, CharacterAssets, load_character, load_character_anim_data, load_stage}, characters::{Attack, player::{Player, PlayerState}}, game::Game, inputs::{input_cycle::AllInputManagement}}};
+use crate::{asset_management::{collider::ColliderType, sound::audio_player}, ecs_system::enemy_systems::update_animations_enemies, game_logic::{character_factory::{CharacterAnimations, CharacterAssets, load_character, load_character_anim_data, load_stage}, characters::{Attack, player::{Player, PlayerState}}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, game::Game, inputs::{input_cycle::AllInputManagement}}};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::{detect_hit, detect_push},
@@ -167,6 +167,11 @@ impl Scene for Match {
 
         let (p1_assets, p1_anims, p1_data) = load_character_anim_data(texture_creator, &self.character);
 
+        let mut enemy_assets = HashMap::new();
+        enemy_assets.insert("ryu", load_enemy_ryu_assets(texture_creator));
+        let mut enemy_animations = HashMap::new();
+        enemy_animations.insert("ryu", load_enemy_ryu_animations());
+
         let stage = load_stage(texture_creator);
         let stage_rect = Rect::new(0, 0, LEVEL_WIDTH as u32, LEVEL_HEIGHT as u32);
 
@@ -181,7 +186,6 @@ impl Scene for Match {
         let player = load_character(
             &self.character,
             Point::new(200, 50),
-            false,
             1,
         );
 
@@ -223,8 +227,6 @@ impl Scene for Match {
         let mut update_counter = 0;
 
         let mut debug_pause = false;
-        let mut should_rollback = false;
-        let mut rollback = 0;
 
         //let end_game_match = EndMatch::new(Rect::new(0, 0, 600, 600), Point::new(0, 0), font);
 
@@ -249,7 +251,7 @@ impl Scene for Match {
                         ..
                     } => {
                         if input == Keycode::L {
-                            should_rollback ^= true;
+                            game.enemies.add_enemy(game.player.position, enemy_animations.get("ryu").unwrap().animations.get("idle").unwrap().clone());
                         }
                         if input == Keycode::P {
                             debug_pause ^= true;
@@ -269,7 +271,6 @@ impl Scene for Match {
                     connected_controllers,
                 );
 
-                //needs also to return which controller/ which player
                 let raw_input = input::input_handler::rcv_input(&event, &controls);
 
                 if raw_input.is_some() {
@@ -282,9 +283,9 @@ impl Scene for Match {
             }
 
             //Update
-            while logic_time_accumulated >= logic_timestep || rollback > 0 {
+            while logic_time_accumulated >= logic_timestep {
                 update_counter += 1;
-                if update_counter > MAX_UPDATES_AVOID_SPIRAL_OF_DEATH && rollback == 0 {
+                if update_counter >= MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
                     logic_time_accumulated = 0.0;
                 }
 
@@ -323,6 +324,8 @@ impl Scene for Match {
                     logic_timestep,
                     game.player.character_width as i32,
                 );
+
+                update_animations_enemies(&mut game.enemies);
 
                 if let Some(ability) = game.player.curr_special_effect {
                     if ability.0 == game.player.animator.sprite_shown {
@@ -433,9 +436,8 @@ impl Scene for Match {
 
                 special_bars.update(game.player.character.special_curr);
 
-                if rollback == 0 {
-                    logic_time_accumulated -= logic_timestep;
-                }
+                //crate::ecs_system::enemy_systems::update_animations_enemies(&mut enemy_manager);
+                logic_time_accumulated -= logic_timestep;
             }
 
             // Render
@@ -445,6 +447,7 @@ impl Scene for Match {
                     (&stage, stage_rect),
                     &mut game,
                     &p1_assets,
+                    &enemy_assets,
                     &mut general_assets,
                     &hp_bars,
                     &special_bars,
