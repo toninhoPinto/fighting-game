@@ -34,7 +34,7 @@ impl EnemyManager {
             self.animator_components.push(animator);
 
             let renderable = Renderable {
-                flipped: true,
+                flipped: false,
                 rect: Rect::new(0,0, 100, 100),
             };
             self.renderable_components.push(Some(renderable));

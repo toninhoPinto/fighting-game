@@ -34,7 +34,9 @@ pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str
             (tex, rect, pos, renderable.flipped)
         });
 
-    living.collect::<Vec<(&'a Texture<'a>, Rect, Point, bool)>>()
+    let mut enemies_y_sorted = living.collect::<Vec<(&'a Texture<'a>, Rect, Point, bool)>>();
+    enemies_y_sorted.sort_by(|a, b| b.2.y.cmp(&a.2.y));
+    enemies_y_sorted
 }
 
 
