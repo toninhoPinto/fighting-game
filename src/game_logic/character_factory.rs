@@ -120,9 +120,6 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     let mut light_kick_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/light_kick", "light_kick");
 
-    let crouched_light_kick_anim = 
-        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/crouch/attacks/light_kick", "crouched_light_kick");
-
     let airborne_light_kick_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/light_kick", "airborne_light_kick");
 
@@ -137,8 +134,6 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
 
     let mut dash_anim=
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/dash", "dash");
-    let mut dash_back_anim =
-        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/back_dash", "dash_back");
     let neutral_jump_anim =
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/neutral_jump", "neutral_jump");
 
@@ -151,10 +146,7 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     dash_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(3000.0, 0.0), Vector2::new(2000.0, 0.0), 
     Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0)]);
     character_anims.insert(dash_anim.name.clone(),dash_anim);
-
-    dash_back_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(-1000.0, 0.0), Vector2::new(-600.0, 0.0), Vector2::new(0.0, 0.0)]);
-    character_anims.insert(dash_back_anim.name.clone(),dash_back_anim);
-
+    
     character_anims.insert(walk_anim.name.clone(),walk_anim);
     character_anims.insert(light_punch_anim.name.clone(),light_punch_anim);
 
@@ -173,7 +165,6 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     character_anims.insert(light_kick_anim.name.clone(),light_kick_anim);
 
     character_anims.insert(airborne_light_kick_anim.name.clone(),airborne_light_kick_anim);
-    character_anims.insert(crouched_light_kick_anim.name.clone(),crouched_light_kick_anim);
     
     character_anims.insert(crouch_start_anim.name.clone(),crouch_start_anim);
     character_anims.insert(crouch_idle_anim.name.clone(),crouch_idle_anim);

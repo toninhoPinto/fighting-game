@@ -173,7 +173,6 @@ pub fn load_animation_data(
     file: std::path::PathBuf,
 ) -> (Vec<i64>, ColliderAnimation, HashMap<i32, Transformation>, HashMap<i64, CastPoint>, i64) {
 
-    println!("Loading animation data: {:?}", file);
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;

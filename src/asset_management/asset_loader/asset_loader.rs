@@ -62,6 +62,7 @@ fn look_for_textures<'a>(
 }
 
 pub fn load_anim_from_dir(dir: &str, name: &str) -> Animation {
+    println!("Loading animation: {:?}", dir);
     let paths = fs::read_dir(dir).unwrap();
 
     let mut vec: Vec<(i64, String)> = Vec::new();
@@ -80,6 +81,7 @@ pub fn load_anim_from_dir(dir: &str, name: &str) -> Animation {
 }
 
 pub fn load_anim_and_data_from_dir(dir: &str, name: &str) -> Animation {
+    println!("Loading animation data: {:?}", dir);
     let paths = fs::read_dir(dir).unwrap();
 
     let mut vec: Vec<(i64, String)> = Vec::new();
@@ -104,6 +106,7 @@ pub fn load_anim_and_data_from_dir(dir: &str, name: &str) -> Animation {
     let mut sprite_alignments = HashMap::new();
     let mut length = sprites_length + 3;
     if let Some(colliders) = data {
+        println!("{:?}", colliders.0);
         for i in 0..vec.len() {
             vec[i].0 = colliders.0[i];
         } 

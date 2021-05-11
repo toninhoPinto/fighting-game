@@ -41,9 +41,6 @@ fn load_enemy_ryu_anims() -> HashMap<String, Animation> {
     
     let walk_anim  =
         load_anim_and_data_from_dir("assets/keetar/standing/walk", "walk");
-    
-    let walk_back_anim =
-        load_anim_and_data_from_dir("assets/keetar/standing/walk_back", "walk_back");
 
     let crouch_start_anim=
         load_anim_and_data_from_dir("assets/keetar/crouch/crouched", "crouch");
@@ -69,9 +66,6 @@ fn load_enemy_ryu_anims() -> HashMap<String, Animation> {
     let mut dash_anim =
         load_anim_and_data_from_dir("assets/keetar/standing/dash", "dash");
 
-    let mut dash_back_anim =
-        load_anim_and_data_from_dir("assets/keetar/standing/back_dash", "dash_back");
-
     let neutral_jump_anim=
         load_anim_and_data_from_dir("assets/keetar/standing/neutral_jump","neutral_jump");
 
@@ -96,13 +90,7 @@ fn load_enemy_ryu_anims() -> HashMap<String, Animation> {
     , Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0)]);
     character_anims.insert(dash_anim.name.clone(), dash_anim);
 
-
-    dash_back_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(-1700.0, 0.0)
-    , Vector2::new(-1000.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0)]);
-    character_anims.insert(dash_back_anim.name.clone(), dash_back_anim);
-
     character_anims.insert(walk_anim.name.clone(), walk_anim);
-    character_anims.insert(walk_back_anim.name.clone(), walk_back_anim);
     
     character_anims.insert(light_punch_anim.name.clone(), light_punch_anim);
     character_anims.insert(medium_punch_anim.name.clone(), medium_punch_anim);

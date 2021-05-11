@@ -197,18 +197,6 @@ impl Scene for Match {
 
         game.player.init_colliders();
 
-        let p1_width = game
-            .player.colliders
-            .iter()
-            .filter(|&c| c.collider_type == ColliderType::Pushbox)
-            .last()
-            .unwrap()
-            .aabb
-            .half_extents()
-            .x;
-        game.player.character_width = p1_width as f64;
-
-
         let screen_res = canvas.output_size().unwrap();
         let mut hp_bars = Match::hp_bars_init(
             screen_res,
