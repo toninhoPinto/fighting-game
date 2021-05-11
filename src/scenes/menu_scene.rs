@@ -40,9 +40,6 @@ macro_rules! rect(
 #[derive(Copy, Clone, Debug)]
 pub enum MenuScreen {
     MainMenu,
-    VersusMenu,
-    CharacterSelect,
-    StageSelect,
     Settings,
     Credits,
 }

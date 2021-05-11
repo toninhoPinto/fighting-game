@@ -1,7 +1,7 @@
 use parry2d::na::Vector2;
 use sdl2::rect::Rect;
 
-use crate::{asset_management::{animation::Animation, animator::Animator}, collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, game_logic::{characters::Character, movement_controller::MovementController}};
+use crate::{collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, engine_types::{animation::Animation, animator::Animator}, game_logic::{characters::Character, movement_controller::MovementController}};
 
 use super::enemy_components::{Behaviour, Health, Position, Renderable};
 

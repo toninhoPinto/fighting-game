@@ -6,10 +6,10 @@ use sdl2::render::BlendMode;
 use std::collections::HashMap;
 use std::path::Path;
 
-#[macro_use]
 extern crate serde_derive;
 extern crate directories;
 
+mod engine_types;
 mod asset_management;
 mod collision;
 mod engine_traits;

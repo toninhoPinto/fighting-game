@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::{asset_management::{animator::Animator, sprite_data::SpriteData}, collision::collider_manager::ColliderManager, game_logic::{characters::{Character, player::Player}, enemy_factory::{EnemyAnimations, EnemyAssets}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{collision::collider_manager::ColliderManager, engine_types::animator::Animator, game_logic::{characters::{Character, player::Player}, factories::enemy_factory::{EnemyAnimations, EnemyAssets}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
@@ -46,8 +46,6 @@ pub fn update_colliders_enemies(enemy_manager: &mut EnemyManager, enemy_assets: 
         .zip(enemy_manager.renderable_components.iter())
         .zip(enemy_manager.character_components.iter());
 
-
-    let living =
         zip
         .filter_map(| ((((collider, pos), animator), renderable), character): 
             ((((&mut Option<ColliderManager>, &Option<Position>), &Option<Animator>), &Option<Renderable>), &Option<Character>)| {
@@ -67,7 +65,6 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
     .zip(enemy_manager.character_components.iter())
     .zip(enemy_manager.renderable_components.iter_mut());
 
-    let living =
     zip
     .filter_map(| (((((pos, animator), hp), mov), character), renderable): 
         (((((&mut Option<Position>, &mut Option<Animator>), &Option<Health>), &mut Option<MovementController>), &Option<Character>), &mut Option<Renderable>)| {

@@ -4,13 +4,9 @@ use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::{animation::ColliderAnimation, animator::Animator, collider::Collider, sprite_data::SpriteData}, game_logic::{character_factory::{CharacterAssets, CharacterData}, characters::{AttackType, Character}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::translated_inputs::TranslatedInput};
-use crate::{
-    asset_management::animation::AnimationState, game_logic::character_factory::CharacterAnimations,
-    rendering::camera::Camera,
-};
+use crate::{engine_types::{animation::{AnimationState, ColliderAnimation}, animator::Animator, collider::Collider, sprite_data::SpriteData}, game_logic::{characters::AttackType, factories::character_factory::{CharacterAnimations, CharacterAssets, CharacterData}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, rendering::camera::Camera};
 
-use super::Ability;
+use super::{Ability, Character};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PlayerState {

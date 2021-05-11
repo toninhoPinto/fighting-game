@@ -4,7 +4,7 @@ use std::{
     time::Instant,
 };
 
-use parry2d::na::{Point as naPoint, Point2, U2};
+use parry2d::na::Point2;
 
 use sdl2::{
     event::Event,
@@ -16,7 +16,7 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::{asset_management::{collider::ColliderType, sound::audio_player}, ecs_system::enemy_systems::{update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, game_logic::{character_factory::{CharacterAnimations, CharacterAssets, load_character, load_character_anim_data, load_stage}, characters::{Attack, player::{Player, PlayerState}}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, game::Game, inputs::{input_cycle::AllInputManagement}}};
+use crate::{asset_management::sound::audio_player, ecs_system::enemy_systems::{update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{Attack, player::{Player, PlayerState}}, factories::{character_factory::{CharacterAnimations, CharacterAssets, load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{input_cycle::AllInputManagement}}};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::{detect_hit, detect_push},

@@ -1,9 +1,9 @@
 use parry2d::{math::{Point, Real}, na::Vector2};
 use sdl2::{rect::Rect, render::Texture};
 
-use crate::{asset_management::{animation::Animation, animator::Animator, collider::Collider}, rendering::camera::Camera};
+use crate::{engine_types::{animation::Animation, animator::Animator, collider::Collider}, rendering::camera::Camera};
 
-use super::{character_factory::{CharacterAnimations, CharacterAssets}, characters::Attack, inputs::input_cycle::AllInputManagement};
+use super::{characters::Attack, factories::character_factory::{CharacterAnimations, CharacterAssets}, inputs::input_cycle::AllInputManagement};
 
 pub struct Projectile {
     pub position: Vector2<f64>,

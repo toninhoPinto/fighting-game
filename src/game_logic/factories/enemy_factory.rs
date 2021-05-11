@@ -3,9 +3,7 @@ use std::collections::HashMap;
 use parry2d::na::Vector2;
 use sdl2::{render::{Texture, TextureCreator}, video::WindowContext};
 
-use crate::asset_management::{animation::Animation, asset_loader::{asset_loader::{load_anim_and_data_from_dir, load_anim_from_dir, load_textures_for_character}}, sprite_data::SpriteData};
-
-use super::characters::{Attack, Character};
+use crate::{asset_management::asset_loader::asset_loader::{load_anim_and_data_from_dir, load_anim_from_dir, load_textures_for_character}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::characters::{Attack, Character}};
 
 pub struct EnemyAssets<'a> {
     pub textures: HashMap<String, Texture<'a>>,

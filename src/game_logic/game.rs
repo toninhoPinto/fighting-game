@@ -3,7 +3,7 @@ use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
 use crate::{asset_management::{cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, rendering::camera::Camera};
 
-use super::{character_factory::CharacterAnimations, characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
+use super::{characters::player::Player, factories::character_factory::CharacterAnimations, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game {

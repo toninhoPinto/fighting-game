@@ -4,9 +4,8 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::get_ground_pos_enemies}, game_logic::{character_factory::CharacterAssets, enemy_factory::EnemyAssets, game::Game}};
+use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::{factories::{character_factory::CharacterAssets, enemy_factory::EnemyAssets}, game::Game}};
 use crate::{
-    asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };

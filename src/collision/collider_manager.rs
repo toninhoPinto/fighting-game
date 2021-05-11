@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use parry2d::na::Vector2;
 
-use crate::asset_management::{animation::ColliderAnimation, animator::Animator, collider::Collider, sprite_data::SpriteData};
+use crate::engine_types::{animation::ColliderAnimation, animator::Animator, collider::Collider, sprite_data::SpriteData};
 
 pub struct ColliderManager {
     pub colliders: Vec<Collider>
@@ -53,7 +53,7 @@ impl ColliderManager {
     }
     
     // update offsets by player position
-    pub fn update_colliders_pos(&mut self, flipped: bool, position: Vector2<f64>, animator: &Animator, sprite_data: &SpriteData) {
+    pub fn update_colliders_pos(&mut self, flipped: bool, position: Vector2<f64>, animator: &Animator, _sprite_data: &SpriteData) {
         let collider_animation = animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
 
         for i in 0..self.colliders.len() {

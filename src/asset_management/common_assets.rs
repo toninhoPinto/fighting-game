@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use crate::engine_types::animation::Animation;
+
 use super::asset_loader::asset_loader;
-use super::{animation::Animation, sound::audio_player};
+use super::{sound::audio_player};
 use sdl2::{
     mixer::Chunk,
     render::{Texture, TextureCreator},
@@ -45,7 +47,7 @@ impl<'a> CommonAssets<'a> {
         sounds.insert("miss".to_string(), miss_sound);
         sounds.insert("block".to_string(), block_sound);
 
-        let (textures, texture_data) = asset_loader::load_textures_for_character(&texture_creator, "assets/vfx");
+        let (textures, _) = asset_loader::load_textures_for_character(&texture_creator, "assets/vfx");
 
         let hit_anim = 
             asset_loader::load_anim_from_dir("assets/vfx/normal_hit", "normal_hit");

@@ -1,13 +1,10 @@
-use super::{characters::{Ability, Attack, AttackType, player::Player}};
+
 use sdl2::rect::Point;
 use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
-use super::characters::Character;
-use super::inputs::game_inputs::GameAction;
-use crate::asset_management::{animation::Animation, asset_loader::asset_loader::load_textures_for_character, sprite_data::SpriteData};
-use crate::asset_management::asset_loader::asset_loader;
+use crate::{asset_management::asset_loader::asset_loader::{self, load_textures_for_character}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Ability, Attack, AttackType, Character, player::Player}, inputs::game_inputs::GameAction}};
 use std::collections::HashMap;
 use std::string::String;
 
@@ -77,13 +74,7 @@ fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)
 }
 
 fn load_foxgirl_special_inputs() -> Vec<(Vec<i32>, String)>{
-    let mut specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
-    let spam_light_punch_inputs = vec![
-        GameAction::Punch as i32,
-        GameAction::Punch as i32,
-        GameAction::Punch as i32,
-    ];
-    //specials_inputs.push((spam_light_punch_inputs, "spam_light_punch".to_string()));
+    let specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
 
     specials_inputs
 }
@@ -303,7 +294,7 @@ fn load_foxgirl_data() -> CharacterData {
     CharacterData {
         input_combination_anims: load_foxgirl_special_inputs(),
         directional_variation_anims: load_foxgirl_directional_inputs(),
-        attacks: load_foxgirl_attacks(),
         attack_effects: HashMap::new(),
+        attacks: load_foxgirl_attacks(),
     }
 }

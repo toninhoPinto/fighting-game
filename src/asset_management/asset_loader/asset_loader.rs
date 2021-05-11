@@ -4,7 +4,7 @@ use sdl2::image::LoadTexture;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
-use crate::asset_management::{animation::{Animation, ColliderAnimation, Transformation}, cast_point::CastPoint, sprite_data::SpriteData};
+use crate::{asset_management::cast_point::CastPoint, engine_types::{animation::{Animation, ColliderAnimation}, sprite_data::SpriteData, transform::Transform}};
 
 use super::spriter_pro_collider_loader::{self, load_frame_data};
 
@@ -85,7 +85,7 @@ pub fn load_anim_and_data_from_dir(dir: &str, name: &str) -> Animation {
     let paths = fs::read_dir(dir).unwrap();
 
     let mut vec: Vec<(i64, String)> = Vec::new();
-    let mut data: Option<(Vec<i64>, ColliderAnimation, HashMap<i32, Transformation>, HashMap<i64, CastPoint>, i64)> = None;
+    let mut data: Option<(Vec<i64>, ColliderAnimation, HashMap<i32, Transform>, HashMap<i64, CastPoint>, i64)> = None;
 
     let mut sprites_length = 0;
     

@@ -1,6 +1,6 @@
 use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Vector2}, query::{self, Contact}, shape::Cuboid};
 
-use crate::{asset_management::collider::{Collider, ColliderType}, game_logic::{characters::player::PlayerState}};
+use crate::{engine_types::collider::{Collider, ColliderType}, game_logic::{characters::player::PlayerState}};
 use crate::game_logic::characters::player::Player;
 
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree

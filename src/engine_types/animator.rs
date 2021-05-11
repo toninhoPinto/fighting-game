@@ -1,4 +1,5 @@
-use super::{animation::Animation};
+use super::animation::Animation;
+
 
 #[derive(Clone)]
 pub struct Animator {

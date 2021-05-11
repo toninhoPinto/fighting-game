@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use parry2d::na::Vector2;
-use super::{cast_point::CastPoint, collider::Collider};
-use sdl2::rect::Point;
+use crate::{asset_management::cast_point::CastPoint, engine_types::transform::Transform};
+
+use super::{collider::Collider};
 
 #[derive(Clone)]
 pub enum AnimationState {
@@ -15,7 +16,7 @@ pub struct Animation {
     pub name: String,
     pub length: i64,
     pub sprites: Vec<(i64, String)>,
-    pub sprite_alignments: HashMap<i32, Transformation>,
+    pub sprite_alignments: HashMap<i32, Transform>,
     pub offsets: Option<Vec<Vector2<f64>>>,
     pub cast_point: HashMap<i64, CastPoint>,
     pub collider_animation: Option<ColliderAnimation>,
@@ -24,14 +25,7 @@ pub struct Animation {
 #[derive(Clone, Debug)]
 pub struct ColliderAnimation {
     pub colliders: Vec<Collider>,
-    //Collider name -> transformations per frame
-    pub pos_animations: HashMap<String, HashMap<i32, Transformation>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Transformation {
-    pub pos: Vector2<f64>,
-    pub scale: (f32, f32),
+    pub pos_animations: HashMap<String, HashMap<i32, Transform>>,     //Collider name -> transformations per frame
 }
 
 impl Animation {
@@ -52,7 +46,7 @@ impl Animation {
     name: String, 
     offsets: Option<Vec<Vector2<f64>>>, 
     cast_point: HashMap<i64, CastPoint>,
-    sprite_alignments: HashMap<i32, Transformation>,
+    sprite_alignments: HashMap<i32, Transform>,
     collider_animation: Option<ColliderAnimation>) -> Self {
         Self {
             name,

@@ -3,9 +3,9 @@ use parry2d::math::Point as aabbPoint;
 
 use std::{collections::HashMap, fs};
 
-use sdl2::rect::Point;
+use crate::{asset_management::cast_point::CastPoint, engine_types::{animation::ColliderAnimation, collider::{Collider, ColliderType}, sprite_data::SpriteData, transform::Transform}};
 
-use crate::asset_management::{animation::{ColliderAnimation, Transformation}, cast_point::CastPoint, collider::{Collider, ColliderType}, sprite_data::SpriteData};
+
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Root {
@@ -21,7 +21,7 @@ pub struct Root {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Entity {
-    pub animation: Vec<Animation>,
+    pub animation: Vec<AnimationJSON>,
     #[serde(rename = "character_map")]
     pub character_map: Vec<::serde_json::Value>,
     pub id: i64,
@@ -32,7 +32,8 @@ pub struct Entity {
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Animation {
+#[serde(rename = "animation")]
+pub struct AnimationJSON {
     pub id: i64,
     pub interval: i64,
     pub length: i64,
@@ -171,7 +172,7 @@ pub fn load_frame_data(file: std::path::PathBuf) -> Vec<SpriteData> {
 
 pub fn load_animation_data(
     file: std::path::PathBuf,
-) -> (Vec<i64>, ColliderAnimation, HashMap<i32, Transformation>, HashMap<i64, CastPoint>, i64) {
+) -> (Vec<i64>, ColliderAnimation, HashMap<i32, Transform>, HashMap<i64, CastPoint>, i64) {
 
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
@@ -221,15 +222,15 @@ pub fn load_animation_data(
         time_vec.push(time/FREQUENCY_OF_FPS);
     }
 
-    let mut sprite_transformations: HashMap<i32, Transformation> = HashMap::new();
+    let mut sprite_transforms: HashMap<i32, Transform> = HashMap::new();
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
-    let mut final_transformations: HashMap<String, HashMap<i32, Transformation>> = HashMap::new();
+    let mut final_transforms: HashMap<String, HashMap<i32, Transform>> = HashMap::new();
     for i in 0..timeline.len() {
         //for each  collider object
         let mut name = timeline[i].name.clone();
         let split_offset = name.find('_').unwrap_or(name.len());
         
-        let mut transformations_of_frame: HashMap<i32, Transformation> = HashMap::new();
+        let mut transforms_of_frame: HashMap<i32, Transform> = HashMap::new();
 
         match &timeline[i].object_type {
             std::option::Option::Some(obj_type) => {
@@ -267,7 +268,7 @@ pub fn load_animation_data(
                             0f64
                         };
 
-                        let transformation_frame = Transformation {
+                        let Transform_frame = Transform {
                             pos: Vector2::new(
                                 x,
                                 y,
@@ -275,8 +276,8 @@ pub fn load_animation_data(
                             scale: (scale_x as f32, scale_y as f32),
                         };
                         if time_keys.contains_key(&(time / FREQUENCY_OF_FPS)) {
-                            transformations_of_frame
-                                .insert(*time_keys.get(&(time / FREQUENCY_OF_FPS)).unwrap() as i32, transformation_frame);
+                            transforms_of_frame
+                                .insert(*time_keys.get(&(time / FREQUENCY_OF_FPS)).unwrap() as i32, Transform_frame);
                         }
                     }
                 } else if obj_type == "point" {
@@ -328,7 +329,7 @@ pub fn load_animation_data(
                         0f64
                     };
 
-                    let transformation_frame = Transformation {
+                    let transforms_of_frame = Transform {
                         pos: Vector2::new(
                             x,
                             y,
@@ -336,19 +337,19 @@ pub fn load_animation_data(
                         scale: (scale_x as f32, scale_y as f32),
                     };
 
-                    sprite_transformations.insert(sprite_frame.id, transformation_frame);
+                    sprite_transforms.insert(sprite_frame.id, transforms_of_frame);
                 }
             }
         }
-        final_transformations.insert(name.drain(..split_offset).collect(), transformations_of_frame);
+        final_transforms.insert(name.drain(..split_offset).collect(), transforms_of_frame);
     }
 
     (time_vec,
     ColliderAnimation {
         colliders: colliders,
-        pos_animations: final_transformations,
+        pos_animations: final_transforms,
     },
-     sprite_transformations,
+     sprite_transforms,
      cast_points,
      duration)
 }

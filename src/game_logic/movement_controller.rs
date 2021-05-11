@@ -1,8 +1,8 @@
 use parry2d::na::Vector2;
 
-use crate::{asset_management::animator::Animator, ecs_system::enemy_components::Position, rendering::camera::Camera};
+use crate::{ecs_system::enemy_components::Position, engine_types::animator::Animator, rendering::camera::Camera};
 
-use super::{characters::{Character, player::PlayerState}, enemy_factory::EnemyAnimations};
+use super::{characters::{Character, player::PlayerState}, factories::enemy_factory::EnemyAnimations};
 
 pub struct MovementController {
     pub walking_dir: Vector2<i8>,
@@ -57,7 +57,6 @@ impl MovementController {
 
     pub fn state_update(&mut self, animator: &mut Animator, position: &mut Position, assets: &EnemyAnimations) {
         let character_animation = &assets.animations;
-        let prev_animation = animator.current_animation.as_ref().unwrap().name.clone();
 
         if animator.is_finished && self.state != PlayerState::Dead {
             self.walking_dir.x = 0;

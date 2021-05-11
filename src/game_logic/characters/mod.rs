@@ -1,7 +1,7 @@
 use sdl2::rect::Rect;
 use std::string::String;
 
-use super::{character_factory::CharacterAnimations, game::Game};
+use super::{factories::character_factory::CharacterAnimations, game::Game};
 
 pub mod foxgirl;
 pub mod player;

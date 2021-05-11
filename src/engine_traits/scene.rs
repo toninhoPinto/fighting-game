@@ -8,7 +8,6 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 use std::collections::HashMap;
-
 pub(crate) trait Scene {
     fn run(
         &mut self,
