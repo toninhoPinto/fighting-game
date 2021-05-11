@@ -213,10 +213,14 @@ fn render_enemies(enemies: &mut EnemyManager,
 
         if debug {
             debug_rect(canvas, screen_rect.center(), screen_rect);
-            for collider_of_enemy in enemies.collider_components.iter_mut() {
-                if let Some(collider_of_enemy) = collider_of_enemy {
-                    render_colliders(canvas, screen_res, camera, &mut collider_of_enemy.colliders);
-                }
+        }
+    }
+    
+    if debug {
+        for collider_of_enemy in enemies.collider_components.iter_mut() {
+            if let Some(collider_of_enemy) = collider_of_enemy {
+                
+                render_colliders(canvas, screen_res, camera, &mut collider_of_enemy.colliders);
             }
         }
     }
@@ -264,15 +268,16 @@ fn render_colliders(
     camera: &Camera,
     colliders: &mut Vec<Collider>,
 ) {
+    let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
+    let semi_transparent_red = Color::RGBA(200, 50, 100, 100);
+    let semi_transparent_blue = Color::RGBA(100, 50, 200, 100);
+
     for collider in colliders.iter().rev() {
         if !collider.enabled {
             continue;
         }
 
         let aabb = collider.aabb;
-        let semi_transparent_green = Color::RGBA(50, 200, 100, 100);
-        let semi_transparent_red = Color::RGBA(200, 50, 100, 150);
-        let semi_transparent_blue = Color::RGBA(100, 50, 200, 150);
         let collider_position = Point::new(
             aabb.center().x as i32 - aabb.half_extents().x as i32,
             aabb.center().y as i32 - aabb.half_extents().y as i32,
