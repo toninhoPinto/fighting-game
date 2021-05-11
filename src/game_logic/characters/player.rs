@@ -583,7 +583,6 @@ impl Player {
                 self.update_colliders(sprite_data.get(&sprite_handle).unwrap());
             }
         }
-
     }
 
 

@@ -19,6 +19,7 @@ mod rendering;
 mod ui;
 mod scenes;
 mod ecs_system;
+mod enemy_behaviour;
 
 use asset_management::sound::{init_sound, music_player};
 
