@@ -28,6 +28,14 @@ use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
 
+/*
+state update
+animation update
+collider update
+
+movement update
+*/
+
 //TODO features tomorrow
 //separate json for animation offsets and animation states (startup, active, recovery)
 

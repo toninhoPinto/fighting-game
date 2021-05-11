@@ -1,7 +1,7 @@
 use parry2d::na::Vector2;
 use sdl2::rect::Rect;
 
-use crate::{asset_management::{animation::Animation, animator::Animator}, enemy_behaviour::simple_enemy_behaviour::walk_to_player, game_logic::{characters::Character, movement_controller::MovementController}};
+use crate::{asset_management::{animation::Animation, animator::Animator}, collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, game_logic::{characters::Character, movement_controller::MovementController}};
 
 use super::enemy_components::{Behaviour, Health, Position, Renderable};
 
@@ -14,6 +14,7 @@ pub struct EnemyManager {
     pub behaviour_components: Vec<Option<Behaviour>>,
     pub animator_components: Vec<Option<Animator>>,
     pub movement_controller_components: Vec<Option<MovementController>>,
+    pub collider_components: Vec<Option<ColliderManager>>,
     pub renderable_components: Vec<Option<Renderable>>,
 }
 
@@ -26,11 +27,21 @@ impl EnemyManager {
             behaviour_components: Vec::new(),
             animator_components: Vec::new(),
             movement_controller_components: Vec::new(),
+            collider_components: Vec::new(),
             renderable_components: Vec::new(),
         }
     }
 
-    fn new_entity(&mut self, health: Option<Health>, behaviour: Option<Behaviour>, player_pos: Vector2<f64>, pos: Option<Position>, character: Option<Character>, animator: Option<Animator>) {
+    fn new_entity(&mut self, 
+        health: Option<Health>, 
+        behaviour: Option<Behaviour>, 
+        player_pos: Vector2<f64>, 
+        pos: Option<Position>, 
+        character: Option<Character>, 
+        animator: Option<Animator>,
+        colliders: Option<ColliderManager>) {
+        
+        
         if self.health_components.len() < MAX_ENEMIES {
             let movement = match (&character, &pos) {
                 (Some(character), Some(pos)) =>  {
@@ -46,6 +57,7 @@ impl EnemyManager {
             self.character_components.push(character);
             self.animator_components.push(animator);
             self.behaviour_components.push(behaviour);
+            self.collider_components.push(colliders);
 
             let renderable = Renderable {
                 flipped: false,
@@ -78,7 +90,8 @@ impl EnemyManager {
             player_pos,
             Some(Position(player_pos + Vector2::new(500f64, 0f64))),
             Some(ryu),
-            Some(animator)
+            Some(animator), 
+            Some(ColliderManager::new())
         );
 
         println!("Spawned entity");

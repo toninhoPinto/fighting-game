@@ -195,7 +195,7 @@ fn render_player(
     }
 }
 
-fn render_enemies(enemies: &EnemyManager,   
+fn render_enemies(enemies: &mut EnemyManager,   
     enemy_assets: &HashMap<&str, EnemyAssets>,
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
@@ -213,6 +213,11 @@ fn render_enemies(enemies: &EnemyManager,
 
         if debug {
             debug_rect(canvas, screen_rect.center(), screen_rect);
+            for collider_of_enemy in enemies.collider_components.iter_mut() {
+                if let Some(collider_of_enemy) = collider_of_enemy {
+                    render_colliders(canvas, screen_res, camera, &mut collider_of_enemy.colliders);
+                }
+            }
         }
     }
 

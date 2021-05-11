@@ -2,18 +2,10 @@ use std::collections::HashMap;
 
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::{asset_management::animator::Animator, game_logic::{characters::{Character, player::Player}, enemy_factory::{EnemyAnimations, EnemyAssets}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{animator::Animator, sprite_data::SpriteData}, collision::collider_manager::ColliderManager, game_logic::{characters::{Character, player::Player}, enemy_factory::{EnemyAnimations, EnemyAssets}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
-pub fn update_animations_enemies(enemy_manager: &mut EnemyManager) {
-    let zip = enemy_manager.animator_components.iter_mut();
-    zip.for_each(|animator| {
-        if let Some(animator) = animator {
-            animator.update();
-        }
-    });
-}
 
 pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Player, enemy_animations: &HashMap<&str, EnemyAnimations>) {
     let zip = enemy_manager.
@@ -23,8 +15,6 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Playe
     .zip(enemy_manager.positions_components.iter())
     .zip(enemy_manager.character_components.iter());
 
-
-//player: &mut Player, pos: &Position, controller: &mut MovementController, enemy_animations: &EnemyAnimations
     zip
     .filter_map(| ((((behaviour, hp), mov), pos), character): ((((&Option<Behaviour>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>)| {
         if let Some(hp) = hp {
@@ -37,6 +27,35 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Playe
     .for_each(|(behaviour, mov, pos, char): (&Behaviour, &mut MovementController, &Position, &Character)| {
         behaviour(player, pos, mov, enemy_animations.get(&char.name as &str).unwrap());
     });
+}
+
+pub fn update_animations_enemies(enemy_manager: &mut EnemyManager) {
+    let zip = enemy_manager.animator_components.iter_mut();
+    zip.for_each(|animator| {
+        if let Some(animator) = animator {
+            animator.update();
+        }
+    });
+}
+
+pub fn update_colliders_enemies(enemy_manager: &mut EnemyManager, enemy_assets: &HashMap<&str, EnemyAssets>) {
+    let zip = enemy_manager.
+        collider_components.iter_mut()
+        .zip(enemy_manager.positions_components.iter())
+        .zip(enemy_manager.animator_components.iter())
+        .zip(enemy_manager.renderable_components.iter())
+        .zip(enemy_manager.character_components.iter());
+
+
+    let living =
+        zip
+        .filter_map(| ((((collider, pos), animator), renderable), character): 
+            ((((&mut Option<ColliderManager>, &Option<Position>), &Option<Animator>), &Option<Renderable>), &Option<Character>)| {
+                Some((collider.as_mut()?, pos.as_ref()?, animator.as_ref()?, renderable.as_ref()?, &character.as_ref()?.name))
+        })
+        .for_each(|(collider, pos, animator, renderable, name): (&mut ColliderManager, &Position, &Animator, &Renderable, &String) | {
+            collider.update_colliders(renderable.flipped, pos.0, animator , &enemy_assets.get(name as &str).unwrap().texture_data);
+        });
 }
 
 pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animations: &HashMap<&str, EnemyAnimations>, camera: &Camera, dt: f64) {
@@ -72,7 +91,6 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
 
         renderable.flipped = mov.facing_dir > 0;
     });
-
 }
 
 pub fn get_ground_pos_enemies(enemy_manager: &EnemyManager) -> Vec<Point> {

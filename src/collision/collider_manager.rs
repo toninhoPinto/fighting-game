@@ -9,6 +9,12 @@ pub struct ColliderManager {
 }
 
 impl ColliderManager {
+
+    pub fn new() -> Self {
+        Self {
+            colliders: Vec::new(),
+        }
+    }
     
     pub fn update_colliders(&mut self, flipped: bool, position: Vector2<f64>, animator: &Animator , sprite_data: &HashMap<String, SpriteData>) {
         if let Some(animation) = animator.current_animation.as_ref() {
