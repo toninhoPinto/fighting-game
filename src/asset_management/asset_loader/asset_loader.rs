@@ -106,7 +106,6 @@ pub fn load_anim_and_data_from_dir(dir: &str, name: &str) -> Animation {
     let mut sprite_alignments = HashMap::new();
     let mut length = sprites_length + 3;
     if let Some(colliders) = data {
-        println!("{:?}", colliders.0);
         for i in 0..vec.len() {
             vec[i].0 = colliders.0[i];
         } 

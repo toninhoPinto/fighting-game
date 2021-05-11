@@ -56,22 +56,22 @@ pub fn rcv_input(
         Event::KeyDown {
             keycode, repeat, ..
         } => {
-            let key_down = keycode.unwrap();
-            if game_controls.contains_key(&key_down.to_string()) && !repeat {
-                let input = *game_controls.get(&key_down.to_string()).unwrap();
-                Some((KEYBOARD_ID, input, true))
-            } else {
-                None
+            if let Some(key_down) = keycode {
+                if game_controls.contains_key(&key_down.to_string()) && !repeat {
+                    let input = *game_controls.get(&key_down.to_string()).unwrap();
+                    return Some((KEYBOARD_ID, input, true))
+                }
             }
+            None
         }
         Event::KeyUp { keycode, .. } => {
-            let key_up = keycode.unwrap();
-            if game_controls.contains_key(&key_up.to_string()) {
-                let input = *game_controls.get(&key_up.to_string()).unwrap();
-                Some((KEYBOARD_ID, input, false))
-            } else {
-                None
+            if let Some(key_up) = keycode {
+                if game_controls.contains_key(&key_up.to_string()) {
+                    let input = *game_controls.get(&key_up.to_string()).unwrap();
+                    return Some((KEYBOARD_ID, input, false))
+                } 
             }
+            None
         }
         _ => None,
     };
