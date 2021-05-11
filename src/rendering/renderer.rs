@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{ecs_system::enemy_manager::EnemyManager, game_logic::{character_factory::CharacterAssets, enemy_factory::EnemyAssets, game::Game}};
+use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::get_ground_pos_enemies}, game_logic::{character_factory::CharacterAssets, enemy_factory::EnemyAssets, game::Game}};
 use crate::{
     asset_management::collider::{Collider, ColliderType},
     game_logic::characters::player::Player,
@@ -76,16 +76,22 @@ pub fn render(
 
     let screen_res = canvas.output_size()?;
 
-    let TextureQuery { width, height, .. } = common_assets.shadow.query();
-    let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
 
-    let shadow_height = game.player.ground_height as i32 - (shadow_rect.height() / 2) as i32;
+    render_shadow(common_assets,
+        canvas,
+        Point::new(game.player.position.x as i32 , game.player.ground_height as i32),  
+        screen_res,
+        &game.camera);
 
-    let screen_rect = world_to_screen(shadow_rect, Point::new(
-        game.player.position.x as i32 - (shadow_rect.width() / 2) as i32, 
-        shadow_height), screen_res, &game.camera);
-    canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
-        .unwrap();
+    let shadow_positions = get_ground_pos_enemies(&mut game.enemies);
+
+    for pos in shadow_positions {
+        render_shadow(common_assets,
+            canvas,
+            pos,  
+            screen_res,
+            &game.camera);
+    }
 
     render_player(&mut game.player, p1_assets, canvas, screen_res, &game.camera, debug);
     render_enemies(&mut game.enemies, enemy_assets, canvas, screen_res, &game.camera, debug);
@@ -136,8 +142,27 @@ pub fn render(
         }
     }
 
-    canvas.present();
+    canvas.present(); 
     Ok(())
+}
+
+fn render_shadow(common_assets: &mut CommonAssets,
+    canvas: &mut WindowCanvas,
+    point: Point,  
+    screen_res: (u32, u32),
+    camera: &Camera) {
+
+    let TextureQuery { width, height, .. } = common_assets.shadow.query();
+    let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
+
+    let shadow_height = point.y - (shadow_rect.height() / 2) as i32;
+
+    let screen_rect = world_to_screen(shadow_rect, Point::new(
+        point.x as i32 - (shadow_rect.width() / 2) as i32, 
+        shadow_height), screen_res, camera);
+    
+    canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
+        .unwrap();
 }
 
 fn render_player(

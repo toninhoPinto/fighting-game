@@ -15,7 +15,6 @@ pub fn update_animations_enemies(enemy_manager: &mut EnemyManager) {
     });
 }
 
-
 pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Player, enemy_animations: &HashMap<&str, EnemyAnimations>) {
     let zip = enemy_manager.
     behaviour_components.iter()
@@ -74,6 +73,24 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
         renderable.flipped = mov.facing_dir > 0;
     });
 
+}
+
+pub fn get_ground_pos_enemies(enemy_manager: &EnemyManager) -> Vec<Point> {
+    let zip = enemy_manager
+        .positions_components
+        .iter()
+        .zip(enemy_manager.movement_controller_components.iter());
+
+        let ground_pos =
+        zip
+        .filter_map(|(pos, mov): (&Option<Position>, &Option<MovementController>)| {
+            Some((pos.as_ref()?, mov.as_ref()?))
+        })
+        .map(|(pos, mov): (&Position, &MovementController)| {
+            Point::new(pos.0.x as i32, mov.ground_height)
+        });
+
+        ground_pos.collect::<Vec<Point>>()
 }
 
 pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str, EnemyAssets>) -> Vec<(&'a Texture<'a>, Rect, Point, bool)> {

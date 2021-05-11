@@ -4,7 +4,7 @@ use std::{
     time::Instant,
 };
 
-use parry2d::na::{Point as naPoint, U2};
+use parry2d::na::{Point as naPoint, Point2, U2};
 
 use sdl2::{
     event::Event,
@@ -116,7 +116,7 @@ fn opponent_blocked(attack: &Attack, time: f64, general_assets: &CommonAssets,
     player_hit.knock_back(attack.push_back * dir_to_push.signum() as f64, time);
 }
 
-fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
+fn hit_particles(point: Point2<f32>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
     let texture_id = &general_assets.hit_effect_animations.get(hit_particle).unwrap().sprites[0].1;
     let TextureQuery { width, height, .. } = general_assets
                             .hit_effect_textures
@@ -141,7 +141,7 @@ fn hit_particles(point: naPoint<f32, U2>, hit_particle: &str, general_assets: &C
     );
 }
 
-fn did_sucessfully_block(point: naPoint<f32, U2>, attack: &Attack, player_blocking: &Player) -> bool{
+fn did_sucessfully_block(point: Point2<f32>, attack: &Attack, player_blocking: &Player) -> bool{
     
     let facing_correct_dir = (point.x > player_blocking.position.x as f32 && player_blocking.facing_dir > 0) || 
     (point.x < player_blocking.position.x as f32 && !player_blocking.facing_dir > 0);
@@ -327,6 +327,7 @@ impl Scene for Match {
 
                 update_behaviour_enemies(&mut game.enemies, &game.player, &enemy_animations);
                 update_animations_enemies(&mut game.enemies);
+                //update colliders
                 update_movement_enemies(&mut game.enemies, &enemy_animations, &game.camera, logic_timestep);
 
                 if let Some(ability) = game.player.curr_special_effect {

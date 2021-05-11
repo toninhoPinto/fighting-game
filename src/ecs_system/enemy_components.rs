@@ -12,5 +12,3 @@ pub struct Renderable {
 }
 
 pub(crate) type Behaviour = fn(&Player, &Position, &mut MovementController, &EnemyAnimations) -> ();
-
-//Colliders
