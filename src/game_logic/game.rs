@@ -5,7 +5,7 @@ use crate::{asset_management::{asset_holders::EntityAnimations, cast_point::Cast
 
 use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
-const LIMIT_NUMBER_OF_VFX: usize = 5;
+const LIMIT_NUMBER_OF_VFX: usize = 20;
 pub struct Game {
     pub current_frame: i32,
     pub player: Player,
