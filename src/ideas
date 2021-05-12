@@ -5,7 +5,7 @@ Roguelite where each level is a time in
 4th modern times
 5th sci fi
 
-Mutants vs Cyborgs vs Perfect Humans
+
 
 inputs
     left
@@ -20,6 +20,12 @@ inputs
     jump attack
     dashing attack
 
+combos
+    punch -> punch -> punch -> punch
+    kick 
+    punch -> punch -> kick -> kick
+    punch -> punch -> up + kick
+    no collisions
 
 
 

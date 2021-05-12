@@ -1,12 +1,14 @@
 use sdl2::rect::Rect;
 use std::string::String;
 
-use super::{factories::character_factory::CharacterAnimations, game::Game};
+use crate::asset_management::asset_holders::EntityAnimations;
+
+use super::game::Game;
 
 pub mod foxgirl;
 pub mod player;
 
-pub(crate) type Ability = fn(&mut Game, i32, &CharacterAnimations) -> ();
+pub(crate) type Ability = fn(&mut Game, i32, &EntityAnimations) -> ();
 
 #[derive(Debug, Clone)]
 pub struct Character {

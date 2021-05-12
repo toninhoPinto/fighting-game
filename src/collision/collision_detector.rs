@@ -1,17 +1,20 @@
-use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Vector2}, query::{self, Contact}, shape::Cuboid};
+use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Point2, Vector2}, query::{self, Contact}, shape::Cuboid};
+use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{engine_types::collider::{Collider, ColliderType}, game_logic::{characters::player::PlayerState}};
-use crate::game_logic::characters::player::Player;
+use crate::{asset_management::{asset_holders::{EntityAnimations}, common_assets::CommonAssets, sound::audio_player}, ecs_system::enemy_components::{Health, Position}, engine_types::{animator::Animator, collider::{Collider, ColliderType}}, game_logic::{characters::{Attack, player::Player}, factories::character_factory::{CharacterAnimations, CharacterAssets}, game::Game, movement_controller::MovementController}};
+
+use crate::ecs_system::enemy_systems::take_damage;
+
 
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
 
-pub fn detect_hit(player_hitting_colliders: &Vec<Collider>, player_hit_colliders: &Vec<Collider>) -> Option<(Point<Real>, String)>{
-    for collider in player_hitting_colliders
+pub fn detect_hit(player_hit_colliders: &Vec<Collider>, enemy_hurt_colliders: &Vec<Collider>) -> Option<(Point<Real>, String)>{
+    for collider in player_hit_colliders
         .iter()
         .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
     {
-        for collider_to_take_dmg in player_hit_colliders
+        for collider_to_take_dmg in enemy_hurt_colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Hurtbox && c.enabled)
         {
@@ -42,89 +45,75 @@ fn contact(p1_collider: &Collider, p2_collider: &Collider) -> Option<Contact> {
         p2_collider.aabb.center().y,
     );
 
-
     query::contact(&cuboid1_pos, &cuboid1, &cuboid2_pos, &cuboid2, prediction)
         .unwrap()
 }
 
-pub fn detect_push(
-    player1: &mut Player,
-    player2: &mut Player,
-    level_width: i32,
-    logic_timestep: f64,
-) {
-    player1.is_pushing = false;
-    player2.is_pushing = false;
+pub fn hit_opponent(
+    attack: &Attack, 
+    time: f64, 
+    general_assets: &CommonAssets, 
+    attacker: &mut MovementController, 
+    receiver: (&mut Health, &mut Position, &mut Animator, &mut MovementController), 
+    receiver_anims: &EntityAnimations){
+    
+    audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
+    take_damage(receiver.0, attack.damage, receiver.3);                                               
+    receiver.3.state_update(receiver.2, &mut receiver.1.0, &receiver_anims);     
+    
+    let dir_to_push = if attacker.is_airborne {                                            
+        attacker.direction_at_jump_time
+    } else {
+        attacker.facing_dir
+    };
+    receiver.3.knock_back(receiver.1, attack.push_back * dir_to_push.signum() as f64, time);
+}
 
-    for p1_collider in player1.colliders
-        .iter()
-        .filter(|&c| c.collider_type == ColliderType::Pushbox)
-    {
-        for p2_collider in player2.colliders
-            .iter()
-            .filter(|&c| c.collider_type == ColliderType::Pushbox)
-        {
-            if p1_collider.aabb.intersects(&p2_collider.aabb) {
-                let penetrating = contact(p1_collider, p2_collider).unwrap().dist;
+pub fn opponent_blocked(attack: &Attack, 
+    time: f64, 
+    general_assets: &CommonAssets, 
+    attacker: &mut MovementController, 
+    receiver: (&mut Position, &mut MovementController)){
+    
+    audio_player::play_sound(general_assets.sound_effects.get("block").unwrap());
+    let dir_to_push = if attacker.is_airborne {                          
+        attacker.direction_at_jump_time
+    } else {
+        attacker.facing_dir
+    };
+    receiver.1.knock_back(receiver.0, attack.push_back * dir_to_push.signum() as f64, time); 
+}
 
-                let player1_is_pushing = player1.walking_dir.x != 0 && player1.walking_dir.x.signum() == player1.facing_dir;
-                if player1_is_pushing {
-                    let speed = if player1.state == PlayerState::Dashing {
-                        player1.character.dash_speed / 2.0
-                    } else {
-                        player1.character.speed / 2.0
-                    };
+pub fn hit_particles(point: Point2<f32>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
+    let texture_id = &general_assets.hit_effect_animations.get(hit_particle).unwrap().sprites[0].1;
+    let TextureQuery { width, height, .. } = general_assets
+                            .hit_effect_textures
+                            .get(texture_id)
+                            .unwrap()
+                            .query();
 
-                    player1.position.x += player1.walking_dir.x as f64 * penetrating as f64;
-                    player2.position += Vector2::new(player1.walking_dir.x as f64 * speed * logic_timestep, 0.0);
-                    player1.is_pushing = true;
-                }
+    let texture_width = width * 2;
+    let texture_height = height * 2;
+    //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
+    //this will have issues with other vfx
+    game.spawn_vfx(
+        Rect::new(
+            point.x as i32,
+            point.y as i32 - texture_height as i32 / 2,
+            texture_width,
+            texture_height,
+        ),
+        false,
+        hit_particle.to_string(),
+        Some(Color::GREEN),
+    );
+}
 
 
-                if player1.is_airborne {
-                    let center = -(player1.position.x - player2.position.x).signum();
-                    let original_push = Vector2::new(center as f64 * penetrating as f64, 0.0);
-                    let push_airborne_player = player2.push(level_width, original_push);
-                    //if player 2 lands on player 1, push both
-                    //if player 1 is on corner and the push is towards the corner, push player 2 fully and dont push player 1
-                    //if player 1 is on corner and the push is away from corner, push player 1 fully and dont push player 2
-                    player1.position += push_airborne_player;
-                    player2.position += player1.push(level_width, push_airborne_player - original_push);
-                    player1.is_pushing = true;
-                }
+pub fn did_sucessfully_block(point: Point2<f32>, blocking_pos: Vector2<f64>, blocking_controller: &MovementController) -> bool {                   //MovementController
+    
+    let facing_correct_dir = (point.x > blocking_pos.x as f32 && blocking_controller.facing_dir > 0) || 
+    (point.x < blocking_pos.x as f32 && !blocking_controller.facing_dir > 0);
 
-
-                let player2_is_pushing = player2.walking_dir.x != 0 && player2.walking_dir.x.signum() == player2.facing_dir;
-                if player2_is_pushing {
-                    let speed = if player2.state == PlayerState::Dashing {
-                        player2.character.dash_speed / 2.0
-                    } else {
-                        player2.character.speed / 2.0
-                    };
-
-                    player2.position.x += player2.facing_dir as f64 * penetrating as f64;
-                    player1.position += Vector2::new(player2.walking_dir.x as f64 * speed * logic_timestep, 0.0);
-                    player2.is_pushing = true;
-                }
-
-                if player2.is_airborne {
-                    let center = -(player2.position.x - player1.position.x).signum();
-                    let original_push = Vector2::new(center as f64 * penetrating as f64, 0.0);
-                    let push_airborne_player = player2.push(level_width, original_push);
-                    //if player 2 lands on player 1, push both
-                    //if player 1 is on corner and the push is towards the corner, push player 2 fully and dont push player 1
-                    //if player 1 is on corner and the push is away from corner, push player 1 fully and dont push player 2
-                    player2.position += push_airborne_player;
-                    player1.position += player1.push(level_width, push_airborne_player - original_push);
-                    player2.is_pushing = true;
-                }
-
-                if !player2.is_airborne && !player1.is_airborne && player1.walking_dir.x == 0 && player2.walking_dir.x == 0{
-                    player2.position += player2.push(level_width, Vector2::new(player2.facing_dir  as f64 * penetrating as f64, 0.0));
-                    player1.position += player1.push(level_width, Vector2::new(player1.facing_dir  as f64 * penetrating as f64, 0.0));
-                }
-            }
-        }
-    }
-
+    blocking_controller.is_blocking && facing_correct_dir
 }

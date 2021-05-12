@@ -4,7 +4,7 @@ use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
-use crate::{asset_management::asset_loader::asset_loader::{self, load_textures_for_character}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Ability, Attack, AttackType, Character, player::Player}, inputs::game_inputs::GameAction}};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Ability, Attack, AttackType, Character, player::Player}, inputs::game_inputs::GameAction}};
 use std::collections::HashMap;
 use std::string::String;
 
@@ -51,7 +51,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, id: i32) -> Player
 pub fn load_character_anim_data<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
     name: &str,
-) -> (CharacterAssets<'a>, CharacterAnimations, CharacterData) {
+) -> (EntityAssets<'a>, EntityAnimations, EntityData) {
     match name {
         "foxgirl" => Some((load_foxgirl_assets(texture_creator), load_foxgirl_animations(), load_foxgirl_data())),
         _ => None,
@@ -274,24 +274,24 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
     attacks
 }
 
-fn load_foxgirl_animations() -> CharacterAnimations {
+fn load_foxgirl_animations() -> EntityAnimations {
     let anims= load_foxgirl_anims();
-    CharacterAnimations {
+    EntityAnimations {
         animations: anims,
         projectile_animation: HashMap::new(),
     }
 }
 
-fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> CharacterAssets {
+fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> EntityAssets {
     let (textures, data) = load_textures_for_character(texture_creator, "assets/foxgirl");
-    CharacterAssets {
+    EntityAssets {
         textures,
         texture_data: data,
     }
 }
 
-fn load_foxgirl_data() -> CharacterData {
-    CharacterData {
+fn load_foxgirl_data() -> EntityData {
+    EntityData {
         input_combination_anims: load_foxgirl_special_inputs(),
         directional_variation_anims: load_foxgirl_directional_inputs(),
         attack_effects: HashMap::new(),

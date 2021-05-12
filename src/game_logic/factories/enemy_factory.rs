@@ -1,34 +1,23 @@
 use std::collections::HashMap;
 
 use parry2d::na::Vector2;
-use sdl2::{render::{Texture, TextureCreator}, video::WindowContext};
+use sdl2::{render::TextureCreator, video::WindowContext};
 
-use crate::{asset_management::asset_loader::asset_loader::{load_anim_and_data_from_dir, load_anim_from_dir, load_textures_for_character}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::characters::{Attack, Character}};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets}, asset_loader::asset_loader::{load_anim_and_data_from_dir, load_anim_from_dir, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::characters::{Attack, Character}};
 
-pub struct EnemyAssets<'a> {
-    pub textures: HashMap<String, Texture<'a>>,
-    pub texture_data: HashMap<String, SpriteData>
-}
-pub struct EnemyAnimations {
-    pub animations: HashMap<String, Animation>,
-}
-pub struct EnemyData {
-    pub attacks: HashMap<String, Attack>,
-}
-
-
-pub fn load_enemy_ryu_assets(texture_creator: &TextureCreator<WindowContext>) -> EnemyAssets {
+pub fn load_enemy_ryu_assets(texture_creator: &TextureCreator<WindowContext>) -> EntityAssets {
     let (textures, data) = load_textures_for_character(texture_creator, "assets/keetar");
-    EnemyAssets {
+    EntityAssets {
         textures,
         texture_data: data,
     }
 }
 
-pub fn load_enemy_ryu_animations() -> EnemyAnimations {
+pub fn load_enemy_ryu_animations() -> EntityAnimations {
     let anims= load_enemy_ryu_anims();
-    EnemyAnimations {
+    EntityAnimations {
         animations: anims,
+        projectile_animation: HashMap::new(),
     }
 }
 

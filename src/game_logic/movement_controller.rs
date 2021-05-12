@@ -1,9 +1,10 @@
 use parry2d::na::Vector2;
 
-use crate::{ecs_system::enemy_components::Position, engine_types::animator::Animator, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::EntityAnimations, ecs_system::enemy_components::Position, engine_types::animator::Animator, rendering::camera::Camera};
 
-use super::{characters::{Character, player::PlayerState}, factories::enemy_factory::EnemyAnimations};
+use super::characters::{Character, player::PlayerState};
 
+#[derive(Clone)]
 pub struct MovementController {
     pub walking_dir: Vector2<i8>,
     pub ground_height: i32,
@@ -18,7 +19,6 @@ pub struct MovementController {
     pub is_attacking: bool,
     pub is_blocking: bool,
     pub is_airborne: bool,
-    pub is_pushing: bool,
     pub knock_back_distance: f64,
 
     pub mid_jump_pos: f64,
@@ -41,7 +41,6 @@ impl MovementController {
             is_attacking: false,
             is_blocking: false,
             is_airborne: false,
-            is_pushing: false,
             knock_back_distance: 0f64,
         
             mid_jump_pos: 0f64,
@@ -55,7 +54,42 @@ impl MovementController {
         self.walking_dir.x = vec_x;
     }
 
-    pub fn state_update(&mut self, animator: &mut Animator, position: &mut Position, assets: &EnemyAnimations) {
+    pub fn player_can_attack(&self) -> bool {
+        !(self.is_attacking
+            || self.state == PlayerState::Dashing
+            || self.state == PlayerState::Dead)
+    }
+
+    pub fn can_move(&self) -> bool {
+        !(self.is_attacking
+            || self.is_airborne
+            || self.knock_back_distance.abs() > 0.0
+            || self.state == PlayerState::Dead
+            || self.state == PlayerState::Dashing)
+    }
+
+    pub fn player_state_change(&mut self, new_state: PlayerState) {
+        let is_interruptable = self.state != PlayerState::Dashing
+            && self.state != PlayerState::Jumping
+            && self.state != PlayerState::Jump;
+
+        if is_interruptable && self.state != PlayerState::Dead {
+            self.state = new_state;
+        }
+    }
+
+    pub fn jump(&mut self) {
+        if !self.is_airborne {
+            self.player_state_change(PlayerState::Jump);
+        }
+    }
+
+    pub fn knock_back(&mut self, pos: &mut Position, amount: f64, dt: f64) {
+        pos.0 += Vector2::new(amount * dt, 0.0);
+        self.knock_back_distance = amount - (amount * 10.0 * dt);
+    }
+
+    pub fn state_update(&mut self, animator: &mut Animator, position: &mut Vector2<f64>, assets: &EntityAnimations) {
         let character_animation = &assets.animations;
 
         if animator.is_finished && self.state != PlayerState::Dead {
@@ -84,7 +118,7 @@ impl MovementController {
         }
 
         if self.state == PlayerState::Landing {
-            position.0.y = self.ground_height as f64;
+            position.y = self.ground_height as f64;
             self.is_attacking = false;
         }
 
@@ -163,9 +197,7 @@ impl MovementController {
                 self.knock_back_distance = 0.0;
             }
         }
-    
-        let speed_mod = if self.is_pushing { 0.5 } else { 1.0 };
-    
+     
         if self.is_airborne {
             let gravity = match self.extra_gravity {
                 Some(extra_g) => extra_g,
@@ -178,8 +210,7 @@ impl MovementController {
             if !should_land {
                 let position_offset_x = self.direction_at_jump_time as f64
                     * character.jump_distance
-                    * dt
-                    * speed_mod;
+                    * dt;
     
                 self.velocity_y += gravity * dt;
                 let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
@@ -207,7 +238,7 @@ impl MovementController {
                     self.walking_dir.y as f64
                 );
                 let normalized_movement = if position_move.magnitude() > 0f64 { position_move.normalize() } else {position_move};
-                *position += normalized_movement * character.speed * dt * speed_mod;
+                *position += normalized_movement * character.speed * dt;
             }
         } else {
             match &animator.current_animation.as_ref().unwrap().offsets {
@@ -231,15 +262,5 @@ impl MovementController {
         */  
     
     }
-
-
-    pub fn can_move(&self) -> bool {
-        !(self.is_attacking
-            || self.is_airborne
-            || self.knock_back_distance.abs() > 0.0
-            || self.state == PlayerState::Dead
-            || self.state == PlayerState::Dashing)
-    }
-
 
 }

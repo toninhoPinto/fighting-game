@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::{factories::{character_factory::CharacterAssets, enemy_factory::EnemyAssets}, game::Game}};
+use crate::{asset_management::asset_holders::EntityAssets, ecs_system::{enemy_manager::EnemyManager, enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::{factories::{character_factory::CharacterAssets}, game::Game}};
 use crate::{
     game_logic::characters::player::Player,
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
@@ -55,8 +55,8 @@ pub fn render(
     canvas: &mut WindowCanvas,
     stage: (&Texture, Rect),
     game: &mut Game,
-    p1_assets: &CharacterAssets,
-    enemy_assets: &HashMap<&str, EnemyAssets>,
+    p1_assets: &EntityAssets,
+    enemy_assets: &HashMap<&str, EntityAssets>,
     common_assets: &mut CommonAssets,
     hp_bars: &Bar,
     special_bars:  &SegmentedBar,
@@ -78,7 +78,7 @@ pub fn render(
 
     render_shadow(common_assets,
         canvas,
-        Point::new(game.player.position.x as i32 , game.player.ground_height as i32),  
+        Point::new(game.player.position.x as i32 , game.player.controller.ground_height as i32),  
         screen_res,
         &game.camera);
 
@@ -166,14 +166,14 @@ fn render_shadow(common_assets: &mut CommonAssets,
 
 fn render_player(
     player: &mut Player,
-    assets: &CharacterAssets,
+    assets: &EntityAssets,
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
     camera: &Camera,
     debug: bool,
 ) {
 
-    let is_flipped = player.facing_dir > 0;
+    let is_flipped = player.controller.facing_dir > 0;
     
     let sprite = player.character.sprite;
 
@@ -195,7 +195,7 @@ fn render_player(
 }
 
 fn render_enemies(enemies: &mut EnemyManager,   
-    enemy_assets: &HashMap<&str, EnemyAssets>,
+    enemy_assets: &HashMap<&str, EntityAssets>,
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
     camera: &Camera,

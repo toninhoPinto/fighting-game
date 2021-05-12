@@ -1,4 +1,5 @@
 pub mod asset_loader;
+pub mod asset_holders;
 pub mod common_assets;
 pub mod controls;
 pub mod sound;

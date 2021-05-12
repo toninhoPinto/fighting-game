@@ -16,10 +16,10 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::{asset_management::sound::audio_player, ecs_system::enemy_systems::{update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{Attack, player::{Player, PlayerState}}, factories::{character_factory::{CharacterAnimations, CharacterAssets, load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{input_cycle::AllInputManagement}}};
+use crate::{asset_management::sound::audio_player, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{Attack, player::{Player, PlayerState}}, factories::{character_factory::{CharacterAnimations, CharacterAssets, load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{input_cycle::AllInputManagement}}};
 use crate::{
     asset_management::common_assets::CommonAssets,
-    collision::collision_detector::{detect_hit, detect_push},
+    collision::collision_detector::detect_hit,
     engine_traits::scene::Scene,
     input::{self, controller_handler::Controller, translated_inputs::TranslatedInput},
     rendering::{self, camera::Camera},
@@ -87,66 +87,6 @@ impl Match {
             None,
         )
     }
-}
-
-
-fn hit_opponent(attack: &Attack, time: f64, general_assets: &CommonAssets, 
-    player_hitting: &mut Player, player_hit: &mut Player, player_hit_anims: &CharacterAnimations, player_assets: &CharacterAssets){
-    
-    audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-    player_hit.take_damage(attack.damage);
-    player_hit.state_update(&player_hit_anims, &player_assets.texture_data);
-    let dir_to_push = if player_hitting.is_airborne {
-        player_hitting.direction_at_jump_time
-    } else {
-        player_hitting.facing_dir
-    };
-    player_hit.knock_back(attack.push_back * dir_to_push.signum() as f64, time);
-}
-
-fn opponent_blocked(attack: &Attack, time: f64, general_assets: &CommonAssets, 
-    player_hitting: &mut Player, player_hit: &mut Player, _player_hit_assets: &CharacterAnimations){
-    
-    audio_player::play_sound(general_assets.sound_effects.get("block").unwrap());
-    let dir_to_push = if player_hitting.is_airborne {
-        player_hitting.direction_at_jump_time
-    } else {
-        player_hitting.facing_dir
-    };
-    player_hit.knock_back(attack.push_back * dir_to_push.signum() as f64, time);
-}
-
-fn hit_particles(point: Point2<f32>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
-    let texture_id = &general_assets.hit_effect_animations.get(hit_particle).unwrap().sprites[0].1;
-    let TextureQuery { width, height, .. } = general_assets
-                            .hit_effect_textures
-                            .get(texture_id)
-                            .unwrap()
-                            .query();
-
-    let texture_width = width * 2;
-    let texture_height = height * 2;
-    //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
-    //this will have issues with other vfx
-    game.spawn_vfx(
-        Rect::new(
-            point.x as i32,
-            point.y as i32 - texture_height as i32 / 2,
-            texture_width,
-            texture_height,
-        ),
-        false,
-        hit_particle.to_string(),
-        Some(Color::GREEN),
-    );
-}
-
-fn did_sucessfully_block(point: Point2<f32>, attack: &Attack, player_blocking: &Player) -> bool{
-    
-    let facing_correct_dir = (point.x > player_blocking.position.x as f32 && player_blocking.facing_dir > 0) || 
-    (point.x < player_blocking.position.x as f32 && !player_blocking.facing_dir > 0);
-
-    player_blocking.is_blocking && facing_correct_dir
 }
 
 impl Scene for Match {
@@ -285,7 +225,7 @@ impl Scene for Match {
 
                 game.current_frame += 1;
 
-                if game.player.state != PlayerState::Dead
+                if game.player.controller.state != PlayerState::Dead
                 {
                     if !self.p1_inputs.input_new_frame.is_empty() {
                         game.player.apply_input(&p1_anims, &p1_data, &mut self.p1_inputs);
@@ -327,76 +267,6 @@ impl Scene for Match {
                 
                 let start_p1_pos = game.player.position.clone();
 
-                /*
-                detect_push(
-                    &mut game.player,
-                    LEVEL_WIDTH,
-                    logic_timestep,
-                );
-                */
-
-                /*
-                if !game.player.has_hit {
-                    match detect_hit(&game.player.colliders, &game.player2.colliders) {
-                        Some((point, name)) => {
-                            game.player1.has_hit = true;
-                            let attack = p1_data
-                                .attacks
-                                .get(&name.replace("?", ""))
-                                .unwrap();
-                            if !did_sucessfully_block(point, attack, &game.player1){
-                                hit_opponent(
-                                    attack,
-                                    logic_timestep,
-                                    &general_assets, 
-                                    &mut game.player1, &mut game.player2, &p2_anims, &p2_assets);
-                                hit_particles(point, "special_hit", &general_assets, &mut game);
-                                hit_stop = 10;
-                            } else {
-                                opponent_blocked(
-                                    attack,
-                                    logic_timestep,
-                                    &general_assets, 
-                                    &mut game.player1, &mut game.player2, &p2_anims);
-                                hit_particles(point, "block", &general_assets, &mut game);
-                                hit_stop = 5;
-                            }
-                        }
-                        None => {}
-                    }
-                }
-
-                for i in 0..game.projectiles.len(){
-                    if game.projectiles[i].player_owner == 1 && game.projectiles[i].colliders.len() > 0 {
-                        match detect_hit(&game.projectiles[i].colliders, &game.player2.colliders) {
-                            Some((point, name)) => {
-                                let attack = &game.projectiles[i].attack;
-                                if !did_sucessfully_block(point, attack, &game.player2) {
-                                    hit_opponent(
-                                        attack,
-                                        logic_timestep,
-                                        &general_assets, 
-                                        &mut game.player1, &mut game.player2, &p2_anims, &p2_assets);
-                                    hit_particles(point, "special_hit", &general_assets, &mut game);
-                                    hit_stop = 10;
-                                } else {
-                                    opponent_blocked(
-                                        attack,
-                                        logic_timestep,
-                                        &general_assets, 
-                                        &mut game.player1, &mut game.player2, &p2_anims);
-                                    hit_particles(point, "block", &general_assets, &mut game);
-                                    hit_stop = 5;
-                                }
-                                (game.projectiles[i].on_hit)(point, &mut game.projectiles[i], &p1_anims);
-                                break;
-                            }
-                            None => {}
-                        }
-                    } 
-                }
-                */
-
                 //TODO probably doesnt need to run unless there is a collision
                 game.projectiles.retain(|p| p.is_alive);
                 
@@ -415,6 +285,12 @@ impl Scene for Match {
                     Game::update_player_colliders_position_only(&mut game.player, start_p1_pos);
                 }
 
+                get_enemy_colliders( &mut game, 
+                    &mut hit_stop, 
+                    logic_timestep, 
+                    &general_assets, 
+                    &p1_data, 
+                    &enemy_animations);
 
                 game.fx(&general_assets);
                 game.update_vfx(&general_assets);

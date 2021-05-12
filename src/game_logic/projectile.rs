@@ -1,7 +1,7 @@
 use parry2d::{math::{Point, Real}, na::Vector2};
 use sdl2::{rect::Rect, render::Texture};
 
-use crate::{engine_types::{animation::Animation, animator::Animator, collider::Collider}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets}, engine_types::{animation::Animation, animator::Animator, collider::Collider}, rendering::camera::Camera};
 
 use super::{characters::Attack, factories::character_factory::{CharacterAnimations, CharacterAssets}, inputs::input_cycle::AllInputManagement};
 
@@ -21,14 +21,14 @@ pub struct Projectile {
     pub kill_at_animation_end: bool,
     pub is_alive: bool,
     pub die_out_of_camera: bool,
-    pub on_hit: fn(Point<Real>, &mut Projectile, &CharacterAnimations) -> (),
-    pub on_update: Option<fn(&AllInputManagement, &CharacterAnimations, &mut Projectile) -> ()>,
+    pub on_hit: fn(Point<Real>, &mut Projectile, &EntityAnimations) -> (),
+    pub on_update: Option<fn(&AllInputManagement, &EntityAnimations, &mut Projectile) -> ()>,
     pub on_death: Option<fn(&mut Projectile) -> ()>,
 }
 
 impl Projectile {
     pub fn new(player_owner: i32, spawn_point: Vector2<f64>, attack: Attack) -> Self {
-        let on_hit_die = |hit_point: Point<Real>, projectile: &mut Projectile, animations: &CharacterAnimations| {
+        let on_hit_die = |hit_point: Point<Real>, projectile: &mut Projectile, animations: &EntityAnimations| {
             if let Some(hit_anim) = animations.projectile_animation.get("hit") {
                 projectile.animator.play_once(hit_anim.clone(), 1.0, false);
                 projectile.colliders.clear();
@@ -116,7 +116,7 @@ impl Projectile {
         self.animator.update();
     }
 
-    pub fn render<'a>(&'a self, assets: &'a CharacterAssets<'a>) -> &'a Texture {
+    pub fn render<'a>(&'a self, assets: &'a EntityAssets<'a>) -> &'a Texture {
         assets.textures.get(&self.animator.render()).unwrap()
     }
 }

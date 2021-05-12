@@ -1,7 +1,7 @@
-use parry2d::na::Vector2;
+use parry2d::{bounding_volume::AABB, na::Vector2, partitioning::SimdQuadTree};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, rendering::camera::Camera};
 
 use super::{characters::player::Player, factories::character_factory::CharacterAnimations, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
@@ -123,7 +123,7 @@ impl Game {
         }
     }
 
-    pub fn update_projectiles(&mut self, inputs: &AllInputManagement, p1_anims: &CharacterAnimations) {
+    pub fn update_projectiles(&mut self, inputs: &AllInputManagement, p1_anims: &EntityAnimations) {
         for i in 0..self.projectiles.len() {
             let prev_pos =  self.projectiles[i].position;
             self.projectiles[i].update(&self.camera);
@@ -167,7 +167,7 @@ impl Game {
 
         let process_point_offset = |player: &Player, point: &CastPoint| -> Vector2<f64> {
             let mut final_pos = player.position;
-            if player.facing_dir > 0 {
+            if player.controller.facing_dir > 0 {
                 final_pos.x -= player.character.sprite.width() as f64 / 2.0;
                 final_pos.x -= point.point.x * 2.0;
                 final_pos.y += point.point.y * 2.0;
@@ -186,7 +186,7 @@ impl Game {
                 Some(point) => {
                     let mut point_position_fixed = point.clone();
                     point_position_fixed.point = process_point_offset(&self.player, &point_position_fixed);
-                    points.push((point_position_fixed, self.player.facing_dir));
+                    points.push((point_position_fixed, self.player.controller.facing_dir));
                 }
                 None => {}
             }

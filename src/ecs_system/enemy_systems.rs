@@ -2,12 +2,90 @@ use std::collections::HashMap;
 
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::{collision::collider_manager::ColliderManager, engine_types::animator::Animator, game_logic::{characters::{Character, player::Player}, factories::enemy_factory::{EnemyAnimations, EnemyAssets}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, PlayerState}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
 
-pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Player, enemy_animations: &HashMap<&str, EnemyAnimations>) {
+pub fn get_enemy_colliders(game: &mut Game, 
+    hit_stop: &mut i32, 
+    logic_timestep: f64, 
+    general_assets: &CommonAssets, 
+    player_data: &EntityData, 
+    enemies_animations: &HashMap<&str, EntityAnimations>) {
+    
+    let player_colliders = game.player.colliders.clone();
+    let mut player_controller = game.player.controller.clone();
+    let player_pos = game.player.position;
+    let enemies_names = game.enemies.character_components.iter()
+        .map(|char| {if let Some(char) = char { Some(char.name.clone()) } else {None}  })
+        .collect::<Vec<Option<String>>>();
+    
+    let enemy_manager = &mut game.enemies;
+    let zip = enemy_manager.
+        collider_components.iter().enumerate()
+        .zip(enemy_manager.health_components.iter_mut())
+        .zip(enemy_manager.positions_components.iter_mut())
+        .zip(enemy_manager.movement_controller_components.iter_mut())
+        .zip(enemy_manager.animator_components.iter_mut());
+    
+    zip.
+    filter_map(| (((((i, collider), hp), pos), mov), anim) : 
+        (((((usize, &Option<ColliderManager>), &mut Option<Health>), &mut Option<Position>), &mut Option<MovementController>), &mut Option<Animator>)| {
+        
+            if let Some(hp) = hp {
+            if hp.0 > 0 {
+                return Some((i, collider.as_ref()?, hp, pos.as_mut()?, mov.as_mut()?, anim.as_mut()?))
+            }
+        }
+        None
+    })
+    .filter_map(|(i, colliders, hp, pos, mov, animator)| {
+        match detect_hit(&player_colliders, &colliders.colliders) {
+            Some((point, name)) => {
+                return Some((i, point, name, hp, pos, mov, animator))
+            }
+            None => {None}
+        }
+    })
+    .for_each(|(i, point, collider_name, hp, pos, mov, animator)| {
+        let attack = player_data
+                    .attacks
+                    .get(&collider_name.replace("?", ""))
+                    .unwrap();
+        if !did_sucessfully_block(point, player_pos, &player_controller){
+            let enemy_name = &enemies_names[i].as_ref().unwrap();
+            hit_opponent(
+                attack,
+                logic_timestep,
+                &general_assets, 
+                &mut player_controller, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
+            //hit_particles(point, "special_hit", &general_assets, game);
+            *hit_stop = 10;
+        } else {
+            opponent_blocked(
+                attack,
+                logic_timestep,
+                &general_assets, 
+                &mut player_controller, (pos, mov));
+            //hit_particles(point, "block", &general_assets, game);
+            *hit_stop = 5;
+        }
+    })
+}
+
+pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController) {
+    if hp.0 > 0 {
+        hp.0 -= damage;
+        mov.state = PlayerState::Hurt;
+    }
+
+    if hp.0 <= 0 {
+        mov.state = PlayerState::Dead;
+    }
+}
+
+pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Player, enemy_animations: &HashMap<&str, EntityAnimations>) {
     let zip = enemy_manager.
     behaviour_components.iter()
     .zip(enemy_manager.health_components.iter())
@@ -38,7 +116,7 @@ pub fn update_animations_enemies(enemy_manager: &mut EnemyManager) {
     });
 }
 
-pub fn update_colliders_enemies(enemy_manager: &mut EnemyManager, enemy_assets: &HashMap<&str, EnemyAssets>) {
+pub fn update_colliders_enemies(enemy_manager: &mut EnemyManager, enemy_assets: &HashMap<&str, EntityAssets>) {
     let zip = enemy_manager.
         collider_components.iter_mut()
         .zip(enemy_manager.positions_components.iter())
@@ -56,7 +134,7 @@ pub fn update_colliders_enemies(enemy_manager: &mut EnemyManager, enemy_assets: 
         });
 }
 
-pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animations: &HashMap<&str, EnemyAnimations>, camera: &Camera, dt: f64) {
+pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animations: &HashMap<&str, EntityAnimations>, camera: &Camera, dt: f64) {
     let zip = enemy_manager
     .positions_components.iter_mut()
     .zip(enemy_manager.animator_components.iter_mut())
@@ -76,7 +154,7 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
         None
     })
     .for_each(|(pos, mov, animator, character, renderable): (&mut Position, &mut MovementController, &mut Animator, &Character, &mut Renderable)| {
-        mov.state_update(animator, pos, enemy_animations.get(&character.name as &str).unwrap());
+        mov.state_update(animator, &mut pos.0, enemy_animations.get(&character.name as &str).unwrap());
         mov.update(
             &mut pos.0,
             character,
@@ -108,7 +186,7 @@ pub fn get_ground_pos_enemies(enemy_manager: &EnemyManager) -> Vec<Point> {
         ground_pos.collect::<Vec<Point>>()
 }
 
-pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str, EnemyAssets>) -> Vec<(&'a Texture<'a>, Rect, Point, bool)> {
+pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str, EntityAssets>) -> Vec<(&'a Texture<'a>, Rect, Point, bool)> {
     let zip = enemy_manager
         .animator_components
         .iter()
@@ -133,7 +211,7 @@ pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str
 }
 
 
-fn render_enemy<'a>(texture_handle: String, animator: &Animator, renderable: &Renderable, assets: &'a EnemyAssets<'a>) -> (&'a Texture<'a>, Rect, (f64, f64))  {
+fn render_enemy<'a>(texture_handle: String, animator: &Animator, renderable: &Renderable, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, (f64, f64))  {
     let sprite_data = assets.texture_data.get(&texture_handle);
     
     let mut rect = renderable.rect.clone();
