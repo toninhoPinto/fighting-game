@@ -1,11 +1,13 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use parry2d::na::Vector2;
 
 use crate::engine_types::{animation::ColliderAnimation, animator::Animator, collider::Collider, sprite_data::SpriteData};
 
+#[derive(Clone)]
 pub struct ColliderManager {
-    pub colliders: Vec<Collider>
+    pub colliders: Vec<Collider>,
+    pub collisions_detected: HashSet<i32>
 }
 
 impl ColliderManager {
@@ -13,6 +15,7 @@ impl ColliderManager {
     pub fn new() -> Self {
         Self {
             colliders: Vec::new(),
+            collisions_detected: HashSet::new(),
         }
     }
     

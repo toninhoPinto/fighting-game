@@ -4,7 +4,7 @@ use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, ecs_system::enemy_components::Health, engine_types::{animation::{AnimationState, ColliderAnimation}, animator::Animator, collider::Collider, sprite_data::SpriteData}, game_logic::{characters::AttackType, factories::character_factory::{CharacterAnimations, CharacterAssets, CharacterData}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animation::{AnimationState, ColliderAnimation}, animator::Animator, collider::Collider, sprite_data::SpriteData}, game_logic::{characters::AttackType, factories::character_factory::{CharacterAnimations, CharacterAssets, CharacterData}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{Ability, Character};
 
@@ -38,7 +38,7 @@ pub struct Player {
 
     pub curr_special_effect: Option<(i32, Ability)>,
 
-    pub colliders: Vec<Collider>,
+    pub collision_Manager: ColliderManager,
 }
 
 impl Player {
@@ -59,7 +59,7 @@ impl Player {
 
             curr_special_effect: None,
 
-            colliders: Vec::new(),
+            collision_Manager: ColliderManager::new(),
         }
     }
 
@@ -333,6 +333,10 @@ impl Player {
         self.controller.state_update(&mut self.animator, &mut self.position, &assets);
         self.animator.update();
 
+        if self.animator.is_finished {
+            self.collision_Manager.collisions_detected.clear();
+        }
+
         if let Some(animation) = self.animator.current_animation.as_ref() {
             if let Some(_) = animation.collider_animation {
                 let animation_id = self.animator.sprite_shown as usize;
@@ -349,85 +353,15 @@ impl Player {
 
 
     pub fn init_colliders(&mut self) {
-        let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap();
-        for i in 0..collider_animation.colliders.len() {
-            if i < self.colliders.len() {
-                //modify current
-                self.colliders[i].collider_type = collider_animation.colliders[i].collider_type;
-                self.colliders[i].name = collider_animation.colliders[i].name.clone();
-                self.colliders[i].aabb = collider_animation.colliders[i].aabb;
-                self.colliders[i].enabled = collider_animation.colliders[i].enabled;
-            } else {
-                //push
-                self.colliders.push(Collider {
-                    collider_type: collider_animation.colliders[i].collider_type,
-                    name: collider_animation.colliders[i].name.clone(),
-                    aabb: collider_animation.colliders[i].aabb,
-                    enabled: collider_animation.colliders[i].enabled,
-                });
-            }
-        }
-        self.colliders.truncate(collider_animation.colliders.len());
+        self.collision_Manager.init_colliders(&self.animator);
     }
     
     // update offsets by player position
     pub fn update_colliders(&mut self, sprite_data: &SpriteData) {
-        let collider_animation = self.animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
-
-        for i in 0..self.colliders.len() {
-            let aabb = &mut self.colliders[i].aabb;
-    
-            aabb.mins.coords[0] = self.position.x as f32;
-            aabb.maxs.coords[0] = self.position.x as f32;
-
-            aabb.mins.coords[1] = self.position.y as f32;
-            aabb.maxs.coords[1] = self.position.y as f32;
-
-            self.sync_with_character_animation(&collider_animation, i);
-        }
+        self.collision_Manager.update_colliders_pos(self.controller.facing_dir > 0, self.position, &self.animator, sprite_data);
     }
     
-    //render offsets by frame index
-    fn sync_with_character_animation(
-        &mut self,
-        collider_animation: &ColliderAnimation,
-        collider_index: usize,
-    ) {
-        let current_collider = &mut self.colliders[collider_index];
-        let aabb = &mut current_collider.aabb;
-        let original_collider = &collider_animation.colliders[collider_index];
-        let original_aabb = original_collider.aabb;
-    
-        let positions_at_frame = collider_animation.pos_animations.get(&original_collider.name).unwrap();
-
-        match positions_at_frame.get(&(self.animator.sprite_shown)) {
-            Some(transformation) => {
-                current_collider.enabled = true;
-                let offset_x = transformation.pos.x as f32 * 2.0;
-                let offset_y = transformation.pos.y as f32 * 2.0;
-
-                if self.controller.facing_dir > 0 {
-                    aabb.mins.coords[0] = self.position.x as f32 - (offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0);
-                    aabb.maxs.coords[0] = self.position.x as f32 - offset_x;
-                } else {
-                    aabb.mins.coords[0] = self.position.x as f32 + offset_x;
-                    aabb.maxs.coords[0] = self.position.x as f32 + offset_x + original_aabb.maxs.x * 2.0 * transformation.scale.0;
-                }
-
-                aabb.mins.coords[1] += offset_y;
-                aabb.maxs.coords[1] +=
-                    offset_y + original_aabb.maxs.y * 2.0 * transformation.scale.1;
-            }
-            //collider doesnt exist at this frame
-            None => {
-                current_collider.enabled = false;
-            }
-        }
-    }
-
-
-
-    pub fn render<'a>(&'a mut self, assets: &'a EntityAssets<'a>) -> (&'a Texture, (Rect, (f64, f64))) {
+    pub fn render<'a>(&'a mut self, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, Point, bool) {
         let key = &self.animator.render();
 
         let sprite_data = assets.texture_data.get(key);
@@ -448,6 +382,8 @@ impl Player {
             };
 
         }
-        (assets.textures.get(key).unwrap(), (rect.clone(), offset))
+        
+        let pos_to_render = Point::new((self.position.x - offset.0) as i32, (self.position.y - offset.1 )as i32 );
+        (assets.textures.get(key).unwrap(), rect.clone(), pos_to_render, self.controller.facing_dir > 0 )
     }
 }

@@ -237,7 +237,7 @@ impl Scene for Match {
                 self.p1_inputs.update_inputs_reset_timer();
 
                 game.player.character_width = match game
-                    .player.colliders
+                    .player.collision_Manager.colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     .last()
@@ -272,7 +272,7 @@ impl Scene for Match {
                 
                 for i in 0..game.projectiles.len(){
                     if game.projectiles[i].player_owner == 2 {
-                        match detect_hit(&game.projectiles[i].colliders, &game.player.colliders) {
+                        match detect_hit(&game.projectiles[i].colliders, &game.player.collision_Manager.colliders) {
                             Some((point, name)) => {
                                 break;
                             }

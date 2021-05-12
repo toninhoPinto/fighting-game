@@ -3,7 +3,7 @@ use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
 use crate::{asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, rendering::camera::Camera};
 
-use super::{characters::player::Player, factories::character_factory::CharacterAnimations, inputs::input_cycle::AllInputManagement, projectile::Projectile};
+use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 5;
 pub struct Game {
@@ -101,8 +101,8 @@ impl Game {
     //TODO change player and projectile to &Vec<Collider> and fuse both functions
     pub fn update_player_colliders_position_only(player: &mut Player, prev_pos: Vector2<f64>) {
         let offset = player.position - prev_pos;
-        for i in 0..player.colliders.len() {
-            let aabb = &mut player.colliders[i].aabb;
+        for i in 0..player.collision_Manager.colliders.len() {
+            let aabb = &mut player.collision_Manager.colliders[i].aabb;
 
             aabb.mins.coords[0] += offset.x as f32;
             aabb.mins.coords[1] += offset.y as f32;

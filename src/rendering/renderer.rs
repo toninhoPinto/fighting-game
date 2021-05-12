@@ -92,8 +92,12 @@ pub fn render(
             &game.camera);
     }
 
-    render_player(&mut game.player, p1_assets, canvas, screen_res, &game.camera, debug);
-    render_enemies(&mut game.enemies, enemy_assets, canvas, screen_res, &game.camera, debug);
+    let mut entities_to_render = crate::ecs_system::enemy_systems::render_enemies(&mut game.enemies, enemy_assets);
+    let data_to_render = game.player.render(p1_assets);
+    entities_to_render.push(data_to_render);
+    entities_to_render.sort_by(|a, b| b.2.y.cmp(&a.2.y));
+
+    render_enemies(&entities_to_render, canvas, screen_res, &game.camera, debug);
 
     for projectile in game.projectiles.iter() {
         let screen_rect =
@@ -122,7 +126,7 @@ pub fn render(
         for i in 0..game.projectiles.len() {
             render_colliders(canvas, screen_res, &game.camera, &mut game.projectiles[i].colliders);
         }
-        render_colliders(canvas, screen_res, &game.camera, &mut game.player.colliders);
+        render_colliders(canvas, screen_res, &game.camera, &mut game.player.collision_Manager.colliders);
     }
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
@@ -164,46 +168,13 @@ fn render_shadow(common_assets: &mut CommonAssets,
         .unwrap();
 }
 
-fn render_player(
-    player: &mut Player,
-    assets: &EntityAssets,
-    canvas: &mut WindowCanvas,
-    screen_res: (u32, u32),
-    camera: &Camera,
-    debug: bool,
-) {
-
-    let is_flipped = player.controller.facing_dir > 0;
-    
-    let sprite = player.character.sprite;
-
-    let player_pos = player.position;
-    let (texture, data) = player.render(assets);
-    let pos = Point::new((player_pos.x - data.1.0) as i32, (player_pos.y - data.1.1 )as i32 );
-
-    let screen_rect = world_to_screen(data.0,pos , screen_res, camera);
-
-    canvas
-        .copy_ex(texture, sprite, screen_rect, 0.0, None, is_flipped, false)
-        .unwrap();
-    if debug {
-        let point = Point::new(player.position.x as i32, player.position.y as i32);
-        debug_point(canvas, pos_world_to_screen(point,screen_res, camera), Color::RGB(50, 250, 255));
-        debug_point(canvas, pos_world_to_screen(Point::new(player_pos.x as i32, player_pos.y as i32),screen_res, camera), Color::RGB(150, 255, 100));
-        debug_rect(canvas, screen_rect.center(), screen_rect);
-    }
-}
-
-fn render_enemies(enemies: &mut EnemyManager,   
-    enemy_assets: &HashMap<&str, EntityAssets>,
+fn render_enemies<'a>(entities: &Vec<(&'a Texture<'a>, Rect, Point, bool)>,  
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
     camera: &Camera,
     debug: bool,) {
     
-    let render_data = crate::ecs_system::enemy_systems::render_enemies(enemies, enemy_assets);
-
-    for enemy in render_data {
+    for enemy in entities {
         let screen_rect = world_to_screen(enemy.1,enemy.2 , screen_res, camera);
 
         canvas
@@ -215,14 +186,16 @@ fn render_enemies(enemies: &mut EnemyManager,
         }
     }
     
+    /*
     if debug {
-        for collider_of_enemy in enemies.collider_components.iter_mut() {
+        for collider_of_enemy in entities.collider_components.iter_mut() {
             if let Some(collider_of_enemy) = collider_of_enemy {
                 
                 render_colliders(canvas, screen_res, camera, &mut collider_of_enemy.colliders);
             }
         }
     }
+    */
 
 }
 

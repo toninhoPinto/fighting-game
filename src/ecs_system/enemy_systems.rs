@@ -14,7 +14,7 @@ pub fn get_enemy_colliders(game: &mut Game,
     player_data: &EntityData, 
     enemies_animations: &HashMap<&str, EntityAnimations>) {
     
-    let player_colliders = game.player.colliders.clone();
+    let player_colliders = &mut game.player.collision_Manager;
     let mut player_controller = game.player.controller.clone();
     let player_pos = game.player.position;
     let enemies_names = game.enemies.character_components.iter()
@@ -23,7 +23,7 @@ pub fn get_enemy_colliders(game: &mut Game,
     
     let enemy_manager = &mut game.enemies;
     let zip = enemy_manager.
-        collider_components.iter().enumerate()
+        collider_components.iter_mut().enumerate()
         .zip(enemy_manager.health_components.iter_mut())
         .zip(enemy_manager.positions_components.iter_mut())
         .zip(enemy_manager.movement_controller_components.iter_mut())
@@ -31,19 +31,25 @@ pub fn get_enemy_colliders(game: &mut Game,
     
     zip.
     filter_map(| (((((i, collider), hp), pos), mov), anim) : 
-        (((((usize, &Option<ColliderManager>), &mut Option<Health>), &mut Option<Position>), &mut Option<MovementController>), &mut Option<Animator>)| {
+        (((((usize, &mut Option<ColliderManager>), &mut Option<Health>), &mut Option<Position>), &mut Option<MovementController>), &mut Option<Animator>)| {
         
             if let Some(hp) = hp {
             if hp.0 > 0 {
-                return Some((i, collider.as_ref()?, hp, pos.as_mut()?, mov.as_mut()?, anim.as_mut()?))
+                return Some((i, collider.as_mut()?, hp, pos.as_mut()?, mov.as_mut()?, anim.as_mut()?))
             }
         }
         None
     })
     .filter_map(|(i, colliders, hp, pos, mov, animator)| {
-        match detect_hit(&player_colliders, &colliders.colliders) {
+        match detect_hit(&player_colliders.colliders, &colliders.colliders) {
             Some((point, name)) => {
-                return Some((i, point, name, hp, pos, mov, animator))
+                if !player_colliders.collisions_detected.contains(&(i as i32)) { 
+                    player_colliders.collisions_detected.insert(i as i32);
+                    return Some((i, point, name, hp, pos, mov, animator)) 
+                } else {
+                    return None
+                } 
+
             }
             None => {None}
         }
@@ -200,18 +206,16 @@ pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str
             Some((animator.as_ref()?, renderable.as_ref()?, pos.as_ref()?, character.as_ref()?))
         })
         .map(|(animator, renderable, pos, character): (&Animator, &Renderable, &Position, &Character)| {
-            let (tex, rect, offsets) = render_enemy(animator.render(), animator, renderable, assets.get(&character.name as &str).unwrap());
+            let (tex, rect, offsets) = render_entity(animator.render(), animator, renderable, assets.get(&character.name as &str).unwrap());
             let pos = Point::new((pos.0.x - offsets.0) as i32, (pos.0.y - offsets.1 )as i32);
             (tex, rect, pos, renderable.flipped)
         });
 
-    let mut enemies_y_sorted = living.collect::<Vec<(&'a Texture<'a>, Rect, Point, bool)>>();
-    enemies_y_sorted.sort_by(|a, b| b.2.y.cmp(&a.2.y));
-    enemies_y_sorted
+    living.collect::<Vec<(&'a Texture<'a>, Rect, Point, bool)>>()
 }
 
 
-fn render_enemy<'a>(texture_handle: String, animator: &Animator, renderable: &Renderable, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, (f64, f64))  {
+fn render_entity<'a>(texture_handle: String, animator: &Animator, renderable: &Renderable, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, (f64, f64))  {
     let sprite_data = assets.texture_data.get(&texture_handle);
     
     let mut rect = renderable.rect.clone();
