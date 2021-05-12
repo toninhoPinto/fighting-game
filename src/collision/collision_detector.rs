@@ -1,7 +1,7 @@
 use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Point2, Vector2}, query::{self, Contact}, shape::Cuboid};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{asset_holders::{EntityAnimations}, common_assets::CommonAssets, sound::audio_player}, ecs_system::enemy_components::{Health, Position}, engine_types::{animator::Animator, collider::{Collider, ColliderType}}, game_logic::{characters::{Attack, player::Player}, factories::character_factory::{CharacterAnimations, CharacterAssets}, game::Game, movement_controller::MovementController}};
+use crate::{asset_management::{asset_holders::{EntityAnimations}, common_assets::CommonAssets, sound::audio_player, vfx::particle::Particle}, ecs_system::enemy_components::{Health, Position}, engine_types::{animator::Animator, collider::{Collider, ColliderType}}, game_logic::{characters::{Attack, player::Player}, factories::character_factory::{CharacterAnimations, CharacterAssets}, game::Game, movement_controller::MovementController}};
 
 use crate::ecs_system::enemy_systems::take_damage;
 
@@ -84,7 +84,7 @@ pub fn opponent_blocked(attack: &Attack,
     receiver.1.knock_back(receiver.0, attack.push_back * dir_to_push.signum() as f64, time); 
 }
 
-pub fn hit_particles(point: Point2<f32>, hit_particle: &str, general_assets: &CommonAssets, game: &mut Game) {
+pub fn hit_particles(particles: &mut Vec<Particle>, point: Point2<f32>, hit_particle: &str, general_assets: &CommonAssets) {
     let texture_id = &general_assets.hit_effect_animations.get(hit_particle).unwrap().sprites[0].1;
     let TextureQuery { width, height, .. } = general_assets
                             .hit_effect_textures
@@ -96,7 +96,8 @@ pub fn hit_particles(point: Point2<f32>, hit_particle: &str, general_assets: &Co
     let texture_height = height * 2;
     //^ * 2 above is to make the sprite bigger, and the hardcoded - 80 and -100 is because the sprite is not centered
     //this will have issues with other vfx
-    game.spawn_vfx(
+    Game::spawn_vfx(
+        particles,
         Rect::new(
             point.x as i32,
             point.y as i32 - texture_height as i32 / 2,

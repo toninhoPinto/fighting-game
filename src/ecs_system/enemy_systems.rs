@@ -2,26 +2,27 @@ use std::collections::HashMap;
 
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, PlayerState}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, PlayerState}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
 
-pub fn get_enemy_colliders(game: &mut Game, 
+pub fn get_enemy_colliders(player: &mut Player,
+    enemy_manager: &mut EnemyManager,
+    particles: &mut Vec<Particle>,
     hit_stop: &mut i32, 
     logic_timestep: f64, 
     general_assets: &CommonAssets, 
     player_data: &EntityData, 
     enemies_animations: &HashMap<&str, EntityAnimations>) {
     
-    let player_colliders = &mut game.player.collision_Manager;
-    let mut player_controller = game.player.controller.clone();
-    let player_pos = game.player.position;
-    let enemies_names = game.enemies.character_components.iter()
+    let player_colliders = &mut player.collision_Manager;
+    let mut player_controller = player.controller.clone();
+    let player_pos = player.position;
+    let enemies_names = enemy_manager.character_components.iter()
         .map(|char| {if let Some(char) = char { Some(char.name.clone()) } else {None}  })
         .collect::<Vec<Option<String>>>();
     
-    let enemy_manager = &mut game.enemies;
     let zip = enemy_manager.
         collider_components.iter_mut().enumerate()
         .zip(enemy_manager.health_components.iter_mut())
@@ -66,7 +67,7 @@ pub fn get_enemy_colliders(game: &mut Game,
                 logic_timestep,
                 &general_assets, 
                 &mut player_controller, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
-            //hit_particles(point, "special_hit", &general_assets, game);
+            hit_particles(particles, point, "special_hit", &general_assets);
             *hit_stop = 10;
         } else {
             opponent_blocked(
@@ -74,7 +75,7 @@ pub fn get_enemy_colliders(game: &mut Game,
                 logic_timestep,
                 &general_assets, 
                 &mut player_controller, (pos, mov));
-            //hit_particles(point, "block", &general_assets, game);
+            hit_particles(particles, point, "block", &general_assets);
             *hit_stop = 5;
         }
     })

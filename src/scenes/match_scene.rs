@@ -285,7 +285,9 @@ impl Scene for Match {
                     Game::update_player_colliders_position_only(&mut game.player, start_p1_pos);
                 }
 
-                get_enemy_colliders( &mut game, 
+                get_enemy_colliders( &mut game.player, 
+                    &mut game.enemies, 
+                    &mut game.hit_vfx, 
                     &mut hit_stop, 
                     logic_timestep, 
                     &general_assets, 
