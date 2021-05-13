@@ -5,13 +5,6 @@ use crate::{asset_management::cast_point::CastPoint, engine_types::transform::Tr
 use super::{collider::Collider};
 
 #[derive(Clone)]
-pub enum AnimationState {
-    Startup,
-    Active,
-    Recovery,
-}
-
-#[derive(Clone)]
 pub struct Animation {
     pub name: String,
     pub length: i64,

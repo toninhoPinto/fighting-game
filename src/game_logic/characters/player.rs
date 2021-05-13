@@ -4,7 +4,7 @@ use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animation::AnimationState, animator::Animator, sprite_data::SpriteData}, game_logic::{characters::AttackType, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{characters::AttackType, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{Ability, Character};
 
@@ -35,7 +35,6 @@ pub struct Player {
     pub controller: MovementController,
 
     pub animator: Animator,
-    pub animation_state: Option<AnimationState>,
     pub character_width: f64,
     pub character: Character,
 
@@ -55,7 +54,6 @@ impl Player {
             controller: MovementController::new(&character, pos_as_vec, pos_as_vec),
 
             animator: Animator::new(),
-            animation_state: None,
 
             character_width: 0.0,
             character,
@@ -66,7 +64,6 @@ impl Player {
         }
     }
 
-
     pub fn change_special_meter(&mut self, special: f32) {
         self.character.special_curr = ((self.character.special_curr + special)
             .clamp(0.0, self.character.special_max as f32)
@@ -75,19 +72,7 @@ impl Player {
             / 10.0;
     }
 
-    pub fn push(&self, level_width: i32, push_vec: Vector2<f64>) -> Vector2<f64>{
-        if (self.position.x + push_vec.x - self.character_width) < 0.0 {
-            Vector2::new( - (self.position.x - self.character_width), 0.0)
-        } else if (self.position.x + push_vec.x + self.character_width) > level_width as f64 {
-            Vector2::new(level_width  as f64 - (self.position.x + self.character_width), 0.0)
-        } else {
-            push_vec * 0.5
-        }
-        
-    }
-
     pub fn attack(&mut self, character_assets: &EntityAnimations, character_data: &EntityData, attack_animation: String) {
-        println!("ATTACK {}", attack_animation);
         if self.controller.player_can_attack() {
             self.controller.is_attacking = true;
             let special_effect = character_data.attack_effects.get(&attack_animation);
@@ -109,10 +94,6 @@ impl Player {
                 self.init_colliders();
             }
         }
-    }
-
-    pub fn player_state_cancel(&mut self, _new_state: EntityState) {
-        self.controller.state = EntityState::Standing;
     }
 
     pub fn apply_input_state(&mut self, action_history: &VecDeque<i32>) {
@@ -333,11 +314,13 @@ impl Player {
     pub fn state_update(&mut self, assets: &EntityAnimations, sprite_data: &HashMap<String, SpriteData>) {
         let prev_animation = self.animator.current_animation.as_ref().unwrap().name.clone();
 
-        self.controller.state_update(&mut self.animator, &mut self.position, &assets);
+        self.controller.state_update(&mut self.animator, &mut self.position, &assets, true);
         self.animator.update();
 
         if self.animator.is_finished {
             self.collision_manager.collisions_detected.clear();
+            self.controller.has_hit = false;
+            println!("reset");
         }
 
         if let Some(animation) = self.animator.current_animation.as_ref() {

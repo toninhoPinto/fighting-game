@@ -19,6 +19,7 @@ pub struct MovementController {
     pub is_attacking: bool,
     pub is_blocking: bool,
     pub is_airborne: bool,
+    pub has_hit: bool,
     pub knock_back_distance: f64,
 
     pub mid_jump_pos: f64,
@@ -41,6 +42,7 @@ impl MovementController {
             is_attacking: false,
             is_blocking: false,
             is_airborne: false,
+            has_hit: false,
             knock_back_distance: 0f64,
         
             mid_jump_pos: 0f64,
@@ -96,7 +98,8 @@ impl MovementController {
         self.knock_back_distance = amount - (amount * 10.0 * dt);
     }
 
-    pub fn state_update(&mut self, animator: &mut Animator, position: &mut Vector2<f64>, assets: &EntityAnimations) {
+    pub fn state_update(&mut self, animator: &mut Animator, position: &mut Vector2<f64>, assets: &EntityAnimations, debug: bool) {
+
         let character_animation = &assets.animations;
 
         if animator.is_finished && self.state != EntityState::Dead {
@@ -129,7 +132,7 @@ impl MovementController {
             self.is_attacking = false;
         }
 
-        if !self.is_attacking {
+        if !self.is_attacking  {
             match self.state {
                 EntityState::Standing => {
                     if self.walking_dir.x != 0 || self.walking_dir.y != 0 {

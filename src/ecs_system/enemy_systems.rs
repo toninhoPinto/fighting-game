@@ -16,8 +16,7 @@ pub fn get_enemy_colliders(player: &mut Player,
     player_data: &EntityData, 
     enemies_animations: &HashMap<&str, EntityAnimations>) {
     
-    let player_colliders = &mut player.collision_manager;
-    let mut player_controller = player.controller.clone();
+    let player_controller = player.controller.clone();
     let player_pos = player.position;
     let enemies_names = enemy_manager.character_components.iter()
         .map(|char| {if let Some(char) = char { Some(char.name.clone()) } else {None}  })
@@ -42,10 +41,11 @@ pub fn get_enemy_colliders(player: &mut Player,
         None
     })
     .filter_map(|(i, colliders, hp, pos, mov, animator)| {
-        match detect_hit(&player_colliders.colliders, &colliders.colliders) {
+        match detect_hit(&player.collision_manager.colliders, &colliders.colliders) {
             Some((point, name)) => {
-                if !player_colliders.collisions_detected.contains(&(i as i32)) { 
-                    player_colliders.collisions_detected.insert(i as i32);
+                if !player.collision_manager.collisions_detected.contains(&(i as i32)) { 
+                    player.collision_manager.collisions_detected.insert(i as i32);
+                    player.controller.has_hit = true;
                     return Some((i, point, name, hp, pos, mov, animator)) 
                 } else {
                     return None
@@ -60,13 +60,13 @@ pub fn get_enemy_colliders(player: &mut Player,
                     .attacks
                     .get(&collider_name.replace("?", ""))
                     .unwrap();
-        if !did_sucessfully_block(point, player_pos, &player_controller){
+        if !did_sucessfully_block(point, player_pos, &mov){
             let enemy_name = &enemies_names[i].as_ref().unwrap();
             hit_opponent(
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &mut player_controller, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
+                &player_controller, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
 
             if let Some(on_hit) = attack.on_hit {
                 on_hit(attack, mov);
@@ -79,7 +79,7 @@ pub fn get_enemy_colliders(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &mut player_controller, (pos, mov));
+                &player_controller, (pos, mov));
             hit_particles(particles, point, "block", &general_assets);
             *hit_stop = 5;
         }
@@ -166,7 +166,7 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
         None
     })
     .for_each(|(pos, mov, animator, character, renderable): (&mut Position, &mut MovementController, &mut Animator, &Character, &mut Renderable)| {
-        mov.state_update(animator, &mut pos.0, enemy_animations.get(&character.name as &str).unwrap());
+        mov.state_update(animator, &mut pos.0, enemy_animations.get(&character.name as &str).unwrap(), false);
         mov.update(
             &mut pos.0,
             character,
