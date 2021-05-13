@@ -4,25 +4,28 @@ use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animation::{AnimationState, ColliderAnimation}, animator::Animator, collider::Collider, sprite_data::SpriteData}, game_logic::{characters::AttackType, factories::character_factory::{CharacterAnimations, CharacterAssets, CharacterData}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animation::AnimationState, animator::Animator, sprite_data::SpriteData}, game_logic::{characters::AttackType, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{Ability, Character};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum PlayerState {
+pub enum EntityState {
     Standing,
     Jump,
     Jumping,
     Landing,
     Dashing,
     Hurt,
+    Knocked,
+    KnockedLanding,
     Dead,
 }
-impl fmt::Display for PlayerState {
+impl fmt::Display for EntityState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
+
 #[derive(Clone)]
 pub struct Player {
     pub id: i32,
@@ -38,7 +41,7 @@ pub struct Player {
 
     pub curr_special_effect: Option<(i32, Ability)>,
 
-    pub collision_Manager: ColliderManager,
+    pub collision_manager: ColliderManager,
 }
 
 impl Player {
@@ -59,7 +62,7 @@ impl Player {
 
             curr_special_effect: None,
 
-            collision_Manager: ColliderManager::new(),
+            collision_manager: ColliderManager::new(),
         }
     }
 
@@ -108,8 +111,8 @@ impl Player {
         }
     }
 
-    pub fn player_state_cancel(&mut self, _new_state: PlayerState) {
-        self.controller.state = PlayerState::Standing;
+    pub fn player_state_cancel(&mut self, _new_state: EntityState) {
+        self.controller.state = EntityState::Standing;
     }
 
     pub fn apply_input_state(&mut self, action_history: &VecDeque<i32>) {
@@ -199,7 +202,7 @@ impl Player {
             }
         if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true }
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
-            self.controller.player_state_change(PlayerState::Dashing);
+            self.controller.player_state_change(EntityState::Dashing);
         }
         if inputs_for_current_frame & GameAction::Slide as i32 > 0 {}
 
@@ -240,7 +243,7 @@ impl Player {
             self.attack(character_anims, character_data, special_input);
         } else if let Some(directional_input) = self.check_directional_inputs(
             character_data,
-            action_history[action_history.len() - 1],
+            action_history[action_history.len() - 1] | recent_input_as_game_action as i32,
         ) {
             self.attack(character_anims, character_data, directional_input);
         } else {
@@ -308,7 +311,7 @@ impl Player {
     ) -> Option<String> {
         for possible_combo in character_data.directional_variation_anims.iter() {
             let (moves, name) = possible_combo;
-    
+             
             if GameAction::check_if_pressed(recent_inputs,moves.0  as i32) &&
                 GameAction::check_if_pressed(recent_inputs,moves.1  as i32) 
             {
@@ -334,7 +337,7 @@ impl Player {
         self.animator.update();
 
         if self.animator.is_finished {
-            self.collision_Manager.collisions_detected.clear();
+            self.collision_manager.collisions_detected.clear();
         }
 
         if let Some(animation) = self.animator.current_animation.as_ref() {
@@ -353,12 +356,12 @@ impl Player {
 
 
     pub fn init_colliders(&mut self) {
-        self.collision_Manager.init_colliders(&self.animator);
+        self.collision_manager.init_colliders(&self.animator);
     }
     
     // update offsets by player position
     pub fn update_colliders(&mut self, sprite_data: &SpriteData) {
-        self.collision_Manager.update_colliders_pos(self.controller.facing_dir > 0, self.position, &self.animator, sprite_data);
+        self.collision_manager.update_colliders_pos(self.controller.facing_dir > 0, self.position, &self.animator, sprite_data);
     }
     
     pub fn render<'a>(&'a mut self, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, Point, bool) {

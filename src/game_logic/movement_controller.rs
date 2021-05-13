@@ -2,7 +2,7 @@ use parry2d::na::Vector2;
 
 use crate::{asset_management::asset_holders::EntityAnimations, ecs_system::enemy_components::Position, engine_types::animator::Animator, rendering::camera::Camera};
 
-use super::characters::{Character, player::PlayerState};
+use super::characters::{Attack, Character, player::EntityState};
 
 #[derive(Clone)]
 pub struct MovementController {
@@ -15,7 +15,7 @@ pub struct MovementController {
     pub extra_gravity: Option<f64>,
 
     pub facing_dir: i8,
-    pub state: PlayerState,
+    pub state: EntityState,
     pub is_attacking: bool,
     pub is_blocking: bool,
     pub is_airborne: bool,
@@ -37,7 +37,7 @@ impl MovementController {
             extra_gravity: None,
         
             facing_dir: (player_pos.x - starting_pos.x).signum() as i8,
-            state: PlayerState::Standing,
+            state: EntityState::Standing,
             is_attacking: false,
             is_blocking: false,
             is_airborne: false,
@@ -56,32 +56,39 @@ impl MovementController {
 
     pub fn player_can_attack(&self) -> bool {
         !(self.is_attacking
-            || self.state == PlayerState::Dashing
-            || self.state == PlayerState::Dead)
+            || self.state == EntityState::Dashing
+            || self.state == EntityState::Dead)
     }
 
     pub fn can_move(&self) -> bool {
         !(self.is_attacking
             || self.is_airborne
             || self.knock_back_distance.abs() > 0.0
-            || self.state == PlayerState::Dead
-            || self.state == PlayerState::Dashing)
+            || self.state == EntityState::Dead
+            || self.state == EntityState::Dashing)
     }
 
-    pub fn player_state_change(&mut self, new_state: PlayerState) {
-        let is_interruptable = self.state != PlayerState::Dashing
-            && self.state != PlayerState::Jumping
-            && self.state != PlayerState::Jump;
+    pub fn player_state_change(&mut self, new_state: EntityState) {
+        let is_interruptable = self.state != EntityState::Dashing
+            && self.state != EntityState::Jumping
+            && self.state != EntityState::Jump;
 
-        if is_interruptable && self.state != PlayerState::Dead {
+        if is_interruptable && self.state != EntityState::Dead {
             self.state = new_state;
         }
     }
 
     pub fn jump(&mut self) {
         if !self.is_airborne {
-            self.player_state_change(PlayerState::Jump);
+            self.player_state_change(EntityState::Jump);
         }
+    }
+
+    pub fn launch(&mut self, attack: &Attack) {
+        self.is_airborne = true;
+        self.player_state_change(EntityState::Knocked);
+        self.velocity_y = self.jump_initial_velocity / 0.5;
+        self.direction_at_jump_time = 0;
     }
 
     pub fn knock_back(&mut self, pos: &mut Position, amount: f64, dt: f64) {
@@ -92,39 +99,39 @@ impl MovementController {
     pub fn state_update(&mut self, animator: &mut Animator, position: &mut Vector2<f64>, assets: &EntityAnimations) {
         let character_animation = &assets.animations;
 
-        if animator.is_finished && self.state != PlayerState::Dead {
+        if animator.is_finished && self.state != EntityState::Dead {
             self.walking_dir.x = 0;
 
             if self.is_attacking {
                 self.is_attacking = false;
             }
 
-            if self.state == PlayerState::Jump {
-                self.state = PlayerState::Jumping;
+            if self.state == EntityState::Jump {
+                self.state = EntityState::Jumping;
             }
 
-            if self.state == PlayerState::Landing {
-                self.state = PlayerState::Standing;
+            if self.state == EntityState::Landing {
+                self.state = EntityState::Standing;
             }
 
-            if self.state == PlayerState::Hurt {
-                self.state = PlayerState::Standing;
+            if self.state == EntityState::Hurt {
+                self.state = EntityState::Standing;
             }
 
-            if self.state == PlayerState::Dashing
+            if self.state == EntityState::Dashing
             {
-                self.state = PlayerState::Standing;
+                self.state = EntityState::Standing;
             }
         }
 
-        if self.state == PlayerState::Landing {
+        if self.state == EntityState::Landing {
             position.y = self.ground_height as f64;
             self.is_attacking = false;
         }
 
         if !self.is_attacking {
             match self.state {
-                PlayerState::Standing => {
+                EntityState::Standing => {
                     if self.walking_dir.x != 0 || self.walking_dir.y != 0 {
                         animator
                             .play(character_animation.get("walk").unwrap().clone(), 1.0, false);
@@ -137,33 +144,45 @@ impl MovementController {
                     }
                 }
 
-                PlayerState::Dead => {
+                EntityState::Dead => {
                     animator
                         .play_once(character_animation.get("dead").unwrap().clone(), 1.0, false);
                 }
 
-                PlayerState::Jump => {
+                EntityState::Jump => {
                     animator
                         .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
                 }
 
-                PlayerState::Jumping => {
+                EntityState::Jumping => {
                     animator
                         .play_once(character_animation.get("neutral_jump").unwrap().clone(), 1.0, false);
                 }
 
-                PlayerState::Landing => {
+                EntityState::Landing => {
                     animator
                         .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
                 }
 
-                PlayerState::Dashing => {
+                EntityState::Dashing => {
                     animator
                         .play_once(character_animation.get("dash").unwrap().clone(), 1.0, false);
                 }
-                PlayerState::Hurt => {
+                EntityState::Hurt => {
                     animator
                         .play_once(character_animation.get("take_damage").unwrap().clone(), 1.0, false);
+                }
+                EntityState::Knocked => {
+                    if self.is_airborne {
+                        animator
+                        .play_once(character_animation.get("launched").unwrap().clone(), 1.0, false);
+                    }
+                }
+                EntityState::KnockedLanding => {
+                    let animation = character_animation.get("knock_land");
+                    if let Some(animation) = animation {
+                        animator.play_once(animation.clone(), 1.0, false);
+                    }
                 }
             }
         }
@@ -179,13 +198,13 @@ impl MovementController {
         dt: f64,
         character_width: i32,
     ) {
-        if self.state == PlayerState::Jump {
+        if self.state == EntityState::Jump {
             self.ground_height = position.y as i32;
             self.velocity_y = self.jump_initial_velocity / 0.5;
-            self.direction_at_jump_time = self.walking_dir.x;
+            self.direction_at_jump_time = self.walking_dir.x.signum();
         }
-    
-        if self.state == PlayerState::Jumping {
+   
+        if self.state == EntityState::Jumping {
             self.is_airborne = true;
         }
     
@@ -222,16 +241,19 @@ impl MovementController {
             if should_land {
                 position.y = self.ground_height as f64;
                 self.velocity_y = character.jump_height;
-                if self.state == PlayerState::Jumping {
-                    self.state = PlayerState::Landing;
+                if self.state == EntityState::Jumping {
+                    self.state = EntityState::Landing;
                     self.is_attacking = false;
+                }
+                if self.state == EntityState::Knocked {
+                    self.state = EntityState::KnockedLanding;
                 }
                 self.is_airborne = false;
             }
         }
     
         if self.can_move() {
-            if self.state == PlayerState::Standing {
+            if self.state == EntityState::Standing {
                 self.ground_height = position.y as i32;
                 let position_move = Vector2::new(
                     self.walking_dir.x as f64, 

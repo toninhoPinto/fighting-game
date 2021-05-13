@@ -4,26 +4,10 @@ use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
-use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Ability, Attack, AttackType, Character, player::Player}, inputs::game_inputs::GameAction}};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Ability, Attack, AttackType, Character, OnHit, player::Player}, inputs::game_inputs::GameAction, on_hit::basic_on_hits::launch}};
 use std::collections::HashMap;
 use std::string::String;
 
-pub struct CharacterAssets<'a> {
-    pub textures: HashMap<String, Texture<'a>>,
-    pub texture_data: HashMap<String, SpriteData>
-}
-
-pub struct CharacterAnimations {
-    pub animations: HashMap<String, Animation>,
-    pub projectile_animation: HashMap<String, Animation>,
-}
-
-pub struct CharacterData {
-    pub input_combination_anims: Vec<(Vec<i32>, String)>,
-    pub directional_variation_anims: Vec<((GameAction, GameAction), String)>,
-    pub attack_effects: HashMap<String, (i32, Ability)>,
-    pub attacks: HashMap<String, Attack>,
-}
 
 pub fn load_stage(texture_creator: &TextureCreator<WindowContext>) -> Texture {
     asset_loader::load_texture(&texture_creator, "assets/stages/Sf3si-hugo.png")
@@ -64,11 +48,10 @@ pub fn load_character_anim_data<'a>(
 fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)>{
     let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
 
-    directional_inputs.push(((GameAction::Right, GameAction::Punch), "directional_light_punch".to_string()));
-    directional_inputs.push(((GameAction::Left, GameAction::Punch), "directional_light_punch".to_string()));
+    //directional_inputs.push(( (GameAction::Right, GameAction::Punch), "directional_light_punch".to_string()) );
+    //directional_inputs.push(( (GameAction::Left, GameAction::Punch), "directional_light_punch".to_string()) );
 
-    directional_inputs.push(( (GameAction::Right, GameAction::Kick), "directional_heavy_punch".to_string()));
-    directional_inputs.push(( (GameAction::Left, GameAction::Kick), "directional_heavy_punch".to_string()));
+    directional_inputs.push(( (GameAction::Up, GameAction::Punch), "launcher".to_string()) );
 
     directional_inputs
 }
@@ -114,14 +97,8 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     let airborne_light_kick_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/light_kick", "airborne_light_kick");
 
-    let special1_anim = 
-        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/specials/directionals/forward_light_punch", "forward_light_punch");
-
-    let special2_anim = 
-        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/specials/directionals/forward_heavy_punch", "forward_heavy_punch");
-
-    let spam_light_punch_anim = 
-        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/specials/spam/spam_light_punch", "spam_light_punch");
+    let launcher_anim = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/launcher", "launcher");
 
     let mut dash_anim=
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/dash", "dash");
@@ -161,9 +138,7 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     character_anims.insert(crouch_idle_anim.name.clone(),crouch_idle_anim);
     character_anims.insert(neutral_jump_anim.name.clone(),neutral_jump_anim);
     
-    character_anims.insert(special1_anim.name.clone(),special1_anim);
-    character_anims.insert(special2_anim.name.clone(),special2_anim);
-    character_anims.insert(spam_light_punch_anim.name.clone(),spam_light_punch_anim);
+    character_anims.insert(launcher_anim.name.clone(),launcher_anim);
 
     character_anims
 }
@@ -178,7 +153,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 400.0,
-            attack_type: AttackType::Normal
+            attack_type: AttackType::Normal,
+            on_hit: None,
         },
     );
 
@@ -189,7 +165,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_type: AttackType::Normal
+            attack_type: AttackType::Normal,
+            on_hit: None,
         },
     );
 
@@ -200,7 +177,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_type: AttackType::Normal
+            attack_type: AttackType::Normal,
+            on_hit: None,
         },
     );
 
@@ -211,7 +189,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 50.0,
-            attack_type: AttackType::Normal
+            attack_type: AttackType::Normal,
+            on_hit: None,
         },
     );
 
@@ -222,7 +201,8 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 50.0,
-            attack_type: AttackType::Normal
+            attack_type: AttackType::Normal,
+            on_hit: None,
         },
     );
 
@@ -233,43 +213,22 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 50.0,
-            attack_type: AttackType::Normal
+            attack_type: AttackType::Normal,
+            on_hit: None,
         },
     );
 
     attacks.insert(
-        "first-spam-punch".to_string(),
+        "launcher".to_string(),
         Attack {
             damage: 5,
             stun_on_hit: 20,
             stun_on_block: 14,
-            push_back: 70.0,
-            attack_type: AttackType::Special
+            push_back: 0.0,
+            attack_type: AttackType::Special,
+            on_hit: Some(launch as OnHit),
         },
     );
-
-    attacks.insert(
-        "fast-spam-punch".to_string(),
-        Attack {
-            damage: 2,
-            stun_on_hit: 20,
-            stun_on_block: 14,
-            push_back: 70.0,
-            attack_type: AttackType::Special
-        },
-    );
-
-    attacks.insert(
-        "last-spam-punch".to_string(),
-        Attack {
-            damage: 20,
-            stun_on_hit: 20,
-            stun_on_block: 14,
-            push_back: 70.0,
-            attack_type: AttackType::Special
-        },
-    );
-
 
     attacks
 }

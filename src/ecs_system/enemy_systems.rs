@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, PlayerState}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, EntityState}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
@@ -16,7 +16,7 @@ pub fn get_enemy_colliders(player: &mut Player,
     player_data: &EntityData, 
     enemies_animations: &HashMap<&str, EntityAnimations>) {
     
-    let player_colliders = &mut player.collision_Manager;
+    let player_colliders = &mut player.collision_manager;
     let mut player_controller = player.controller.clone();
     let player_pos = player.position;
     let enemies_names = enemy_manager.character_components.iter()
@@ -67,6 +67,11 @@ pub fn get_enemy_colliders(player: &mut Player,
                 logic_timestep,
                 &general_assets, 
                 &mut player_controller, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
+
+            if let Some(on_hit) = attack.on_hit {
+                on_hit(attack, mov);
+            }
+
             hit_particles(particles, point, "special_hit", &general_assets);
             *hit_stop = 10;
         } else {
@@ -84,11 +89,11 @@ pub fn get_enemy_colliders(player: &mut Player,
 pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController) {
     if hp.0 > 0 {
         hp.0 -= damage;
-        mov.state = PlayerState::Hurt;
+        mov.state = EntityState::Hurt;
     }
 
     if hp.0 <= 0 {
-        mov.state = PlayerState::Dead;
+        mov.state = EntityState::Dead;
     }
 }
 

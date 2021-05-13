@@ -85,30 +85,22 @@ pub fn load_anim_and_data_from_dir(dir: &str, name: &str) -> Animation {
     let paths = fs::read_dir(dir).unwrap();
 
     let mut vec: Vec<(i64, String)> = Vec::new();
-    let mut data: Option<(Vec<i64>, ColliderAnimation, HashMap<i32, Transform>, HashMap<i64, CastPoint>, i64)> = None;
+    let mut data: Option<(Vec<(i64, String)>, ColliderAnimation, HashMap<i32, Transform>, HashMap<i64, CastPoint>, i64)> = None;
 
-    let mut sprites_length = 0;
-    
     for entry in paths {
         let entry = entry.unwrap();
         let path = entry.path();
-        if path.is_file() && path.extension().unwrap() == "png" {
-            let file_name = path.file_name().unwrap().to_str().unwrap().replace(".png", "").to_string();
-            sprites_length += 3;
-            vec.push((sprites_length, file_name));
-        } else if path.is_file() && path.extension().unwrap() == "scon" {
+        if path.is_file() && path.extension().unwrap() == "scon" {
             data = Some(spriter_pro_collider_loader::load_animation_data(path))
         }
     }
 
+    let mut length = 0;
     let mut collider_animation = None;
     let mut points = HashMap::new();
     let mut sprite_alignments = HashMap::new();
-    let mut length = sprites_length + 3;
     if let Some(colliders) = data {
-        for i in 0..vec.len() {
-            vec[i].0 = colliders.0[i];
-        } 
+        vec = colliders.0;
         collider_animation = Some(colliders.1);
         sprite_alignments = colliders.2;
         points = colliders.3;

@@ -4,9 +4,8 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{asset_management::asset_holders::EntityAssets, ecs_system::{enemy_manager::EnemyManager, enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::{factories::{character_factory::CharacterAssets}, game::Game}};
+use crate::{asset_management::asset_holders::EntityAssets, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game};
 use crate::{
-    game_logic::characters::player::Player,
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };
 use crate::{
@@ -126,7 +125,7 @@ pub fn render(
         for i in 0..game.projectiles.len() {
             render_colliders(canvas, screen_res, &game.camera, &mut game.projectiles[i].colliders);
         }
-        render_colliders(canvas, screen_res, &game.camera, &mut game.player.collision_Manager.colliders);
+        render_colliders(canvas, screen_res, &game.camera, &mut game.player.collision_manager.colliders);
     }
 
     //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead

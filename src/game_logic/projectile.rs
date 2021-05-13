@@ -3,7 +3,7 @@ use sdl2::{rect::Rect, render::Texture};
 
 use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets}, engine_types::{animation::Animation, animator::Animator, collider::Collider}, rendering::camera::Camera};
 
-use super::{characters::Attack, factories::character_factory::{CharacterAnimations, CharacterAssets}, inputs::input_cycle::AllInputManagement};
+use super::{characters::Attack, inputs::input_cycle::AllInputManagement};
 
 pub struct Projectile {
     pub position: Vector2<f64>,

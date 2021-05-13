@@ -1,3 +1,4 @@
+pub mod on_hit;
 pub mod factories;
 pub mod movement_controller;
 pub mod characters;

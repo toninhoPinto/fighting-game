@@ -172,13 +172,14 @@ pub fn load_frame_data(file: std::path::PathBuf) -> Vec<SpriteData> {
 
 pub fn load_animation_data(
     file: std::path::PathBuf,
-) -> (Vec<i64>, ColliderAnimation, HashMap<i32, Transform>, HashMap<i64, CastPoint>, i64) {
+) -> (Vec<(i64, String)>, ColliderAnimation, HashMap<i32, Transform>, HashMap<i64, CastPoint>, i64) {
 
     let json_string = fs::read_to_string(file).unwrap();
     let v = &serde_json::from_str::<Root>(&json_string).unwrap().entity[0];
     let timeline = &v.animation[0].timeline;
     let mainline = &v.animation[0].mainline;
     let boxes = &v.obj_info;
+    let sprites =  &serde_json::from_str::<Root>(&json_string).unwrap().folder[0].file;
     let duration = &v.animation[0].length / FREQUENCY_OF_FPS;
 
     let mut colliders: Vec<Collider> = Vec::new();
@@ -221,6 +222,13 @@ pub fn load_animation_data(
         time_keys.insert(time/FREQUENCY_OF_FPS, i);
         time_vec.push(time/FREQUENCY_OF_FPS);
     }
+
+    let mut sprite_animation : Vec<(i64, String)> = Vec::new();
+    for i in 0..sprites.len() {
+        sprite_animation.push((time_vec[i], sprites[i].name.replace(".png", "")));
+    } 
+
+
 
     let mut sprite_transforms: HashMap<i32, Transform> = HashMap::new();
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
@@ -344,7 +352,7 @@ pub fn load_animation_data(
         final_transforms.insert(name.drain(..split_offset).collect(), transforms_of_frame);
     }
 
-    (time_vec,
+    (sprite_animation,
     ColliderAnimation {
         colliders: colliders,
         pos_animations: final_transforms,

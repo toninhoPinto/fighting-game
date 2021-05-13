@@ -101,8 +101,8 @@ impl Game {
     //TODO change player and projectile to &Vec<Collider> and fuse both functions
     pub fn update_player_colliders_position_only(player: &mut Player, prev_pos: Vector2<f64>) {
         let offset = player.position - prev_pos;
-        for i in 0..player.collision_Manager.colliders.len() {
-            let aabb = &mut player.collision_Manager.colliders[i].aabb;
+        for i in 0..player.collision_manager.colliders.len() {
+            let aabb = &mut player.collision_manager.colliders[i].aabb;
 
             aabb.mins.coords[0] += offset.x as f32;
             aabb.mins.coords[1] += offset.y as f32;

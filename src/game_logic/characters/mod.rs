@@ -3,12 +3,13 @@ use std::string::String;
 
 use crate::asset_management::asset_holders::EntityAnimations;
 
-use super::game::Game;
+use super::{game::Game, movement_controller::MovementController};
 
 pub mod foxgirl;
 pub mod player;
 
 pub(crate) type Ability = fn(&mut Game, i32, &EntityAnimations) -> ();
+pub(crate) type OnHit = fn(&Attack, &mut MovementController) -> ();
 
 #[derive(Debug, Clone)]
 pub struct Character {
@@ -33,13 +34,13 @@ pub enum AttackType {
     Special,
     Ultra,
 }
-#[derive(Debug)]
 pub struct Attack {
     pub damage: i32,
     pub stun_on_hit: i32,
     pub stun_on_block: i32,
     pub push_back: f64,
     pub attack_type: AttackType,
+    pub on_hit: Option<OnHit>,
 }
 
 impl Character {

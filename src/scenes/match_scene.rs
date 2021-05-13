@@ -1,10 +1,8 @@
-use sdl2::{rect::Rect, render::TextureQuery};
+use sdl2::{rect::Rect};
 use std::{
     collections::HashMap,
     time::Instant,
 };
-
-use parry2d::na::Point2;
 
 use sdl2::{
     event::Event,
@@ -16,7 +14,7 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::{asset_management::sound::audio_player, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{Attack, player::{Player, PlayerState}}, factories::{character_factory::{CharacterAnimations, CharacterAssets, load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{input_cycle::AllInputManagement}}};
+use crate::{ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{input_cycle::AllInputManagement}}};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -50,15 +48,6 @@ impl Match {
             character,
             p1_inputs: AllInputManagement::new(),
         }
-    }
-
-    pub fn reset(
-        &mut self,
-        is_single_player: bool,
-        is_local_versus: bool,
-        character: String,
-    ) {
-        self.character = character;
     }
 
     fn hp_bars_init<'a>(screen_res: (u32, u32), p1_hp: i32) -> Bar<'a> {
@@ -225,7 +214,7 @@ impl Scene for Match {
 
                 game.current_frame += 1;
 
-                if game.player.controller.state != PlayerState::Dead
+                if game.player.controller.state != EntityState::Dead
                 {
                     if !self.p1_inputs.input_new_frame.is_empty() {
                         game.player.apply_input(&p1_anims, &p1_data, &mut self.p1_inputs);
@@ -237,7 +226,7 @@ impl Scene for Match {
                 self.p1_inputs.update_inputs_reset_timer();
 
                 game.player.character_width = match game
-                    .player.collision_Manager.colliders
+                    .player.collision_manager.colliders
                     .iter()
                     .filter(|&c| c.collider_type == ColliderType::Pushbox)
                     .last()
@@ -272,7 +261,7 @@ impl Scene for Match {
                 
                 for i in 0..game.projectiles.len(){
                     if game.projectiles[i].player_owner == 2 {
-                        match detect_hit(&game.projectiles[i].colliders, &game.player.collision_Manager.colliders) {
+                        match detect_hit(&game.projectiles[i].colliders, &game.player.collision_manager.colliders) {
                             Some((point, name)) => {
                                 break;
                             }

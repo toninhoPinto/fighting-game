@@ -32,9 +32,6 @@ fn load_enemy_ryu_anims() -> HashMap<String, Animation> {
     let crouch_start_anim=
         load_anim_and_data_from_dir("assets/keetar/crouch/crouched", "crouch");
 
-    let crouch_idle_anim=
-       load_anim_and_data_from_dir("assets/keetar/crouch/crouching", "crouching");
-
     let light_punch_anim = 
         load_anim_and_data_from_dir("assets/keetar/standing/attacks/light_punch", "light_punch");
 
@@ -68,6 +65,11 @@ fn load_enemy_ryu_anims() -> HashMap<String, Animation> {
     let take_damage_anim =
         load_anim_and_data_from_dir("assets/keetar/standing/take_damage", "take_damage");
 
+    let launched_anim =
+        load_anim_and_data_from_dir("assets/keetar/launched", "launched");
+    let knocked_landing_anim =
+        load_anim_and_data_from_dir("assets/keetar/knock_land", "knock_land");
+
     let mut character_anims = HashMap::new();
     
     character_anims.insert(idle_anim.name.clone(), idle_anim);
@@ -86,7 +88,6 @@ fn load_enemy_ryu_anims() -> HashMap<String, Animation> {
     character_anims.insert(light_kick_anim.name.clone(), light_kick_anim);
     
     character_anims.insert(crouch_start_anim.name.clone(), crouch_start_anim);
-    character_anims.insert(crouch_idle_anim.name.clone(), crouch_idle_anim);
 
     character_anims.insert(neutral_jump_anim.name.clone(), neutral_jump_anim);
     character_anims.insert(directional_jump_anim.name.clone(), directional_jump_anim);
@@ -106,6 +107,9 @@ fn load_enemy_ryu_anims() -> HashMap<String, Animation> {
     character_anims.insert("med_special_attack".to_string(), special.clone());
     character_anims.insert("heavy_special_attack".to_string(), special.clone());
 
+    character_anims.insert(launched_anim.name.clone(), launched_anim);
+    character_anims.insert(knocked_landing_anim.name.clone(), knocked_landing_anim);
+
     character_anims
 }
 
@@ -119,7 +123,7 @@ pub fn load_enemy(character_name: &str) -> Character {
             4,
             250.0,
             350.0,
-            700.0,
+            500.0,
             600.0,
         )),
 
