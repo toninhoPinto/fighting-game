@@ -166,7 +166,7 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
         None
     })
     .for_each(|(pos, mov, animator, character, renderable): (&mut Position, &mut MovementController, &mut Animator, &Character, &mut Renderable)| {
-        mov.state_update(animator, &mut pos.0, enemy_animations.get(&character.name as &str).unwrap(), false);
+        mov.state_update(animator, enemy_animations.get(&character.name as &str).unwrap(), false);
         mov.update(
             &mut pos.0,
             character,

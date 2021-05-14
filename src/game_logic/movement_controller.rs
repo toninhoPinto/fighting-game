@@ -98,7 +98,7 @@ impl MovementController {
         self.knock_back_distance = amount - (amount * 10.0 * dt);
     }
 
-    pub fn state_update(&mut self, animator: &mut Animator, position: &mut Vector2<f64>, assets: &EntityAnimations, debug: bool) {
+    pub fn state_update(&mut self, animator: &mut Animator, assets: &EntityAnimations, debug: bool) {
 
         let character_animation = &assets.animations;
 
@@ -125,11 +125,6 @@ impl MovementController {
             {
                 self.state = EntityState::Standing;
             }
-        }
-
-        if self.state == EntityState::Landing {
-            position.y = self.ground_height as f64;
-            self.is_attacking = false;
         }
 
         if !self.is_attacking  {

@@ -59,7 +59,7 @@ pub fn hit_opponent(
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
     take_damage(receiver.0, attack.damage, receiver.3);                                               
-    receiver.3.state_update(receiver.2, &mut receiver.1.0, &receiver_anims, false);     
+    receiver.3.state_update(receiver.2, &receiver_anims, false);     
     
     let dir_to_push = if attacker.is_airborne {                                            
         attacker.direction_at_jump_time

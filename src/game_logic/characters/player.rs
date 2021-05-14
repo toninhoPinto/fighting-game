@@ -147,7 +147,6 @@ impl Player {
                 self.controller.set_velocity_x(-1);
             }
         }
-        //100 0010
 
         if inputs_for_current_frame & moving_vertically == 0 {
             self.controller.walking_dir.y = 0;
@@ -314,7 +313,7 @@ impl Player {
     pub fn state_update(&mut self, assets: &EntityAnimations, sprite_data: &HashMap<String, SpriteData>) {
         let prev_animation = self.animator.current_animation.as_ref().unwrap().name.clone();
 
-        self.controller.state_update(&mut self.animator, &mut self.position, &assets, true);
+        self.controller.state_update(&mut self.animator, &assets, true);
         self.animator.update();
 
         if self.animator.is_finished {
