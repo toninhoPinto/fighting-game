@@ -76,6 +76,10 @@ impl Player {
     pub fn attack(&mut self, character_assets: &EntityAnimations, character_data: &EntityData, attack_animation: String) {
         if self.controller.player_can_attack() {
             self.controller.is_attacking = true;
+
+            self.collision_manager.collisions_detected.clear();
+            self.controller.has_hit = false;
+
             let special_effect = character_data.attack_effects.get(&attack_animation);
             if let Some(&special_effect) = special_effect {
                 self.curr_special_effect = Some(special_effect);
@@ -88,7 +92,7 @@ impl Player {
             }
 
             if let Some(attack_anim) = character_assets.animations.get(&attack_animation) { 
-                self.animator.play_once(attack_anim.clone(), 1.0, false);
+                self.animator.play_animation(attack_anim.clone(),1.0, false, true, true);
             }
 
             if let Some(_) = self.animator.current_animation.as_ref().unwrap().collider_animation {
@@ -313,6 +317,7 @@ impl Player {
 
         self.controller.state_update(&mut self.animator, &assets, true);
 
+        println!("animation before colliders {}", self.animator.current_animation.as_ref().unwrap().name);
         self.collision_manager.update_colliders(self.controller.facing_dir > 0, 
             self.position,  &self.animator, sprite_data)
     }

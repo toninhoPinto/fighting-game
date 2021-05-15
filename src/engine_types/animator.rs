@@ -37,7 +37,7 @@ impl Animator {
         self.play_animation(new_animation, speed, play_rewind,  true, false);
     }
 
-    pub fn play_animation(&mut self, new_animation: Animation, speed: f64, play_rewind: bool, play_once: bool, interrupt_self: bool){
+    pub fn play_animation(&mut self, new_animation: Animation, speed: f64, play_rewind: bool, play_once: bool, interrupt_self: bool) {
         if interrupt_self || self.current_animation.is_none() || (self.current_animation.as_ref().unwrap().name != new_animation.name)
         {
             if !play_rewind {

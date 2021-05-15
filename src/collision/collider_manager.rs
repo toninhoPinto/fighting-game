@@ -24,9 +24,7 @@ impl ColliderManager {
             if let Some(_) = animation.collider_animation {
                 let animation_id = animator.sprite_shown as usize;
                 let sprite_handle = animation.sprites[animation_id].1.clone();
-                if animator.is_starting {
-                    self.init_colliders(animator);
-                }
+                self.init_colliders(animator); //TODO <- running this everyframe might not be the best idea
                 
                 self.update_colliders_pos(flipped, position, animator, sprite_data.get(&sprite_handle).unwrap());
             }

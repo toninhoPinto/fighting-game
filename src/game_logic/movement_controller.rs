@@ -78,9 +78,64 @@ impl MovementController {
             || self.state == EntityState::Dashing)
     }
 
-    pub fn set_entity_state(&mut self, new_state: EntityState, animator: &mut Animator, assets: &EntityAnimations) {
-
+    fn update_state(&mut self, new_state: EntityState, animator: &mut Animator, assets: &EntityAnimations) {
+        self.state = new_state;
         let character_animation = &assets.animations;
+        match self.state {
+            EntityState::Idle => {
+                animator
+                    .play(character_animation.get("idle").unwrap().clone(), 1.0, false);
+            }
+
+            EntityState::Walking => {
+                animator
+                    .play(character_animation.get("walk").unwrap().clone(), 1.0, false);
+            }
+
+            EntityState::Dead => {
+                animator
+                    .play_once(character_animation.get("dead").unwrap().clone(), 1.0, false);
+            }
+
+            EntityState::Jump => {
+                animator
+                    .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
+            }
+
+            EntityState::Jumping => {
+                animator
+                    .play_once(character_animation.get("neutral_jump").unwrap().clone(), 1.0, false);
+            }
+
+            EntityState::Landing => {
+                animator
+                    .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
+            }
+
+            EntityState::Dashing => {
+                animator
+                    .play_once(character_animation.get("dash").unwrap().clone(), 1.0, false);
+            }
+            EntityState::Hurt => {
+                animator
+                    .play_once(character_animation.get("take_damage").unwrap().clone(), 1.0, false);
+            }
+            EntityState::Knocked => {
+                if self.is_airborne {
+                    animator
+                    .play_once(character_animation.get("launched").unwrap().clone(), 1.0, false);
+                }
+            }
+            EntityState::KnockedLanding => {
+                let animation = character_animation.get("knock_land");
+                if let Some(animation) = animation {
+                    animator.play_once(animation.clone(), 1.0, false);
+                }
+            }
+        }
+    }
+
+    pub fn set_entity_state(&mut self, new_state: EntityState, animator: &mut Animator, assets: &EntityAnimations) {
         
         let can_idle = 
             self.state == EntityState::Idle ||
@@ -99,85 +154,39 @@ impl MovementController {
             self.state == EntityState::KnockedLanding;
 
         let can_jump = 
+            (self.is_attacking && self.has_hit) ||
             self.state == EntityState::Idle ||
             self.state == EntityState::Walking;
 
         let interrupt_attack = new_state == EntityState::Landing || 
             new_state == EntityState::Hurt;
+
+        let cancel_attack = (self.is_attacking && self.has_hit) && (
+            new_state == EntityState::Jump ||
+            new_state == EntityState::Dashing 
+            );
         
-        if (!self.is_attacking || (self.is_attacking && interrupt_attack)) && self.state != EntityState::Dead{
+        
+        if (!self.is_attacking || (self.is_attacking && interrupt_attack) || cancel_attack )  && self.state != EntityState::Dead{
 
             match new_state {
                 EntityState::Idle => {
                     if can_idle {
-                        self.state = new_state;
+                        self.update_state(new_state, animator, assets);
                     }
                 },
                 EntityState::Walking => {
                     if can_walk {
-                        self.state = new_state;
+                        self.update_state(new_state, animator, assets);
                     }
                 },
                 EntityState::Jump => {
                     if can_jump {
-                        self.state = new_state;
+                        self.update_state(new_state, animator, assets);
                     }
                 },
                 _ => {
-                    self.state = new_state;
-                }
-            }
-            
-            match self.state {
-                EntityState::Idle => {
-                    animator
-                        .play(character_animation.get("idle").unwrap().clone(), 1.0, false);
-                }
-
-                EntityState::Walking => {
-                    animator
-                        .play(character_animation.get("walk").unwrap().clone(), 1.0, false);
-                }
-
-                EntityState::Dead => {
-                    animator
-                        .play_once(character_animation.get("dead").unwrap().clone(), 1.0, false);
-                }
-
-                EntityState::Jump => {
-                    animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, false);
-                }
-
-                EntityState::Jumping => {
-                    animator
-                        .play_once(character_animation.get("neutral_jump").unwrap().clone(), 1.0, false);
-                }
-
-                EntityState::Landing => {
-                    animator
-                        .play_once(character_animation.get("crouch").unwrap().clone(), 3.0, true);
-                }
-
-                EntityState::Dashing => {
-                    animator
-                        .play_once(character_animation.get("dash").unwrap().clone(), 1.0, false);
-                }
-                EntityState::Hurt => {
-                    animator
-                        .play_once(character_animation.get("take_damage").unwrap().clone(), 1.0, false);
-                }
-                EntityState::Knocked => {
-                    if self.is_airborne {
-                        animator
-                        .play_once(character_animation.get("launched").unwrap().clone(), 1.0, false);
-                    }
-                }
-                EntityState::KnockedLanding => {
-                    let animation = character_animation.get("knock_land");
-                    if let Some(animation) = animation {
-                        animator.play_once(animation.clone(), 1.0, false);
-                    }
+                    self.update_state(new_state, animator, assets);
                 }
             }
         }

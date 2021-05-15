@@ -27,7 +27,6 @@ pub struct Character {
     pub jump_distance: f64,
 }
 
-
 #[derive(Debug, PartialEq)]
 pub enum AttackType {
     Normal,
