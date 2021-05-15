@@ -9,6 +9,8 @@ pub struct AllInputManagement {
     pub input_new_frame: VecDeque<(TranslatedInput, bool)>,
     pub action_history: VecDeque<i32>,
     pub input_reset_timer: Vec<i32>,
+
+    pub input_buffer: VecDeque<(TranslatedInput, bool)>
 }
 
 impl AllInputManagement {
@@ -17,6 +19,8 @@ impl AllInputManagement {
             input_new_frame: VecDeque::new(),
             action_history: VecDeque::new(),
             input_reset_timer: Vec::new(),
+
+            input_buffer: VecDeque::new(),
         }
     }
 

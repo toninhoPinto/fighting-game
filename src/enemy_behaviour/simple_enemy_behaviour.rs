@@ -1,9 +1,11 @@
-use crate::{asset_management::asset_holders::EntityAnimations, ecs_system::enemy_components::Position, game_logic::{characters::player::{Player}, movement_controller::MovementController}};
+use parry2d::na::Vector2;
+
+use crate::{asset_management::asset_holders::EntityAnimations, ecs_system::enemy_components::Position, engine_types::animator::Animator, game_logic::{characters::player::{Player}, movement_controller::MovementController}};
 
 
 
-pub fn walk_to_player(player: &Player, pos: &Position, controller: &mut MovementController, _enemy_animations: &EntityAnimations)  {
+pub fn walk_to_player(player: &Player, pos: &Position, controller: &mut MovementController, animator: &mut Animator, _enemy_animations: &EntityAnimations)  {
     let dir_to_player = player.position - pos.0;
 
-    controller.set_velocity_x(dir_to_player.x as i8);
+    controller.set_velocity(Vector2::new(dir_to_player.x as i8, 0), animator, _enemy_animations);
 }

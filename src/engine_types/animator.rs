@@ -7,6 +7,7 @@ pub struct Animator {
     pub sprite_shown: i32,
     pub speed: f64,
     pub current_animation: Option<Animation>,
+    pub is_starting: bool,
     pub is_playing: bool,
     pub is_finished: bool,
     pub play_once: bool,
@@ -20,6 +21,7 @@ impl Animator {
             sprite_shown: 0,
             speed: 1.0,
             current_animation: None,
+            is_starting: true,
             is_playing: false,
             is_finished: false,
             play_once: false,
@@ -47,6 +49,7 @@ impl Animator {
             }
             self.current_animation = Some(new_animation);
             self.play_once = play_once;
+            self.is_starting = true;
             self.is_playing = true;
             self.is_finished = false;
             self.rewind = play_rewind;
@@ -64,7 +67,7 @@ impl Animator {
         let n_sprites = playing_animation.sprites.len() as i32;
 
         if self.is_playing {
-
+            self.is_starting = false;
             if !self.rewind {
                 self.animation_index += self.speed;
 

@@ -24,7 +24,7 @@ impl ColliderManager {
             if let Some(_) = animation.collider_animation {
                 let animation_id = animator.sprite_shown as usize;
                 let sprite_handle = animation.sprites[animation_id].1.clone();
-                if animation_id == 0 { //TODO this will run too many times, think of a better way 
+                if animator.is_starting {
                     self.init_colliders(animator);
                 }
                 
@@ -34,31 +34,33 @@ impl ColliderManager {
     }
 
     pub fn init_colliders(&mut self, animator: &Animator) {
-        let collider_animation = animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap();
-        for i in 0..collider_animation.colliders.len() {
-            if i < self.colliders.len() {
-                //modify current
-                self.colliders[i].collider_type = collider_animation.colliders[i].collider_type;
-                self.colliders[i].name = collider_animation.colliders[i].name.clone();
-                self.colliders[i].aabb = collider_animation.colliders[i].aabb;
-                self.colliders[i].enabled = collider_animation.colliders[i].enabled;
-            } else {
-                //push
-                self.colliders.push(Collider {
-                    collider_type: collider_animation.colliders[i].collider_type,
-                    name: collider_animation.colliders[i].name.clone(),
-                    aabb: collider_animation.colliders[i].aabb,
-                    enabled: collider_animation.colliders[i].enabled,
-                });
+        if let Some(collider_animation) = animator.current_animation.as_ref().unwrap().collider_animation.as_ref() {
+            for i in 0..collider_animation.colliders.len() {
+                if i < self.colliders.len() {
+                    //modify current
+                    self.colliders[i].collider_type = collider_animation.colliders[i].collider_type;
+                    self.colliders[i].name = collider_animation.colliders[i].name.clone();
+                    self.colliders[i].aabb = collider_animation.colliders[i].aabb;
+                    self.colliders[i].enabled = collider_animation.colliders[i].enabled;
+                } else {
+                    //push
+                    self.colliders.push(Collider {
+                        collider_type: collider_animation.colliders[i].collider_type,
+                        name: collider_animation.colliders[i].name.clone(),
+                        aabb: collider_animation.colliders[i].aabb,
+                        enabled: collider_animation.colliders[i].enabled,
+                    });
+                }
             }
+            self.colliders.truncate(collider_animation.colliders.len());
+        } else {
+            self.colliders.clear();
         }
-        self.colliders.truncate(collider_animation.colliders.len());
     }
     
     // update offsets by player position
     pub fn update_colliders_pos(&mut self, flipped: bool, position: Vector2<f64>, animator: &Animator, _sprite_data: &SpriteData) {
         let collider_animation = animator.current_animation.as_ref().unwrap().collider_animation.as_ref().unwrap().clone();
-
         for i in 0..self.colliders.len() {
             let aabb = &mut self.colliders[i].aabb;
     

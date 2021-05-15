@@ -46,7 +46,7 @@ pub fn get_enemy_colliders(player: &mut Player,
                 if !player.collision_manager.collisions_detected.contains(&(i as i32)) { 
                     player.collision_manager.collisions_detected.insert(i as i32);
                     player.controller.has_hit = true;
-                    return Some((i, point, name, hp, pos, mov, animator)) 
+                    return Some((i, point, name, hp, pos, colliders, mov, animator)) 
                 } else {
                     return None
                 } 
@@ -55,7 +55,7 @@ pub fn get_enemy_colliders(player: &mut Player,
             None => {None}
         }
     })
-    .for_each(|(i, point, collider_name, hp, pos, mov, animator)| {
+    .for_each(|(i, point, collider_name, hp, pos, colliders, mov, animator)| {
         let attack = player_data
                     .attacks
                     .get(&collider_name.replace("?", ""))
@@ -69,7 +69,7 @@ pub fn get_enemy_colliders(player: &mut Player,
                 &player_controller, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
 
             if let Some(on_hit) = attack.on_hit {
-                on_hit(attack, mov);
+               on_hit(attack, colliders, mov, animator, &enemies_animations.get(&enemy_name as &str).unwrap());
             }
 
             hit_particles(particles, point, "special_hit", &general_assets);
@@ -86,14 +86,14 @@ pub fn get_enemy_colliders(player: &mut Player,
     })
 }
 
-pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController) {
+pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController, animator: &mut Animator, assets: &EntityAnimations) {
     if hp.0 > 0 {
         hp.0 -= damage;
-        mov.state = EntityState::Hurt;
+        mov.set_entity_state(EntityState::Hurt, animator, assets);
     }
 
     if hp.0 <= 0 {
-        mov.state = EntityState::Dead;
+        mov.set_entity_state(EntityState::Dead, animator, assets);
     }
 }
 
@@ -103,19 +103,21 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Playe
     .zip(enemy_manager.health_components.iter())
     .zip(enemy_manager.movement_controller_components.iter_mut())
     .zip(enemy_manager.positions_components.iter())
-    .zip(enemy_manager.character_components.iter());
+    .zip(enemy_manager.character_components.iter())
+    .zip(enemy_manager.animator_components.iter_mut());
 
     zip
-    .filter_map(| ((((behaviour, hp), mov), pos), character): ((((&Option<Behaviour>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>)| {
+    .filter_map(| (((((behaviour, hp), mov), pos), character), animator): 
+    (((((&Option<Behaviour>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>), &mut Option<Animator>)| {
         if let Some(hp) = hp {
             if hp.0 > 0 {
-                return Some((behaviour.as_ref()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?))
+                return Some((behaviour.as_ref()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?, animator.as_mut()?))
             }
         }
         None
     })
-    .for_each(|(behaviour, mov, pos, char): (&Behaviour, &mut MovementController, &Position, &Character)| {
-        behaviour(player, pos, mov, enemy_animations.get(&char.name as &str).unwrap());
+    .for_each(|(behaviour, mov, pos, char, animator): (&Behaviour, &mut MovementController, &Position, &Character, &mut Animator)| {
+        behaviour(player, pos, mov, animator, enemy_animations.get(&char.name as &str).unwrap());
     });
 }
 
@@ -171,6 +173,7 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
             &mut pos.0,
             character,
             animator,
+            enemy_animations.get(&character.name as &str).unwrap(),
             camera,
             dt,
             100, //TODO fix this

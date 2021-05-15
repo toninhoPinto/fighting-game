@@ -1,7 +1,7 @@
 use sdl2::rect::Rect;
 use std::string::String;
 
-use crate::asset_management::asset_holders::EntityAnimations;
+use crate::{asset_management::asset_holders::EntityAnimations, collision::collider_manager::ColliderManager, engine_types::animator::Animator};
 
 use super::{game::Game, movement_controller::MovementController};
 
@@ -9,7 +9,7 @@ pub mod foxgirl;
 pub mod player;
 
 pub(crate) type Ability = fn(&mut Game, i32, &EntityAnimations) -> ();
-pub(crate) type OnHit = fn(&Attack, &mut MovementController) -> ();
+pub(crate) type OnHit = fn(&Attack, &mut ColliderManager, &mut MovementController, &mut Animator, &EntityAnimations)  -> ();
 
 #[derive(Debug, Clone)]
 pub struct Character {

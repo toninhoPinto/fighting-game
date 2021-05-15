@@ -126,10 +126,9 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
 
     character_anims.insert(heavy_punch_anim.name.clone(),heavy_punch_anim);
 
-
     light_kick_anim.offsets =Some(vec![Vector2::new(400.0, 0.0), Vector2::new(100.0, 0.0), Vector2::new(0.0, 0.0), 
     Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(300.0, 0.0), Vector2::new(300.0, 0.0), 
-    Vector2::new(300.0, 0.0), Vector2::new(300.0, 0.0),  Vector2::new(0.0, 0.0)]);
+    Vector2::new(300.0, 0.0), Vector2::new(300.0, 0.0),  Vector2::new(300.0, 0.0)]);
     character_anims.insert(light_kick_anim.name.clone(),light_kick_anim);
 
     character_anims.insert(airborne_light_kick_anim.name.clone(),airborne_light_kick_anim);

@@ -9,6 +9,7 @@ use std::path::Path;
 extern crate serde_derive;
 extern crate directories;
 
+mod utils;
 mod engine_types;
 mod asset_management;
 mod collision;

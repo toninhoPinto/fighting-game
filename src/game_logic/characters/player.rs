@@ -10,7 +10,8 @@ use super::{Ability, Character};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum EntityState {
-    Standing,
+    Idle,
+    Walking,
     Jump,
     Jumping,
     Landing,
@@ -91,12 +92,12 @@ impl Player {
             }
 
             if let Some(_) = self.animator.current_animation.as_ref().unwrap().collider_animation {
-                self.init_colliders();
+                self.collision_manager.init_colliders(&self.animator);
             }
         }
     }
 
-    pub fn apply_input_state(&mut self, action_history: &VecDeque<i32>) {
+    pub fn apply_input_state(&mut self, action_history: &VecDeque<i32>, character_anims: &EntityAnimations) {
         if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Right as i32) {
             self.controller.walking_dir.x = 1;
         }
@@ -105,7 +106,7 @@ impl Player {
         }
 
         if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Jump as i32) {
-            self.controller.jump();
+            self.controller.jump(&mut self.animator, character_anims);
         }
     }
 
@@ -134,33 +135,26 @@ impl Player {
             inputs_for_current_frame |= GameAction::Dash as i32;
         }
     
-        let moving_horizontally = GameAction::Right as i32 | GameAction::Left as i32;
-        let moving_vertically = GameAction::Up as i32 | GameAction::Down as i32;
-        
-        if inputs_for_current_frame & moving_horizontally == 0 {
-            self.controller.set_velocity_x(0);
+        let x = if inputs_for_current_frame & GameAction::Right as i32 > 0 {
+            1i8
+        } else if inputs_for_current_frame & GameAction::Left as i32 > 0 {
+            -1i8
         } else {
-            if inputs_for_current_frame & GameAction::Right as i32 > 0 {
-                self.controller.set_velocity_x(1);
-            }
-            if inputs_for_current_frame & GameAction::Left as i32 > 0 {
-                self.controller.set_velocity_x(-1);
-            }
-        }
+            0i8
+        };
 
-        if inputs_for_current_frame & moving_vertically == 0 {
-            self.controller.walking_dir.y = 0;
+        let y = if inputs_for_current_frame & GameAction::Up as i32 > 0 {
+            1i8
+        } else if inputs_for_current_frame & GameAction::Down as i32 > 0 {
+            -1i8
         } else {
-            if inputs_for_current_frame & GameAction::Up as i32 > 0 {
-                self.controller.walking_dir.y = 1;
-            }
-            if inputs_for_current_frame & GameAction::Down as i32 > 0 {
-                self.controller.walking_dir.y = -1;
-            }
-        }
+            0i8
+        };
+
+        self.controller.set_velocity(Vector2::new(x, y), &mut self.animator, character_anims);
 
         if inputs_for_current_frame & GameAction::Jump as i32 > 0 {
-            self.controller.jump();
+            self.controller.jump(&mut self.animator, character_anims);
         }
         if inputs_for_current_frame & GameAction::Punch as i32 > 0 {
             self.check_attack_inputs(
@@ -182,7 +176,7 @@ impl Player {
             }
         if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true }
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
-            self.controller.player_state_change(EntityState::Dashing);
+            self.controller.set_entity_state(EntityState::Dashing, &mut self.animator, character_anims);
         }
         if inputs_for_current_frame & GameAction::Slide as i32 > 0 {}
 
@@ -304,46 +298,23 @@ impl Player {
     pub fn update(
         &mut self,
         camera: &Camera,
+        assets: &EntityAnimations,
         dt: f64,
         character_width: i32,
     ) {
-       self.controller.update(&mut self.position, &self.character, &self.animator, camera, dt, character_width);
+       self.controller.update(&mut self.position, &self.character, &mut self.animator, assets, camera, dt, character_width);
     }
 
     pub fn state_update(&mut self, assets: &EntityAnimations, sprite_data: &HashMap<String, SpriteData>) {
-        let prev_animation = self.animator.current_animation.as_ref().unwrap().name.clone();
-
-        self.controller.state_update(&mut self.animator, &assets, true);
-        self.animator.update();
-
         if self.animator.is_finished {
             self.collision_manager.collisions_detected.clear();
             self.controller.has_hit = false;
-            println!("reset");
         }
 
-        if let Some(animation) = self.animator.current_animation.as_ref() {
-            if let Some(_) = animation.collider_animation {
-                let animation_id = self.animator.sprite_shown as usize;
-                let sprite_handle = animation.sprites[animation_id].1.clone();
-                if prev_animation != self.animator.current_animation.as_ref().unwrap().name {
-                    self.init_colliders();
-                }
-                
-                self.update_colliders(sprite_data.get(&sprite_handle).unwrap());
-            }
-        }
-    
-    }
+        self.controller.state_update(&mut self.animator, &assets, true);
 
-
-    pub fn init_colliders(&mut self) {
-        self.collision_manager.init_colliders(&self.animator);
-    }
-    
-    // update offsets by player position
-    pub fn update_colliders(&mut self, sprite_data: &SpriteData) {
-        self.collision_manager.update_colliders_pos(self.controller.facing_dir > 0, self.position, &self.animator, sprite_data);
+        self.collision_manager.update_colliders(self.controller.facing_dir > 0, 
+            self.position,  &self.animator, sprite_data)
     }
     
     pub fn render<'a>(&'a mut self, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, Point, bool) {

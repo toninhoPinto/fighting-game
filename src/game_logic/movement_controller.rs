@@ -4,6 +4,8 @@ use crate::{asset_management::asset_holders::EntityAnimations, ecs_system::enemy
 
 use super::characters::{Attack, Character, player::EntityState};
 
+use crate::utils::math_sign::Sign;
+
 #[derive(Clone)]
 pub struct MovementController {
     pub walking_dir: Vector2<i8>,
@@ -37,8 +39,8 @@ impl MovementController {
             jump_initial_velocity: 2.0 * character.jump_height,
             extra_gravity: None,
         
-            facing_dir: (player_pos.x - starting_pos.x).signum() as i8,
-            state: EntityState::Standing,
+            facing_dir: (player_pos.x - starting_pos.x).sign() as i8,
+            state: EntityState::Idle,
             is_attacking: false,
             is_blocking: false,
             is_airborne: false,
@@ -49,97 +51,92 @@ impl MovementController {
         }
     }
 
-    pub fn set_velocity_x(&mut self, vec_x: i8) {
-        if vec_x != 0 {
-            self.facing_dir = vec_x;
+    pub fn set_velocity(&mut self, vec: Vector2<i8>, animator: &mut Animator, assets: &EntityAnimations) {
+        if vec.x != 0 || vec.y != 0 {
+            if vec.x != 0 {
+                self.facing_dir = vec.x;
+            }
+            self.set_entity_state(EntityState::Walking, animator, assets);
+        } else {
+            self.set_entity_state(EntityState::Idle, animator, assets);
         }
-        self.walking_dir.x = vec_x;
+        self.walking_dir = vec;
     }
 
     pub fn player_can_attack(&self) -> bool {
-        !(self.is_attacking
+        !((self.is_attacking && !self.has_hit)
+            || self.state == EntityState::Jump
             || self.state == EntityState::Dashing
             || self.state == EntityState::Dead)
     }
 
     pub fn can_move(&self) -> bool {
-        !(self.is_attacking
+        !((self.is_attacking && !self.has_hit)
             || self.is_airborne
             || self.knock_back_distance.abs() > 0.0
             || self.state == EntityState::Dead
             || self.state == EntityState::Dashing)
     }
 
-    pub fn player_state_change(&mut self, new_state: EntityState) {
-        let is_interruptable = self.state != EntityState::Dashing
-            && self.state != EntityState::Jumping
-            && self.state != EntityState::Jump;
-
-        if is_interruptable && self.state != EntityState::Dead {
-            self.state = new_state;
-        }
-    }
-
-    pub fn jump(&mut self) {
-        if !self.is_airborne {
-            self.player_state_change(EntityState::Jump);
-        }
-    }
-
-    pub fn launch(&mut self, attack: &Attack) {
-        self.is_airborne = true;
-        self.player_state_change(EntityState::Knocked);
-        self.velocity_y = self.jump_initial_velocity / 0.5;
-        self.direction_at_jump_time = 0;
-    }
-
-    pub fn knock_back(&mut self, pos: &mut Position, amount: f64, dt: f64) {
-        pos.0 += Vector2::new(amount * dt, 0.0);
-        self.knock_back_distance = amount - (amount * 10.0 * dt);
-    }
-
-    pub fn state_update(&mut self, animator: &mut Animator, assets: &EntityAnimations, debug: bool) {
+    pub fn set_entity_state(&mut self, new_state: EntityState, animator: &mut Animator, assets: &EntityAnimations) {
 
         let character_animation = &assets.animations;
+        
+        let can_idle = 
+            self.state == EntityState::Idle ||
+            self.state == EntityState::Walking || 
+            self.state == EntityState::Landing ||
+            self.state == EntityState::Dashing || 
+            self.state == EntityState::Hurt ||
+            self.state == EntityState::KnockedLanding;
 
-        if animator.is_finished && self.state != EntityState::Dead {
-            self.walking_dir.x = 0;
+        let can_walk = 
+            self.state == EntityState::Idle ||
+            self.state == EntityState::Walking ||
+            self.state == EntityState::Landing ||
+            self.state == EntityState::Dashing || 
+            self.state == EntityState::Hurt ||
+            self.state == EntityState::KnockedLanding;
 
-            if self.is_attacking {
-                self.is_attacking = false;
-            }
+        let can_jump = 
+            self.state == EntityState::Idle ||
+            self.state == EntityState::Walking;
 
-            if self.state == EntityState::Jump {
-                self.state = EntityState::Jumping;
-            }
+        let interrupt_attack = new_state == EntityState::Landing || 
+            new_state == EntityState::Hurt;
+        
+        if (!self.is_attacking || (self.is_attacking && interrupt_attack)) && self.state != EntityState::Dead{
 
-            if self.state == EntityState::Landing {
-                self.state = EntityState::Standing;
-            }
-
-            if self.state == EntityState::Hurt {
-                self.state = EntityState::Standing;
-            }
-
-            if self.state == EntityState::Dashing
-            {
-                self.state = EntityState::Standing;
-            }
-        }
-
-        if !self.is_attacking  {
-            match self.state {
-                EntityState::Standing => {
-                    if self.walking_dir.x != 0 || self.walking_dir.y != 0 {
-                        animator
-                            .play(character_animation.get("walk").unwrap().clone(), 1.0, false);
-                    } else {
-                        if animator.current_animation.as_ref().unwrap().name != "idle" {
-                            animator
-                            .play(character_animation.get("idle").unwrap().clone(), 1.0, false);
-                        }
-                        
+            match new_state {
+                EntityState::Idle => {
+                    if can_idle {
+                        self.state = new_state;
                     }
+                },
+                EntityState::Walking => {
+                    if can_walk {
+                        self.state = new_state;
+                    }
+                },
+                EntityState::Jump => {
+                    if can_jump {
+                        self.state = new_state;
+                    }
+                },
+                _ => {
+                    self.state = new_state;
+                }
+            }
+            
+            match self.state {
+                EntityState::Idle => {
+                    animator
+                        .play(character_animation.get("idle").unwrap().clone(), 1.0, false);
+                }
+
+                EntityState::Walking => {
+                    animator
+                        .play(character_animation.get("walk").unwrap().clone(), 1.0, false);
                 }
 
                 EntityState::Dead => {
@@ -186,12 +183,84 @@ impl MovementController {
         }
     }
 
+    pub fn jump(&mut self, animator: &mut Animator, assets: &EntityAnimations) {
+        if !self.is_airborne {
+            self.set_entity_state(EntityState::Jump, animator, assets);
+        }
+    }
+
+    pub fn launch(&mut self, attack: &Attack, animator: &mut Animator, assets: &EntityAnimations) {
+        self.is_airborne = true;
+        self.set_entity_state(EntityState::Knocked, animator, assets);
+        self.velocity_y = self.jump_initial_velocity / 0.5;
+        self.direction_at_jump_time = 0;
+    }
+
+    pub fn knock_back(&mut self, pos: &mut Position, amount: f64, dt: f64) {
+        pos.0 += Vector2::new(amount * dt, 0.0);
+        self.knock_back_distance = amount - (amount * 10.0 * dt);
+    }
+
+    pub fn state_update(&mut self, animator: &mut Animator, assets: &EntityAnimations, debug: bool) {
+
+        if animator.is_finished && self.state != EntityState::Dead {
+
+            if self.is_attacking {
+                self.is_attacking = false;
+                if self.walking_dir.x != 0 || self.walking_dir.y != 0  {
+                    self.set_entity_state(EntityState::Walking, animator, assets);
+                } else {
+                    self.set_entity_state(EntityState::Idle, animator, assets);
+                }
+            }
+
+            if self.state == EntityState::Jump {
+                self.set_entity_state(EntityState::Jumping, animator, assets);
+            }
+
+            if self.state == EntityState::Landing {
+                if self.walking_dir.x != 0 || self.walking_dir.y != 0 {
+                    self.set_entity_state(EntityState::Walking, animator, assets);
+                } else {
+                    self.set_entity_state(EntityState::Idle, animator, assets);
+                }
+                
+            }
+
+            if self.state == EntityState::Hurt {
+                if self.walking_dir.x != 0 || self.walking_dir.y != 0  {
+                    self.set_entity_state(EntityState::Walking, animator, assets);
+                } else {
+                    self.set_entity_state(EntityState::Idle, animator, assets);
+                }
+            }
+
+            if self.state == EntityState::Dashing {
+                if self.walking_dir.x != 0 || self.walking_dir.y != 0  {
+                    self.set_entity_state(EntityState::Walking, animator, assets);
+                } else {
+                    self.set_entity_state(EntityState::Idle, animator, assets);
+                }
+            }
+
+            if self.state == EntityState::KnockedLanding {
+                if self.walking_dir.x != 0 || self.walking_dir.y != 0  {
+                    self.set_entity_state(EntityState::Walking, animator, assets);
+                } else {
+                    self.set_entity_state(EntityState::Idle, animator, assets);
+                }
+            }
+        }
+
+    }
+
 
     pub fn update(
         &mut self,
         position: &mut Vector2<f64>,
         character: &Character,
-        animator: &Animator,
+        animator: &mut Animator,
+        anims: &EntityAnimations,
         camera: &Camera,
         dt: f64,
         character_width: i32,
@@ -199,7 +268,7 @@ impl MovementController {
         if self.state == EntityState::Jump {
             self.ground_height = position.y as i32;
             self.velocity_y = self.jump_initial_velocity / 0.5;
-            self.direction_at_jump_time = self.walking_dir.x.signum();
+            self.direction_at_jump_time = self.walking_dir.x.sign();
         }
    
         if self.state == EntityState::Jumping {
@@ -240,18 +309,18 @@ impl MovementController {
                 position.y = self.ground_height as f64;
                 self.velocity_y = character.jump_height;
                 if self.state == EntityState::Jumping {
-                    self.state = EntityState::Landing;
+                    self.set_entity_state(EntityState::Landing, animator, anims);
                     self.is_attacking = false;
                 }
                 if self.state == EntityState::Knocked {
-                    self.state = EntityState::KnockedLanding;
+                    self.set_entity_state(EntityState::KnockedLanding, animator, anims);
                 }
                 self.is_airborne = false;
             }
         }
     
         if self.can_move() {
-            if self.state == EntityState::Standing {
+            if self.state == EntityState::Idle || self.state == EntityState::Walking {
                 self.ground_height = position.y as i32;
                 let position_move = Vector2::new(
                     self.walking_dir.x as f64, 
@@ -264,7 +333,6 @@ impl MovementController {
             match &animator.current_animation.as_ref().unwrap().offsets {
                 Some(offsets) => {
                     let offset = offsets[animator.sprite_shown as usize];
-                    self.walking_dir.x = (self.facing_dir as f64 * offset.x).signum() as i8;
                     *position += Vector2::new( self.facing_dir as f64 * offset.x, offset.y) * dt
                 }
                 None => { }

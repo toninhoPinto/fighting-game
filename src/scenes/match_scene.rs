@@ -124,7 +124,7 @@ impl Scene for Match {
             .animator
             .play(p1_anims.animations.get("idle").unwrap().clone(), 1.0,false);
 
-        game.player.init_colliders();
+        game.player.collision_manager.init_colliders(&game.player.animator);
 
         let screen_res = canvas.output_size().unwrap();
         let mut hp_bars = Match::hp_bars_init(
@@ -220,7 +220,7 @@ impl Scene for Match {
                         game.player.apply_input(&p1_anims, &p1_data, &mut self.p1_inputs);
                     }
 
-                    game.player.apply_input_state(&self.p1_inputs.action_history);
+                    game.player.apply_input_state(&self.p1_inputs.action_history, &p1_anims);
                 }
                 
                 self.p1_inputs.update_inputs_reset_timer();
@@ -235,17 +235,19 @@ impl Scene for Match {
                     None => { game.player.character_width },
                 };
 
-                game.player.state_update(&p1_anims, &p1_assets.texture_data);
+                game.player.animator.update();
                 game.player.update(
                     &game.camera,
+                    &p1_anims,
                     logic_timestep,
                     game.player.character_width as i32,
                 );
+                game.player.state_update(&p1_anims, &p1_assets.texture_data);
 
-                update_behaviour_enemies(&mut game.enemies, &game.player, &enemy_animations);
                 update_animations_enemies(&mut game.enemies);
-                update_colliders_enemies(&mut game.enemies, &enemy_assets);
+                update_behaviour_enemies(&mut game.enemies, &game.player, &enemy_animations);
                 update_movement_enemies(&mut game.enemies, &enemy_animations, &game.camera, logic_timestep);
+                update_colliders_enemies(&mut game.enemies, &enemy_assets);
 
                 if let Some(ability) = game.player.curr_special_effect {
                     if ability.0 == game.player.animator.sprite_shown {

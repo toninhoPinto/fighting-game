@@ -3,6 +3,8 @@ extern crate sdl2;
 use sdl2::event::Event;
 use std::collections::HashMap;
 
+use crate::utils::math_sign::Sign;
+
 use super::translated_inputs::TranslatedInput;
 use super::controller_handler::KEYBOARD_ID;
 
@@ -18,7 +20,7 @@ pub fn rcv_input(
             ..
         } => {
             println!("joy#{} axis#{} value:{}", which, axis_idx, value);
-            let sign = i32::from(value).signum();
+            let sign = i32::from(value).sign();
             if axis_idx == 0 {
                 Some((which, TranslatedInput::Horizontal(sign), sign != 0))
             } else {

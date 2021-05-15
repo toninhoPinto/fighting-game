@@ -1,7 +1,7 @@
 use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Point2, Vector2}, query::{self, Contact}, shape::Cuboid};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{asset_holders::{EntityAnimations}, common_assets::CommonAssets, sound::audio_player, vfx::particle::Particle}, ecs_system::enemy_components::{Health, Position}, engine_types::{animator::Animator, collider::{Collider, ColliderType}}, game_logic::{characters::{Attack, player::Player}, game::Game, movement_controller::MovementController}};
+use crate::{asset_management::{asset_holders::{EntityAnimations}, common_assets::CommonAssets, sound::audio_player, vfx::particle::Particle}, ecs_system::enemy_components::{Health, Position}, engine_types::{animator::Animator, collider::{Collider, ColliderType}}, game_logic::{characters::{Attack, player::Player}, game::Game, movement_controller::MovementController}, utils::math_sign::Sign};
 
 use crate::ecs_system::enemy_systems::take_damage;
 
@@ -58,7 +58,7 @@ pub fn hit_opponent(
     receiver_anims: &EntityAnimations){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-    take_damage(receiver.0, attack.damage, receiver.3);                                               
+    take_damage(receiver.0, attack.damage, receiver.3, receiver.2, receiver_anims);                                               
     receiver.3.state_update(receiver.2, &receiver_anims, false);     
     
     let dir_to_push = if attacker.is_airborne {                                            
@@ -66,7 +66,7 @@ pub fn hit_opponent(
     } else {
         attacker.facing_dir
     };
-    receiver.3.knock_back(receiver.1, attack.push_back * dir_to_push.signum() as f64, time);
+    receiver.3.knock_back(receiver.1, attack.push_back * dir_to_push.sign() as f64, time);
 }
 
 pub fn opponent_blocked(attack: &Attack, 
@@ -81,7 +81,7 @@ pub fn opponent_blocked(attack: &Attack,
     } else {
         attacker.facing_dir
     };
-    receiver.1.knock_back(receiver.0, attack.push_back * dir_to_push.signum() as f64, time); 
+    receiver.1.knock_back(receiver.0, attack.push_back * dir_to_push.sign() as f64, time); 
 }
 
 pub fn hit_particles(particles: &mut Vec<Particle>, point: Point2<f32>, hit_particle: &str, general_assets: &CommonAssets) {

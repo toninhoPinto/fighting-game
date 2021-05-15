@@ -98,6 +98,14 @@ pub fn render(
 
     render_enemies(&entities_to_render, canvas, screen_res, &game.camera, debug);
 
+    if debug {
+        for collider_of_enemy in  game.enemies.collider_components.iter_mut() {
+            if let Some(collider_of_enemy) = collider_of_enemy {
+                render_colliders(canvas, screen_res, &game.camera, &mut collider_of_enemy.colliders);
+            }
+        }
+    }
+
     for projectile in game.projectiles.iter() {
         let screen_rect =
             world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, &game.camera);
@@ -184,18 +192,6 @@ fn render_enemies<'a>(entities: &Vec<(&'a Texture<'a>, Rect, Point, bool)>,
             debug_rect(canvas, screen_rect.center(), screen_rect);
         }
     }
-    
-    /*
-    if debug {
-        for collider_of_enemy in entities.collider_components.iter_mut() {
-            if let Some(collider_of_enemy) = collider_of_enemy {
-                
-                render_colliders(canvas, screen_res, camera, &mut collider_of_enemy.colliders);
-            }
-        }
-    }
-    */
-
 }
 
 fn render_vfx(
