@@ -29,30 +29,24 @@ use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
 
-/*
-state update
-animation update
-collider update
-
-movement update
-*/
-
 //TODO features tomorrow
 //separate json for animation offsets and animation states (startup, active, recovery)
+//If you press dash input while it is still on the last few frames of dash recovery it will not dash (i believe due to using play_once instead of play_animation)
+//this is fixed by having input buffer
 
 //TODO FEATURES
 //play block animation while standing 
 //add input buffer- decide if multiple buffers for different things or not
 //add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
 //charge special attacks like makoto where you can hold punch for a stronger attack
-//rekka  special attacks where you can chain special attacks but as one
 //dash attacks
 //save sound settings on config
 //add menu to change the controllers for each player
 //add menu to change the controller mapping of keys/buttons
 //make ui loop only 60fps to avoid the computer doing too many wasted computations
 
-//TODO TECH DEBT AND BUGS
+//TODO TECH DEBT AND BUGS~
+
 //16 
 //15 so much duplicated code inside match_scene
 //13 the placement of the particles spawned at the moment of a projectile hit are a bit weird

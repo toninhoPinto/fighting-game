@@ -174,7 +174,7 @@ impl<'a> Scene for MenuScene<'a> {
 
                 if raw_input.is_some() {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
-                    if is_pressed {
+                    if !is_pressed {
                         if translated_input == TranslatedInput::Vertical(1) {
                             self.selected_btn = (((self.selected_btn - 1)
                                 % self.text.len() as i32)

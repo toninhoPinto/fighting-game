@@ -1,11 +1,11 @@
-use std::fmt::{self, Display};
+use std::{fmt::{self, Display}};
 
 use crate::input::translated_inputs::TranslatedInput;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum GameAction {
-    Right =   0b0000000001,     // 1
-    Left =  0b0000000010,     // 2
+    Right =     0b0000000001,     // 1
+    Left =      0b0000000010,     // 2
     Up =        0b0000000100,     // 4
     Down =      0b0000001000,     // 8
     Punch =     0b0000010000,     // 16
@@ -24,27 +24,64 @@ impl Display for GameAction {
 
 impl GameAction {
 
+    pub fn debug_i32(mut n: i32) -> Vec<Self>{
+        let mut result = Vec::new();
+        while n > 0 {
+            if n & GameAction::Right as i32 > 0 {
+                result.push(GameAction::Right);
+                n ^= GameAction::Right as i32;
+            }
+            if n & GameAction::Left as i32 > 0 { 
+                result.push(GameAction::Left);
+                n ^= GameAction::Left as i32;
+            }
+            if n & GameAction::Up as i32 > 0 { 
+                result.push(GameAction::Up);
+                n ^= GameAction::Up as i32;
+            }
+            if n & GameAction::Down as i32 > 0 { 
+                result.push(GameAction::Down);
+                n ^= GameAction::Down as i32;
+            }
+            if n & GameAction::Punch as i32 > 0 { 
+                result.push(GameAction::Punch);
+                n ^= GameAction::Punch as i32;
+            }
+            if n & GameAction::Kick as i32 > 0 { 
+                result.push(GameAction::Kick);
+                n ^= GameAction::Kick as i32;
+            }
+            if n & GameAction::Jump as i32 > 0 { 
+                result.push(GameAction::Jump);
+                n ^= GameAction::Jump as i32;
+            }
+            if n & GameAction::Block as i32 > 0 { 
+                result.push(GameAction::Block);
+                n ^= GameAction::Block as i32;
+            }
+            if n & GameAction::Dash as i32 > 0 { 
+                result.push(GameAction::Dash);
+                n ^= GameAction::Dash as i32;
+            }
+            if n & GameAction::Slide as i32 > 0 { 
+                result.push(GameAction::Slide);
+                n ^= GameAction::Slide as i32;
+            }
+        }
+        result
+    }
+
     pub fn combinate_states(curr_state: &mut i32){
-        if GameAction::check_if_pressed(*curr_state, GameAction::Dash as i32) && GameAction::check_if_pressed(*curr_state, GameAction::Down as i32) {
+        if GameAction::is_pressed(*curr_state, GameAction::Dash) && GameAction::is_pressed(*curr_state, GameAction::Down) {
             *curr_state ^= GameAction::Slide as i32
         }
     }
 
-    pub fn update_state(curr_state: i32, update: (GameAction, bool)) -> i32 {
-        if update.1 {
-            curr_state | update.0 as i32
-        } else if curr_state & (update.0 as i32) > 0 {
-            curr_state ^ (update.0 as i32)
-        } else {
-            curr_state
-        }
+    pub fn is_pressed(curr_state: i32, check: GameAction) -> bool {
+        curr_state & check as i32 > 0
     }
 
-    pub fn check_if_pressed(curr_state: i32, check: i32) -> bool {
-        curr_state & check > 0
-    }
-
-    pub fn check_if_pressed_direction(curr_state: i32) -> bool {
+    pub fn is_pressed_direction(curr_state: i32) -> bool {
         curr_state & GameAction::Right as i32 > 0 || 
         curr_state & GameAction::Left as i32 > 0 || 
         curr_state & GameAction::Up as i32 > 0 ||
@@ -72,7 +109,7 @@ impl GameAction {
             TranslatedInput::Horizontal(h) if h == 0 => {
                     //Specifically for joysticks that do not inform what was once pressed and then released for the axis
                     //so whatever was once pressed is the direction that was released (this works because joystick only lets you have 1 direction at a time)
-                    if GameAction::check_if_pressed(curr_state, GameAction::Right as i32){
+                    if GameAction::is_pressed(curr_state, GameAction::Right){
                         Ok(GameAction::Right)
                     } else {
                         Ok(GameAction::Left)
@@ -82,7 +119,7 @@ impl GameAction {
             TranslatedInput::Vertical(v) if v < 0 => Ok(GameAction::Down),
 
             TranslatedInput::Vertical(v) if v == 0 => {
-                if GameAction::check_if_pressed(curr_state, GameAction::Up as i32) {
+                if GameAction::is_pressed(curr_state, GameAction::Up) {
                     Ok(GameAction::Up)
                 } else {
                     Ok(GameAction::Down)

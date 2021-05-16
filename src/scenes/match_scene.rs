@@ -14,7 +14,7 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::{ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{input_cycle::AllInputManagement}}};
+use crate::{ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -190,12 +190,16 @@ impl Scene for Match {
 
                 let raw_input = input::input_handler::rcv_input(&event, &controls);
 
-                if raw_input.is_some() {
-                    let (controller_id, translated_input, is_pressed) = raw_input.unwrap();
+                if let Some((controller_id, translated_input, is_pressed)) = raw_input {
 
-                    self.p1_inputs
-                        .input_new_frame
-                        .push_back((translated_input, is_pressed));
+                    let inputs_for_current_frame = if let Some(&last_action) = self.p1_inputs.action_history.back() {last_action} else {0};
+                    let recent_input_as_game_action = GameAction::from_translated_input(
+                        translated_input,
+                        inputs_for_current_frame,
+                        game.player.controller.facing_dir,
+                    );
+
+                    self.p1_inputs.input_new_frame ^= recent_input_as_game_action.unwrap() as i32;
                 }
             }
 
@@ -216,13 +220,13 @@ impl Scene for Match {
 
                 if game.player.controller.state != EntityState::Dead
                 {
-                    if !self.p1_inputs.input_new_frame.is_empty() {
+                    if self.p1_inputs.input_new_frame != 0 {
                         game.player.apply_input(&p1_anims, &p1_data, &mut self.p1_inputs);
                     }
 
                     game.player.apply_input_state(&self.p1_inputs.action_history, &p1_anims);
                 }
-                
+
                 self.p1_inputs.update_inputs_reset_timer();
 
                 game.player.character_width = match game

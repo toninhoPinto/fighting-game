@@ -56,12 +56,6 @@ fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)
     directional_inputs
 }
 
-fn load_foxgirl_special_inputs() -> Vec<(Vec<i32>, String)>{
-    let specials_inputs: Vec<(Vec<i32>, String)> = Vec::new();
-
-    specials_inputs
-}
-
 fn load_foxgirl_anims() -> HashMap<String, Animation> {
 
     let idle_anim =
@@ -111,7 +105,7 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     character_anims.insert(take_damage_anim.name.clone(),take_damage_anim);
     character_anims.insert(dead_anim.name.clone(),dead_anim);
 
-    dash_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(3000.0, 0.0), Vector2::new(2000.0, 0.0), 
+    dash_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(8000.0, 0.0), Vector2::new(5000.0, 0.0), 
     Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0)]);
     character_anims.insert(dash_anim.name.clone(),dash_anim);
     
@@ -250,7 +244,6 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Entit
 
 fn load_foxgirl_data() -> EntityData {
     EntityData {
-        input_combination_anims: load_foxgirl_special_inputs(),
         directional_variation_anims: load_foxgirl_directional_inputs(),
         attack_effects: HashMap::new(),
         attacks: load_foxgirl_attacks(),

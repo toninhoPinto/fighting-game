@@ -4,7 +4,11 @@ use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{characters::AttackType, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, 
+collision::collider_manager::ColliderManager, 
+ecs_system::enemy_components::Health, 
+engine_types::{animator::Animator, sprite_data::SpriteData}, 
+game_logic::{characters::AttackType, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{Ability, Character};
 
@@ -102,14 +106,7 @@ impl Player {
     }
 
     pub fn apply_input_state(&mut self, action_history: &VecDeque<i32>, character_anims: &EntityAnimations) {
-        if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Right as i32) {
-            self.controller.walking_dir.x = 1;
-        }
-        if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Left as i32) {
-            self.controller.walking_dir.x = -1;
-        }
-
-        if action_history.len() > 0 && GameAction::check_if_pressed(action_history[action_history.len()-1], GameAction::Jump as i32) {
+        if action_history.len() > 0 && GameAction::is_pressed(action_history[action_history.len()-1], GameAction::Jump) {
             self.controller.jump(&mut self.animator, character_anims);
         }
     }
@@ -120,24 +117,17 @@ impl Player {
         inputs: &mut AllInputManagement) {
             
         let mut inputs_for_current_frame = if let Some(&last_action) = inputs.action_history.back() {last_action} else {0};
+        inputs_for_current_frame ^= inputs.input_new_frame;
 
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
             inputs_for_current_frame ^= GameAction::Dash as i32;
         }
 
-        for &(recent_input, is_pressed) in inputs.input_new_frame.iter() {
-            let recent_input_as_game_action = GameAction::from_translated_input(
-                recent_input,
-                inputs_for_current_frame,
-                self.controller.facing_dir,
-            )
-            .unwrap();
-            inputs_for_current_frame = GameAction::update_state(inputs_for_current_frame, (recent_input_as_game_action, is_pressed));
-        }
-
         if Player::check_for_dash_inputs(inputs_for_current_frame, &inputs.action_history) {
             inputs_for_current_frame |= GameAction::Dash as i32;
         }
+
+        println!("inputs {:?}", GameAction::debug_i32(inputs_for_current_frame));
     
         let x = if inputs_for_current_frame & GameAction::Right as i32 > 0 {
             1i8
@@ -179,31 +169,36 @@ impl Player {
             );
             }
         if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true }
+
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
             self.controller.set_entity_state(EntityState::Dashing, &mut self.animator, character_anims);
         }
+
         if inputs_for_current_frame & GameAction::Slide as i32 > 0 {}
 
         inputs.action_history.push_back(inputs_for_current_frame);
         inputs.input_reset_timer.push(0);
-        inputs.input_new_frame.clear();
+        inputs.input_new_frame = 0;
     }
 
     //TODO kinda yikes but should work for now
     fn check_for_dash_inputs(current_actions: i32, last_inputs: &VecDeque<i32>) -> bool {
         let len = last_inputs.len();
-        if len > 3 {
-            let curr_input_right = GameAction::check_if_pressed(current_actions, GameAction::Right as i32);
-            let curr_input_left = GameAction::check_if_pressed(current_actions, GameAction::Left as i32);
-            if !(curr_input_right || curr_input_left) {
-                return false;
-            }
+        if len >= 2 {
 
-            if !(GameAction::check_if_pressed(last_inputs[len-1], GameAction::Right as i32) || 
-            GameAction::check_if_pressed(last_inputs[len-1], GameAction::Left as i32)){
+            let repeated_actions = current_actions & last_inputs[len-2];
+            let gap_frame_actions = repeated_actions & last_inputs[len-1];
+            if repeated_actions > 0 {
+
+                let avoid_dash_combo = !GameAction::is_pressed(last_inputs[len-2], GameAction::Dash);
+
+                let dir_not_pressed = !(GameAction::is_pressed(gap_frame_actions, GameAction::Right) && 
+                    GameAction::is_pressed(gap_frame_actions, GameAction::Left));
+
+                let dir_pressed = GameAction::is_pressed(repeated_actions, GameAction::Right) || 
+                GameAction::is_pressed(repeated_actions, GameAction::Left);
                 
-                return GameAction::check_if_pressed(last_inputs[len-2], GameAction::Right as i32) || 
-                     GameAction::check_if_pressed(last_inputs[len-2], GameAction::Left as i32);
+                return dir_not_pressed && dir_pressed && avoid_dash_combo;
             }
         }
         return false;
@@ -217,15 +212,29 @@ impl Player {
         animation_name: String,
         action_history: &VecDeque<i32>,
     ) {
-        if let Some(special_input) = self.check_special_inputs(character_data, action_history) {
-            self.attack(character_anims, character_data, special_input);
-        } else if let Some(directional_input) = self.check_directional_inputs(
-            character_data,
-            action_history[action_history.len() - 1] | recent_input_as_game_action as i32,
-        ) {
-            self.attack(character_anims, character_data, directional_input);
+        if action_history.len() > 0  {
+            if let Some(directional_input) = self.check_directional_inputs(
+                character_data,
+                action_history.back().unwrap() | recent_input_as_game_action as i32) {
+                self.attack(character_anims, character_data, directional_input);
+            } else {
+                if !self.controller.is_airborne {
+                    self.attack(character_anims, character_data, animation_name);
+                } else if self.controller.is_airborne {
+                    self.attack(
+                        character_anims,
+                        character_data, 
+                        format!("{}_{}", "airborne", animation_name),
+                    );
+                } else {
+                    self.attack(
+                        character_anims,
+                        character_data, 
+                        format!("{}_{}", "crouched", animation_name),
+                    );
+                }
+            }
         } else {
-            self.change_special_meter(0.1);
             if !self.controller.is_airborne {
                 self.attack(character_anims, character_data, animation_name);
             } else if self.controller.is_airborne {
@@ -244,44 +253,6 @@ impl Player {
         }
     }
     
-    fn check_special_inputs(
-        &mut self,
-        character_data: &EntityData,
-        action_history: &VecDeque<i32>,
-    ) -> Option<String> {
-        //iterate over last inputs starting from the end
-        //check of matches against each of the player.input_combination_anims
-        //if no match
-        // iterate over last inputs starting from the end -1
-        //etc
-        //if find match, play animation and remove that input from array
-        let cleaned_history: VecDeque<i32> =
-            action_history.iter().cloned().filter(|&z| z > 0).collect();
-        for possible_combo in character_data.input_combination_anims.iter() {
-            let size_of_combo = possible_combo.0.len();
-            let size_of_history = cleaned_history.len();
-            let mut j = 0;
-            //TODO change special meter price per ability
-            if self.character.special_curr >= 1.0 {
-                if size_of_combo <= size_of_history {
-                    for i in (size_of_history - size_of_combo)..cleaned_history.len() {
-                        if cleaned_history[i] & possible_combo.0[j] > 0 {
-                            j += 1;
-                        } else {
-                            break;
-                        }
-    
-                        if j == size_of_combo {
-                            println!("SPECIAL ATTACK");
-                            return Some(possible_combo.1.clone());
-                        }
-                    }
-                }
-            }
-        }
-        None
-    }
-    
     fn check_directional_inputs(
         &mut self,
         character_data: &EntityData,
@@ -290,8 +261,8 @@ impl Player {
         for possible_combo in character_data.directional_variation_anims.iter() {
             let (moves, name) = possible_combo;
              
-            if GameAction::check_if_pressed(recent_inputs,moves.0  as i32) &&
-                GameAction::check_if_pressed(recent_inputs,moves.1  as i32) 
+            if GameAction::is_pressed(recent_inputs,moves.0) &&
+                GameAction::is_pressed(recent_inputs,moves.1) 
             {
                 return Some(name.to_string());
             }
@@ -317,7 +288,6 @@ impl Player {
 
         self.controller.state_update(&mut self.animator, &assets, true);
 
-        println!("animation before colliders {}", self.animator.current_animation.as_ref().unwrap().name);
         self.collision_manager.update_colliders(self.controller.facing_dir > 0, 
             self.position,  &self.animator, sprite_data)
     }

@@ -2,11 +2,11 @@ use std::collections::VecDeque;
 
 use crate::input::translated_inputs::TranslatedInput;
 
-const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 60;
+const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 10;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct AllInputManagement {
-    pub input_new_frame: VecDeque<(TranslatedInput, bool)>,
+    pub input_new_frame: i32,
     pub action_history: VecDeque<i32>,
     pub input_reset_timer: Vec<i32>,
 
@@ -16,7 +16,7 @@ pub struct AllInputManagement {
 impl AllInputManagement {
     pub fn new() -> Self {
         Self {
-            input_new_frame: VecDeque::new(),
+            input_new_frame: 0,
             action_history: VecDeque::new(),
             input_reset_timer: Vec::new(),
 

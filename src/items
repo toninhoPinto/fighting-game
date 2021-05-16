@@ -1,0 +1,32 @@
+Active Items
+    -Rail gun -> Shoots laser that does damage
+    -Missile Barrage -> Spawns Enemy tracking missiles
+    -EMP -> Stuns enemies around you temporarily
+
+
+
+Combo Items
+    -Extends Punch Combo by 1 (until 4 or 5)
+    -Extends Kick Combo by 1 (until 4 or 5)
+
+    -Extends Airborne Punch Combo by 1 (until 4 or 5)
+    -Extends Airborne Kick Combo by 1 (until 4 or 5)
+
+    -Add Airborne Dropper (Launches enemy to the ground dealing extra damage)
+    -Add Dashing attack
+    -Add Airborne Self-Dropper (Launch youself to the ground doing damage around you when landing)
+
+Passive Items
+    - When you jump enemies are lifted with you -> Anti-gravity area
+    - Drones that attack enemies                -> Anti-Personnel Drones
+    - Every x enemies heal a bit of hp          -> Nano-healing
+    - Increasing Max hp                         -> Armor Plating
+    - Increases movement speed                  -> Enriched fuel
+    - Increases attack speed (animations are acellerated)
+    - Increases attack damage of each attack
+    - Increases attack push back
+    - Pulls enemies closer to the attack hitbox -> Magnetic Fists
+    - Add double jump
+    - Add air-dash
+    - Dash starts making damage
+    

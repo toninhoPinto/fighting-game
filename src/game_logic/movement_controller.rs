@@ -141,17 +141,17 @@ impl MovementController {
             self.state == EntityState::Idle ||
             self.state == EntityState::Walking || 
             self.state == EntityState::Landing ||
-            self.state == EntityState::Dashing || 
+            (self.state == EntityState::Dashing && animator.is_finished) || 
             self.state == EntityState::Hurt ||
             self.state == EntityState::KnockedLanding;
 
         let can_walk = 
             self.state == EntityState::Idle ||
             self.state == EntityState::Walking ||
-            self.state == EntityState::Landing ||
-            self.state == EntityState::Dashing || 
-            self.state == EntityState::Hurt ||
-            self.state == EntityState::KnockedLanding;
+            (self.state == EntityState::Landing && animator.is_finished) ||
+            (self.state == EntityState::Dashing && animator.is_finished) || 
+            (self.state == EntityState::Hurt && animator.is_finished) ||
+            (self.state == EntityState::KnockedLanding && animator.is_finished);
 
         let can_jump = 
             (self.is_attacking && self.has_hit) ||
@@ -165,6 +165,15 @@ impl MovementController {
             new_state == EntityState::Jump ||
             new_state == EntityState::Dashing 
             );
+        
+        let can_dash = !self.is_airborne && (
+            self.state == EntityState::Idle ||
+        self.state == EntityState::Walking ||
+        (self.state == EntityState::Landing && animator.is_finished) ||
+        (self.state == EntityState::Dashing && animator.is_finished) || 
+        (self.state == EntityState::Hurt && animator.is_finished) ||
+        (self.state == EntityState::KnockedLanding && animator.is_finished)
+        );
         
         
         if (!self.is_attacking || (self.is_attacking && interrupt_attack) || cancel_attack )  && self.state != EntityState::Dead{
@@ -182,6 +191,11 @@ impl MovementController {
                 },
                 EntityState::Jump => {
                     if can_jump {
+                        self.update_state(new_state, animator, assets);
+                    }
+                },
+                EntityState::Dashing => {
+                    if can_dash {
                         self.update_state(new_state, animator, assets);
                     }
                 },
