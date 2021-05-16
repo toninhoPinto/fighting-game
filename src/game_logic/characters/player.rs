@@ -105,10 +105,34 @@ impl Player {
         }
     }
 
-    pub fn apply_input_state(&mut self, action_history: &VecDeque<i32>, character_anims: &EntityAnimations) {
-        if action_history.len() > 0 && GameAction::is_pressed(action_history[action_history.len()-1], GameAction::Jump) {
-            self.controller.jump(&mut self.animator, character_anims);
+    pub fn apply_input_state(&mut self, inputs: &mut AllInputManagement, character_anims: &EntityAnimations, character_data: &EntityData) {
+        if let Some(last_action) = inputs.action_history.back() {
+            if GameAction::is_pressed(*last_action, GameAction::Jump) { 
+                self.controller.jump(&mut self.animator, character_anims);
+            }
         }
+
+        let mut occupied = (self.controller.is_attacking && !self.controller.has_hit) ||
+            self.controller.state == EntityState::Hurt ||
+            self.controller.state == EntityState::Landing || 
+            self.controller.state == EntityState::Dashing;
+
+        let action_history = inputs.action_history.clone();
+
+        inputs.input_buffer.retain(|&buffered_input| {
+
+            occupied = (self.controller.is_attacking && !self.controller.has_hit) ||
+            self.controller.state == EntityState::Hurt ||
+            self.controller.state == EntityState::Landing || 
+            self.controller.state == EntityState::Dashing;
+
+            if !occupied {
+                self.process_input(buffered_input, character_anims, character_data, &action_history);
+            }
+
+            occupied
+        });
+            
     }
 
     pub fn apply_input(&mut self,   
@@ -127,8 +151,36 @@ impl Player {
             inputs_for_current_frame |= GameAction::Dash as i32;
         }
 
-        println!("inputs {:?}", GameAction::debug_i32(inputs_for_current_frame));
+        let occupied = (self.controller.is_attacking && !self.controller.has_hit) ||
+        self.controller.state == EntityState::Hurt ||
+        self.controller.state == EntityState::Landing || 
+        self.controller.state == EntityState::Dashing ;
+        
+        if inputs_for_current_frame != 0 && occupied {
+            inputs.input_buffer.push_front(inputs_for_current_frame);
+            inputs.action_history.push_back(inputs_for_current_frame);
+            inputs.input_reset_timer.push(0);
+            inputs.input_new_frame = 0;
+            return;
+        }
+
+        self.process_input(inputs_for_current_frame, character_anims, character_data, &inputs.action_history);
+
+        inputs.action_history.push_back(inputs_for_current_frame);
+        inputs.input_reset_timer.push(0);
+        inputs.input_new_frame = 0;
+    }
+
+
     
+    fn process_input(&mut self, 
+        inputs_for_current_frame: i32, 
+        character_anims: &EntityAnimations,
+        character_data: &EntityData, 
+        action_history: &VecDeque<i32>) {
+
+        //println!("run inputs {:?}", GameAction::debug_i32(inputs_for_current_frame));
+
         let x = if inputs_for_current_frame & GameAction::Right as i32 > 0 {
             1i8
         } else if inputs_for_current_frame & GameAction::Left as i32 > 0 {
@@ -156,7 +208,7 @@ impl Player {
                 character_data,
                 GameAction::Punch,
                 "light_punch".to_string(),
-                &inputs.action_history,
+                action_history,
             );
         }
         if inputs_for_current_frame & GameAction::Kick as i32 > 0 {
@@ -165,7 +217,7 @@ impl Player {
                 character_data,
                 GameAction::Kick,
                 "light_kick".to_string(),
-                &inputs.action_history,
+                action_history,
             );
             }
         if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true }
@@ -175,10 +227,6 @@ impl Player {
         }
 
         if inputs_for_current_frame & GameAction::Slide as i32 > 0 {}
-
-        inputs.action_history.push_back(inputs_for_current_frame);
-        inputs.input_reset_timer.push(0);
-        inputs.input_new_frame = 0;
     }
 
     //TODO kinda yikes but should work for now

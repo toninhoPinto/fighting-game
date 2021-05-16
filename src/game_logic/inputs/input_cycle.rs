@@ -1,7 +1,5 @@
 use std::collections::VecDeque;
 
-use crate::input::translated_inputs::TranslatedInput;
-
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 10;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -10,7 +8,7 @@ pub struct AllInputManagement {
     pub action_history: VecDeque<i32>,
     pub input_reset_timer: Vec<i32>,
 
-    pub input_buffer: VecDeque<(TranslatedInput, bool)>
+    pub input_buffer: VecDeque<i32>
 }
 
 impl AllInputManagement {

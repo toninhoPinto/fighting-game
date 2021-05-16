@@ -224,7 +224,7 @@ impl Scene for Match {
                         game.player.apply_input(&p1_anims, &p1_data, &mut self.p1_inputs);
                     }
 
-                    game.player.apply_input_state(&self.p1_inputs.action_history, &p1_anims);
+                    game.player.apply_input_state(&mut self.p1_inputs, &p1_anims, &p1_data);
                 }
 
                 self.p1_inputs.update_inputs_reset_timer();

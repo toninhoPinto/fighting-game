@@ -15,6 +15,7 @@ pub struct EntityAnimations {
 }
 
 pub struct EntityData {
+    //pub auto_combo_strings: HashMap<GameAction, Vec<String>>,
     pub directional_variation_anims: Vec<((GameAction, GameAction), String)>,
     pub attack_effects: HashMap<String, (i32, Ability)>,
     pub attacks: HashMap<String, Attack>,
