@@ -345,6 +345,8 @@ impl MovementController {
                     let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
 
                     *position += Vector2::new(position_offset_x, position_offset_y);
+                } else {
+                    self.velocity_y = 0.0;
                 }
                 
             }
