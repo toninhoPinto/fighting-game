@@ -31,8 +31,7 @@ use input::translated_inputs::TranslatedInput;
 
 //TODO features tomorrow
 //separate json for animation offsets and animation states (startup, active, recovery)
-//If you press dash input while it is still on the last few frames of dash recovery it will not dash (i believe due to using play_once instead of play_animation)
-//this is fixed by having input buffer
+//Jumping fucks up rendering order, use grounded_y instead of actual y position
 
 //TODO FEATURES
 //play block animation while standing 

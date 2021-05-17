@@ -107,8 +107,15 @@ impl Player {
     }
 
     pub fn apply_input_state(&mut self, inputs: &mut AllInputManagement, character_anims: &EntityAnimations, character_data: &EntityData) {
-        if let Some(last_action) = inputs.action_history.back() {
-            if GameAction::is_pressed(*last_action, GameAction::Jump) { 
+        if let Some(&last_action) = inputs.action_history.back() {
+            if GameAction::is_pressed(last_action, GameAction::Right) { //1
+                self.controller.set_velocity_x(1, &mut self.animator, character_anims);
+            }
+            if GameAction::is_pressed(last_action, GameAction::Left) { //-1
+                self.controller.set_velocity_x(-1, &mut self.animator, character_anims);
+            }
+
+            if GameAction::is_pressed(last_action, GameAction::Jump) { 
                 self.controller.jump(&mut self.animator, character_anims);
             }
         }
@@ -158,8 +165,25 @@ impl Player {
         self.controller.state == EntityState::Dashing ;
         
         if inputs_for_current_frame != 0 && occupied {
-            if inputs.input_buffer.len() < 2 {
-                inputs.input_buffer.push_front(inputs_for_current_frame);
+            if inputs.input_buffer.len() < 1 {
+                let mut input_to_buffer = inputs_for_current_frame;
+                let dashing = inputs_for_current_frame & GameAction::Dash as i32 > 0;
+                if !dashing {
+                    if input_to_buffer & GameAction::Right as i32 > 0 {
+                        input_to_buffer ^= GameAction::Right as i32;
+                    }
+                    if input_to_buffer & GameAction::Left as i32 > 0 {
+                        input_to_buffer ^= GameAction::Left as i32;
+                    }
+                    if input_to_buffer & GameAction::Up as i32 > 0 {
+                        input_to_buffer ^= GameAction::Up as i32;
+                    }
+                    if input_to_buffer & GameAction::Down as i32 > 0 {
+                        input_to_buffer ^= GameAction::Down as i32;
+                    }
+                }
+                inputs.input_buffer.push_front(input_to_buffer);
+                inputs.input_buffer_reset_time.push(0);
             }
             
             inputs.action_history.push_back(inputs_for_current_frame);
@@ -241,7 +265,7 @@ impl Player {
 
                 let avoid_dash_combo = !GameAction::is_pressed(last_inputs[len-2], GameAction::Dash);
 
-                let dir_not_pressed = !(GameAction::is_pressed(gap_frame_actions, GameAction::Right) && 
+                let dir_not_pressed = !(GameAction::is_pressed(gap_frame_actions, GameAction::Right) || 
                     GameAction::is_pressed(gap_frame_actions, GameAction::Left));
 
                 let dir_pressed = GameAction::is_pressed(repeated_actions, GameAction::Right) || 

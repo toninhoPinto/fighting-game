@@ -229,6 +229,7 @@ impl Scene for Match {
                 }
 
                 self.p1_inputs.update_inputs_reset_timer();
+                self.p1_inputs.update_input_buffer_reset_time();
 
                 game.player.character_width = match game
                     .player.collision_manager.colliders

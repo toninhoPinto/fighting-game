@@ -37,7 +37,7 @@ impl MovementController {
             velocity_y: 0f64,
         
             direction_at_jump_time: 0,
-            jump_initial_velocity: 2.0 * character.jump_height,
+            jump_initial_velocity: 4.0 * character.jump_height,
             extra_gravity: None,
         
             facing_dir: (player_pos.x - starting_pos.x).sign() as i8,
@@ -63,6 +63,18 @@ impl MovementController {
             self.set_entity_state(EntityState::Idle, animator, assets);
         }
         self.walking_dir = vec;
+    }
+
+    pub fn set_velocity_x(&mut self, x: i8, animator: &mut Animator, assets: &EntityAnimations) {
+        if x != 0 {
+            if x != 0 {
+                self.facing_dir = x;
+            }
+            self.set_entity_state(EntityState::Walking, animator, assets);
+        } else {
+            self.set_entity_state(EntityState::Idle, animator, assets);
+        }
+        self.walking_dir.x = x;
     }
 
     pub fn player_can_attack(&self) -> bool {
@@ -217,7 +229,7 @@ impl MovementController {
     pub fn launch(&mut self, attack: &Attack, animator: &mut Animator, assets: &EntityAnimations) {
         self.is_airborne = true;
         self.set_entity_state(EntityState::Knocked, animator, assets);
-        self.velocity_y = self.jump_initial_velocity / 0.5;
+        self.velocity_y = self.jump_initial_velocity;
         self.direction_at_jump_time = 0;
     }
 
@@ -293,7 +305,7 @@ impl MovementController {
     ) {
         if self.state == EntityState::Jump {
             self.ground_height = position.y as i32;
-            self.velocity_y = self.jump_initial_velocity / 0.5;
+            self.velocity_y = self.jump_initial_velocity;
             self.direction_at_jump_time = self.walking_dir.x.sign();
         }
    
@@ -301,7 +313,6 @@ impl MovementController {
             self.is_airborne = true;
         }
     
-        //TODO I KINDA HATE THIS
         if self.knock_back_distance.abs() > 0.0 {
             *position += Vector2::new(self.knock_back_distance as f64 * dt, 0.0);
             self.knock_back_distance -= self.knock_back_distance * 10.0 * dt;
@@ -313,7 +324,13 @@ impl MovementController {
         if self.is_airborne {
             let gravity = match self.extra_gravity {
                 Some(extra_g) => extra_g,
-                None => -2.0 * self.jump_initial_velocity / 0.25,
+                None => { 
+                    if self.state == EntityState::Knocked {
+                        -4.0 *self.jump_initial_velocity
+                    } else {
+                        -4.0 * self.jump_initial_velocity
+                    } 
+                } 
             };
     
             let ground = self.ground_height;
@@ -333,7 +350,6 @@ impl MovementController {
             let should_land = position.y < ground as f64;
             if should_land {
                 position.y = self.ground_height as f64;
-                self.velocity_y = character.jump_height;
                 if self.state == EntityState::Jumping {
                     self.set_entity_state(EntityState::Landing, animator, anims);
                     self.is_attacking = false;

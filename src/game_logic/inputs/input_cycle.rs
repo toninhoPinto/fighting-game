@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
 
 const FRAME_WINDOW_BETWEEN_INPUTS: i32 = 10;
+const FRAME_WINDOW_BUFFER: i32 = 10;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct AllInputManagement {
@@ -8,7 +9,8 @@ pub struct AllInputManagement {
     pub action_history: VecDeque<i32>,
     pub input_reset_timer: Vec<i32>,
 
-    pub input_buffer: VecDeque<i32>
+    pub input_buffer: VecDeque<i32>,
+    pub input_buffer_reset_time: Vec<i32>,
 }
 
 impl AllInputManagement {
@@ -19,6 +21,7 @@ impl AllInputManagement {
             input_reset_timer: Vec::new(),
 
             input_buffer: VecDeque::new(),
+            input_buffer_reset_time: Vec::new(),
         }
     }
 
@@ -33,5 +36,18 @@ impl AllInputManagement {
         }
         self.input_reset_timer
             .retain(|&i| i <= FRAME_WINDOW_BETWEEN_INPUTS);
+    }
+
+    pub fn update_input_buffer_reset_time(&mut self) {
+        for i in 0..self.input_buffer_reset_time.len() {
+            self.input_buffer_reset_time[i] += 1;
+            if self.input_buffer_reset_time[i] > FRAME_WINDOW_BUFFER {
+                if self.input_buffer.len() > 0 {
+                    self.input_buffer.pop_front();
+                }
+            }
+        }
+        self.input_buffer_reset_time
+            .retain(|&i| i <= FRAME_WINDOW_BUFFER);
     }
 }
