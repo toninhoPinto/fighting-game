@@ -2,7 +2,7 @@ use parry2d::na::Vector2;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::Texture;
 
-use std::{collections::{HashMap, VecDeque}, fmt};
+use std::{cmp, collections::{HashMap, VecDeque}, fmt};
 
 use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, 
 collision::collider_manager::ColliderManager, 
@@ -80,6 +80,7 @@ impl Player {
     pub fn attack(&mut self, character_assets: &EntityAnimations, character_data: &EntityData, attack_animation: String) {
         if self.controller.player_can_attack() {
             self.controller.is_attacking = true;
+            self.controller.combo_counter += 1;
 
             self.collision_manager.collisions_detected.clear();
             self.controller.has_hit = false;
@@ -157,7 +158,10 @@ impl Player {
         self.controller.state == EntityState::Dashing ;
         
         if inputs_for_current_frame != 0 && occupied {
-            inputs.input_buffer.push_front(inputs_for_current_frame);
+            if inputs.input_buffer.len() < 2 {
+                inputs.input_buffer.push_front(inputs_for_current_frame);
+            }
+            
             inputs.action_history.push_back(inputs_for_current_frame);
             inputs.input_reset_timer.push(0);
             inputs.input_new_frame = 0;
@@ -171,8 +175,6 @@ impl Player {
         inputs.input_new_frame = 0;
     }
 
-
-    
     fn process_input(&mut self, 
         inputs_for_current_frame: i32, 
         character_anims: &EntityAnimations,
@@ -206,20 +208,20 @@ impl Player {
             self.check_attack_inputs(
                 character_anims,
                 character_data,
+                action_history,
                 GameAction::Punch,
                 "light_punch".to_string(),
-                action_history,
             );
         }
         if inputs_for_current_frame & GameAction::Kick as i32 > 0 {
             self.check_attack_inputs(
                 character_anims,
                 character_data,
+                action_history,
                 GameAction::Kick,
                 "light_kick".to_string(),
-                action_history,
             );
-            }
+        }
         if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true }
 
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
@@ -229,7 +231,6 @@ impl Player {
         if inputs_for_current_frame & GameAction::Slide as i32 > 0 {}
     }
 
-    //TODO kinda yikes but should work for now
     fn check_for_dash_inputs(current_actions: i32, last_inputs: &VecDeque<i32>) -> bool {
         let len = last_inputs.len();
         if len >= 2 {
@@ -256,9 +257,9 @@ impl Player {
         &mut self,
         character_anims: &EntityAnimations,
         character_data: &EntityData,
+        action_history: &VecDeque<i32>,
         recent_input_as_game_action: GameAction,
         animation_name: String,
-        action_history: &VecDeque<i32>,
     ) {
         if action_history.len() > 0  {
             if let Some(directional_input) = self.check_directional_inputs(
@@ -267,35 +268,25 @@ impl Player {
                 self.attack(character_anims, character_data, directional_input);
             } else {
                 if !self.controller.is_airborne {
-                    self.attack(character_anims, character_data, animation_name);
-                } else if self.controller.is_airborne {
-                    self.attack(
-                        character_anims,
-                        character_data, 
-                        format!("{}_{}", "airborne", animation_name),
-                    );
+                    if let Some(combo) = character_data.auto_combo_strings.get(&(recent_input_as_game_action as i32)) {
+                        self.attack(character_anims, character_data, combo[cmp::min(self.controller.combo_counter as usize, combo.len()-1)].to_string());
+                    }
                 } else {
                     self.attack(
                         character_anims,
                         character_data, 
-                        format!("{}_{}", "crouched", animation_name),
+                        format!("{}_{}", "airborne", animation_name),
                     );
                 }
             }
         } else {
             if !self.controller.is_airborne {
                 self.attack(character_anims, character_data, animation_name);
-            } else if self.controller.is_airborne {
-                self.attack(
-                    character_anims,
-                    character_data, 
-                    format!("{}_{}", "airborne", animation_name),
-                );
             } else {
                 self.attack(
                     character_anims,
                     character_data, 
-                    format!("{}_{}", "crouched", animation_name),
+                    format!("{}_{}", "airborne", animation_name),
                 );
             }
         }

@@ -21,6 +21,7 @@ pub struct MovementController {
     pub is_attacking: bool,
     pub is_blocking: bool,
     pub is_airborne: bool,
+    pub combo_counter: i32,
     pub has_hit: bool,
     pub knock_back_distance: f64,
 
@@ -44,6 +45,7 @@ impl MovementController {
             is_attacking: false,
             is_blocking: false,
             is_airborne: false,
+            combo_counter: 0,
             has_hit: false,
             knock_back_distance: 0f64,
         
@@ -230,6 +232,7 @@ impl MovementController {
 
             if self.is_attacking {
                 self.is_attacking = false;
+                self.combo_counter = 0;
                 if self.walking_dir.x != 0 || self.walking_dir.y != 0  {
                     self.set_entity_state(EntityState::Walking, animator, assets);
                 } else {

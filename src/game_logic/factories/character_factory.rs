@@ -152,18 +152,6 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
     );
 
     attacks.insert(
-        "c.lk".to_string(),
-        Attack {
-            damage: 15,
-            stun_on_hit: 10,
-            stun_on_block: 4,
-            push_back: 300.0,
-            attack_type: AttackType::Normal,
-            on_hit: None,
-        },
-    );
-
-    attacks.insert(
         "j.lk".to_string(),
         Attack {
             damage: 15,
@@ -193,7 +181,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 5,
             stun_on_hit: 10,
             stun_on_block: 4,
-            push_back: 50.0,
+            push_back: 1250.0,
             attack_type: AttackType::Normal,
             on_hit: None,
         },
@@ -205,7 +193,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             damage: 10,
             stun_on_hit: 20,
             stun_on_block: 14,
-            push_back: 50.0,
+            push_back: 550.0,
             attack_type: AttackType::Normal,
             on_hit: None,
         },
@@ -242,8 +230,18 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Entit
     }
 }
 
+fn load_foxgirl_auto_combos() -> HashMap<i32, Vec<&'static str>> {
+    let mut auto_combos = HashMap::new();
+
+    auto_combos.insert(GameAction::Punch as i32, vec!["light_punch", "heavy_punch", "medium_punch"]);
+    auto_combos.insert(GameAction::Kick as i32, vec!["light_kick"]);
+
+    auto_combos
+}
+
 fn load_foxgirl_data() -> EntityData {
     EntityData {
+        auto_combo_strings: load_foxgirl_auto_combos(),
         directional_variation_anims: load_foxgirl_directional_inputs(),
         attack_effects: HashMap::new(),
         attacks: load_foxgirl_attacks(),

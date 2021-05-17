@@ -3,8 +3,6 @@ Active Items
     -Missile Barrage -> Spawns Enemy tracking missiles
     -EMP -> Stuns enemies around you temporarily
 
-
-
 Combo Items
     -Extends Punch Combo by 1 (until 4 or 5)
     -Extends Kick Combo by 1 (until 4 or 5)
@@ -29,4 +27,5 @@ Passive Items
     - Add double jump
     - Add air-dash
     - Dash starts making damage
+    - Fly by keeping pressing Jump
     
