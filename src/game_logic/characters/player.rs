@@ -303,7 +303,8 @@ impl Player {
                 } 
 
                 if let Some(combo) = character_data.auto_combo_strings.get(&(combo_id)) {
-                    self.attack(character_anims, character_data, combo[cmp::min(self.controller.combo_counter as usize, combo.len()-1)].to_string());
+                    let combo_number = self.controller.combo_counter as usize % combo.len();
+                    self.attack(character_anims, character_data, combo[combo_number].to_string());
                 }
             }
         } else {
