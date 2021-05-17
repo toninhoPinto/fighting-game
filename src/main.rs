@@ -78,7 +78,7 @@ fn main() -> Result<(), String> {
 
     let music =
         music_player::load_from_file(Path::new("assets/musics/RetroFuture_Dirty.mp3")).unwrap();
-    music_player::play_music(&music);
+   // music_player::play_music(&music);
 
     let window = video_subsystem
         .window("fighting game", 1280, 720)

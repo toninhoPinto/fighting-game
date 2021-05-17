@@ -10,6 +10,9 @@ pub fn play_sound(sound_chunk: &Chunk) {
     let channel_to_play = Channel::all();
     if !channel_to_play.is_playing(){
         channel_to_play.play(&sound_chunk, 0).unwrap();
+    } else {
+        channel_to_play.halt();
+        channel_to_play.play(&sound_chunk, 0).unwrap();
     }
 }
 

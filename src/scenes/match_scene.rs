@@ -198,8 +198,6 @@ impl Scene for Match {
                         inputs_for_current_frame,
                         game.player.controller.facing_dir,
                     );
-
-                    println!("input {} gameaction {:?}", translated_input, recent_input_as_game_action.clone().unwrap());
                     self.p1_inputs.input_new_frame ^= recent_input_as_game_action.unwrap() as i32;
                 }
             }
