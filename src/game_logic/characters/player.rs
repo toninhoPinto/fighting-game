@@ -267,16 +267,19 @@ impl Player {
                 action_history.back().unwrap() | recent_input_as_game_action as i32) {
                 self.attack(character_anims, character_data, directional_input);
             } else {
-                if !self.controller.is_airborne {
-                    if let Some(combo) = character_data.auto_combo_strings.get(&(recent_input_as_game_action as i32)) {
-                        self.attack(character_anims, character_data, combo[cmp::min(self.controller.combo_counter as usize, combo.len()-1)].to_string());
-                    }
-                } else {
-                    self.attack(
-                        character_anims,
-                        character_data, 
-                        format!("{}_{}", "airborne", animation_name),
-                    );
+                let mut combo_id = 0;
+                if recent_input_as_game_action == GameAction::Punch {
+                    combo_id = 0;
+                }
+                if recent_input_as_game_action == GameAction::Kick {
+                    combo_id = 1;
+                }
+                if self.controller.is_airborne {
+                    combo_id += 2;
+                } 
+
+                if let Some(combo) = character_data.auto_combo_strings.get(&(combo_id)) {
+                    self.attack(character_anims, character_data, combo[cmp::min(self.controller.combo_counter as usize, combo.len()-1)].to_string());
                 }
             }
         } else {

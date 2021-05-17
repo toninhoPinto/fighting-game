@@ -337,6 +337,7 @@ impl MovementController {
                 if self.state == EntityState::Jumping {
                     self.set_entity_state(EntityState::Landing, animator, anims);
                     self.is_attacking = false;
+                    self.combo_counter = 0;
                 }
                 if self.state == EntityState::Knocked {
                     self.set_entity_state(EntityState::KnockedLanding, animator, anims);

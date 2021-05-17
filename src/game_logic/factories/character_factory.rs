@@ -91,6 +91,15 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     let airborne_light_kick_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/light_kick", "airborne_light_kick");
 
+    let airborne_punch = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/punch", "airborne_punch");
+
+    let airborne_poke = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/poke", "airborne_poke");
+
+    let airborne_slash = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/slash", "airborne_slash");
+
     let launcher_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/launcher", "launcher");
 
@@ -100,6 +109,10 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/neutral_jump", "neutral_jump");
 
     let mut character_anims = HashMap::new();
+
+    character_anims.insert(airborne_punch.name.clone(),airborne_punch);
+    character_anims.insert(airborne_poke.name.clone(),airborne_poke);
+    character_anims.insert(airborne_slash.name.clone(),airborne_slash);
 
     character_anims.insert(idle_anim.name.clone(),idle_anim);
     character_anims.insert(take_damage_anim.name.clone(),take_damage_anim);
@@ -153,6 +166,42 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
 
     attacks.insert(
         "j.lk".to_string(),
+        Attack {
+            damage: 15,
+            stun_on_hit: 10,
+            stun_on_block: 4,
+            push_back: 300.0,
+            attack_type: AttackType::Normal,
+            on_hit: None,
+        },
+    );
+
+    attacks.insert(
+        "j.punch".to_string(),
+        Attack {
+            damage: 15,
+            stun_on_hit: 10,
+            stun_on_block: 4,
+            push_back: 300.0,
+            attack_type: AttackType::Normal,
+            on_hit: None,
+        },
+    );
+
+    attacks.insert(
+        "poke".to_string(),
+        Attack {
+            damage: 15,
+            stun_on_hit: 10,
+            stun_on_block: 4,
+            push_back: 300.0,
+            attack_type: AttackType::Normal,
+            on_hit: None,
+        },
+    );
+
+    attacks.insert(
+        "slash".to_string(),
         Attack {
             damage: 15,
             stun_on_hit: 10,
@@ -233,8 +282,11 @@ fn load_foxgirl_assets(texture_creator: &TextureCreator<WindowContext>) -> Entit
 fn load_foxgirl_auto_combos() -> HashMap<i32, Vec<&'static str>> {
     let mut auto_combos = HashMap::new();
 
-    auto_combos.insert(GameAction::Punch as i32, vec!["light_punch", "heavy_punch", "medium_punch"]);
-    auto_combos.insert(GameAction::Kick as i32, vec!["light_kick"]);
+    auto_combos.insert(0, vec!["light_punch", "heavy_punch", "medium_punch"]);
+    auto_combos.insert(1, vec!["light_kick"]);
+
+    auto_combos.insert(2, vec!["airborne_slash", "airborne_poke", "airborne_punch"]);
+    auto_combos.insert(3, vec!["airborne_light_kick"]);
 
     auto_combos
 }

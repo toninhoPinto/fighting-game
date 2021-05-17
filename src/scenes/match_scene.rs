@@ -199,6 +199,7 @@ impl Scene for Match {
                         game.player.controller.facing_dir,
                     );
 
+                    println!("input {} gameaction {:?}", translated_input, recent_input_as_game_action.clone().unwrap());
                     self.p1_inputs.input_new_frame ^= recent_input_as_game_action.unwrap() as i32;
                 }
             }
@@ -316,7 +317,7 @@ impl Scene for Match {
                     &hp_bars,
                     &special_bars,
                    // &end_game_match,
-                    true,
+                    false,
                 )
                 .unwrap();
 
