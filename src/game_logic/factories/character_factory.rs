@@ -177,7 +177,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
     );
 
     attacks.insert(
-        "j.punch".to_string(),
+        "j.p".to_string(),
         Attack {
             damage: 15,
             stun_on_hit: 10,
@@ -285,7 +285,7 @@ fn load_foxgirl_auto_combos() -> HashMap<i32, Vec<&'static str>> {
     auto_combos.insert(0, vec!["light_punch", "heavy_punch", "medium_punch"]);
     auto_combos.insert(1, vec!["light_kick"]);
 
-    auto_combos.insert(2, vec!["airborne_slash", "airborne_poke", "airborne_punch"]);
+    auto_combos.insert(2, vec!["airborne_poke", "airborne_slash", "airborne_punch"]);
     auto_combos.insert(3, vec!["airborne_light_kick"]);
 
     auto_combos

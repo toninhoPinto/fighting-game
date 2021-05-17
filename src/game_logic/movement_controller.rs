@@ -229,7 +229,7 @@ impl MovementController {
     pub fn launch(&mut self, attack: &Attack, animator: &mut Animator, assets: &EntityAnimations) {
         self.is_airborne = true;
         self.set_entity_state(EntityState::Knocked, animator, assets);
-        self.velocity_y = self.jump_initial_velocity;
+        self.velocity_y = self.jump_initial_velocity * 0.75f64;
         self.direction_at_jump_time = 0;
     }
 
@@ -292,7 +292,6 @@ impl MovementController {
 
     }
 
-
     pub fn update(
         &mut self,
         position: &mut Vector2<f64>,
@@ -326,9 +325,9 @@ impl MovementController {
                 Some(extra_g) => extra_g,
                 None => { 
                     if self.state == EntityState::Knocked {
-                        -4.0 *self.jump_initial_velocity
+                        -1.5 * self.jump_initial_velocity
                     } else {
-                        -4.0 * self.jump_initial_velocity
+                        -3.0 * self.jump_initial_velocity
                     } 
                 } 
             };
@@ -341,9 +340,13 @@ impl MovementController {
                     * character.jump_distance
                     * dt;
     
-                self.velocity_y += gravity * dt;
-                let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
-                *position += Vector2::new(position_offset_x, position_offset_y);
+                if !self.is_attacking && self.state != EntityState::Hurt {
+                    self.velocity_y += gravity * dt;
+                    let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
+
+                    *position += Vector2::new(position_offset_x, position_offset_y);
+                }
+                
             }
     
             //reset position back to ground height
