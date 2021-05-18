@@ -1,0 +1,22 @@
+Procedurally generated node map
+
+node types:
+    - level
+    - event 
+    - store
+    - boss
+
+A Level includes: 
+    - enemies
+    - 1 item
+
+An Event are:
+    - Text and provided two choices
+        -One choice provides some benefits or simply skips
+        -The second choice provides big benefits but you need to fight a specific challenge level
+
+Examples of Events:
+     
+
+
+----------------------------------------------------------------

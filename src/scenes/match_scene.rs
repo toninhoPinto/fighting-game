@@ -14,7 +14,7 @@ use sdl2::{
     EventPump, GameControllerSubsystem, JoystickSubsystem,
 };
 
-use crate::{ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}};
+use crate::{ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -86,10 +86,7 @@ impl Scene for Match {
         texture_creator: &TextureCreator<WindowContext>,
 
         event_pump: &mut EventPump,
-        joystick: &JoystickSubsystem,
-        controller: &GameControllerSubsystem,
-        controls: &HashMap<String, TranslatedInput>,
-        connected_controllers: &mut Controller,
+        input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
     ) {
         let mut general_assets = CommonAssets::load(&texture_creator);
@@ -182,13 +179,13 @@ impl Scene for Match {
                     _ => {}
                 };
                 input::controller_handler::handle_new_controller(
-                    controller,
-                    joystick,
+                    &input_devices.controller,
+                    &input_devices. joystick,
                     &event,
-                    connected_controllers,
+                    &mut input_devices.joys,
                 );
 
-                let raw_input = input::input_handler::rcv_input(&event, &controls);
+                let raw_input = input::input_handler::rcv_input(&event, &input_devices.controls);
 
                 if let Some((controller_id, translated_input, is_pressed)) = raw_input {
 

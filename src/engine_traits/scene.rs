@@ -1,13 +1,9 @@
-use crate::{
-    input::{controller_handler::Controller, translated_inputs::TranslatedInput},
-    GameStateData,
-};
+use crate::{GameStateData, input::{input_devices::InputDevices}};
 use sdl2::{
     render::{Canvas, TextureCreator},
     video::{Window, WindowContext},
-    EventPump, GameControllerSubsystem, JoystickSubsystem,
+    EventPump,
 };
-use std::collections::HashMap;
 pub(crate) trait Scene {
     fn run(
         &mut self,
@@ -15,10 +11,7 @@ pub(crate) trait Scene {
         game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
         event_pump: &mut EventPump,
-        joystick: &JoystickSubsystem,
-        controller: &GameControllerSubsystem,
-        controls: &HashMap<String, TranslatedInput>,
-        joys: &mut Controller,
+        input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
     );
 }

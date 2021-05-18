@@ -24,7 +24,7 @@ mod enemy_behaviour;
 
 use asset_management::sound::{init_sound, music_player};
 
-use crate::asset_management::controls;
+use crate::{asset_management::controls, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
 
 use input::translated_inputs::TranslatedInput;
@@ -32,6 +32,8 @@ use input::translated_inputs::TranslatedInput;
 //TODO features tomorrow
 //separate json for animation offsets and animation states (startup, active, recovery)
 //Jumping fucks up rendering order, use grounded_y instead of actual y position
+//make overworld proc gen man
+//Improve AI
 
 //TODO FEATURES
 //play block animation while standing 
@@ -70,8 +72,7 @@ fn main() -> Result<(), String> {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
     let _image_context = image::init(InitFlag::PNG | InitFlag::JPG)?;
-    let joystick = sdl_context.joystick()?;
-    let controller = sdl_context.game_controller()?;
+
     let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
     let _mixer_context = init_sound();
@@ -94,13 +95,18 @@ fn main() -> Result<(), String> {
     let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_context.event_pump()?;
-    let mut controller_data = Controller::new();
-    controller_data.add_keyboard(); //should not use 0
+
 
     let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 128)?;
 
-    //controllers
-    let controls: HashMap<_, TranslatedInput> = controls::load_controls();
+    let mut controller_data = Controller::new();
+    controller_data.add_keyboard();
+    let mut device_management = InputDevices {
+        joystick: sdl_context.joystick()?,
+        controller: sdl_context.game_controller()?,
+        controls: controls::load_controls(),
+        joys: controller_data,
+    };
 
     let scene2 = MenuScene::new_main_menu(&font);
 
@@ -117,10 +123,7 @@ fn main() -> Result<(), String> {
             &mut game_state_data,
             &texture_creator,
             &mut event_pump,
-            &joystick,
-            &controller,
-            &controls,
-            &mut controller_data,
+            &mut device_management,
             &mut canvas,
         );
     }

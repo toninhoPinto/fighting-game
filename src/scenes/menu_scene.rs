@@ -9,10 +9,7 @@
 //credits
 //quit
 
-use crate::{
-    input::{self, controller_handler::Controller, translated_inputs::TranslatedInput},
-    GameStateData,
-};
+use crate::{GameStateData, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use sdl2::{
     event::Event,
     pixels::Color,
@@ -21,9 +18,8 @@ use sdl2::{
     surface::Surface,
     ttf::Font,
     video::{Window, WindowContext},
-    EventPump, GameControllerSubsystem, JoystickSubsystem,
+    EventPump,
 };
-use std::collections::HashMap;
 
 //character select
 //stage select
@@ -51,41 +47,18 @@ pub struct MenuScene<'a> {
     pub selected_btn: i32,
 }
 
-pub fn render_main(canvas: &mut Canvas<Window>) {
-    canvas.set_draw_color(Color::RGB(50, 50, 50));
-    canvas.clear();
-    canvas.present();
-}
 
 impl<'a> MenuScene<'a> {
     pub fn new_main_menu(font: &Font) -> Self {
         let color = Color::RGB(200, 70, 70);
         let surface = font
-            .render("Campaign")
+            .render("New Game")
             .blended(color)
             .map_err(|e| e.to_string())
             .unwrap();
 
         let surface2 = font
-            .render("Arcade")
-            .blended(color)
-            .map_err(|e| e.to_string())
-            .unwrap();
-
-        let surface3 = font
-            .render("Local versus")
-            .blended(color)
-            .map_err(|e| e.to_string())
-            .unwrap();
-
-        let surface4 = font
-            .render("Online versus")
-            .blended(color)
-            .map_err(|e| e.to_string())
-            .unwrap();
-
-        let surface5 = font
-            .render("Training mode")
+            .render("Load Game")
             .blended(color)
             .map_err(|e| e.to_string())
             .unwrap();
@@ -112,7 +85,7 @@ impl<'a> MenuScene<'a> {
             curr_screen: MenuScreen::MainMenu,
             prev_screen: None,
             text: vec![
-                surface, surface2, surface3, surface4, surface5, surface6, surface7, surface8,
+                surface, surface2, surface6, surface7, surface8,
             ],
             selected_btn: 0,
         }
@@ -137,10 +110,7 @@ impl<'a> Scene for MenuScene<'a> {
         game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
         event_pump: &mut EventPump,
-        joystick: &JoystickSubsystem,
-        controller: &GameControllerSubsystem,
-        controls: &HashMap<String, TranslatedInput>,
-        joys: &mut Controller,
+        input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
     ) {
         let mut offset = 0;
@@ -166,11 +136,14 @@ impl<'a> Scene for MenuScene<'a> {
                     _ => {}
                 };
                 input::controller_handler::handle_new_controller(
-                    controller, joystick, &event, joys,
+                    &input_devices.controller,
+                    &input_devices.joystick,
+                    &event,
+                    &mut input_devices.joys,
                 );
 
                 //needs also to return which controller/ which player
-                let raw_input = input::input_handler::rcv_input(&event, &controls);
+                let raw_input = input::input_handler::rcv_input(&event, &input_devices.controls);
 
                 if raw_input.is_some() {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
@@ -184,7 +157,7 @@ impl<'a> Scene for MenuScene<'a> {
                             self.selected_btn = (self.selected_btn + 1) % self.text.len() as i32;
                         } else if translated_input == TranslatedInput::Punch {
                             //confirm
-                            if self.selected_btn == 2 {
+                            if self.selected_btn == 0 {
                                 //must leave and make main use match scene instead
                                 game_state_stack.push(Box::new(Match::new(
                                     "foxgirl".to_string(),
