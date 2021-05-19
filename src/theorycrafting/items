@@ -2,6 +2,7 @@ Active Items
     -Rail gun -> Shoots laser that does damage
     -Missile Barrage -> Spawns Enemy tracking missiles
     -EMP -> Stuns enemies around you temporarily
+    -Hack -> Hacks an enemy mech to your team
 
 Combo Items
     -Extends Punch Combo by 1 (until 4 or 5)
@@ -28,4 +29,13 @@ Passive Items
     - Add air-dash
     - Dash starts making damage
     - Fly by keeping pressing Jump
+    - Freeze enemies solid, if kicked enemy acts as a projectile
+    - Fire Punches (damage over time)
+    - Automatically block 1 attack per encounter
+    - Flying blades that stab through full screen when punching
+    - Electricity field that does damage around the player
+    - Tech Cannibalism, get HP from killing enemies 
+    - Turn enemy to your team (charm)
+    - Item that changes the world map to full delaunay, allowing more options where traversing the overworld map
+
     

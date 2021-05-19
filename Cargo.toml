@@ -13,6 +13,8 @@ serde_json = "1.0.64"
 bincode = "1.3.2"
 parry2d = "0.3.0"
 directories = "3.0.1"
+rand = { version = "0.8.3", default-features = false, features = ["small_rng"] }
+delaunator = "0.2.0"
 
 #When you're shipping your game make sure to copy SDL2.dll to the same directory that your compiled exe is in, otherwise the game won't launch.
 [dependencies.sdl2]

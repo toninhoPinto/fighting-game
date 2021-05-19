@@ -276,7 +276,7 @@ pub fn load_animation_data(
                             0f64
                         };
 
-                        let Transform_frame = Transform {
+                        let transform_frame = Transform {
                             pos: Vector2::new(
                                 x,
                                 y,
@@ -285,7 +285,7 @@ pub fn load_animation_data(
                         };
                         if time_keys.contains_key(&(time / FREQUENCY_OF_FPS)) {
                             transforms_of_frame
-                                .insert(*time_keys.get(&(time / FREQUENCY_OF_FPS)).unwrap() as i32, Transform_frame);
+                                .insert(*time_keys.get(&(time / FREQUENCY_OF_FPS)).unwrap() as i32, transform_frame);
                         }
                     }
                 } else if obj_type == "point" {

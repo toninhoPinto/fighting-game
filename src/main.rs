@@ -21,6 +21,7 @@ mod ui;
 mod scenes;
 mod ecs_system;
 mod enemy_behaviour;
+mod overworld;
 
 use asset_management::sound::{init_sound, music_player};
 
@@ -30,9 +31,17 @@ use crate::input::controller_handler::Controller;
 use input::translated_inputs::TranslatedInput;
 
 //TODO features tomorrow
+//make overworld proc gen map
+    //- remove links from delaunay but keep cant have islands or deadends
+    //- replace squares with icons
+        //- check spritesheep rendering
+    //- replace lines with rotated squares with textures
+    //- decision making on the type of node (level, event, store)
+    // little icon near the current node location
+    // little arrow near the next-to-travel player selected node 
+
 //separate json for animation offsets and animation states (startup, active, recovery)
 //Jumping fucks up rendering order, use grounded_y instead of actual y position
-//make overworld proc gen man
 //Improve AI
 
 //TODO FEATURES

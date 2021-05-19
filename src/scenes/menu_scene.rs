@@ -25,7 +25,7 @@ use sdl2::{
 //stage select
 use crate::engine_traits::scene::Scene;
 
-use super::match_scene::Match;
+use super::{match_scene::Match, overworld_scene::OverworldScene};
 
 macro_rules! rect(
     ($x:expr, $y:expr, $w:expr, $h:expr) => (
@@ -147,28 +147,26 @@ impl<'a> Scene for MenuScene<'a> {
 
                 if raw_input.is_some() {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
-                    if !is_pressed {
-                        if translated_input == TranslatedInput::Vertical(1) {
-                            self.selected_btn = (((self.selected_btn - 1)
-                                % self.text.len() as i32)
-                                + self.text.len() as i32)
-                                % self.text.len() as i32;
-                        } else if translated_input == TranslatedInput::Vertical(-1) {
-                            self.selected_btn = (self.selected_btn + 1) % self.text.len() as i32;
-                        } else if translated_input == TranslatedInput::Punch {
-                            //confirm
+                    if translated_input == TranslatedInput::Vertical(1) && is_pressed {
+                        self.selected_btn = (((self.selected_btn - 1)
+                            % self.text.len() as i32)
+                            + self.text.len() as i32)
+                            % self.text.len() as i32;
+                    } else if translated_input == TranslatedInput::Vertical(-1) && is_pressed  {
+                        self.selected_btn = (self.selected_btn + 1) % self.text.len() as i32;
+                    } else if translated_input == TranslatedInput::Punch {
+                        //confirm
+                        if !is_pressed {
                             if self.selected_btn == 0 {
                                 //must leave and make main use match scene instead
-                                game_state_stack.push(Box::new(Match::new(
-                                    "foxgirl".to_string(),
-                                )));
+                                game_state_stack.push(Box::new(OverworldScene::new()));
                                 return;
                             }
-                        } else if translated_input == TranslatedInput::Kick {
-                            //go back
-                            if self.prev_screen.is_some() {
-                                self.curr_screen = self.prev_screen.unwrap();
-                            }
+                        }
+                    } else if translated_input == TranslatedInput::Kick {
+                        //go back
+                        if self.prev_screen.is_some() {
+                            self.curr_screen = self.prev_screen.unwrap();
                         }
                     }
                 }

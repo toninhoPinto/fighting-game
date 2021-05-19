@@ -14,18 +14,21 @@ use crate::{
 
 use super::camera::Camera;
 
-fn pos_world_to_screen(position: Point, screen_size: (u32, u32), camera: &Camera) -> Point {
+pub fn pos_world_to_screen(position: Point, screen_size: (u32, u32), camera: Option<&Camera>) -> Point {
     let (_, height) = screen_size;
     let mut inverted_pos = position;
     //make world coordinates Y increase as we go up
     //and make Y = 0 as the bottom of the screen
     inverted_pos.y = -inverted_pos.y + height as i32;
-    inverted_pos.x -= camera.rect.x(); //make camera as its own little space coordinates
+    if let Some(camera) = camera {
+        inverted_pos.x -= camera.rect.x();
+    }
+     //make camera as its own little space coordinates
 
     inverted_pos
 }
 
-fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), camera: &Camera) -> Rect {
+pub fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), camera: Option<&Camera>) -> Rect {
     let screen_position = pos_world_to_screen(position, screen_size, camera);
     Rect::new(screen_position.x, screen_position.y - rect.height() as i32, rect.width(), rect.height())
 }
@@ -108,7 +111,7 @@ pub fn render(
 
     for projectile in game.projectiles.iter() {
         let screen_rect =
-            world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, &game.camera);
+            world_to_screen(projectile.sprite, Point::new(projectile.position.x as i32, projectile.position.y as i32) , screen_res, Some(&game.camera));
 
         let assets = p1_assets;
         canvas.copy_ex(
@@ -169,7 +172,7 @@ fn render_shadow(common_assets: &mut CommonAssets,
 
     let screen_rect = world_to_screen(shadow_rect, Point::new(
         point.x as i32 - (shadow_rect.width() / 2) as i32, 
-        shadow_height), screen_res, camera);
+        shadow_height), screen_res, Some(camera));
     
     canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
         .unwrap();
@@ -182,7 +185,7 @@ fn render_enemies<'a>(entities: &Vec<(&'a Texture<'a>, Rect, Point, bool)>,
     debug: bool,) {
     
     for enemy in entities {
-        let screen_rect = world_to_screen(enemy.1,enemy.2 , screen_res, camera);
+        let screen_rect = world_to_screen(enemy.1,enemy.2 , screen_res, Some(camera));
 
         canvas
             .copy_ex(enemy.0, enemy.1, screen_rect, 0.0, None, enemy.3, false)
@@ -210,7 +213,7 @@ fn render_vfx(
                 vfx.sprite.center().y - vfx.sprite.height() as i32 / 2,
             );
 
-            let screen_rect = world_to_screen(rect_size, vfx_position, screen_res, camera);
+            let screen_rect = world_to_screen(rect_size, vfx_position, screen_res, Some(camera));
 
             let (frame, texture_id) = &common_assets
                 .hit_effect_animations
@@ -251,7 +254,7 @@ fn render_colliders(
         );
         let collider_rect_size = Rect::new(0, 0, aabb.extents().x as u32, aabb.extents().y as u32);
         let screen_rect_2 =
-            world_to_screen(collider_rect_size, collider_position, screen_res, camera);
+            world_to_screen(collider_rect_size, collider_position, screen_res, Some(camera));
 
         canvas.draw_rect(screen_rect_2).unwrap();
         if collider.collider_type == ColliderType::Hurtbox {
