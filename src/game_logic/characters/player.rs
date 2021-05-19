@@ -359,7 +359,7 @@ impl Player {
             self.position,  &self.animator, sprite_data)
     }
     
-    pub fn render<'a>(&'a mut self, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, Point, bool) {
+    pub fn render<'a>(&'a mut self, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, Point, bool, i32) {
         let key = &self.animator.render();
 
         let sprite_data = assets.texture_data.get(key);
@@ -370,7 +370,7 @@ impl Player {
         if let Some(sprite_data) = sprite_data {
             rect.resize(sprite_data.width * 2 , sprite_data.height * 2 );
 
-            let pivot_x_offset = if self.controller.facing_dir > 0 {(1f64 - sprite_data.pivot_x)* 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
+            let pivot_x_offset = if self.controller.facing_dir >= 0 {(1f64 - sprite_data.pivot_x)* 2.0 * sprite_data.width as f64} else {sprite_data.pivot_x * 2.0 * sprite_data.width as f64};
             let pivot_y_offset = sprite_data.pivot_y * 2.0 * sprite_data.height as f64;
 
             offset = if let Some(sprite_alignment) = self.animator.current_animation.as_ref().unwrap().sprite_alignments.get(&self.animator.sprite_shown) {
@@ -382,6 +382,6 @@ impl Player {
         }
         
         let pos_to_render = Point::new((self.position.x - offset.0) as i32, (self.position.y - offset.1 )as i32 );
-        (assets.textures.get(key).unwrap(), rect.clone(), pos_to_render, self.controller.facing_dir > 0 )
+        (assets.textures.get(key).unwrap(), rect.clone(), pos_to_render, self.controller.facing_dir >= 0 , self.controller.ground_height)
     }
 }

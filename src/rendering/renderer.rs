@@ -97,7 +97,7 @@ pub fn render(
     let mut entities_to_render = crate::ecs_system::enemy_systems::render_enemies(&mut game.enemies, enemy_assets);
     let data_to_render = game.player.render(p1_assets);
     entities_to_render.push(data_to_render);
-    entities_to_render.sort_by(|a, b| b.2.y.cmp(&a.2.y));
+    entities_to_render.sort_by(|a, b| b.4.cmp(&a.4));
 
     render_enemies(&entities_to_render, canvas, screen_res, &game.camera, debug);
 
@@ -178,7 +178,7 @@ fn render_shadow(common_assets: &mut CommonAssets,
         .unwrap();
 }
 
-fn render_enemies<'a>(entities: &Vec<(&'a Texture<'a>, Rect, Point, bool)>,  
+fn render_enemies<'a>(entities: &Vec<(&'a Texture<'a>, Rect, Point, bool, i32)>,  
     canvas: &mut WindowCanvas,
     screen_res: (u32, u32),
     camera: &Camera,

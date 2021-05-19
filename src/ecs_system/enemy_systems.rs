@@ -201,26 +201,27 @@ pub fn get_ground_pos_enemies(enemy_manager: &EnemyManager) -> Vec<Point> {
         ground_pos.collect::<Vec<Point>>()
 }
 
-pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str, EntityAssets>) -> Vec<(&'a Texture<'a>, Rect, Point, bool)> {
+pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str, EntityAssets>) -> Vec<(&'a Texture<'a>, Rect, Point, bool, i32)> {
     let zip = enemy_manager
         .animator_components
         .iter()
         .zip(enemy_manager.renderable_components.iter())
         .zip(enemy_manager.positions_components.iter())
-        .zip(enemy_manager.character_components.iter());
+        .zip(enemy_manager.character_components.iter())
+        .zip(enemy_manager.movement_controller_components.iter());
 
     let living =
         zip
-        .filter_map(|(((animator, renderable), pos), character): (((&Option<Animator>, &Option<Renderable>), &Option<Position>), &Option<Character>)| {
-            Some((animator.as_ref()?, renderable.as_ref()?, pos.as_ref()?, character.as_ref()?))
+        .filter_map(|((((animator, renderable), pos), character), mov): ((((&Option<Animator>, &Option<Renderable>), &Option<Position>), &Option<Character>), &Option<MovementController>)| {
+            Some((animator.as_ref()?, renderable.as_ref()?, pos.as_ref()?, character.as_ref()?, mov.as_ref()?.ground_height))
         })
-        .map(|(animator, renderable, pos, character): (&Animator, &Renderable, &Position, &Character)| {
+        .map(|(animator, renderable, pos, character, render_order): (&Animator, &Renderable, &Position, &Character, i32)| {
             let (tex, rect, offsets) = render_entity(animator.render(), animator, renderable, assets.get(&character.name as &str).unwrap());
             let pos = Point::new((pos.0.x - offsets.0) as i32, (pos.0.y - offsets.1 )as i32);
-            (tex, rect, pos, renderable.flipped)
+            (tex, rect, pos, renderable.flipped, render_order)
         });
 
-    living.collect::<Vec<(&'a Texture<'a>, Rect, Point, bool)>>()
+    living.collect::<Vec<(&'a Texture<'a>, Rect, Point, bool, i32)>>()
 }
 
 

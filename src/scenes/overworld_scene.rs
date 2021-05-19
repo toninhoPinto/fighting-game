@@ -11,6 +11,7 @@ use super::match_scene::Match;
 pub struct OverworldScene {
     pub nodes: Vec<WorldNode>,
     pub player_node_pos: i32,
+    pub next_node: usize,
 }
 
 impl OverworldScene{
@@ -18,6 +19,7 @@ impl OverworldScene{
         Self {
             nodes: Vec::new(),
             player_node_pos: 0,
+            next_node: 0,
         }
     } 
 }
