@@ -25,7 +25,7 @@ use sdl2::{
 //stage select
 use crate::engine_traits::scene::Scene;
 
-use super::{match_scene::Match, overworld_scene::OverworldScene};
+use super::overworld_scene::OverworldScene;
 
 macro_rules! rect(
     ($x:expr, $y:expr, $w:expr, $h:expr) => (

@@ -25,7 +25,7 @@ mod overworld;
 
 use asset_management::sound::{init_sound, music_player};
 
-use crate::{asset_management::controls, input::input_devices::InputDevices};
+use crate::{asset_management::controls, input::input_devices::InputDevices, scenes::{match_scene::MatchScene, overworld_scene::OverworldScene}};
 use crate::input::controller_handler::Controller;
 
 
@@ -113,10 +113,12 @@ fn main() -> Result<(), String> {
         joys: controller_data,
     };
 
-    let scene2 = MenuScene::new_main_menu(&font);
+    let menu = MenuScene::new_main_menu(&font);
+    let overworld = OverworldScene::new();
+    let level = MatchScene::new("foxgirl".to_string());
 
     let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();
-    state_stack.push(Box::new(scene2)); //menu state
+    state_stack.push(Box::new(menu));
 
     let mut game_state_data = GameStateData {
         character: "",

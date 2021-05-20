@@ -2,7 +2,7 @@ use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::
 
 use crate::{GameStateData, engine_traits::scene::Scene, game_logic::factories::world_factory::load_overworld_assets, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}};
 
-use super::match_scene::Match;
+use super::match_scene::MatchScene;
 
 pub struct OverworldScene {
     pub nodes: Vec<WorldNode>,
@@ -78,7 +78,7 @@ impl<'a> Scene for OverworldScene {
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {
                             if let WorldNodeType::Level(_) = self.nodes[self.next_node].node_type {
-                                game_state_stack.push(Box::new(Match::new(
+                                game_state_stack.push(Box::new(MatchScene::new(
                                     "foxgirl".to_string(),
                                 )));
                                 return;

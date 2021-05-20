@@ -11,7 +11,7 @@ use sdl2::{
     rect::Point,
     render::{Canvas, TextureCreator},
     video::{Window, WindowContext},
-    EventPump, GameControllerSubsystem, JoystickSubsystem,
+    EventPump,
 };
 
 use crate::{ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
@@ -19,7 +19,7 @@ use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
     engine_traits::scene::Scene,
-    input::{self, controller_handler::Controller, translated_inputs::TranslatedInput},
+    input::{self},
     rendering::{self, camera::Camera},
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
     GameStateData,
@@ -34,12 +34,12 @@ const LEVEL_HEIGHT: i32 = 720;
 const SCREEN_WIDTH: u32 = 1280;
 const SCREEN_HEIGHT: u32 = 720;
 
-pub struct Match {
+pub struct MatchScene {
     pub character: String,
     p1_inputs: AllInputManagement,
 }
 
-impl Match {
+impl MatchScene {
     pub fn new(
 
         character: String,
@@ -78,7 +78,7 @@ impl Match {
     }
 }
 
-impl Scene for Match {
+impl Scene for MatchScene {
     fn run(
         &mut self,
         game_state_stack: &mut Vec<Box<dyn Scene>>,
@@ -124,11 +124,11 @@ impl Scene for Match {
         game.player.collision_manager.init_colliders(&game.player.animator);
 
         let screen_res = canvas.output_size().unwrap();
-        let mut hp_bars = Match::hp_bars_init(
+        let mut hp_bars = MatchScene::hp_bars_init(
             screen_res,
             game.player.character.hp,
         );
-        let mut special_bars = Match::special_bars_init(
+        let mut special_bars = MatchScene::special_bars_init(
             screen_res,
             game.player.character.special_max
         );
@@ -174,6 +174,10 @@ impl Scene for Match {
                         }
                         if input == Keycode::Right && debug_pause {
                             logic_time_accumulated += logic_timestep;
+                        }
+                        if input == Keycode::Escape {
+                            println!("states {}", game_state_stack.len());
+                            game_state_stack.pop();
                         }
                     }
                     _ => {}
