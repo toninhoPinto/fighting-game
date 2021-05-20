@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use sdl2::rect::{Point, Rect};
 use delaunator::{Point as DelPoint, triangulate};
@@ -42,7 +42,7 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
                 area.y() + cell_height * row_level as i32 - cell_height / 2 + cell_offset_y
             );
             overworld.push(WorldNode{
-                node_type: WorldNodeType::Level,
+                node_type: WorldNodeType::Level(0),
                 position: Point::new(position_cell.0, position_cell.1),
                 connect_to: HashSet::new(),
             });
@@ -60,13 +60,7 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
 
     //Use triangulate to get all paths to all nodes (check if can use it make points position aswell tho it doesnt make sense)
     let points = &overworld.iter().map(|n| {DelPoint{x: n.position.x as f64, y: n.position.y as f64}}).collect::<Vec<DelPoint>>();
-    println!("points {:?}", points);
     let delaunay = triangulate(points);
-
-    //Use minimum spanning tree to get paths
-    //Add some of the original triangles to avoid having boring maps
-
-    println!("tris {:?}", delaunay.as_ref().unwrap().triangles);
 
     let n_points = points.len();
     let mut graph = points.iter().map(|_| {HashSet::new()}).collect::<Vec<HashSet<usize>>>();
@@ -129,9 +123,16 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
                 visited.insert(i);
             }
         }
-
-
     }
 
+    populate_levels(&mut overworld);
+
     overworld
+}
+
+
+fn populate_levels(overworld: &mut Vec<WorldNode>){
+    let n_nodes = overworld.len();
+
+    overworld[n_nodes/2].node_type = WorldNodeType::Store;
 }

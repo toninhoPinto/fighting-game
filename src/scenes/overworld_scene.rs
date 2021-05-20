@@ -8,6 +8,7 @@ pub struct OverworldScene {
     pub nodes: Vec<WorldNode>,
     pub player_node_pos: i32,
     pub next_node: usize,
+    pub connect_to_index: usize,
 }
 
 impl OverworldScene{
@@ -16,6 +17,7 @@ impl OverworldScene{
             nodes: Vec::new(),
             player_node_pos: 0,
             next_node: 0,
+            connect_to_index: 0,
         }
     } 
 }
@@ -36,6 +38,12 @@ impl<'a> Scene for OverworldScene {
         self.nodes = overworld_generation(map_area, (5, 6), false);
 
         let assets = load_overworld_assets(&texture_creator);
+
+        let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
+        self.next_node = connecting_to
+            .iter()
+            .map(|&a| {a})
+            .collect::<Vec<usize>>()[self.connect_to_index];
 
         loop {
             //receive inputs for managing selecting menu options
@@ -58,20 +66,23 @@ impl<'a> Scene for OverworldScene {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
                     if is_pressed {
                         if translated_input == TranslatedInput::Vertical(1) {
-                            //must leave and make main use match scene instead
-                            game_state_stack.push(Box::new(Match::new(
-                                "foxgirl".to_string(),
-                            )));
-                            return;
+                            let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
+                            self.connect_to_index =  (1 + self.connect_to_index) % connecting_to.len();
+
+                            self.next_node = connecting_to
+                                .iter()
+                                .map(|&a| {a})
+                                .collect::<Vec<usize>>()[self.connect_to_index];
                         }
                     }
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {
-                            //must leave and make main use match scene instead
-                            game_state_stack.push(Box::new(Match::new(
-                                "foxgirl".to_string(),
-                            )));
-                            return;
+                            if let WorldNodeType::Level(_) = self.nodes[self.next_node].node_type {
+                                game_state_stack.push(Box::new(Match::new(
+                                    "foxgirl".to_string(),
+                                )));
+                                return;
+                            }
                         }
                     }
                 }
@@ -86,8 +97,8 @@ impl<'a> Scene for OverworldScene {
             canvas.set_draw_color(Color::RGB(255, 255, 50));
             for node in self.nodes.iter() {
                 for &connections in node.connect_to.iter() {
-                    let origin_point = pos_world_to_screen(node.position + Point::new(20,20), (w, h), None);
-                    let destination_point =  pos_world_to_screen(self.nodes[connections as usize].position + Point::new(20,20), (w, h), None);
+                    let origin_point = pos_world_to_screen(node.position + Point::new(30,30), (w, h), None);
+                    let destination_point =  pos_world_to_screen(self.nodes[connections as usize].position + Point::new(30,30), (w, h), None);
                     canvas.draw_line(origin_point, destination_point).unwrap();
                 }
             }
@@ -102,23 +113,36 @@ impl<'a> Scene for OverworldScene {
             for i in 0..self.nodes.len() {
                 let src_rect;
 
-                if self.nodes[i].node_type == WorldNodeType::Level {
+                if let WorldNodeType::Level(_) = self.nodes[i].node_type  {
                     src_rect = assets.src_rects.get("camp").unwrap();
                     canvas.set_draw_color(Color::RGB(50, 255, 100));
                 } else if self.nodes[i].node_type == WorldNodeType::Start {
                     src_rect = assets.src_rects.get("start").unwrap();
+                    canvas.set_draw_color(Color::RGB(255, 255, 50));
+                } else if self.nodes[i].node_type == WorldNodeType::Store {
+                    src_rect = assets.src_rects.get("store").unwrap();
                     canvas.set_draw_color(Color::RGB(255, 255, 50));
                 } else {
                     src_rect = assets.src_rects.get("boss_skull").unwrap();
                     canvas.set_draw_color(Color::RGB(200, 70, 70));
                 }
 
-                let debug_rect = Rect::new(0,0, 40, 40);
-                let rect_screen_pos = world_to_screen(debug_rect, self.nodes[i].position, (w, h), None);
+                let node_rect = Rect::new(0,0, 60, 60);
+                let rect_screen_pos = world_to_screen(node_rect, self.nodes[i].position, (w, h), None);
                 canvas.set_draw_color(Color::RGBA(100, 50, 50, 50));
 
                 canvas.copy(&assets.spritesheet, src_rect.clone(), rect_screen_pos).unwrap();
             }
+            
+            
+            let src_pointer = assets.src_rects.get("arrow").unwrap();
+            let pointer_screen = world_to_screen(Rect::new(0,0, 40, 40), self.nodes[self.next_node].position + Point::new(20,0), (w, h), None);
+            canvas.copy_ex(&assets.spritesheet, src_pointer.clone(), pointer_screen, 90f64, Point::new(0,0), false, false).unwrap();
+            
+            let src_pointer = assets.src_rects.get("symbol").unwrap();
+            let pointer_screen = world_to_screen(Rect::new(0,0, 40, 40), self.nodes[self.player_node_pos as usize].position - Point::new(20,0), (w, h), None);
+            canvas.copy(&assets.spritesheet, src_pointer.clone(), pointer_screen).unwrap();
+            
 
             let rect_screen_pos = world_to_screen(Rect::new(0,0, 300, 480), Point::new(0,0), (w, h), None);
             canvas.copy(&assets.portraits.get("portrait").unwrap(), Rect::new(0,0, 500, 870), rect_screen_pos).unwrap();

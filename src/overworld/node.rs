@@ -5,10 +5,10 @@ use sdl2::rect::Point;
 #[derive(Debug, PartialEq)]
 pub enum WorldNodeType {
     Start,
-    Boss,
-    Level,
-    Event,
-    Store
+    Boss, 
+    Level(i32),  //Level(difficulty)
+    Event(i32),  //Event(id)
+    Store,
 }
 
 #[derive(Debug)]

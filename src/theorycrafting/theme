@@ -23,7 +23,27 @@ Examples of Events:
 
 4 characters
 
-- Mercenary - default mech, mid-bulky
-- Religious cult ancient tech - Skinny advanced mech
-- Wasteland Bandit - Super Bulky, grappling
-- Governmental Faction - wheel based with tiny arms, horizontal, like ghost in the shell robots
+- Mercenary 
+    - default mech, mid-bulky 
+    - average ground and air strings 
+    - starts with launcher
+
+- Religious cult ancient tech 
+    - Skinny advanced mech semi organic looking 
+    - fast attacks, long air strings, short ground strings
+    - low hp
+    - fast movement speed
+    - starts with launcher
+
+- Wasteland Bandit
+    - ???? visuals
+    - Long ground strings, short air strings
+    - starts with no launcher
+
+- Governmental Faction 
+    - four legs with tiny arms, horizontal, like ghost in the shell robots
+    - starts with average ground projectiles strings
+    - lots of hp
+    - slow movement speed
+    - no air strings, short hop
+    - no launcher

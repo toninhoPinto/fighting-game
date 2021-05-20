@@ -5,7 +5,6 @@ pub fn load_overworld_assets(texture_creator: &TextureCreator<WindowContext>) ->
     let spritesheet = asset_loader::load_texture(&texture_creator, "assets/overworld/spritesheet_default.png");
 
     let mapping = load_spritesheet("assets/overworld/spritesheet_mapping.json".to_string());
-    println!("loaded sprites {:?}", mapping);
     
     OverworldAssets {
         spritesheet,
