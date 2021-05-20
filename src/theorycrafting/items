@@ -36,6 +36,6 @@ Passive Items
     - Electricity field that does damage around the player
     - Tech Cannibalism, get HP from killing enemies 
     - Turn enemy to your team (charm)
-    - Item that changes the world map to full delaunay, allowing more options where traversing the overworld map
+    - Item that changes the world map to full delaunay, (creates more links between nodes on the map) allowing more options where traversing the overworld map
 
     

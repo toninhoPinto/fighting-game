@@ -52,7 +52,7 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
     let end_cell = area.y() + area.height() as i32 / graph_height * graph_height;
     let end_node = WorldNode{
         node_type: WorldNodeType::Boss,
-        position: Point::new(start_cell.0, end_cell - 10),
+        position: Point::new(start_cell.0 - cell_width, end_cell - 20),
         connect_to: HashSet::new(),
     };
 
@@ -115,7 +115,6 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
     
         for i in 1..graph.len()-1 {
             if !visited.contains(&i) {
-                println!("for node {:?}=============", i);
                 let mut possible_nodes_that_reach_unvisited = Vec::new();
                 for j in 0..graph.len() {
                     if graph[j].contains(&i) {
@@ -123,7 +122,6 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
                     }
                 }
     
-                println!("possible_nodes_that_reach_unvisited{:?}", possible_nodes_that_reach_unvisited);
                 let node_to_connected_to_unvisited = possible_nodes_that_reach_unvisited[rng.gen_range(0..possible_nodes_that_reach_unvisited.len())];
     
                 overworld[node_to_connected_to_unvisited].connect_to.insert(i);

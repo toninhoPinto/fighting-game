@@ -1,10 +1,6 @@
+use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-
-use std::collections::HashMap;
-
-use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
-
-use crate::{GameStateData, engine_traits::scene::Scene, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}};
+use crate::{GameStateData, engine_traits::scene::Scene, game_logic::factories::world_factory::load_overworld_assets, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}};
 
 use super::match_scene::Match;
 
@@ -36,8 +32,10 @@ impl<'a> Scene for OverworldScene {
     ) {
 
         let (w, h) = canvas.output_size().unwrap();
-        let map_area = Rect::new(200, 100, w-400, h-200);
+        let map_area = Rect::new(400, 100, w-800, h-200);
         self.nodes = overworld_generation(map_area, (5, 6), false);
+
+        let assets = load_overworld_assets(&texture_creator);
 
         loop {
             //receive inputs for managing selecting menu options
@@ -58,6 +56,15 @@ impl<'a> Scene for OverworldScene {
 
                 if raw_input.is_some() {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
+                    if is_pressed {
+                        if translated_input == TranslatedInput::Vertical(1) {
+                            //must leave and make main use match scene instead
+                            game_state_stack.push(Box::new(Match::new(
+                                "foxgirl".to_string(),
+                            )));
+                            return;
+                        }
+                    }
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {
                             //must leave and make main use match scene instead
@@ -73,14 +80,14 @@ impl<'a> Scene for OverworldScene {
             //update
 
             //render
-            canvas.set_draw_color(Color::RGB(0, 85, 200));
+            canvas.set_draw_color(Color::RGB(237, 158, 80));
 
             canvas.clear();
             canvas.set_draw_color(Color::RGB(255, 255, 50));
             for node in self.nodes.iter() {
                 for &connections in node.connect_to.iter() {
-                    let origin_point = pos_world_to_screen(node.position, (w, h), None);
-                    let destination_point =  pos_world_to_screen(self.nodes[connections as usize].position, (w, h), None);
+                    let origin_point = pos_world_to_screen(node.position + Point::new(20,20), (w, h), None);
+                    let destination_point =  pos_world_to_screen(self.nodes[connections as usize].position + Point::new(20,20), (w, h), None);
                     canvas.draw_line(origin_point, destination_point).unwrap();
                 }
             }
@@ -93,19 +100,28 @@ impl<'a> Scene for OverworldScene {
             canvas.fill_rect(rect_screen_pos).unwrap();
 
             for i in 0..self.nodes.len() {
+                let src_rect;
+
                 if self.nodes[i].node_type == WorldNodeType::Level {
+                    src_rect = assets.src_rects.get("camp").unwrap();
                     canvas.set_draw_color(Color::RGB(50, 255, 100));
                 } else if self.nodes[i].node_type == WorldNodeType::Start {
+                    src_rect = assets.src_rects.get("start").unwrap();
                     canvas.set_draw_color(Color::RGB(255, 255, 50));
                 } else {
+                    src_rect = assets.src_rects.get("boss_skull").unwrap();
                     canvas.set_draw_color(Color::RGB(200, 70, 70));
                 }
-                let debug_rect = Rect::new(0,0, 10, 10);
+
+                let debug_rect = Rect::new(0,0, 40, 40);
                 let rect_screen_pos = world_to_screen(debug_rect, self.nodes[i].position, (w, h), None);
-                canvas.draw_rect(rect_screen_pos).unwrap();
-                canvas.fill_rect(rect_screen_pos).unwrap();
                 canvas.set_draw_color(Color::RGBA(100, 50, 50, 50));
+
+                canvas.copy(&assets.spritesheet, src_rect.clone(), rect_screen_pos).unwrap();
             }
+
+            let rect_screen_pos = world_to_screen(Rect::new(0,0, 300, 480), Point::new(0,0), (w, h), None);
+            canvas.copy(&assets.portraits.get("portrait").unwrap(), Rect::new(0,0, 500, 870), rect_screen_pos).unwrap();
       
             canvas.present();
         }
