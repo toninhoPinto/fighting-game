@@ -20,6 +20,11 @@ impl OverworldScene{
             connect_to_index: 0,
         }
     } 
+
+    pub fn init(&mut self, (w, h): (u32, u32)) {
+        let map_area = Rect::new(400, 100, w-800, h-200);
+        self.nodes = overworld_generation(map_area, (5, 6), false);
+    }
 }
 
 impl<'a> Scene for OverworldScene {
@@ -34,7 +39,6 @@ impl<'a> Scene for OverworldScene {
 
         let (w, h) = canvas.output_size().unwrap();
         let map_area = Rect::new(400, 100, w-800, h-200);
-        self.nodes = overworld_generation(map_area, (5, 6), false);
 
         let assets = load_overworld_assets(&texture_creator);
 

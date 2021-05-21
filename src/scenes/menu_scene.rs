@@ -114,6 +114,9 @@ impl<'a> Scene for MenuScene<'a> {
     ) -> Transition {
         let mut offset = 0;
         let mut text_buttons = Vec::new();
+
+        let screen_res = canvas.output_size().unwrap();
+
         for text in self.text.iter() {
             let texture = texture_creator
                 .create_texture_from_surface(&text)
@@ -121,7 +124,6 @@ impl<'a> Scene for MenuScene<'a> {
                 .unwrap();
 
             let TextureQuery { width, height, .. } = texture.query();
-            let screen_res = canvas.output_size().unwrap();
             let target = MenuScene::get_centered_rect(screen_res, width / 2, height / 2, offset);
             text_buttons.push((texture, target));
             offset += 80;
@@ -158,7 +160,9 @@ impl<'a> Scene for MenuScene<'a> {
                         if !is_pressed {
                             if self.selected_btn == 0 {
                                 //must leave and make main use match scene instead
-                                return Transition::Push(Box::new(OverworldScene::new()));
+                                let mut overworld = OverworldScene::new();
+                                overworld.init(screen_res);
+                                return Transition::Push(Box::new(overworld));
                             }
                         }
                     } else if translated_input == TranslatedInput::Kick {
