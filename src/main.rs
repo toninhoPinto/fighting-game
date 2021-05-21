@@ -3,7 +3,6 @@ use scenes::menu_scene::MenuScene;
 use sdl2::image::{self, InitFlag};
 use sdl2::render::BlendMode;
 
-use std::collections::HashMap;
 use std::path::Path;
 
 extern crate serde_derive;
@@ -33,6 +32,14 @@ use crate::input::controller_handler::Controller;
 //make overworld proc gen map
     // replace lines with rotated squares with textures
     // decision making on the type of node (level, event, store)
+    // add sounds when moving the arrow through the possible next levels
+    // add confimation sound when selecting a level
+    // add small up/down animation on the "character" icon
+
+    // make a store Scene
+    // make an event UI window appear on top
+
+
 
 //separate json for animation offsets and animation states (startup, active, recovery)
 //Improve AI
@@ -59,7 +66,6 @@ use crate::input::controller_handler::Controller;
 //8 refactor menu and maybe remove menu having a separate loop?
 //7 VFX sprites are not centered, hard to place
 //6 fix init colliders, its a mess
-//5 depenetration needs cleanup
 //1 Since Animator now holds Option<Animation> and Animation has a Vec, it doesnt implement Copy trait, so there are lots of clone()
 //^^^^^possibly bad, and its a bit ugly, maybe have Animator only hold a handle to the animation just like the Textures?
 
@@ -69,8 +75,10 @@ pub struct GameStateData<'a> {
 
 pub enum Transition {
     Continue,
+    Change(Box<dyn Scene>),
     Push(Box<dyn Scene>),
-    Pop
+    Pop,
+    Quit,
 }
 
 fn main() -> Result<(), String> {
@@ -136,6 +144,8 @@ fn main() -> Result<(), String> {
             Transition::Continue => {}
             Transition::Push(next_state) => {state_stack.push(next_state);}
             Transition::Pop => {state_stack.pop();}
+            Transition::Quit => {state_stack.clear();}
+            Transition::Change(next_state) => {state_stack.pop(); state_stack.push(next_state);}
         }
 
     }

@@ -143,7 +143,7 @@ impl Scene for MatchScene {
 
         //let end_game_match = EndMatch::new(Rect::new(0, 0, 600, 600), Point::new(0, 0), font);
 
-        'running: loop {
+        loop {
             let current_time = Instant::now();
             let delta_time = current_time.duration_since(previous_time);
             let delta_time_as_nanos =
@@ -158,7 +158,7 @@ impl Scene for MatchScene {
             // Handle events
             for event in event_pump.poll_iter() {
                 match event {
-                    Event::Quit { .. } => return Transition::Pop,
+                    Event::Quit { .. } => return Transition::Quit,
                     Event::KeyDown {
                         keycode: Some(input),
                         ..

@@ -53,7 +53,7 @@ impl<'a> Scene for OverworldScene {
             //receive inputs for managing selecting menu options
             for event in event_pump.poll_iter() {
                 match event {
-                    Event::Quit { .. } => return Transition::Pop,
+                    Event::Quit { .. } => return Transition::Quit,
                     _ => {}
                 };
                 input::controller_handler::handle_new_controller(
