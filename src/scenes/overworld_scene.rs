@@ -1,12 +1,12 @@
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, engine_traits::scene::Scene, game_logic::factories::world_factory::load_overworld_assets, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}};
+use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::factories::world_factory::load_overworld_assets, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}};
 
 use super::match_scene::MatchScene;
 
 pub struct OverworldScene {
     pub nodes: Vec<WorldNode>,
-    pub player_node_pos: i32,
+    pub player_node_pos: usize,
     pub next_node: usize,
     pub connect_to_index: usize,
 }
@@ -25,13 +25,12 @@ impl OverworldScene{
 impl<'a> Scene for OverworldScene {
     fn run(
         &mut self,
-        game_state_stack: &mut Vec<Box<dyn Scene>>,
         game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
         event_pump: &mut EventPump,
         input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
-    ) {
+    ) -> Transition {
 
         let (w, h) = canvas.output_size().unwrap();
         let map_area = Rect::new(400, 100, w-800, h-200);
@@ -39,6 +38,7 @@ impl<'a> Scene for OverworldScene {
 
         let assets = load_overworld_assets(&texture_creator);
 
+        self.connect_to_index = 0;
         let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
         self.next_node = connecting_to
             .iter()
@@ -49,7 +49,7 @@ impl<'a> Scene for OverworldScene {
             //receive inputs for managing selecting menu options
             for event in event_pump.poll_iter() {
                 match event {
-                    Event::Quit { .. } => return,
+                    Event::Quit { .. } => return Transition::Pop,
                     _ => {}
                 };
                 input::controller_handler::handle_new_controller(
@@ -78,10 +78,8 @@ impl<'a> Scene for OverworldScene {
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {
                             if let WorldNodeType::Level(_) = self.nodes[self.next_node].node_type {
-                                game_state_stack.push(Box::new(MatchScene::new(
-                                    "foxgirl".to_string(),
-                                )));
-                                return;
+                                self.player_node_pos = self.next_node;
+                                return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string())));
                             }
                         }
                     }

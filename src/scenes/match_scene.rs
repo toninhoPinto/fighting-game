@@ -14,7 +14,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
+use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -81,14 +81,13 @@ impl MatchScene {
 impl Scene for MatchScene {
     fn run(
         &mut self,
-        game_state_stack: &mut Vec<Box<dyn Scene>>,
         game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
 
         event_pump: &mut EventPump,
         input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
-    ) {
+    ) -> Transition {
         let mut general_assets = CommonAssets::load(&texture_creator);
 
         let (p1_assets, p1_anims, p1_data) = load_character_anim_data(texture_creator, &self.character);
@@ -159,7 +158,7 @@ impl Scene for MatchScene {
             // Handle events
             for event in event_pump.poll_iter() {
                 match event {
-                    Event::Quit { .. } => break 'running,
+                    Event::Quit { .. } => return Transition::Pop,
                     Event::KeyDown {
                         keycode: Some(input),
                         ..
@@ -176,8 +175,7 @@ impl Scene for MatchScene {
                             logic_time_accumulated += logic_timestep;
                         }
                         if input == Keycode::Escape {
-                            println!("states {}", game_state_stack.len());
-                            game_state_stack.pop();
+                            return Transition::Pop;
                         }
                     }
                     _ => {}

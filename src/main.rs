@@ -25,7 +25,7 @@ mod overworld;
 
 use asset_management::sound::{init_sound, music_player};
 
-use crate::{asset_management::controls, input::input_devices::InputDevices, scenes::{match_scene::MatchScene, overworld_scene::OverworldScene}};
+use crate::{asset_management::controls, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
 
 
@@ -33,11 +33,8 @@ use crate::input::controller_handler::Controller;
 //make overworld proc gen map
     // replace lines with rotated squares with textures
     // decision making on the type of node (level, event, store)
-    // little icon near the current node location
-    // little arrow near the next-to-travel player selected node 
 
 //separate json for animation offsets and animation states (startup, active, recovery)
-//Jumping fucks up rendering order, use grounded_y instead of actual y position
 //Improve AI
 
 //TODO FEATURES
@@ -69,6 +66,12 @@ use crate::input::controller_handler::Controller;
 
 pub struct GameStateData<'a> {
     character: &'a str,
+}
+
+pub enum Transition {
+    Continue,
+    Push(Box<dyn Scene>),
+    Pop
 }
 
 fn main() -> Result<(), String> {
@@ -113,26 +116,29 @@ fn main() -> Result<(), String> {
         joys: controller_data,
     };
 
-    let menu = MenuScene::new_main_menu(&font);
-    let overworld = OverworldScene::new();
-    let level = MatchScene::new("foxgirl".to_string());
-
-    let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();
-    state_stack.push(Box::new(menu));
-
     let mut game_state_data = GameStateData {
         character: "",
     };
+    
+    let menu = MenuScene::new_main_menu(&font);
+    let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();
+    state_stack.push(Box::new(menu));
 
     while !state_stack.is_empty() {
-        state_stack.pop().unwrap().run(
-            &mut state_stack,
+        let scene =  state_stack.last_mut().unwrap();
+
+        match scene.run(
             &mut game_state_data,
             &texture_creator,
             &mut event_pump,
             &mut device_management,
             &mut canvas,
-        );
+        ) {
+            Transition::Continue => {}
+            Transition::Push(next_state) => {state_stack.push(next_state);}
+            Transition::Pop => {state_stack.pop();}
+        }
+
     }
 
     Ok(())

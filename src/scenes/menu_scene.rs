@@ -9,7 +9,7 @@
 //credits
 //quit
 
-use crate::{GameStateData, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
+use crate::{GameStateData, Transition, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use sdl2::{
     event::Event,
     pixels::Color,
@@ -106,13 +106,12 @@ impl<'a> MenuScene<'a> {
 impl<'a> Scene for MenuScene<'a> {
     fn run(
         &mut self,
-        game_state_stack: &mut Vec<Box<dyn Scene>>,
         game_state_data: &mut GameStateData,
         texture_creator: &TextureCreator<WindowContext>,
         event_pump: &mut EventPump,
         input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
-    ) {
+    ) -> Transition {
         let mut offset = 0;
         let mut text_buttons = Vec::new();
         for text in self.text.iter() {
@@ -132,7 +131,7 @@ impl<'a> Scene for MenuScene<'a> {
             //receive inputs for managing selecting menu options
             for event in event_pump.poll_iter() {
                 match event {
-                    Event::Quit { .. } => return,
+                    Event::Quit { .. } => return Transition::Pop,
                     _ => {}
                 };
                 input::controller_handler::handle_new_controller(
@@ -159,8 +158,7 @@ impl<'a> Scene for MenuScene<'a> {
                         if !is_pressed {
                             if self.selected_btn == 0 {
                                 //must leave and make main use match scene instead
-                                game_state_stack.push(Box::new(OverworldScene::new()));
-                                return;
+                                return Transition::Push(Box::new(OverworldScene::new()));
                             }
                         }
                     } else if translated_input == TranslatedInput::Kick {
