@@ -44,11 +44,6 @@ impl<'a> SegmentedBar<'a> {
         }
     }
 
-    //if has 3 bars
-    //if current value = 3.0 -> index should be 2 and width should be 1 * step
-    //if current value = 2.6 -> index should be 2 and width should be 0.6 * step
-    //if current value = 2.0 -> index should be 2 and width should be 0 * step
-    //if current value = 0.6 -> index should be 0 and width should be 0.6 * step
     pub fn update(&mut self, curr_value: f32) {
         self.curr_value = (curr_value.clamp(0.0, self.segmentations as f32) * 10.0).round() / 10.0;
         let index = min(self.curr_value as usize, self.segmentations as usize - 1);

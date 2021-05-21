@@ -162,7 +162,7 @@ impl<'a> Scene for MenuScene<'a> {
                                 //must leave and make main use match scene instead
                                 let mut overworld = OverworldScene::new();
                                 overworld.init(screen_res);
-                                return Transition::Push(Box::new(overworld));
+                                return Transition::Change(Box::new(overworld));
                             }
                         }
                     } else if translated_input == TranslatedInput::Kick {
