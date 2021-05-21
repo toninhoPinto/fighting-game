@@ -39,11 +39,10 @@ use crate::input::controller_handler::Controller;
 
 //TODO FEATURES
 //play block animation while standing 
-//add input buffer- decide if multiple buffers for different things or not
-//add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
+ //add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
 //charge special attacks like makoto where you can hold punch for a stronger attack
 //dash attacks
-//save sound settings on config
+//save sound volume settings on config
 //add menu to change the controllers for each player
 //add menu to change the controller mapping of keys/buttons
 //make ui loop only 60fps to avoid the computer doing too many wasted computations
