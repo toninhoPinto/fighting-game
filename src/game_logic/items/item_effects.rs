@@ -40,5 +40,4 @@ pub fn poison(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, ef
             {
         take_damage_light(hp, effect.change.unwrap(), mov);
     }
-    
 }

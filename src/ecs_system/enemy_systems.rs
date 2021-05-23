@@ -133,6 +133,7 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
     .filter_map(| (((((behaviour, hp), mov), pos), character), animator): 
     (((((&Option<Behaviour>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>), &mut Option<Animator>)| {
         if let Some(hp) = hp {
+            println!("enemy hp {}", hp.0);
             if hp.0 > 0 {
                 return Some((behaviour.as_ref()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?, animator.as_mut()?))
             }
@@ -144,25 +145,38 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
     });
 
 
-    /*
     let zip = enemy_manager.
         events_components.iter_mut().enumerate()
         .zip(enemy_manager.health_components.iter());
 
-    zip
+    let mut enemy_events = zip
     .filter_map(|((i, events), health) : ((usize, &mut Option<EventsPubSub>), &Option<Health>)| {
         if let (Some(hp), Some(events)) = (health, events) {
             if hp.0 > 0 {
-                return Some((i, &mut events.on_update))
+                return Some((i, events.on_update.clone()))
             }
         }
         None
-    }).for_each(|(i, events): (usize, &mut Vec<(CharacterEvent, Effect)>)| {
-        for event in events {
-            event.0(player, enemy_manager, i as i32, &mut event.1);
+    }).collect::<Vec<(usize, Vec<(CharacterEvent, Effect)>)>> ();
+    
+    enemy_events.iter_mut().for_each(|(i, events): &mut (usize,  Vec<(CharacterEvent, Effect)>)| {
+        for event in events.iter_mut() {
+            event.0(player, enemy_manager, *i as i32, &mut event.1);
         }
-    }); 
-    */
+    });
+
+    let replace_events = enemy_manager.
+        events_components.iter_mut().enumerate()
+        .zip(enemy_events);
+
+    replace_events
+    .for_each(|((i, events), (to_replace_i, to_replace_events)) : ((usize, &mut Option<EventsPubSub>), (usize,  Vec<(CharacterEvent, Effect)>))| {
+        if i == to_replace_i {
+            if let Some(events) = events {
+                events.on_update = to_replace_events;
+            }
+        }
+    });
 }
 
 pub fn update_animations_enemies(enemy_manager: &mut EnemyManager) {
