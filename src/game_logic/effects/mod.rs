@@ -5,6 +5,8 @@ use super::{characters::player::Player, items::item_effects::{add_attack, apply_
 pub(crate) type ItemEffects = fn(&mut Player, &mut Effect) -> ();
 
 pub mod events_pub_sub;
+
+#[derive(Clone)]
 pub struct Effect {
     //handler for function
     pub effect_id: i32,

@@ -15,7 +15,7 @@ pub fn add_attack(player: &mut Player, effect: &mut Effect) {
 }
 
 pub fn apply_lifesteal(player: &mut Player, effect: &mut Effect){
-    player.events.on_hit.push(lifesteal);
+    player.events.on_hit.push((lifesteal, effect.clone()));
 }
 
 pub fn lifesteal(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
@@ -23,12 +23,12 @@ pub fn lifesteal(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32,
 }
 
 pub fn apply_poison_to_enemies(player: &mut Player, effect: &mut Effect){
-    player.events.on_hit.push(apply_poison as CharacterEvent);
+    player.events.on_hit.push((apply_poison as CharacterEvent, effect.clone()));
 }
 
 pub fn apply_poison(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
     if let Some(enemy_events) = &mut enemies.events_components[enemy_id as usize] {
-        enemy_events.on_update.push(poison as CharacterEvent);
+        enemy_events.on_update.push((poison as CharacterEvent, effect.clone()));
     }
 } 
 

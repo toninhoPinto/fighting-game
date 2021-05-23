@@ -7,21 +7,21 @@ pub type CharacterEvent = fn(&mut Player, &mut EnemyManager, i32, &mut Effect) -
 
 #[derive(Clone)]
 pub struct EventsPubSub {
-    pub on_update: Vec<CharacterEvent>,
+    pub on_update: Vec<(CharacterEvent, Effect)>,
 
-    pub on_heal: Vec<CharacterEvent>,
-    pub on_hurt: Vec<CharacterEvent>,
-    pub on_death: Vec<CharacterEvent>,
+    pub on_heal: Vec<(CharacterEvent, Effect)>,
+    pub on_hurt: Vec<(CharacterEvent, Effect)>,
+    pub on_death: Vec<(CharacterEvent, Effect)>,
 
-    pub on_attack: Vec<CharacterEvent>,
-    pub on_hit: Vec<CharacterEvent>,
-    pub on_kill: Vec<CharacterEvent>,
+    pub on_attack: Vec<(CharacterEvent, Effect)>,
+    pub on_hit: Vec<(CharacterEvent, Effect)>,
+    pub on_kill: Vec<(CharacterEvent, Effect)>,
 
-    pub on_jump: Vec<CharacterEvent>,
-    pub on_dash: Vec<CharacterEvent>,
+    pub on_jump: Vec<(CharacterEvent, Effect)>,
+    pub on_dash: Vec<(CharacterEvent, Effect)>,
 
-    pub on_overworld_map: Vec<CharacterEvent>,
-    pub on_start_level: Vec<CharacterEvent>,
+    pub on_overworld_map: Vec<(CharacterEvent, Effect)>,
+    pub on_start_level: Vec<(CharacterEvent, Effect)>,
 }
 
 impl EventsPubSub {

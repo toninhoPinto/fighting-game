@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, EntityState}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, EntityState}}, effects::{Effect, events_pub_sub::{CharacterEvent, EventsPubSub}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
@@ -16,12 +16,16 @@ pub fn get_enemy_colliders(player: &mut Player,
     player_data: &EntityData, 
     enemies_animations: &HashMap<&str, EntityAnimations>) {
     
-    let player_controller = player.controller.clone();
+    let player_collisions = &mut player.collision_manager.collisions_detected; 
+    let player_colliders = &player.collision_manager.colliders;
+    let player_controller_clone = player.controller.clone();
+    let player_controller = &mut player.controller;
     let player_pos = player.position;
     let enemies_names = enemy_manager.character_components.iter()
         .map(|char| {if let Some(char) = char { Some(char.name.clone()) } else {None}  })
         .collect::<Vec<Option<String>>>();
     
+    let mut enemies_hit = Vec::new();
     let zip = enemy_manager.
         collider_components.iter_mut().enumerate()
         .zip(enemy_manager.health_components.iter_mut())
@@ -41,11 +45,11 @@ pub fn get_enemy_colliders(player: &mut Player,
         None
     })
     .filter_map(|(i, colliders, hp, pos, mov, animator)| {
-        match detect_hit(&player.collision_manager.colliders, &colliders.colliders) {
+        match detect_hit(player_colliders, &colliders.colliders) {
             Some((point, name)) => {
-                if !player.collision_manager.collisions_detected.contains(&(i as i32)) { 
-                    player.collision_manager.collisions_detected.insert(i as i32);
-                    player.controller.has_hit = true;
+                if !player_collisions.contains(&(i as i32)) { 
+                    player_collisions.insert(i as i32);
+                    player_controller.has_hit = true;
                     return Some((i, point, name, hp, pos, colliders, mov, animator)) 
                 } else {
                     return None
@@ -61,12 +65,14 @@ pub fn get_enemy_colliders(player: &mut Player,
                     .get(&collider_name.replace("?", ""))
                     .unwrap();
         if !did_sucessfully_block(point, player_pos, &mov){
+            enemies_hit.push(i as i32);
+
             let enemy_name = &enemies_names[i].as_ref().unwrap();
             hit_opponent(
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
+                &player_controller_clone, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
 
             if let Some(on_hit) = attack.on_hit {
                on_hit(attack, colliders, mov, animator, &enemies_animations.get(&enemy_name as &str).unwrap());
@@ -79,11 +85,18 @@ pub fn get_enemy_colliders(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller, (pos, mov));
+                &player_controller_clone, (pos, mov));
             hit_particles(particles, point, "block", &general_assets);
             *hit_stop = 5;
         }
-    })
+    });
+
+    let mut p_on_hits = player.events.on_hit.clone();
+    for &i in enemies_hit.iter() {
+        for onhit in p_on_hits.iter_mut() {
+            onhit.0(player, enemy_manager, i, &mut onhit.1);
+        }
+    }
 }
 
 pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController, animator: &mut Animator, assets: &EntityAnimations) {
@@ -107,7 +120,7 @@ pub fn heal(hp: &mut Health, heal_amount: i32, char: &Character) {
     hp.0 = std::cmp::min(hp.0 + heal_amount, char.hp);
 }
 
-pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Player, enemy_animations: &HashMap<&str, EntityAnimations>) {
+pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut Player, enemy_animations: &HashMap<&str, EntityAnimations>) {
     let zip = enemy_manager.
     behaviour_components.iter()
     .zip(enemy_manager.health_components.iter())
@@ -129,6 +142,26 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Playe
     .for_each(|(behaviour, mov, pos, char, animator): (&Behaviour, &mut MovementController, &Position, &Character, &mut Animator)| {
         behaviour(player, pos, mov, animator, enemy_animations.get(&char.name as &str).unwrap());
     });
+
+
+    let zip = enemy_manager.
+        events_components.iter_mut().enumerate()
+        .zip(enemy_manager.health_components.iter());
+
+    zip
+    .filter_map(|((i, events), health) : ((usize, &mut Option<EventsPubSub>), &Option<Health>)| {
+        if let (Some(hp), Some(events)) = (health, events) {
+            if hp.0 > 0 {
+                return Some((i, &mut events.on_update))
+            }
+        }
+        None
+    }).for_each(|(i, events): (usize, &mut Vec<(CharacterEvent, Effect)>)| {
+        for event in events {
+            event.0(player, enemy_manager, i as i32, &mut event.1);
+        }
+    });
+
 }
 
 pub fn update_animations_enemies(enemy_manager: &mut EnemyManager) {
@@ -170,12 +203,7 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
     zip
     .filter_map(| (((((pos, animator), hp), mov), character), renderable): 
         (((((&mut Option<Position>, &mut Option<Animator>), &Option<Health>), &mut Option<MovementController>), &Option<Character>), &mut Option<Renderable>)| {
-        if let Some(hp) = hp {
-            if hp.0 > 0 {
-                return Some((pos.as_mut()?, mov.as_mut()?, animator.as_mut()?, character.as_ref()?, renderable.as_mut()?))
-            }
-        }
-        None
+        return Some((pos.as_mut()?, mov.as_mut()?, animator.as_mut()?, character.as_ref()?, renderable.as_mut()?))
     })
     .for_each(|(pos, mov, animator, character, renderable): (&mut Position, &mut MovementController, &mut Animator, &Character, &mut Renderable)| {
         mov.state_update(animator, enemy_animations.get(&character.name as &str).unwrap(), false);

@@ -175,11 +175,14 @@ impl Scene for MatchScene {
                         if input == Keycode::Escape {
                             return Transition::Pop;
                         }
-                        if input == Keycode::Num4 {
+                        if input == Keycode::Num4 { //punch
                             game.player.equip_item(items.get_mut(&4).unwrap(), &effects);
                         }
+                        if input == Keycode::Num8 { //launcher
+                            game.player.equip_item(items.get_mut(&8).unwrap(), &effects);
+                        }
                         if input == Keycode::Num6 {
-
+                            game.player.equip_item(items.get_mut(&14).unwrap(), &effects);
                         }
                     }
                     _ => {}
@@ -252,7 +255,7 @@ impl Scene for MatchScene {
                 game.player.state_update(&p1_anims, &p1_assets.texture_data);
 
                 update_animations_enemies(&mut game.enemies);
-                update_behaviour_enemies(&mut game.enemies, &game.player, &enemy_animations);
+                update_behaviour_enemies(&mut game.enemies, &mut game.player, &enemy_animations);
                 update_movement_enemies(&mut game.enemies, &enemy_animations, &game.camera, logic_timestep);
                 update_colliders_enemies(&mut game.enemies, &enemy_assets);
                 
