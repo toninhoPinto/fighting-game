@@ -4,11 +4,7 @@ use sdl2::render::Texture;
 
 use std::{cmp, collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, 
-collision::collider_manager::ColliderManager, 
-ecs_system::enemy_components::Health, 
-engine_types::{animator::Animator, sprite_data::SpriteData}, 
-game_logic::{characters::AttackType, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{characters::AttackType, effects::{ItemEffects, events_pub_sub::EventsPubSub}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{Ability, Character};
 
@@ -46,6 +42,10 @@ pub struct Player {
     pub curr_special_effect: Option<(i32, Ability)>,
 
     pub collision_manager: ColliderManager,
+
+    pub events: EventsPubSub,
+    pub items: Vec<i32>
+    //pub active_item: Option<fn() ->()>
 }
 
 impl Player {
@@ -66,15 +66,26 @@ impl Player {
             curr_special_effect: None,
 
             collision_manager: ColliderManager::new(),
+
+            events: EventsPubSub::new(),
+            items: Vec::new(),
         }
     }
 
-    pub fn change_special_meter(&mut self, special: f32) {
-        self.character.special_curr = ((self.character.special_curr + special)
-            .clamp(0.0, self.character.special_max as f32)
-            * 10.0)
-            .round()
-            / 10.0;
+    pub fn equip_item(&mut self, item: &mut Item, hash_effects: &HashMap<i32, ItemEffects>){
+
+        //check type of item
+            //if active, replace with active item
+            //if combat, apply effect function
+            //if passive, apply effect function
+        if item.item_type != ItemType::ActivePart {
+            self.items.push(item.asset_id);
+            for effect in item.effects.iter_mut() {
+                if let Some(apply_effect) = hash_effects.get(&effect.effect_id) {
+                    apply_effect(self, effect);
+                }
+            }
+        }
     }
 
     pub fn attack(&mut self, character_assets: &EntityAnimations, character_data: &EntityData, attack_animation: String) {
@@ -88,12 +99,6 @@ impl Player {
             let special_effect = character_data.attack_effects.get(&attack_animation);
             if let Some(&special_effect) = special_effect {
                 self.curr_special_effect = Some(special_effect);
-            }
-
-            if let Some(attack) = character_data.attacks.get(&attack_animation) {
-                if attack.attack_type == AttackType::Special {
-                    self.change_special_meter(-1.0); 
-                }
             }
 
             if let Some(attack_anim) = character_assets.animations.get(&attack_animation) { 
@@ -292,18 +297,29 @@ impl Player {
                 self.attack(character_anims, character_data, directional_input);
             } else {
                 let mut combo_id = 0;
+                let mut current_combo_length = 0;
+                
                 if recent_input_as_game_action == GameAction::Punch {
                     combo_id = 0;
+                    current_combo_length = self.character.punch_string_curr;
                 }
                 if recent_input_as_game_action == GameAction::Kick {
                     combo_id = 1;
+                    current_combo_length = self.character.kick_string_curr;
                 }
                 if self.controller.is_airborne {
                     combo_id += 2;
+                    if recent_input_as_game_action == GameAction::Punch {
+                        current_combo_length = self.character.airborne_punch_string_curr;
+                    }
+                    if recent_input_as_game_action == GameAction::Kick {
+                        current_combo_length = self.character.airborne_kick_string_curr;
+                    }
                 } 
 
                 if let Some(combo) = character_data.auto_combo_strings.get(&(combo_id)) {
-                    let combo_number = self.controller.combo_counter as usize % combo.len();
+                    let curr_combo_length = std::cmp::min(combo.len(), current_combo_length as usize);
+                    let combo_number = self.controller.combo_counter as usize % curr_combo_length;
                     self.attack(character_anims, character_data, combo[combo_number].to_string());
                 }
             }

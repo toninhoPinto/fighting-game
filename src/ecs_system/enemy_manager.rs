@@ -1,7 +1,7 @@
 use parry2d::na::Vector2;
 use sdl2::rect::Rect;
 
-use crate::{collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, engine_types::{animation::Animation, animator::Animator}, game_logic::{characters::Character, movement_controller::MovementController}};
+use crate::{collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, engine_types::{animation::Animation, animator::Animator}, game_logic::{characters::Character, effects::events_pub_sub::EventsPubSub, factories::enemy_factory::load_enemy, movement_controller::MovementController}};
 
 use super::enemy_components::{Behaviour, Health, Position, Renderable};
 
@@ -16,6 +16,7 @@ pub struct EnemyManager {
     pub movement_controller_components: Vec<Option<MovementController>>,
     pub collider_components: Vec<Option<ColliderManager>>,
     pub renderable_components: Vec<Option<Renderable>>,
+    pub events_components: Vec<Option<EventsPubSub>>,
 }
 
 impl EnemyManager {
@@ -29,6 +30,7 @@ impl EnemyManager {
             movement_controller_components: Vec::new(),
             collider_components: Vec::new(),
             renderable_components: Vec::new(),
+            events_components: Vec::new(),
         }
     }
 
@@ -39,7 +41,8 @@ impl EnemyManager {
         pos: Option<Position>, 
         character: Option<Character>, 
         animator: Option<Animator>,
-        colliders: Option<ColliderManager>) {
+        colliders: Option<ColliderManager>,
+        events: Option<EventsPubSub>) {
         
         
         if self.health_components.len() < MAX_ENEMIES {
@@ -58,6 +61,7 @@ impl EnemyManager {
             self.animator_components.push(animator);
             self.behaviour_components.push(behaviour);
             self.collider_components.push(colliders);
+            self.events_components.push(events);
 
             let renderable = Renderable {
                 flipped: false,
@@ -69,17 +73,7 @@ impl EnemyManager {
 
     pub fn add_enemy(&mut self, player_pos: Vector2<f64>, starting_animation: Animation) {
 
-        let ryu = Character::new(
-            "ryu".to_string(),
-            240,
-            240,
-            100,
-            3,
-            150.0,
-            570.0,
-            600.0,
-            500.0,
-        );
+        let ryu = load_enemy("ryu");
 
         let mut animator = Animator::new();
         animator.play(starting_animation, 1.0,false);
@@ -91,7 +85,8 @@ impl EnemyManager {
             Some(Position(player_pos + Vector2::new(500f64, 0f64))),
             Some(ryu),
             Some(animator), 
-            Some(ColliderManager::new())
+            Some(ColliderManager::new()),
+            Some(EventsPubSub::new())
         );
 
         println!("Spawned entity");

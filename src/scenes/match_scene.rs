@@ -14,7 +14,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
+use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -115,6 +115,8 @@ impl Scene for MatchScene {
         );
 
         let mut game = Game::new(player.clone(),camera);
+        let mut items = load_items("assets/items/items.json".to_string());
+        let effects = hash_effects();
 
         game.player
             .animator
@@ -126,10 +128,6 @@ impl Scene for MatchScene {
         let mut hp_bars = MatchScene::hp_bars_init(
             screen_res,
             game.player.character.hp,
-        );
-        let mut special_bars = MatchScene::special_bars_init(
-            screen_res,
-            game.player.character.special_max
         );
 
         let mut hit_stop = 0;
@@ -176,6 +174,12 @@ impl Scene for MatchScene {
                         }
                         if input == Keycode::Escape {
                             return Transition::Pop;
+                        }
+                        if input == Keycode::Num4 {
+                            game.player.equip_item(items.get_mut(&4).unwrap(), &effects);
+                        }
+                        if input == Keycode::Num6 {
+
                         }
                     }
                     _ => {}
@@ -297,8 +301,6 @@ impl Scene for MatchScene {
 
                 hp_bars.update(game.player.character.hp);
 
-                special_bars.update(game.player.character.special_curr);
-
                 //crate::ecs_system::enemy_systems::update_animations_enemies(&mut enemy_manager);
                 logic_time_accumulated -= logic_timestep;
             }
@@ -313,7 +315,6 @@ impl Scene for MatchScene {
                     &enemy_assets,
                     &mut general_assets,
                     &hp_bars,
-                    &special_bars,
                    // &end_game_match,
                     false,
                 )

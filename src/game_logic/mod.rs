@@ -1,3 +1,5 @@
+pub mod effects;
+pub mod items;
 pub mod on_hit;
 pub mod factories;
 pub mod movement_controller;

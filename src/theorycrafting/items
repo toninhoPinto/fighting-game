@@ -19,6 +19,9 @@ Combo Items
 
     -Martial Master- Adds all the attacks for the character
 
+    - Add double jump
+    - Add air-dash
+
 Passive Items
     - When you jump enemies are lifted with you -> Anti-gravity area
     - Drones that attack enemies                -> Anti-Personnel Drones
@@ -29,8 +32,6 @@ Passive Items
     - Increase/Reduce attack damage of each attack
     - Increase/Reduce attack push back
     - Pulls enemies closer to the attack hitbox -> Magnetic Fists
-    - Add double jump
-    - Add air-dash
     - Dash starts making damage
     - Fly by keeping pressing Jump
     - Freeze enemies solid, if kicked enemy acts as a projectile
@@ -39,7 +40,6 @@ Passive Items
     - Flying blades that stab through full screen when punching
     - Electricity field that does damage around the player
     - Tech Cannibalism, get HP from killing enemies 
-    - Turn enemy to your team (charm)
     - Item that changes the world map to full delaunay, (creates more links between nodes on the map) allowing more options where traversing the overworld map
     - Killing enemies will cause them to explode.
     - When you have max HP gain some other stat (attack damage? attack speed? mov speed? etc.)
@@ -50,8 +50,12 @@ Passive Items
     - Blocking reflects 50% of the damage to the enemy
     - Take 50% more damage, but also give 50% more damage
     - Replace dash with teleport
-    - 
-
+    - Heal with explosions
+    - every punch explodes on impact (more damage, and stuns for 1.5 seconds AoE) but you loose health every punch
+    - every time you hit someone, you gain X amount of health, but you are constantly loosing health till you reach 25%
+    - Kicking an enemy free's them from gravity for 1.5 seconds, but so do you
+    - HyperGravity - you can't jump, be airborne or launch enemies but ground attacks make 25% more damage
+    - Extra virgin oil - Attack speed is increased by 25% but the ocasional oil leak makes you fall every time you reach 6x combo
 
 
     

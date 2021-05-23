@@ -97,6 +97,16 @@ pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController, a
     }
 }
 
+pub fn take_damage_light(hp: &mut Health, damage: i32, mov: &mut MovementController) {
+    if hp.0 > 0 {
+        hp.0 = std::cmp::max(hp.0 - damage, 1);
+    }
+}
+
+pub fn heal(hp: &mut Health, heal_amount: i32, char: &Character) {
+    hp.0 = std::cmp::min(hp.0 + heal_amount, char.hp);
+}
+
 pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &Player, enemy_animations: &HashMap<&str, EntityAnimations>) {
     let zip = enemy_manager.
     behaviour_components.iter()
@@ -223,7 +233,6 @@ pub fn render_enemies<'a>(enemy_manager: &EnemyManager, assets: &'a HashMap<&str
 
     living.collect::<Vec<(&'a Texture<'a>, Rect, Point, bool, i32)>>()
 }
-
 
 fn render_entity<'a>(texture_handle: String, animator: &Animator, renderable: &Renderable, assets: &'a EntityAssets<'a>) -> (&'a Texture<'a>, Rect, (f64, f64))  {
     let sprite_data = assets.texture_data.get(&texture_handle);

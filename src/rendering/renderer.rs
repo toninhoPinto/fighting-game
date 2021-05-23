@@ -61,7 +61,6 @@ pub fn render(
     enemy_assets: &HashMap<&str, EntityAssets>,
     common_assets: &mut CommonAssets,
     hp_bars: &Bar,
-    special_bars:  &SegmentedBar,
     //end_match_menu: &EndMatch,
     debug: bool,
 ) -> Result<(), String> {
@@ -146,15 +145,6 @@ pub fn render(
         canvas.fill_rect(hp_bars.rect).unwrap();
     }
     
-
-    if special_bars.curr_value > 0.0 {
-        for j in 0..special_bars.render().len() {
-            canvas.draw_rect(special_bars.rects[j]).unwrap();
-            canvas.set_draw_color(special_bars.color.unwrap());
-            canvas.fill_rect(special_bars.rects[j]).unwrap();
-        }
-    }
-
     canvas.present(); 
     Ok(())
 }

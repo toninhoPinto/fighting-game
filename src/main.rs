@@ -29,6 +29,11 @@ use crate::input::controller_handler::Controller;
 
 
 //TODO features tomorrow
+//add items
+
+//add to game_state_data
+    //player??? or character and all items and apply them all everytime you start a level
+    
 //make overworld proc gen map
     // replace lines with rotated squares with textures
     // decision making on the type of node (level, event, store)
