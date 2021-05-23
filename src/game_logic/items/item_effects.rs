@@ -1,4 +1,4 @@
-use crate::{asset_management::asset_holders::EntityAnimations, ecs_system::{enemy_manager::EnemyManager, enemy_systems::{heal, take_damage, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::{Attack, Character, player::Player}, effects::{Effect, events_pub_sub::{CharacterEvent, EventsPubSub}}, movement_controller::MovementController}};
+use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::CharacterEvent}}};
 
 pub fn add_attack(player: &mut Player, effect: &mut Effect) {
     match &effect.add_attack.as_ref().unwrap() as &str {
@@ -6,10 +6,10 @@ pub fn add_attack(player: &mut Player, effect: &mut Effect) {
         "kick" => {player.character.kick_string_curr+=1;},
         "airborne punch" => {player.character.airborne_punch_string_curr+=1;},
         "airborne kick" => {player.character.airborne_kick_string_curr+=1;},
-        "launcher" => {player.character.launcher = true;},
-        "dropper" => {player.character.dropper = true;}, 
-        "dashing" => {player.character.dash_attack = true;},
-        "crash" => {player.character.crash = true;},
+        "launcher" => {player.character.directional_attacks_mask =  0b0001u32;},
+        "dropper" => {player.character.directional_attacks_mask =   0b0010u32;}, 
+        "dashing" => {player.character.directional_attacks_mask =   0b0100u32;},
+        "crash" => {player.character.directional_attacks_mask =     0b1000u32;},
         _ => {},
     }
 }

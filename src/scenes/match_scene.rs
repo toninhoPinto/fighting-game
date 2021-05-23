@@ -255,13 +255,6 @@ impl Scene for MatchScene {
                 update_behaviour_enemies(&mut game.enemies, &game.player, &enemy_animations);
                 update_movement_enemies(&mut game.enemies, &enemy_animations, &game.camera, logic_timestep);
                 update_colliders_enemies(&mut game.enemies, &enemy_assets);
-
-                if let Some(ability) = game.player.curr_special_effect {
-                    if ability.0 == game.player.animator.sprite_shown {
-                        ability.1(&mut game, 1, &p1_anims);
-                        game.player.curr_special_effect = None;
-                    }
-                }
                 
                 let start_p1_pos = game.player.position.clone();
 

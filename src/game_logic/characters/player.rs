@@ -2,11 +2,11 @@ use parry2d::na::Vector2;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::Texture;
 
-use std::{cmp, collections::{HashMap, VecDeque}, fmt};
+use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{characters::AttackType, effects::{ItemEffects, events_pub_sub::EventsPubSub}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{effects::{ItemEffects, events_pub_sub::EventsPubSub}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
 
-use super::{Ability, Character};
+use super::Character;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum EntityState {
@@ -39,8 +39,6 @@ pub struct Player {
     pub character_width: f64,
     pub character: Character,
 
-    pub curr_special_effect: Option<(i32, Ability)>,
-
     pub collision_manager: ColliderManager,
 
     pub events: EventsPubSub,
@@ -62,8 +60,6 @@ impl Player {
 
             character_width: 0.0,
             character,
-
-            curr_special_effect: None,
 
             collision_manager: ColliderManager::new(),
 
@@ -88,18 +84,13 @@ impl Player {
         }
     }
 
-    pub fn attack(&mut self, character_assets: &EntityAnimations, character_data: &EntityData, attack_animation: String) {
+    pub fn attack(&mut self, character_assets: &EntityAnimations, _character_data: &EntityData, attack_animation: String) {
         if self.controller.player_can_attack() {
             self.controller.is_attacking = true;
             self.controller.combo_counter += 1;
 
             self.collision_manager.collisions_detected.clear();
             self.controller.has_hit = false;
-
-            let special_effect = character_data.attack_effects.get(&attack_animation);
-            if let Some(&special_effect) = special_effect {
-                self.curr_special_effect = Some(special_effect);
-            }
 
             if let Some(attack_anim) = character_assets.animations.get(&attack_animation) { 
                 self.animator.play_animation(attack_anim.clone(),1.0, false, true, true);
@@ -342,13 +333,16 @@ impl Player {
         recent_inputs: i32
     ) -> Option<String> {
         for possible_combo in character_data.directional_variation_anims.iter() {
-            let (moves, name) = possible_combo;
+            let (mask,moves, name) = possible_combo;
              
-            if GameAction::is_pressed(recent_inputs,moves.0) &&
-                GameAction::is_pressed(recent_inputs,moves.1) 
-            {
-                return Some(name.to_string());
+            if mask & self.character.directional_attacks_mask != 0 {
+                if  GameAction::is_pressed(recent_inputs,moves.0) &&
+                    GameAction::is_pressed(recent_inputs,moves.1) 
+                {
+                    return Some(name.to_string());
+                }
             }
+            
         }
         None
     }

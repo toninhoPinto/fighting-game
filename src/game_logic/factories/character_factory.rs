@@ -4,7 +4,7 @@ use parry2d::na::Vector2;
 use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
-use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Ability, Attack, AttackType, Character, OnHit, player::Player}, inputs::game_inputs::GameAction, on_hit::basic_on_hits::launch}};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Attack, AttackType, Character, OnHitSpecificAttack, player::Player}, inputs::game_inputs::GameAction, on_hit::basic_on_hits::launch}};
 use std::collections::HashMap;
 use std::string::String;
 
@@ -28,10 +28,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, id: i32) -> Player
             1,
             2,
             1,
-            false,
-            false,
-            false,
-            false,
+            0b0000u32,
         )),
         _ => None,
     }
@@ -52,13 +49,13 @@ pub fn load_character_anim_data<'a>(
 //===========================================================
 
 
-fn load_foxgirl_directional_inputs() ->   Vec<((GameAction, GameAction), String)>{
-    let mut directional_inputs: Vec<((GameAction, GameAction), String)> = Vec::new();
+fn load_foxgirl_directional_inputs() ->   Vec<(u32, (GameAction, GameAction), String)>{
+    let mut directional_inputs: Vec<(u32, (GameAction, GameAction), String)> = Vec::new();
 
     //directional_inputs.push(( (GameAction::Right, GameAction::Punch), "directional_light_punch".to_string()) );
     //directional_inputs.push(( (GameAction::Left, GameAction::Punch), "directional_light_punch".to_string()) );
 
-    directional_inputs.push(( (GameAction::Up, GameAction::Punch), "launcher".to_string()) );
+    directional_inputs.push((0b0001u32, (GameAction::Up, GameAction::Punch), "launcher".to_string()) );
 
     directional_inputs
 }
@@ -263,7 +260,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 14,
             push_back: 0.0,
             attack_type: AttackType::Special,
-            on_hit: Some(launch as OnHit),
+            on_hit: Some(launch as OnHitSpecificAttack),
         },
     );
 
@@ -302,7 +299,6 @@ fn load_foxgirl_data() -> EntityData {
     EntityData {
         auto_combo_strings: load_foxgirl_auto_combos(),
         directional_variation_anims: load_foxgirl_directional_inputs(),
-        attack_effects: HashMap::new(),
         attacks: load_foxgirl_attacks(),
     }
 }

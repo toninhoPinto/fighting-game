@@ -3,13 +3,12 @@ use std::string::String;
 
 use crate::{asset_management::asset_holders::EntityAnimations, collision::collider_manager::ColliderManager, engine_types::animator::Animator};
 
-use super::{game::Game, movement_controller::MovementController};
+use super::{movement_controller::MovementController};
 
 pub mod foxgirl;
 pub mod player;
 
-pub(crate) type Ability = fn(&mut Game, i32, &EntityAnimations) -> ();
-pub(crate) type OnHit = fn(&Attack, &mut ColliderManager, &mut MovementController, &mut Animator, &EntityAnimations)  -> ();
+pub(crate) type OnHitSpecificAttack = fn(&Attack, &mut ColliderManager, &mut MovementController, &mut Animator, &EntityAnimations)  -> ();
 
 #[derive(Debug, Clone)]
 pub struct Character {
@@ -27,11 +26,15 @@ pub struct Character {
     pub kick_string_curr: i8,
     pub airborne_punch_string_curr: i8,
     pub airborne_kick_string_curr: i8,
-    pub launcher: bool,
-    pub dropper: bool,
-    pub dash_attack: bool,
-    pub crash: bool,
+    pub directional_attacks_mask: u32,
 }
+
+/*
+    launcher    0b0001u32
+    dropper     0b0010u32
+    dashing     0b0100u32
+    crash       0b1000u32
+*/
 
 #[derive(Debug, PartialEq)]
 pub enum AttackType {
@@ -45,7 +48,7 @@ pub struct Attack {
     pub stun_on_block: i32,
     pub push_back: f64,
     pub attack_type: AttackType,
-    pub on_hit: Option<OnHit>,
+    pub on_hit: Option<OnHitSpecificAttack>,
 }
 
 impl Character {
@@ -62,10 +65,7 @@ impl Character {
         kick_string_curr: i8,
         airborne_punch_string_curr: i8,
         airborne_kick_string_curr: i8,
-        launcher: bool,
-        dropper: bool,
-        dash_attack: bool,
-        crash: bool,
+        directional_attacks_mask: u32,
     ) -> Self {
         Self {
             name,
@@ -82,10 +82,7 @@ impl Character {
             airborne_punch_string_curr,
             airborne_kick_string_curr,
 
-            launcher,
-            dropper,
-            dash_attack,
-            crash,
+            directional_attacks_mask,
         }
     }
 }
