@@ -181,8 +181,14 @@ impl Scene for MatchScene {
                         if input == Keycode::Num8 { //launcher
                             game.player.equip_item(items.get_mut(&8).unwrap(), &effects);
                         }
-                        if input == Keycode::Num6 {
+                        if input == Keycode::Num6 { //poison
                             game.player.equip_item(items.get_mut(&14).unwrap(), &effects);
+                        }
+                        if input == Keycode::Num5 { //lifesteal
+                            game.player.equip_item(items.get_mut(&15).unwrap(), &effects);
+                        }
+                        if input == Keycode::V { //hurt self
+                            game.player.hp.0 -= 5;
                         }
                     }
                     _ => {}
@@ -295,9 +301,8 @@ impl Scene for MatchScene {
 
                 game.camera.update(LEVEL_WIDTH, &game.player);
 
-                hp_bars.update(game.player.character.hp);
+                hp_bars.update(game.player.hp.0);
 
-                //crate::ecs_system::enemy_systems::update_animations_enemies(&mut enemy_manager);
                 logic_time_accumulated -= logic_timestep;
             }
 

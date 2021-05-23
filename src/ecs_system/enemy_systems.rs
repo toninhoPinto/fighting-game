@@ -144,6 +144,7 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
     });
 
 
+    /*
     let zip = enemy_manager.
         events_components.iter_mut().enumerate()
         .zip(enemy_manager.health_components.iter());
@@ -160,8 +161,8 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
         for event in events {
             event.0(player, enemy_manager, i as i32, &mut event.1);
         }
-    });
-
+    }); 
+    */
 }
 
 pub fn update_animations_enemies(enemy_manager: &mut EnemyManager) {
