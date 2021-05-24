@@ -14,7 +14,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
+use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -263,6 +263,7 @@ impl Scene for MatchScene {
                 update_animations_enemies(&mut game.enemies);
                 update_behaviour_enemies(&mut game.enemies, &mut game.player, &enemy_animations);
                 update_movement_enemies(&mut game.enemies, &enemy_animations, &game.camera, logic_timestep);
+                update_events(&mut game.enemies, &mut game.player, logic_timestep);
                 update_colliders_enemies(&mut game.enemies, &enemy_assets);
                 
                 let start_p1_pos = game.player.position.clone();

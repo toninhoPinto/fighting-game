@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, EntityState}}, effects::{Effect, events_pub_sub::{CharacterEvent, EventsPubSub}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Character, player::{Player, EntityState}}, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventUpdate, EventsPubSub}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
@@ -120,6 +120,42 @@ pub fn heal(hp: &mut Health, heal_amount: i32, char: &Character) {
     hp.0 = std::cmp::min(hp.0 + heal_amount, char.hp);
 }
 
+pub fn update_events(enemy_manager: &mut EnemyManager, player: &mut Player, dt: f64) {
+    
+    let zip = enemy_manager.
+        events_components.iter_mut().enumerate()
+        .zip(enemy_manager.health_components.iter());
+
+    let mut enemy_events = zip
+    .filter_map(|((i, events), health) : ((usize, &mut Option<EventsPubSub>), &Option<Health>)| {
+        if let (Some(hp), Some(events)) = (health, events) {
+            if hp.0 > 0 {
+                return Some((i, events.on_update.clone()))
+            }
+        }
+        None
+    }).collect::<Vec<(usize, Vec<(CharacterEventUpdate, Effect)>)>> ();
+    
+    enemy_events.iter_mut().for_each(|(i, events): &mut (usize,  Vec<(CharacterEventUpdate, Effect)>)| {
+        for event in events.iter_mut() {
+            event.0(player, enemy_manager, *i as i32, &mut event.1, dt);
+        }
+    });
+
+    let replace_events = enemy_manager.
+        events_components.iter_mut().enumerate()
+        .zip(enemy_events);
+
+    replace_events
+    .for_each(|((i, events), (to_replace_i, to_replace_events)) : ((usize, &mut Option<EventsPubSub>), (usize,  Vec<(CharacterEventUpdate, Effect)>))| {
+        if i == to_replace_i {
+            if let Some(events) = events {
+                events.on_update = to_replace_events;
+            }
+        }
+    });
+}
+
 pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut Player, enemy_animations: &HashMap<&str, EntityAnimations>) {
     let zip = enemy_manager.
     behaviour_components.iter()
@@ -142,40 +178,6 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
     })
     .for_each(|(behaviour, mov, pos, char, animator): (&Behaviour, &mut MovementController, &Position, &Character, &mut Animator)| {
         behaviour(player, pos, mov, animator, enemy_animations.get(&char.name as &str).unwrap());
-    });
-
-
-    let zip = enemy_manager.
-        events_components.iter_mut().enumerate()
-        .zip(enemy_manager.health_components.iter());
-
-    let mut enemy_events = zip
-    .filter_map(|((i, events), health) : ((usize, &mut Option<EventsPubSub>), &Option<Health>)| {
-        if let (Some(hp), Some(events)) = (health, events) {
-            if hp.0 > 0 {
-                return Some((i, events.on_update.clone()))
-            }
-        }
-        None
-    }).collect::<Vec<(usize, Vec<(CharacterEvent, Effect)>)>> ();
-    
-    enemy_events.iter_mut().for_each(|(i, events): &mut (usize,  Vec<(CharacterEvent, Effect)>)| {
-        for event in events.iter_mut() {
-            event.0(player, enemy_manager, *i as i32, &mut event.1);
-        }
-    });
-
-    let replace_events = enemy_manager.
-        events_components.iter_mut().enumerate()
-        .zip(enemy_events);
-
-    replace_events
-    .for_each(|((i, events), (to_replace_i, to_replace_events)) : ((usize, &mut Option<EventsPubSub>), (usize,  Vec<(CharacterEvent, Effect)>))| {
-        if i == to_replace_i {
-            if let Some(events) = events {
-                events.on_update = to_replace_events;
-            }
-        }
     });
 }
 

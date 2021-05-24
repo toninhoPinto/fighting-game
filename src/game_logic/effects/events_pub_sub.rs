@@ -4,10 +4,11 @@ use super::Effect;
 
 
 pub type CharacterEvent = fn(&mut Player, &mut EnemyManager, i32, &mut Effect) -> ();
+pub type CharacterEventUpdate = fn(&mut Player, &mut EnemyManager, i32, &mut Effect, f64,) -> ();
 
 #[derive(Clone)]
 pub struct EventsPubSub {
-    pub on_update: Vec<(CharacterEvent, Effect)>,
+    pub on_update: Vec<(CharacterEventUpdate, Effect)>,
 
     pub on_heal: Vec<(CharacterEvent, Effect)>,
     pub on_hurt: Vec<(CharacterEvent, Effect)>,

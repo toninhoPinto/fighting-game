@@ -42,7 +42,7 @@ pub struct Player {
     pub collision_manager: ColliderManager,
 
     pub events: EventsPubSub,
-    pub items: Vec<i32>,
+    pub items: Vec<String>,
     pub active_item: Option<(CharacterEvent, Effect)>
 }
 
@@ -77,7 +77,7 @@ impl Player {
             //if combat, apply effect function
             //if passive, apply effect function
         if item.item_type != ItemType::ActivePart {
-            self.items.push(item.asset_id);
+            self.items.push(item.asset_id.clone());
             for effect in item.effects.iter_mut() {
                 if let Some(apply_effect) = hash_effects.get(&effect.effect_id) {
                     apply_effect(self, effect);

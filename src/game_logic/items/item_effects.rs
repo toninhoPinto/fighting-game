@@ -1,4 +1,4 @@
-use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::CharacterEvent}}};
+use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventUpdate}}}};
 
 pub fn add_attack(player: &mut Player, effect: &mut Effect) {
     match &effect.add_attack.as_ref().unwrap() as &str {
@@ -28,16 +28,22 @@ pub fn apply_poison_to_enemies(player: &mut Player, effect: &mut Effect){
 
 pub fn apply_poison(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
     if let Some(enemy_events) = &mut enemies.events_components[enemy_id as usize] {
-        enemy_events.on_update.push((poison as CharacterEvent, effect.clone()));
+        enemy_events.on_update.push((poison as CharacterEventUpdate, effect.clone()));
     }
 } 
 
-pub fn poison(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
+pub fn poison(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect, dt: f64){
     if let (Some(hp), Some(mov), Some(animator)) = 
         (&mut enemies.health_components[enemy_id as usize],
         &mut enemies.movement_controller_components[enemy_id as usize],
         &mut enemies.animator_components[enemy_id as usize])
             {
-        take_damage_light(hp, effect.change.unwrap(), mov);
+                effect.time_elapsed += (dt * 1000f64) as i32;
+                if let Some(time_threshold) = effect.apply_at_every {
+                    if effect.time_elapsed % time_threshold == 0 {
+                        take_damage_light(hp, effect.change.unwrap(), mov);
+                    }
+                }
+                
     }
 }

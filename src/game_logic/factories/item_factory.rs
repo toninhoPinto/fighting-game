@@ -11,7 +11,7 @@ pub struct Root {
     #[serde(rename = "item_type")]
     pub item_type: String,
     #[serde(rename = "asset_id")]
-    pub asset_id: i32,
+    pub asset_id: String,
     pub effects: Vec<JsonEffect>,
 }
 
@@ -19,23 +19,19 @@ pub struct Root {
 #[serde(rename_all = "camelCase")]
 pub struct JsonEffect {
     pub id: i32,
-    pub duration: Option<i32>,
+    pub change: Option<i32>,
     #[serde(rename = "add_attack")]
     pub add_attack: Option<String>,
-    pub change: Option<i32>,
+    #[serde(default)]
+    pub stat: Vec<String>,
+    #[serde(rename = "apply_at_every")]
+    pub apply_at_every: Option<i32>,
+    pub duration: Option<i32>,
 }
 
-fn make_effect(json_effect: &JsonEffect) -> Effect {
-    Effect {
-        duration: json_effect.duration,
-        change: json_effect.change,
-        add_attack: if let Some(add_attack) = &json_effect.add_attack {Some(add_attack.to_string())} else {None} ,
-        effect_id: json_effect.id,
-        time_elapsed: 0,
-    }
-}
 
 pub fn load_items(dir: String) -> HashMap<i32, Item>{
+    println!("loading {}", dir);
     let json_string = fs::read_to_string(dir.clone()).unwrap();
     let items = serde_json::from_str::<Vec<Root>>(&json_string).unwrap();
     
@@ -59,4 +55,16 @@ pub fn load_items(dir: String) -> HashMap<i32, Item>{
     }
     
     map
+}
+
+fn make_effect(json_effect: &JsonEffect) -> Effect {
+    Effect {
+        duration: json_effect.duration,
+        change: json_effect.change,
+        add_attack: if let Some(add_attack) = &json_effect.add_attack {Some(add_attack.to_string())} else {None},
+        effect_id: json_effect.id,
+        stat: if json_effect.stat.len() == 0 {None} else {Some(json_effect.stat.clone())},
+        time_elapsed: 0,
+        apply_at_every: json_effect.apply_at_every,
+    }
 }

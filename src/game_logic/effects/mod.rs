@@ -14,23 +14,16 @@ pub struct Effect {
     //for overtime effects
     pub duration: Option<i32>,
     pub time_elapsed: i32,
+    pub apply_at_every: Option<i32>,
     pub change: Option<i32>,
+    pub stat:  Option<Vec<String>>,
 
     //for adding new animations
     pub add_attack: Option<String>,
 }
 
-impl Effect {
-    pub fn new(effect_id: i32, duration:i32, change: i32) -> Self {
-        Self {
-            effect_id: effect_id,
-            duration: Some(duration),
-            time_elapsed: 0,
-            change: Some(change),
-            add_attack: None
-        }
-    }
-}
+
+
 
 pub fn hash_effects() -> HashMap<i32, ItemEffects>{
     let mut effects = HashMap::new();
