@@ -1,6 +1,6 @@
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::factories::world_factory::load_overworld_assets, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}};
+use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::factories::world_factory::load_overworld_assets, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::segmented_bar_ui::SegmentedBar};
 
 use super::match_scene::MatchScene;
 
@@ -27,6 +27,20 @@ impl OverworldScene{
     }
 }
 
+pub fn hp_bar_init<'a>(screen_res: (u32, u32), max_hp: i32, curr_hp: i32) -> SegmentedBar<'a> {
+    SegmentedBar::new(
+        10,
+        20,
+        screen_res.0 / 2 - 50,
+        25,
+        max_hp,
+        curr_hp,
+        20,
+        Some(Color::RGB(255, 100, 100)),
+        None,
+    )
+}
+
 impl<'a> Scene for OverworldScene {
     fn run(
         &mut self,
@@ -41,6 +55,12 @@ impl<'a> Scene for OverworldScene {
         let map_area = Rect::new(400, 100, w-800, h-200);
 
         let assets = load_overworld_assets(&texture_creator);
+
+        let mut hp_bars = hp_bar_init(
+            (w, h),
+            game_state_data.player.as_ref().unwrap().character.hp,
+            game_state_data.player.as_ref().unwrap().hp.0,
+        );
 
         self.connect_to_index = 0;
         let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
@@ -97,6 +117,7 @@ impl<'a> Scene for OverworldScene {
 
             canvas.clear();
             canvas.set_draw_color(Color::RGB(255, 255, 50));
+            
             for node in self.nodes.iter() {
                 for &connections in node.connect_to.iter() {
                     let origin_point = pos_world_to_screen(node.position + Point::new(30,30), (w, h), None);
@@ -137,6 +158,7 @@ impl<'a> Scene for OverworldScene {
             }
             
             
+            
             let src_pointer = assets.src_rects.get("arrow").unwrap();
             let pointer_screen = world_to_screen(Rect::new(0,0, 40, 40), self.nodes[self.next_node].position + Point::new(20,0), (w, h), None);
             canvas.copy_ex(&assets.spritesheet, src_pointer.clone(), pointer_screen, 90f64, Point::new(0,0), false, false).unwrap();
@@ -149,6 +171,14 @@ impl<'a> Scene for OverworldScene {
             let rect_screen_pos = world_to_screen(Rect::new(0,0, 300, 480), Point::new(0,0), (w, h), None);
             canvas.copy(&assets.portraits.get("portrait").unwrap(), Rect::new(0,0, 500, 870), rect_screen_pos).unwrap();
       
+            if hp_bars.curr_value > 0 {
+                canvas.set_draw_color(hp_bars.color.unwrap());
+                for hp_rect in hp_bars.render() {
+                    canvas.draw_rect(hp_rect).unwrap();
+                    canvas.fill_rect(hp_rect).unwrap();
+                }
+            }
+
             canvas.present();
         }
     }

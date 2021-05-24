@@ -60,7 +60,7 @@ pub fn render(
     p1_assets: &EntityAssets,
     enemy_assets: &HashMap<&str, EntityAssets>,
     common_assets: &mut CommonAssets,
-    hp_bars: &Bar,
+    hp_bars: &SegmentedBar,
     //end_match_menu: &EndMatch,
     debug: bool,
 ) -> Result<(), String> {
@@ -138,11 +138,13 @@ pub fn render(
         render_colliders(canvas, screen_res, &game.camera, &mut game.player.collision_manager.colliders);
     }
 
-    //Apparently sdl2 Rect doesnt like width of 0, it will make it width of 1, so i just stop it from rendering instead
-    if hp_bars.fill_value > 0.0 {
-        canvas.draw_rect(hp_bars.rect).unwrap();
+
+    if hp_bars.curr_value > 0 {
         canvas.set_draw_color(hp_bars.color.unwrap());
-        canvas.fill_rect(hp_bars.rect).unwrap();
+        for hp_rect in hp_bars.render() {
+            canvas.draw_rect(hp_rect).unwrap();
+            canvas.fill_rect(hp_rect).unwrap();
+        }
     }
     
     canvas.present(); 

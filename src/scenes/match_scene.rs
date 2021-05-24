@@ -25,6 +25,8 @@ use crate::{
     GameStateData,
 };
 
+use super::overworld_scene::hp_bar_init;
+
 const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
 
 const LEVEL_WIDTH: i32 = 2560;
@@ -48,33 +50,6 @@ impl MatchScene {
             character,
             p1_inputs: AllInputManagement::new(),
         }
-    }
-
-    fn hp_bars_init<'a>(screen_res: (u32, u32), p1_hp: i32) -> Bar<'a> {
-        Bar::new(
-            10,
-            20,
-            screen_res.0 / 2 - 20,
-            50,
-            p1_hp,
-            Some(Color::RGB(255, 100, 100)),
-            None,
-        )
-    }
-
-    fn special_bars_init<'a>(
-        screen_res: (u32, u32),
-        p1_special: i32,
-    ) -> SegmentedBar<'a> {
-        SegmentedBar::new(
-            10,
-            screen_res.1 as i32 - 30,
-            150,
-            10,
-            p1_special,
-            Some(Color::RGB(20, 250, 250)),
-            None,
-        )
     }
 }
 
@@ -108,13 +83,7 @@ impl Scene for MatchScene {
             SCREEN_HEIGHT,
         );
 
-        let player = load_character(
-            &self.character,
-            Point::new(200, 50),
-            1,
-        );
-
-        let mut game = Game::new(player.clone(),camera);
+        let mut game = Game::new(game_state_data.player.as_ref().unwrap().clone(),camera);
         let mut items = load_items("assets/items/items.json".to_string());
         let effects = hash_effects();
 
@@ -125,9 +94,10 @@ impl Scene for MatchScene {
         game.player.collision_manager.init_colliders(&game.player.animator);
 
         let screen_res = canvas.output_size().unwrap();
-        let mut hp_bars = MatchScene::hp_bars_init(
+        let mut hp_bars = hp_bar_init(
             screen_res,
             game.player.character.hp,
+            game.player.hp.0,
         );
 
         let mut hit_stop = 0;
@@ -173,6 +143,7 @@ impl Scene for MatchScene {
                             logic_time_accumulated += logic_timestep;
                         }
                         if input == Keycode::Escape {
+                            game_state_data.player = Some(game.player.clone());
                             return Transition::Pop;
                         }
                         if input == Keycode::Num4 { //punch
@@ -188,7 +159,7 @@ impl Scene for MatchScene {
                             game.player.equip_item(items.get_mut(&20).unwrap(), &effects);
                         }
                         if input == Keycode::V { //hurt self
-                            game.player.hp.0 -= 5;
+                            game.player.hp.0 -= 10;
                         }
                     }
                     _ => {}

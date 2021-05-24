@@ -1,4 +1,5 @@
 use engine_traits::scene::Scene;
+use game_logic::characters::player::Player;
 use scenes::menu_scene::MenuScene;
 use sdl2::{image::{self, InitFlag}, rect::Rect};
 use sdl2::render::BlendMode;
@@ -64,7 +65,7 @@ use crate::input::controller_handler::Controller;
 
 //TODO TECH DEBT AND BUGS~
 
-//16 
+//16 Match_scene no inicio faz clone de player para dentro do game, e vice versa no fim, secalhar pode usar directamente apartir do game_state_data.player
 //15 so much duplicated code inside match_scene
 //13 the placement of the particles spawned at the moment of a projectile hit are a bit weird
 //12 For the animation import the texture names from the scon file instead of iterating through the dir 
@@ -79,6 +80,7 @@ use crate::input::controller_handler::Controller;
 
 pub struct GameStateData {
     item_sprites: HashMap<String, Rect>,
+    player: Option<Player>,
     //loot_tables; HashMap<>
 }
 
@@ -134,6 +136,7 @@ fn main() -> Result<(), String> {
 
     let mut game_state_data = GameStateData {  
         item_sprites: HashMap::new(),
+        player: None,
     };
     
     let menu = MenuScene::new_main_menu(&font);

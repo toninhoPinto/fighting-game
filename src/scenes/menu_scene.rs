@@ -11,17 +11,8 @@
 
 use std::collections::HashMap;
 
-use crate::{GameStateData, Transition, asset_management::asset_loader::my_spritesheet_format::load_spritesheet, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
-use sdl2::{
-    event::Event,
-    pixels::Color,
-    rect::Rect,
-    render::{Canvas, TextureCreator, TextureQuery},
-    surface::Surface,
-    ttf::Font,
-    video::{Window, WindowContext},
-    EventPump,
-};
+use crate::{GameStateData, Transition, asset_management::asset_loader::my_spritesheet_format::load_spritesheet, game_logic::factories::character_factory::load_character, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
+use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
 
 //character select
 //stage select
@@ -169,7 +160,11 @@ impl<'a> Scene for MenuScene<'a> {
                                 let mut overworld = OverworldScene::new();
                                 overworld.init(screen_res);
                                 game_state_data.item_sprites = load_items_sprites();
-
+                                game_state_data.player = Some(load_character(
+                                    "foxgirl",
+                                    Point::new(200, 50),
+                                    1,
+                                ));
                                 return Transition::Change(Box::new(overworld));
                             }
                         }
