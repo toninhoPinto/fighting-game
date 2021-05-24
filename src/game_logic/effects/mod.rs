@@ -36,8 +36,8 @@ pub fn hash_effects() -> HashMap<i32, ItemEffects>{
     let mut effects = HashMap::new();
 
     effects.insert(4, add_attack as ItemEffects);
-    effects.insert(6, apply_poison_to_enemies as ItemEffects);
-    effects.insert(7, apply_lifesteal as ItemEffects);
+    effects.insert(10, apply_poison_to_enemies as ItemEffects);
+    effects.insert(9, apply_lifesteal as ItemEffects);
 
     effects
 }

@@ -182,10 +182,10 @@ impl Scene for MatchScene {
                             game.player.equip_item(items.get_mut(&8).unwrap(), &effects);
                         }
                         if input == Keycode::Num6 { //poison
-                            game.player.equip_item(items.get_mut(&14).unwrap(), &effects);
+                            game.player.equip_item(items.get_mut(&19).unwrap(), &effects);
                         }
                         if input == Keycode::Num5 { //lifesteal
-                            game.player.equip_item(items.get_mut(&15).unwrap(), &effects);
+                            game.player.equip_item(items.get_mut(&20).unwrap(), &effects);
                         }
                         if input == Keycode::V { //hurt self
                             game.player.hp.0 -= 5;

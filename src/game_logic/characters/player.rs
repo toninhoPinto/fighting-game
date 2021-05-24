@@ -4,7 +4,7 @@ use sdl2::render::Texture;
 
 use std::{collections::{HashMap, VecDeque}, fmt};
 
-use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{effects::{ItemEffects, events_pub_sub::EventsPubSub}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{effects::{Effect, ItemEffects, events_pub_sub::{CharacterEvent, EventsPubSub}}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::Character;
 
@@ -42,8 +42,8 @@ pub struct Player {
     pub collision_manager: ColliderManager,
 
     pub events: EventsPubSub,
-    pub items: Vec<i32>
-    //pub active_item: Option<fn() ->()>
+    pub items: Vec<i32>,
+    pub active_item: Option<(CharacterEvent, Effect)>
 }
 
 impl Player {
@@ -65,6 +65,8 @@ impl Player {
 
             events: EventsPubSub::new(),
             items: Vec::new(),
+
+            active_item: None,
         }
     }
 

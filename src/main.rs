@@ -1,9 +1,9 @@
 use engine_traits::scene::Scene;
 use scenes::menu_scene::MenuScene;
-use sdl2::image::{self, InitFlag};
+use sdl2::{image::{self, InitFlag}, rect::Rect};
 use sdl2::render::BlendMode;
 
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 extern crate serde_derive;
 extern crate directories;
@@ -76,6 +76,7 @@ use crate::input::controller_handler::Controller;
 
 pub struct GameStateData<'a> {
     character: &'a str,
+    item_sprites: HashMap<String, Rect>,
 }
 
 pub enum Transition {
@@ -130,6 +131,7 @@ fn main() -> Result<(), String> {
 
     let mut game_state_data = GameStateData {
         character: "",
+        item_sprites: HashMap::new(),
     };
     
     let menu = MenuScene::new_main_menu(&font);

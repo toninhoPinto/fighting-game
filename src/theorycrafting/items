@@ -21,45 +21,45 @@ Combo Items
 
     - Add double jump
     - Add air-dash
+    - Dash starts making damage
+
+    - Mental Breakdown - Sometimes you forget a move, and gain a random one
+    - Nirvana - Attain mastery of all moves, but forget them when reality comes crashing down
+        -tens todos os ataques, mas quando levas 1 hit perdes os ataques extras que ganhaste até ao proximo nivel
+    - Rage against the Machine - Using any move does 50% more damage, but you forget it until you have a combo of 6x (does not affect basic attack)
+    - Remove all your punching animations except one, but that punch does +100% damage per animation removed
+
 
 Passive Items
     - When you jump enemies are lifted with you -> Anti-gravity area
     - Drones that attack enemies                -> Anti-Personnel Drones
-    - Every x enemies heal a bit of hp          -> Nano-healing
     - Increase/Reduce Max hp                         -> Armor Plating
     - Increase/Reduce movement speed                  -> Enriched fuel
     - Increase/Reduce attack speed (animations are acellerated)
     - Increase/Reduce attack damage of each attack
     - Increase/Reduce attack push back
     - Pulls enemies closer to the attack hitbox -> Magnetic Fists
-    - Dash starts making damage
     - Fly by keeping pressing Jump
+    - Slow enemies both movement and attack speed
     - Freeze enemies solid, if kicked enemy acts as a projectile
-    - Fire Punches (damage over time)
+    - Fire Punches (damage over time) -> Overheat punching
     - Automatically block 1 attack per encounter
     - Flying blades that stab through full screen when punching
     - Electricity field that does damage around the player
     - Tech Cannibalism, get HP from killing enemies 
     - Item that changes the world map to full delaunay, (creates more links between nodes on the map) allowing more options where traversing the overworld map
     - Killing enemies will cause them to explode.
-    - When you have max HP gain some other stat (attack damage? attack speed? mov speed? etc.)
+    - When you have max HP gain attack damage
     - Killing an enemy grants a temporary boost of speed
     - You move faster but take more knockback from enemies
     - Add damage the longer you keep your combo going
-    - Remove all your punching animations except one, but that punch does +100% damage per animation removed
     - Blocking reflects 50% of the damage to the enemy
     - Take 50% more damage, but also give 50% more damage
-    - Replace dash with teleport
     - Heal with explosions
     - every punch explodes on impact (more damage, and stuns for 1.5 seconds AoE) but you loose health every punch
     - every time you hit someone, you gain X amount of health, but you are constantly loosing health till you reach 25%
-    - Kicking an enemy free's them from gravity for 1.5 seconds, but so do you
     - HyperGravity - you can't jump, be airborne or launch enemies but ground attacks make 25% more damage
     - Extra virgin oil - Attack speed is increased by 25% but the ocasional oil leak makes you fall every time you reach 6x combo
-    - Mental Breakdown - Sometimes you forget a move, and gain a random one
-    - Nirvana - Attain mastery of all moves, but forget them when reality comes crashing down
-        -tens todos os ataques, mas quando levas 1 hit perdes os ataques extras que ganhaste até ao proximo nivel
-    - Rage against the Machine - Using any move does 50% more damage, but you forget it until you have a combo of 6x (does not affect basic attack)
-
+   
 
     

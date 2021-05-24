@@ -9,7 +9,9 @@
 //credits
 //quit
 
-use crate::{GameStateData, Transition, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
+use std::collections::HashMap;
+
+use crate::{GameStateData, Transition, asset_management::asset_loader::my_spritesheet_format::load_spritesheet, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use sdl2::{
     event::Event,
     pixels::Color,
@@ -103,6 +105,10 @@ impl<'a> MenuScene<'a> {
     }
 }
 
+fn load_items_sprites() -> HashMap<String, Rect> {
+    load_spritesheet("assets/items/spritesheet_mapping.json".to_string())
+}
+
 impl<'a> Scene for MenuScene<'a> {
     fn run(
         &mut self,
@@ -162,6 +168,8 @@ impl<'a> Scene for MenuScene<'a> {
                                 //must leave and make main use match scene instead
                                 let mut overworld = OverworldScene::new();
                                 overworld.init(screen_res);
+                                game_state_data.item_sprites = load_items_sprites();
+
                                 return Transition::Change(Box::new(overworld));
                             }
                         }

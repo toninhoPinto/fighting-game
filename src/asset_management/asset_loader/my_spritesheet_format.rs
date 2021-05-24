@@ -25,6 +25,7 @@ pub struct Size {
 }
 
 pub fn load_spritesheet(dir: String) -> HashMap<String, Rect>{
+    println!("load sprite_sheet {}", dir);
     let json_string = fs::read_to_string(dir.clone()).unwrap();
     let v = &serde_json::from_str::<Vec<Root>>(&json_string).unwrap();
     
