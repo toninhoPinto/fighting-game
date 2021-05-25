@@ -97,6 +97,13 @@ pub fn render(
     let mut entities_to_render = crate::ecs_system::enemy_systems::render_enemies(&mut game.enemies, enemy_assets);
     let data_to_render = game.player.render(p1_assets);
     entities_to_render.push(data_to_render);
+
+    let mut items_on_ground = game.items_on_ground
+        .iter_mut()
+        .map(|item| {item.render(item_assets)})
+        .collect::<Vec<(&Texture, Rect, Point, bool, i32)>>();
+
+    entities_to_render.append(&mut items_on_ground);
     entities_to_render.sort_by(|a, b| b.4.cmp(&a.4));
 
     render_enemies(&entities_to_render, canvas, screen_res, &game.camera, debug);

@@ -35,7 +35,8 @@ use crate::input::controller_handler::Controller;
 //make player able to pickup items
 
 //add to game_state_data
-    //make overworld display stuff like: items equipped, currency, etc
+    //add seed to game_state_data
+    //make overworld display stuff like: currency ?
     
 //make overworld proc gen map
     // replace lines with rotated squares with textures

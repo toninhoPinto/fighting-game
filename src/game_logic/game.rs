@@ -3,7 +3,7 @@ use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
 use crate::{asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, rendering::camera::Camera};
 
-use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, projectile::Projectile};
+use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, items::ItemGround, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 20;
 pub struct Game {
@@ -15,6 +15,7 @@ pub struct Game {
     pub projectiles: Vec<Projectile>,
 
     pub hit_vfx: Vec<Particle>,
+    pub items_on_ground: Vec<ItemGround>
 }
 
 impl Game {
@@ -29,6 +30,7 @@ impl Game {
             projectiles: Vec::new(),
 
             hit_vfx: Vec::new(),
+            items_on_ground: Vec::new(),
         }
     }
 

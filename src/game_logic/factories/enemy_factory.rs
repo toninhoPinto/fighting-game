@@ -119,7 +119,7 @@ pub fn load_enemy(character_name: &str) -> Character {
             character_name.to_string(),
             240,
             200,
-            200,
+            50,
             250.0,
             350.0,
             500.0,

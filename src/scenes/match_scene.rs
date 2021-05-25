@@ -1,3 +1,4 @@
+use parry2d::na::Vector2;
 use sdl2::{rect::Rect};
 use std::{
     collections::HashMap,
@@ -14,7 +15,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
+use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::ItemGround}, input::input_devices::InputDevices};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -148,19 +149,19 @@ impl Scene for MatchScene {
                             game_state_data.player = Some(game.player.clone());
                             return Transition::Pop;
                         }
-                        if input == Keycode::Num4 { //punch
-                            game.player.equip_item(items.get_mut(&4).unwrap(), &effects);
+                        if input == Keycode::M {
+                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&4).unwrap()).clone() });
                         }
-                        if input == Keycode::Num8 { //launcher
-                            game.player.equip_item(items.get_mut(&8).unwrap(), &effects);
+                        if input == Keycode::N {
+                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&19).unwrap()).clone() });
                         }
-                        if input == Keycode::Num6 { //poison
-                            game.player.equip_item(items.get_mut(&20).unwrap(), &effects);
+                        if input == Keycode::B {
+                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&8).unwrap()).clone() });
                         }
-                        if input == Keycode::Num5 { //lifesteal
-                            game.player.equip_item(items.get_mut(&19).unwrap(), &effects);
+                        if input == Keycode::V {
+                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&20).unwrap()).clone() });
                         }
-                        if input == Keycode::V { //hurt self
+                        if input == Keycode::C { //hurt self
                             game.player.hp.0 -= 10;
                         }
                     }
@@ -232,7 +233,19 @@ impl Scene for MatchScene {
                     game.player.character_width as i32,
                 );
                 game.player.state_update(&p1_anims, &p1_assets.texture_data);
+               
+                let player_position = game.player.position;
+                let mut items_spawned = game.items_on_ground.clone();
+                items_spawned.iter_mut().for_each(|item_ground| {
+                    if (player_position - item_ground.position).magnitude() <= 50.0 {
+                        game.player.equip_item(&mut item_ground.item, &effects);
+                    }
+                });
 
+                game.items_on_ground.retain(|item_ground| {
+                    return (player_position - item_ground.position).magnitude() >= 50.0;
+                });
+                   
                 update_animations_enemies(&mut game.enemies);
                 update_behaviour_enemies(&mut game.enemies, &mut game.player, &enemy_animations);
                 update_movement_enemies(&mut game.enemies, &enemy_animations, &game.camera, logic_timestep);
