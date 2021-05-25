@@ -1,6 +1,6 @@
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::factories::world_factory::load_overworld_assets, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::segmented_bar_ui::SegmentedBar};
+use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
 
 use super::match_scene::MatchScene;
 
@@ -41,6 +41,17 @@ pub fn hp_bar_init<'a>(screen_res: (u32, u32), max_hp: i32, curr_hp: i32) -> Seg
     )
 }
 
+pub fn item_list_init(game_state_data: &GameStateData) -> WrappingList {
+    WrappingList::new(
+        Point::new(10, 50),
+        200,
+        game_state_data.player.as_ref().unwrap().items.iter()
+            .map(|item| {Rect::new(0,0,32,32)})
+            .collect::<Vec<Rect>>(), 
+        10
+    )
+}
+
 impl<'a> Scene for OverworldScene {
     fn run(
         &mut self,
@@ -55,12 +66,15 @@ impl<'a> Scene for OverworldScene {
         let map_area = Rect::new(400, 100, w-800, h-200);
 
         let assets = load_overworld_assets(&texture_creator);
+        let item_assets = load_item_assets(&texture_creator);
 
         let mut hp_bars = hp_bar_init(
             (w, h),
             game_state_data.player.as_ref().unwrap().character.hp,
             game_state_data.player.as_ref().unwrap().hp.0,
         );
+
+        let mut item_list = item_list_init(&game_state_data);
 
         self.connect_to_index = 0;
         let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
@@ -176,6 +190,16 @@ impl<'a> Scene for OverworldScene {
                 for hp_rect in hp_bars.render() {
                     canvas.draw_rect(hp_rect).unwrap();
                     canvas.fill_rect(hp_rect).unwrap();
+                }
+            }
+
+            let item_list = item_list.render();
+            let player = game_state_data.player.as_ref().unwrap();
+            if player.items.len() > 0 {
+                for i in 0..player.items.len() {
+                    let src_rect = game_state_data.item_sprites.src_rects.get(&player.items[i]).unwrap();
+                    let dst_rect = item_list[i];
+                    canvas.copy(&game_state_data.item_sprites.spritesheet, src_rect.clone(), dst_rect).unwrap();
                 }
             }
 

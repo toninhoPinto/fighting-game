@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{asset_management::asset_holders::EntityAssets, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game};
+use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, ui::ingame::wrapping_list_ui::WrappingList};
 use crate::{
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };
@@ -60,8 +60,9 @@ pub fn render(
     p1_assets: &EntityAssets,
     enemy_assets: &HashMap<&str, EntityAssets>,
     common_assets: &mut CommonAssets,
+    item_assets: &ItemAssets,
+    item_list: &WrappingList,
     hp_bars: &SegmentedBar,
-    //end_match_menu: &EndMatch,
     debug: bool,
 ) -> Result<(), String> {
     canvas.clear();
@@ -144,6 +145,16 @@ pub fn render(
         for hp_rect in hp_bars.render() {
             canvas.draw_rect(hp_rect).unwrap();
             canvas.fill_rect(hp_rect).unwrap();
+        }
+    }
+
+    let item_list = item_list.render();
+    let player = &game.player;
+    if player.items.len() > 0 {
+        for i in 0..player.items.len() {
+            let src_rect = item_assets.src_rects.get(&player.items[i]).unwrap();
+            let dst_rect = item_list[i];
+            canvas.copy(&item_assets.spritesheet, src_rect.clone(), dst_rect).unwrap();
         }
     }
     

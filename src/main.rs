@@ -23,9 +23,9 @@ mod ecs_system;
 mod enemy_behaviour;
 mod overworld;
 
-use asset_management::sound::{init_sound, music_player};
+use asset_management::{asset_holders::ItemAssets, sound::{init_sound, music_player}};
 
-use crate::{asset_management::controls, input::input_devices::InputDevices};
+use crate::{asset_management::controls, game_logic::factories::item_factory::load_item_assets, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
 
 
@@ -35,8 +35,7 @@ use crate::input::controller_handler::Controller;
 //make player able to pickup items
 
 //add to game_state_data
-    //player??? or character and all items and apply them all everytime you start a level
-    //make overworld display stuff like: items equipped, health, etc
+    //make overworld display stuff like: items equipped, currency, etc
     
 //make overworld proc gen map
     // replace lines with rotated squares with textures
@@ -78,8 +77,8 @@ use crate::input::controller_handler::Controller;
 //1 Since Animator now holds Option<Animation> and Animation has a Vec, it doesnt implement Copy trait, so there are lots of clone()
 //^^^^^possibly bad, and its a bit ugly, maybe have Animator only hold a handle to the animation just like the Textures?
 
-pub struct GameStateData {
-    item_sprites: HashMap<String, Rect>,
+pub struct GameStateData<'a> {
+    item_sprites: ItemAssets<'a>,
     player: Option<Player>,
     //loot_tables; HashMap<>
 }
@@ -135,7 +134,7 @@ fn main() -> Result<(), String> {
     };
 
     let mut game_state_data = GameStateData {  
-        item_sprites: HashMap::new(),
+        item_sprites: load_item_assets(&texture_creator),
         player: None,
     };
     

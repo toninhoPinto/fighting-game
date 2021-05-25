@@ -25,7 +25,7 @@ use crate::{
     GameStateData,
 };
 
-use super::overworld_scene::hp_bar_init;
+use super::overworld_scene::{hp_bar_init, item_list_init};
 
 const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
 
@@ -100,6 +100,8 @@ impl Scene for MatchScene {
             game.player.hp.0,
         );
 
+        let mut item_list = item_list_init(&game_state_data);
+        
         let mut hit_stop = 0;
 
         let mut previous_time = Instant::now();
@@ -153,10 +155,10 @@ impl Scene for MatchScene {
                             game.player.equip_item(items.get_mut(&8).unwrap(), &effects);
                         }
                         if input == Keycode::Num6 { //poison
-                            game.player.equip_item(items.get_mut(&19).unwrap(), &effects);
+                            game.player.equip_item(items.get_mut(&20).unwrap(), &effects);
                         }
                         if input == Keycode::Num5 { //lifesteal
-                            game.player.equip_item(items.get_mut(&20).unwrap(), &effects);
+                            game.player.equip_item(items.get_mut(&19).unwrap(), &effects);
                         }
                         if input == Keycode::V { //hurt self
                             game.player.hp.0 -= 10;
@@ -274,6 +276,12 @@ impl Scene for MatchScene {
                 game.camera.update(LEVEL_WIDTH, &game.player);
 
                 hp_bars.update(game.player.hp.0);
+                if game.player.items.len() != item_list.rects.len() {
+                    item_list.update(game.player.items.iter()
+                        .map(|_| {Rect::new(0,0,32,32)})
+                        .collect::<Vec<Rect>>()
+                    );
+                }
 
                 logic_time_accumulated -= logic_timestep;
             }
@@ -287,6 +295,8 @@ impl Scene for MatchScene {
                     &p1_assets,
                     &enemy_assets,
                     &mut general_assets,
+                    &game_state_data.item_sprites,
+                    &item_list,
                     &hp_bars,
                    // &end_game_match,
                     false,

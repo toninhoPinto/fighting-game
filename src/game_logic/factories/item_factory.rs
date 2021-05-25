@@ -1,6 +1,8 @@
 use std::{collections::HashMap, fs};
 
-use crate::game_logic::{effects::Effect, items::{Item, ItemType}};
+use sdl2::{render::TextureCreator, video::WindowContext};
+
+use crate::{asset_management::{asset_holders::ItemAssets, asset_loader::{asset_loader, my_spritesheet_format::load_spritesheet}}, game_logic::{effects::Effect, items::{Item, ItemType}}};
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -66,5 +68,16 @@ fn make_effect(json_effect: &JsonEffect) -> Effect {
         stat: if json_effect.stat.len() == 0 {None} else {Some(json_effect.stat.clone())},
         time_elapsed: 0,
         apply_at_every: json_effect.apply_at_every,
+    }
+}
+
+pub fn load_item_assets(texture_creator: &TextureCreator<WindowContext>) -> ItemAssets {
+    let spritesheet = asset_loader::load_texture(&texture_creator, "assets/items/items.png");
+
+    let mapping = load_spritesheet("assets/items/spritesheet_mapping.json".to_string());
+    
+    ItemAssets {
+        spritesheet,
+        src_rects: mapping,
     }
 }

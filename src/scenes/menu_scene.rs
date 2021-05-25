@@ -11,7 +11,7 @@
 
 use std::collections::HashMap;
 
-use crate::{GameStateData, Transition, asset_management::asset_loader::my_spritesheet_format::load_spritesheet, game_logic::factories::character_factory::load_character, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
+use crate::{GameStateData, Transition, asset_management::asset_loader::my_spritesheet_format::load_spritesheet, game_logic::factories::{character_factory::load_character, item_factory::load_item_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
 
 //character select
@@ -96,15 +96,11 @@ impl<'a> MenuScene<'a> {
     }
 }
 
-fn load_items_sprites() -> HashMap<String, Rect> {
-    load_spritesheet("assets/items/spritesheet_mapping.json".to_string())
-}
-
 impl<'a> Scene for MenuScene<'a> {
     fn run(
         &mut self,
-        game_state_data: &mut GameStateData,
-        texture_creator: &TextureCreator<WindowContext>,
+        game_state_data: & mut GameStateData,
+        texture_creator: & TextureCreator<WindowContext>,
         event_pump: &mut EventPump,
         input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
@@ -159,7 +155,6 @@ impl<'a> Scene for MenuScene<'a> {
                                 //must leave and make main use match scene instead
                                 let mut overworld = OverworldScene::new();
                                 overworld.init(screen_res);
-                                game_state_data.item_sprites = load_items_sprites();
                                 game_state_data.player = Some(load_character(
                                     "foxgirl",
                                     Point::new(200, 50),
