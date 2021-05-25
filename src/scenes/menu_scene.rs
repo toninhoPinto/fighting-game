@@ -1,21 +1,7 @@
-//main menu
-//story mode *recommended*
-//arcade
-//versus
-//local
-//online
-//training mode *recommended only for experts*
-//settings
-//credits
-//quit
-
-use std::collections::HashMap;
-
-use crate::{GameStateData, Transition, asset_management::asset_loader::my_spritesheet_format::load_spritesheet, game_logic::factories::{character_factory::load_character, item_factory::load_item_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
+use crate::{GameStateData, Transition, game_logic::factories::{character_factory::load_character}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
 
 //character select
-//stage select
 use crate::engine_traits::scene::Scene;
 
 use super::overworld_scene::OverworldScene;

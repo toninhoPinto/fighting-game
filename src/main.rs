@@ -23,6 +23,8 @@ mod ecs_system;
 mod enemy_behaviour;
 mod overworld;
 
+mod debug_console;
+
 use asset_management::{asset_holders::ItemAssets, sound::{init_sound, music_player}};
 
 use crate::{asset_management::controls, game_logic::factories::item_factory::load_item_assets, input::input_devices::InputDevices};
@@ -31,8 +33,6 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 //implement more item effects
-//make items on the ground
-//make player able to pickup items
 
 //add to game_state_data
     //add seed to game_state_data

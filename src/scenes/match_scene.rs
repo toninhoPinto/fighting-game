@@ -15,7 +15,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::ItemGround}, input::input_devices::InputDevices};
+use crate::{Transition, debug_console::console::Console, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::ItemGround}, input::input_devices::InputDevices};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -64,6 +64,12 @@ impl Scene for MatchScene {
         input_devices: &mut InputDevices,
         canvas: &mut Canvas<Window>,
     ) -> Transition {
+
+        let mut console = Console {
+            up: false,
+            command: "".to_string(),
+        };
+
         let mut general_assets = CommonAssets::load(&texture_creator);
 
         let (p1_assets, p1_anims, p1_data) = load_character_anim_data(texture_creator, &self.character);
@@ -127,13 +133,19 @@ impl Scene for MatchScene {
             }
 
             // Handle events
-            for event in event_pump.poll_iter() {
+            'kb_events: for event in event_pump.poll_iter() {
                 match event {
                     Event::Quit { .. } => return Transition::Quit,
                     Event::KeyDown {
                         keycode: Some(input),
                         ..
                     } => {
+                        if input == Keycode::Escape {
+                            game_state_data.player = Some(game.player.clone());
+                            return Transition::Pop;
+                        }
+                        
+
                         if input == Keycode::L {
                             game.enemies.add_enemy(game.player.position, enemy_animations.get("ryu").unwrap().animations.get("idle").unwrap().clone());
                         }
@@ -145,28 +157,27 @@ impl Scene for MatchScene {
                         if input == Keycode::Right && debug_pause {
                             logic_time_accumulated += logic_timestep;
                         }
-                        if input == Keycode::Escape {
-                            game_state_data.player = Some(game.player.clone());
-                            return Transition::Pop;
-                        }
-                        if input == Keycode::M {
-                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&4).unwrap()).clone() });
-                        }
-                        if input == Keycode::N {
-                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&19).unwrap()).clone() });
-                        }
-                        if input == Keycode::B {
-                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&8).unwrap()).clone() });
-                        }
-                        if input == Keycode::V {
-                            game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&20).unwrap()).clone() });
-                        }
                         if input == Keycode::C { //hurt self
                             game.player.hp.0 -= 10;
                         }
+
+                        if input == Keycode::Backslash {
+                            println!("toggle");
+                            console.toggle();
+                        } else if input == Keycode::Return{
+                            println!("enter");
+                            console.run(&mut game, &items)
+                        } else {
+                            console.add(input);
+                        }
+                        
                     }
                     _ => {}
                 };
+
+                if console.up {
+                    break 'kb_events;
+                }
                 input::controller_handler::handle_new_controller(
                     &input_devices.controller,
                     &input_devices. joystick,
@@ -315,6 +326,8 @@ impl Scene for MatchScene {
                     false,
                 )
                 .unwrap();
+
+                
 
                 update_counter = 0;
             }
