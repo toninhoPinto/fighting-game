@@ -65,8 +65,7 @@ pub fn render(
     hp_bars: &SegmentedBar,
     debug: bool,
 ) -> Result<(), String> {
-    canvas.clear();
-
+    
     canvas
         .copy(
             stage.0,
@@ -164,8 +163,7 @@ pub fn render(
             canvas.copy(&item_assets.spritesheet, src_rect.clone(), dst_rect).unwrap();
         }
     }
-    
-    canvas.present(); 
+
     Ok(())
 }
 

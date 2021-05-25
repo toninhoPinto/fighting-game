@@ -1,7 +1,7 @@
 use engine_traits::scene::Scene;
 use game_logic::characters::player::Player;
 use scenes::menu_scene::MenuScene;
-use sdl2::{image::{self, InitFlag}, rect::Rect};
+use sdl2::{image::{self, InitFlag}, rect::Rect, ttf::Font};
 use sdl2::render::BlendMode;
 
 use std::{collections::HashMap, path::Path};
@@ -78,9 +78,12 @@ use crate::input::controller_handler::Controller;
 //1 Since Animator now holds Option<Animation> and Animation has a Vec, it doesnt implement Copy trait, so there are lots of clone()
 //^^^^^possibly bad, and its a bit ugly, maybe have Animator only hold a handle to the animation just like the Textures?
 
+
+
 pub struct GameStateData<'a> {
     item_sprites: ItemAssets<'a>,
     player: Option<Player>,
+    font: Font<'a, 'a>,
     //loot_tables; HashMap<>
 }
 
@@ -124,6 +127,7 @@ fn main() -> Result<(), String> {
 
 
     let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 128)?;
+    let console_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 32)?;
 
     let mut controller_data = Controller::new();
     controller_data.add_keyboard();
@@ -134,12 +138,14 @@ fn main() -> Result<(), String> {
         joys: controller_data,
     };
 
+    let menu = MenuScene::new_main_menu(&font);
+
     let mut game_state_data = GameStateData {  
         item_sprites: load_item_assets(&texture_creator),
         player: None,
+        font: console_font,
     };
     
-    let menu = MenuScene::new_main_menu(&font);
     let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();
     state_stack.push(Box::new(menu));
 

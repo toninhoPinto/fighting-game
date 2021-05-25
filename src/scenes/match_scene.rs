@@ -312,6 +312,7 @@ impl Scene for MatchScene {
 
             // Render
             if update_counter > 0 {
+                canvas.clear();
                 rendering::renderer::render(
                     canvas,
                     (&stage, stage_rect),
@@ -326,11 +327,13 @@ impl Scene for MatchScene {
                     false,
                 )
                 .unwrap();
-
                 
+                console.render(texture_creator, canvas, &game_state_data.font);
+                canvas.present(); 
 
                 update_counter = 0;
             }
+        
         }
     }
 }
