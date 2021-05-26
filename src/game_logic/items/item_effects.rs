@@ -30,7 +30,7 @@ pub fn remove_all_extra_attacks_wrap(player: &mut Player, _: &mut EnemyManager, 
     remove_all_extra_attacks(player, effect);
 }
 
-pub fn remove_all_extra_attacks(player: &mut Player, effect: &mut Effect) {
+pub fn remove_all_extra_attacks(player: &mut Player, _: &mut Effect) {
     player.character.punch_string_curr = player.character.punch_string;
     player.character.kick_string_curr = player.character.kick_string;
     player.character.airborne_punch_string_curr = player.character.airborne_punch_string;
@@ -41,7 +41,7 @@ pub fn remove_all_extra_attacks(player: &mut Player, effect: &mut Effect) {
 pub fn remove_all_extra_punches(player: &mut Player, effect: &mut Effect) {
     let multiplyer = (player.character.punch_string_curr - 1) as i32 * effect.change.unwrap();
     player.character.punch_string_curr = 1;
-
+    //buff first punch damage, need access to EntityData, maybe put it inside player
 }
 
 pub fn apply_lifesteal(player: &mut Player, effect: &mut Effect){
@@ -60,25 +60,26 @@ pub fn apply_anti_grav(player: &mut Player, effect: &mut Effect){
     player.events.on_jump.push((anti_grav as CharacterEvent, effect.clone()));
 }
 
-pub fn anti_grav(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect) {
-    
+pub fn anti_grav(player: &mut Player, enemies: &mut EnemyManager, _: i32, _: &mut Effect) {
+    // iterate over enemies.position component
+    //compare against player position and if within some small range
+    //launch enemies up ? or force them to jump but skip the crouch animation
 }
 
 pub fn apply_poison_to_enemies(player: &mut Player, effect: &mut Effect){
     player.events.on_hit.push((apply_poison as CharacterEvent, effect.clone()));
 }
 
-pub fn apply_poison(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
+pub fn apply_poison(_: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
     if let Some(enemy_events) = &mut enemies.events_components[enemy_id as usize] {
         enemy_events.on_update.push((poison as CharacterEventUpdate, effect.clone()));
     }
 } 
 
-pub fn poison(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect, dt: f64){
-    if let (Some(hp), Some(mov), Some(animator)) = 
+pub fn poison(_: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect, dt: f64){
+    if let (Some(hp), Some(mov)) = 
         (&mut enemies.health_components[enemy_id as usize],
-        &mut enemies.movement_controller_components[enemy_id as usize],
-        &mut enemies.animator_components[enemy_id as usize])
+        &mut enemies.movement_controller_components[enemy_id as usize])
     {
         effect.time_elapsed += (dt * 1000f64) as i32;
         if let Some(time_threshold) = effect.apply_at_every {
