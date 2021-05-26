@@ -339,7 +339,7 @@ impl Player {
         for possible_combo in character_data.directional_variation_anims.iter() {
             let (mask,moves, name) = possible_combo;
              
-            if mask & self.character.directional_attacks_mask != 0 {
+            if mask & self.character.directional_attacks_mask_curr != 0 {
                 if  GameAction::is_pressed(recent_inputs,moves.0) &&
                     GameAction::is_pressed(recent_inputs,moves.1) 
                 {

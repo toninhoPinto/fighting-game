@@ -22,11 +22,18 @@ pub struct Character {
     pub dash_speed: f64,
     pub jump_height: f64,
     pub jump_distance: f64,
+
+    pub punch_string: i8,
+    pub kick_string: i8,
+    pub airborne_punch_string: i8,
+    pub airborne_kick_string: i8,
+    pub directional_attacks_mask: u32,
+
     pub punch_string_curr: i8,
     pub kick_string_curr: i8,
     pub airborne_punch_string_curr: i8,
     pub airborne_kick_string_curr: i8,
-    pub directional_attacks_mask: u32,
+    pub directional_attacks_mask_curr: u32,
 }
 
 /*
@@ -61,10 +68,10 @@ impl Character {
         dash_speed: f64,
         jump_height: f64,
         jump_distance: f64,
-        punch_string_curr: i8,
-        kick_string_curr: i8,
-        airborne_punch_string_curr: i8,
-        airborne_kick_string_curr: i8,
+        punch_string: i8,
+        kick_string: i8,
+        airborne_punch_string: i8,
+        airborne_kick_string: i8,
         directional_attacks_mask: u32,
     ) -> Self {
         Self {
@@ -77,12 +84,18 @@ impl Character {
             jump_height,
             jump_distance,
 
-            punch_string_curr,
-            kick_string_curr,
-            airborne_punch_string_curr,
-            airborne_kick_string_curr,
+            punch_string,
+            kick_string,
+            airborne_punch_string,
+            airborne_kick_string,
 
             directional_attacks_mask,
+
+            punch_string_curr: punch_string,
+            kick_string_curr: kick_string,
+            airborne_punch_string_curr: airborne_punch_string,
+            airborne_kick_string_curr: airborne_kick_string,
+            directional_attacks_mask_curr: directional_attacks_mask,
         }
     }
 }
