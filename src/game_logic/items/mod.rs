@@ -37,7 +37,6 @@ impl ItemGround {
         let sprite_data = &assets.spritesheet;
         
         let src_rect = assets.src_rects.get(key).unwrap();
-        //let dst_rect = Rect::new(0,0, 32, 32);
         
         let pos_to_render = Point::new(self.position.x as i32, self.position.y as i32 );
         (sprite_data, src_rect.clone(), pos_to_render, false, self.position.y as i32)

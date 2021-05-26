@@ -83,6 +83,8 @@ impl Player {
                     apply_effect(self, effect);
                 }
             }
+        } else {
+            
         }
     }
 

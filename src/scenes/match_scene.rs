@@ -100,6 +100,13 @@ impl Scene for MatchScene {
 
         game.player.collision_manager.init_colliders(&game.player.animator);
 
+        let player = &mut game.player;
+        let mut start_level_events = player.events.on_start_level.clone();
+        for event_on_lvl_start in start_level_events.iter_mut() {
+            (event_on_lvl_start.0)(player, &mut game.enemies, -1, &mut event_on_lvl_start.1);
+        }
+        player.events.on_start_level = start_level_events;
+
         let screen_res = canvas.output_size().unwrap();
         let mut hp_bars = hp_bar_init(
             screen_res,

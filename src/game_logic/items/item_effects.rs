@@ -1,5 +1,13 @@
 use crate::{ecs_system::{enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventUpdate}}}};
 
+pub fn apply_add_attack_at_level_start(player: &mut Player, effect: &mut Effect){
+    player.events.on_start_level.push((add_attack_wrap, effect.clone()));
+}
+
+pub fn add_attack_wrap(player: &mut Player, _: &mut EnemyManager, _: i32, effect: &mut Effect){
+    add_attack(player, effect);
+}
+
 pub fn add_attack(player: &mut Player, effect: &mut Effect) {
     match &effect.add_attack.as_ref().unwrap() as &str {
         "punch" => {player.character.punch_string_curr+=1;},
@@ -12,6 +20,18 @@ pub fn add_attack(player: &mut Player, effect: &mut Effect) {
         "crash" => {player.character.directional_attacks_mask |=     0b1000u32;},
         _ => {},
     }
+}
+
+pub fn apply_remove_all_extra_attacks_on_hurt(player: &mut Player, effect: &mut Effect){
+    player.events.on_hurt.push((remove_all_extra_attacks_wrap, effect.clone()));
+}
+
+pub fn remove_all_extra_attacks_wrap(player: &mut Player, _: &mut EnemyManager, _: i32, effect: &mut Effect){
+    remove_all_extra_attacks(player, effect);
+}
+
+pub fn remove_all_extra_attacks(player: &mut Player, effect: &mut Effect) {
+    player.character.directional_attacks_mask =  0b0000u32;
 }
 
 pub fn apply_lifesteal(player: &mut Player, effect: &mut Effect){
