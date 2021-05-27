@@ -89,7 +89,7 @@ impl Player {
     }
 
     pub fn attack(&mut self, character_assets: &EntityAnimations, _character_data: &EntityData, attack_animation: String) {
-        if self.controller.player_can_attack() {
+        if self.controller.can_attack() {
             self.controller.is_attacking = true;
             self.controller.combo_counter += 1;
 
