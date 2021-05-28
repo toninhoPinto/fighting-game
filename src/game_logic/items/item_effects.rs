@@ -1,4 +1,4 @@
-use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventUpdate}}, movement_controller::MovementController}};
+use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventUpdate}}, movement_controller::MovementController}};
 
 pub fn apply_add_attack_at_level_start(player: &mut Player, effect: &mut Effect){
     player.events.on_start_level.push((add_attack_wrap, effect.clone()));
@@ -61,14 +61,15 @@ pub fn apply_anti_grav(player: &mut Player, effect: &mut Effect){
 }
 
 pub fn anti_grav(player: &mut Player, enemies: &mut EnemyManager, _: i32, _: &mut Effect) {
-
     let player_position = player.position;
     enemies.positions_components.iter()
     .zip(enemies.movement_controller_components.iter_mut())
-    .filter_map(|(pos, mov): (&Option<Position>, &mut Option<MovementController>)| {
-        Some((pos.as_ref()?, mov.as_mut()?))
-    }).for_each(|(pos, mov): (&Position, &mut MovementController)| {
+    .zip(enemies.animator_components.iter_mut())
+    .filter_map(|((pos, mov), animator): ((&Option<Position>, &mut Option<MovementController>), &mut Option<Animator>)| {
+        Some((pos.as_ref()?, mov.as_mut()?, animator.as_mut()?))
+    }).for_each(|(pos, mov, animator): (&Position, &mut MovementController, &mut Animator)| {
         if (player_position - pos.0).magnitude() < 100f64 {
+            mov.launch(animator);
              //launch enemies up ? or force them to jump but skip the crouch animation
         }
     });

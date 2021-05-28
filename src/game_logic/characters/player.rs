@@ -117,7 +117,7 @@ impl Player {
             }
 
             if GameAction::is_pressed(last_action, GameAction::Jump) { 
-                self.controller.jump(&mut self.animator);
+                self.jump();
             }
         }
 
@@ -142,6 +142,10 @@ impl Player {
             occupied
         });
             
+    }
+
+    fn jump(&mut self) {
+        self.controller.jump(&mut self.animator);
     }
 
     pub fn apply_input(&mut self,   
@@ -225,7 +229,7 @@ impl Player {
         self.controller.set_velocity(Vector2::new(x, y), &mut self.animator);
 
         if inputs_for_current_frame & GameAction::Jump as i32 > 0 {
-            self.controller.jump(&mut self.animator);
+            self.jump();
         }
         if inputs_for_current_frame & GameAction::Punch as i32 > 0 {
             self.check_attack_inputs(

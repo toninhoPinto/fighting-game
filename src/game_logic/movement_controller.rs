@@ -230,7 +230,7 @@ impl MovementController {
         }
     }
 
-    pub fn launch(&mut self, attack: &Attack, animator: &mut Animator) {
+    pub fn launch(&mut self, animator: &mut Animator) {
         self.is_airborne = true;
         self.set_entity_state(EntityState::Knocked, animator);
         self.velocity_y = self.jump_initial_velocity * 0.75f64;
