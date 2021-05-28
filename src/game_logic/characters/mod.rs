@@ -8,7 +8,7 @@ use super::{movement_controller::MovementController};
 pub mod foxgirl;
 pub mod player;
 
-pub(crate) type OnHitSpecificAttack = fn(&Attack, &mut ColliderManager, &mut MovementController, &mut Animator, &EntityAnimations)  -> ();
+pub(crate) type OnHitSpecificAttack = fn(&Attack, &mut ColliderManager, &mut MovementController, &mut Animator)  -> ();
 
 #[derive(Debug, Clone)]
 pub struct Character {

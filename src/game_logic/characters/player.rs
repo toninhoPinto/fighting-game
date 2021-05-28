@@ -2,6 +2,7 @@ use parry2d::na::Vector2;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::Texture;
 
+use std::rc::Rc;
 use std::{collections::{HashMap, VecDeque}, fmt};
 
 use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{effects::{Effect, ItemEffects, events_pub_sub::{CharacterEvent, EventsPubSub}}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
@@ -47,14 +48,14 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(id: i32, character: Character, spawn_position: Point) -> Self {
+    pub fn new(id: i32, character: Character, spawn_position: Point, animations: Rc<EntityAnimations>) -> Self {
         let pos_as_vec = Vector2::new(spawn_position.x as f64, spawn_position.y  as f64);
         Self {
             id,
             hp: Health(character.hp),
             position: pos_as_vec,
 
-            controller: MovementController::new(&character, pos_as_vec, pos_as_vec),
+            controller: MovementController::new(&character, pos_as_vec, pos_as_vec, animations),
 
             animator: Animator::new(),
 
@@ -88,7 +89,7 @@ impl Player {
         }
     }
 
-    pub fn attack(&mut self, character_assets: &EntityAnimations, _character_data: &EntityData, attack_animation: String) {
+    pub fn attack(&mut self, _character_data: &EntityData, attack_animation: String) {
         if self.controller.can_attack() {
             self.controller.is_attacking = true;
             self.controller.combo_counter += 1;
@@ -96,7 +97,7 @@ impl Player {
             self.collision_manager.collisions_detected.clear();
             self.controller.has_hit = false;
 
-            if let Some(attack_anim) = character_assets.animations.get(&attack_animation) { 
+            if let Some(attack_anim) = self.controller.animations.animations.get(&attack_animation) { 
                 self.animator.play_animation(attack_anim.clone(),1.0, false, true, true);
             }
 
@@ -106,17 +107,17 @@ impl Player {
         }
     }
 
-    pub fn apply_input_state(&mut self, inputs: &mut AllInputManagement, character_anims: &EntityAnimations, character_data: &EntityData) {
+    pub fn apply_input_state(&mut self, inputs: &mut AllInputManagement, character_data: &EntityData) {
         if let Some(&last_action) = inputs.action_history.back() {
             if GameAction::is_pressed(last_action, GameAction::Right) { //1
-                self.controller.set_velocity_x(1, &mut self.animator, character_anims);
+                self.controller.set_velocity_x(1, &mut self.animator);
             }
             if GameAction::is_pressed(last_action, GameAction::Left) { //-1
-                self.controller.set_velocity_x(-1, &mut self.animator, character_anims);
+                self.controller.set_velocity_x(-1, &mut self.animator);
             }
 
             if GameAction::is_pressed(last_action, GameAction::Jump) { 
-                self.controller.jump(&mut self.animator, character_anims);
+                self.controller.jump(&mut self.animator);
             }
         }
 
@@ -135,7 +136,7 @@ impl Player {
             self.controller.state == EntityState::Dashing;
 
             if !occupied {
-                self.process_input(buffered_input, character_anims, character_data, &action_history);
+                self.process_input(buffered_input, character_data, &action_history);
             }
 
             occupied
@@ -144,7 +145,6 @@ impl Player {
     }
 
     pub fn apply_input(&mut self,   
-        character_anims: &EntityAnimations,
         character_data: &EntityData,
         inputs: &mut AllInputManagement) {
             
@@ -192,7 +192,7 @@ impl Player {
             return;
         }
 
-        self.process_input(inputs_for_current_frame, character_anims, character_data, &inputs.action_history);
+        self.process_input(inputs_for_current_frame, character_data, &inputs.action_history);
 
         inputs.action_history.push_back(inputs_for_current_frame);
         inputs.input_reset_timer.push(0);
@@ -201,7 +201,6 @@ impl Player {
 
     fn process_input(&mut self, 
         inputs_for_current_frame: i32, 
-        character_anims: &EntityAnimations,
         character_data: &EntityData, 
         action_history: &VecDeque<i32>) {
 
@@ -223,14 +222,13 @@ impl Player {
             0i8
         };
 
-        self.controller.set_velocity(Vector2::new(x, y), &mut self.animator, character_anims);
+        self.controller.set_velocity(Vector2::new(x, y), &mut self.animator);
 
         if inputs_for_current_frame & GameAction::Jump as i32 > 0 {
-            self.controller.jump(&mut self.animator, character_anims);
+            self.controller.jump(&mut self.animator);
         }
         if inputs_for_current_frame & GameAction::Punch as i32 > 0 {
             self.check_attack_inputs(
-                character_anims,
                 character_data,
                 action_history,
                 GameAction::Punch,
@@ -239,7 +237,6 @@ impl Player {
         }
         if inputs_for_current_frame & GameAction::Kick as i32 > 0 {
             self.check_attack_inputs(
-                character_anims,
                 character_data,
                 action_history,
                 GameAction::Kick,
@@ -249,7 +246,7 @@ impl Player {
         if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true }
 
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
-            self.controller.set_entity_state(EntityState::Dashing, &mut self.animator, character_anims);
+            self.controller.set_entity_state(EntityState::Dashing, &mut self.animator);
         }
 
         if inputs_for_current_frame & GameAction::Slide as i32 > 0 {}
@@ -279,7 +276,6 @@ impl Player {
     
     fn check_attack_inputs(
         &mut self,
-        character_anims: &EntityAnimations,
         character_data: &EntityData,
         action_history: &VecDeque<i32>,
         recent_input_as_game_action: GameAction,
@@ -289,7 +285,7 @@ impl Player {
             if let Some(directional_input) = self.check_directional_inputs(
                 character_data,
                 action_history.back().unwrap() | recent_input_as_game_action as i32) {
-                self.attack(character_anims, character_data, directional_input);
+                self.attack( character_data, directional_input);
             } else {
                 let mut combo_id = 0;
                 let mut current_combo_length = 0;
@@ -315,15 +311,14 @@ impl Player {
                 if let Some(combo) = character_data.auto_combo_strings.get(&(combo_id)) {
                     let curr_combo_length = std::cmp::min(combo.len(), current_combo_length as usize);
                     let combo_number = self.controller.combo_counter as usize % curr_combo_length;
-                    self.attack(character_anims, character_data, combo[combo_number].to_string());
+                    self.attack(character_data, combo[combo_number].to_string());
                 }
             }
         } else {
             if !self.controller.is_airborne {
-                self.attack(character_anims, character_data, animation_name);
+                self.attack(character_data, animation_name);
             } else {
                 self.attack(
-                    character_anims,
                     character_data, 
                     format!("{}_{}", "airborne", animation_name),
                 );
@@ -354,20 +349,19 @@ impl Player {
     pub fn update(
         &mut self,
         camera: &Camera,
-        assets: &EntityAnimations,
         dt: f64,
         character_width: i32,
     ) {
-       self.controller.update(&mut self.position, &self.character, &mut self.animator, assets, camera, dt, character_width);
+       self.controller.update(&mut self.position, &self.character, &mut self.animator, camera, dt, character_width);
     }
 
-    pub fn state_update(&mut self, assets: &EntityAnimations, sprite_data: &HashMap<String, SpriteData>) {
+    pub fn state_update(&mut self, sprite_data: &HashMap<String, SpriteData>) {
         if self.animator.is_finished {
             self.collision_manager.collisions_detected.clear();
             self.controller.has_hit = false;
         }
 
-        self.controller.state_update(&mut self.animator, &assets, true);
+        self.controller.state_update(&mut self.animator, true);
 
         self.collision_manager.update_colliders(self.controller.facing_dir > 0, 
             self.position,  &self.animator, sprite_data)

@@ -1,4 +1,6 @@
-use crate::{GameStateData, Transition, game_logic::factories::{character_factory::load_character}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
+use std::rc::Rc;
+
+use crate::{GameStateData, Transition, game_logic::factories::{character_factory::{load_character, load_character_animations}, enemy_factory::load_enemy_ryu_animations}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
 
 //character select
@@ -141,11 +143,18 @@ impl<'a> Scene for MenuScene<'a> {
                                 //must leave and make main use match scene instead
                                 let mut overworld = OverworldScene::new();
                                 overworld.init(screen_res);
+
+                                game_state_data.enemy_animations.insert("player".to_string(), Rc::new(load_character_animations("foxgirl")));
                                 game_state_data.player = Some(load_character(
                                     "foxgirl",
                                     Point::new(200, 50),
                                     1,
+                                    Rc::clone(game_state_data.enemy_animations.get("player").unwrap())
                                 ));
+
+                                game_state_data.enemy_animations.insert("ryu".to_string(), Rc::new(load_enemy_ryu_animations()));
+
+
                                 return Transition::Change(Box::new(overworld));
                             }
                         }

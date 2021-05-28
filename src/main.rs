@@ -4,7 +4,7 @@ use scenes::menu_scene::MenuScene;
 use sdl2::{image::{self, InitFlag}, rect::Rect, ttf::Font};
 use sdl2::render::BlendMode;
 
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, rc::Rc};
 
 extern crate serde_derive;
 extern crate directories;
@@ -25,7 +25,7 @@ mod overworld;
 
 mod debug_console;
 
-use asset_management::{asset_holders::ItemAssets, sound::{init_sound, music_player}};
+use asset_management::{asset_holders::{EntityAnimations, ItemAssets}, sound::{init_sound, music_player}};
 
 use crate::{asset_management::controls, game_logic::factories::item_factory::load_item_assets, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
@@ -84,6 +84,7 @@ pub struct GameStateData<'a> {
     item_sprites: ItemAssets<'a>,
     player: Option<Player>,
     font: Font<'a, 'a>,
+    enemy_animations: HashMap<String, Rc<EntityAnimations>>,
     //loot_tables; HashMap<>
 }
 
@@ -143,6 +144,7 @@ fn main() -> Result<(), String> {
     let mut game_state_data = GameStateData {  
         item_sprites: load_item_assets(&texture_creator),
         player: None,
+        enemy_animations: HashMap::new(),
         font: console_font,
     };
     

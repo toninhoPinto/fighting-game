@@ -1,9 +1,6 @@
 use parry2d::na::Vector2;
 use sdl2::{rect::Rect};
-use std::{
-    collections::HashMap,
-    time::Instant,
-};
+use std::{collections::HashMap, rc::Rc, time::Instant};
 
 use sdl2::{
     event::Event,
@@ -15,7 +12,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, debug_console::console::Console, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character, load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::ItemGround}, input::input_devices::InputDevices};
+use crate::{Transition, debug_console::console::Console, ecs_system::enemy_systems::{get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::ItemGround}, input::input_devices::InputDevices};
 use crate::{
     asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
@@ -72,12 +69,10 @@ impl Scene for MatchScene {
 
         let mut general_assets = CommonAssets::load(&texture_creator);
 
-        let (p1_assets, p1_anims, p1_data) = load_character_anim_data(texture_creator, &self.character);
+        let (p1_assets, p1_data) = load_character_anim_data(texture_creator, &self.character);
 
         let mut enemy_assets = HashMap::new();
         enemy_assets.insert("ryu", load_enemy_ryu_assets(texture_creator));
-        let mut enemy_animations = HashMap::new();
-        enemy_animations.insert("ryu", load_enemy_ryu_animations());
 
         let stage = load_stage(texture_creator);
         let stage_rect = Rect::new(0, 0, LEVEL_WIDTH as u32, LEVEL_HEIGHT as u32);
@@ -96,7 +91,7 @@ impl Scene for MatchScene {
 
         game.player
             .animator
-            .play(p1_anims.animations.get("idle").unwrap().clone(), 1.0,false);
+            .play(game.player.controller.animations.animations.get("idle").unwrap().clone(), 1.0,false);
 
         game.player.collision_manager.init_colliders(&game.player.animator);
 
@@ -154,7 +149,7 @@ impl Scene for MatchScene {
                         
 
                         if input == Keycode::L {
-                            game.enemies.add_enemy(game.player.position, enemy_animations.get("ryu").unwrap().animations.get("idle").unwrap().clone());
+                            game.enemies.add_enemy(game.player.position, Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
                         }
                         if input == Keycode::P {
                             debug_pause ^= true;
@@ -169,10 +164,8 @@ impl Scene for MatchScene {
                         }
 
                         if input == Keycode::Backslash {
-                            println!("toggle");
                             console.toggle();
                         } else if input == Keycode::Return{
-                            println!("enter");
                             console.run(&mut game, &items)
                         } else {
                             console.add(input);
@@ -224,10 +217,10 @@ impl Scene for MatchScene {
                 if game.player.controller.state != EntityState::Dead
                 {
                     if self.p1_inputs.input_new_frame != 0 {
-                        game.player.apply_input(&p1_anims, &p1_data, &mut self.p1_inputs);
+                        game.player.apply_input(&p1_data, &mut self.p1_inputs);
                     }
 
-                    game.player.apply_input_state(&mut self.p1_inputs, &p1_anims, &p1_data);
+                    game.player.apply_input_state(&mut self.p1_inputs, &p1_data);
                 }
 
                 self.p1_inputs.update_inputs_reset_timer();
@@ -246,11 +239,10 @@ impl Scene for MatchScene {
                 game.player.animator.update();
                 game.player.update(
                     &game.camera,
-                    &p1_anims,
                     logic_timestep,
                     game.player.character_width as i32,
                 );
-                game.player.state_update(&p1_anims, &p1_assets.texture_data);
+                game.player.state_update(&p1_assets.texture_data);
                
                 let player_position = game.player.position;
                 let mut items_spawned = game.items_on_ground.clone();
@@ -265,8 +257,8 @@ impl Scene for MatchScene {
                 });
                    
                 update_animations_enemies(&mut game.enemies);
-                update_behaviour_enemies(&mut game.enemies, &mut game.player, &enemy_animations);
-                update_movement_enemies(&mut game.enemies, &enemy_animations, &game.camera, logic_timestep);
+                update_behaviour_enemies(&mut game.enemies, &mut game.player);
+                update_movement_enemies(&mut game.enemies, &game.camera, logic_timestep);
                 update_events(&mut game.enemies, &mut game.player, logic_timestep);
                 update_colliders_enemies(&mut game.enemies, &enemy_assets);
                 
@@ -296,13 +288,10 @@ impl Scene for MatchScene {
                     &mut hit_stop, 
                     logic_timestep, 
                     &general_assets, 
-                    &p1_data, 
-                    &enemy_animations);
+                    &p1_data);
 
                 game.fx(&general_assets);
                 game.update_vfx(&general_assets);
-
-                game.update_projectiles(&self.p1_inputs, &p1_anims);
 
                 game.camera.update(LEVEL_WIDTH, &game.player);
 

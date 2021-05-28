@@ -13,4 +13,4 @@ pub struct Renderable {
     pub rect: Rect,
 }
 
-pub(crate) type Behaviour = fn(&Player, &Position, &mut MovementController, &mut Animator, &EntityAnimations) -> ();
+pub(crate) type Behaviour = fn(&Player, &Position, &mut MovementController, &mut Animator) -> ();

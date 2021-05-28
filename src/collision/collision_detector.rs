@@ -54,12 +54,11 @@ pub fn hit_opponent(
     time: f64, 
     general_assets: &CommonAssets, 
     attacker: &MovementController, 
-    receiver: (&mut Health, &mut Position, &mut Animator, &mut MovementController), 
-    receiver_anims: &EntityAnimations){
+    receiver: (&mut Health, &mut Position, &mut Animator, &mut MovementController)){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
-    take_damage(receiver.0, attack.damage, receiver.3, receiver.2, receiver_anims);                                               
-    receiver.3.state_update(receiver.2, &receiver_anims, false);     
+    take_damage(receiver.0, attack.damage, receiver.3, receiver.2);                                               
+    receiver.3.state_update(receiver.2, false);     
     
     let dir_to_push = if attacker.is_airborne {                                            
         attacker.direction_at_jump_time

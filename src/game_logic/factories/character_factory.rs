@@ -6,6 +6,7 @@ use sdl2::video::WindowContext;
 
 use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Attack, AttackType, Character, OnHitSpecificAttack, player::Player}, inputs::game_inputs::GameAction, on_hit::basic_on_hits::launch}};
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::string::String;
 
 
@@ -13,7 +14,7 @@ pub fn load_stage(texture_creator: &TextureCreator<WindowContext>) -> Texture {
     asset_loader::load_texture(&texture_creator, "assets/stages/Sf3si-hugo.png")
 }
 
-pub fn load_character(character_name: &str, spawn_pos: Point, id: i32) -> Player {
+pub fn load_character(character_name: &str, spawn_pos: Point, id: i32, animations: Rc<EntityAnimations>) -> Player {
     let fighter = match character_name {
         "foxgirl" => Some(Character::new(
             character_name.to_string(),
@@ -33,15 +34,22 @@ pub fn load_character(character_name: &str, spawn_pos: Point, id: i32) -> Player
         _ => None,
     }
     .unwrap();
-    Player::new(id, fighter, spawn_pos)
+    Player::new(id, fighter, spawn_pos, animations)
+}
+
+pub fn load_character_animations(name: &str) -> EntityAnimations {
+    match name {
+        "foxgirl" => Some(load_foxgirl_animations()),
+        _ => None,
+    }.unwrap()
 }
 
 pub fn load_character_anim_data<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
     name: &str,
-) -> (EntityAssets<'a>, EntityAnimations, EntityData) {
+) -> (EntityAssets<'a>, EntityData) {
     match name {
-        "foxgirl" => Some((load_foxgirl_assets(texture_creator), load_foxgirl_animations(), load_foxgirl_data())),
+        "foxgirl" => Some((load_foxgirl_assets(texture_creator), load_foxgirl_data())),
         _ => None,
     }.unwrap()
 }

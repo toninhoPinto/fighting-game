@@ -1,7 +1,9 @@
+use std::rc::Rc;
+
 use parry2d::na::Vector2;
 use sdl2::rect::Rect;
 
-use crate::{collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, engine_types::{animation::Animation, animator::Animator}, game_logic::{characters::Character, effects::events_pub_sub::EventsPubSub, factories::enemy_factory::load_enemy, movement_controller::MovementController}};
+use crate::{asset_management::asset_holders::EntityAnimations, collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, engine_types::{animation::Animation, animator::Animator}, game_logic::{characters::Character, effects::events_pub_sub::EventsPubSub, factories::enemy_factory::load_enemy, movement_controller::MovementController}};
 
 use super::enemy_components::{Behaviour, Health, Position, Renderable};
 
@@ -42,13 +44,15 @@ impl EnemyManager {
         character: Option<Character>, 
         animator: Option<Animator>,
         colliders: Option<ColliderManager>,
-        events: Option<EventsPubSub>) {
+        events: Option<EventsPubSub>,
+        entity_animations: Rc<EntityAnimations>
+    ) {
         
         
         if self.health_components.len() < MAX_ENEMIES {
             let movement = match (&character, &pos) {
                 (Some(character), Some(pos)) =>  {
-                    Some(MovementController::new(&character, pos.0 , player_pos))
+                    Some(MovementController::new(&character, pos.0 , player_pos, entity_animations))
                 },
                 
                 (None, None) | (None, Some(_)) | (Some(_), None) => {None}
@@ -71,11 +75,13 @@ impl EnemyManager {
         }
     }
 
-    pub fn add_enemy(&mut self, player_pos: Vector2<f64>, starting_animation: Animation) {
+    pub fn add_enemy(&mut self, player_pos: Vector2<f64>, entity_animations: Rc<EntityAnimations>) {
 
         let ryu = load_enemy("ryu");
 
         let mut animator = Animator::new();
+
+        let starting_animation = entity_animations.animations.get("idle").unwrap().clone();
         animator.play(starting_animation, 1.0,false);
 
         self.new_entity(
@@ -86,7 +92,8 @@ impl EnemyManager {
             Some(ryu),
             Some(animator), 
             Some(ColliderManager::new()),
-            Some(EventsPubSub::new())
+            Some(EventsPubSub::new()),
+            entity_animations
         );
 
         println!("Spawned entity");

@@ -13,8 +13,7 @@ pub fn get_enemy_colliders(player: &mut Player,
     hit_stop: &mut i32, 
     logic_timestep: f64, 
     general_assets: &CommonAssets, 
-    player_data: &EntityData, 
-    enemies_animations: &HashMap<&str, EntityAnimations>) {
+    player_data: &EntityData) {
     
     let player_collisions = &mut player.collision_manager.collisions_detected; 
     let player_colliders = &player.collision_manager.colliders;
@@ -71,10 +70,10 @@ pub fn get_enemy_colliders(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller_clone, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
+                &player_controller_clone, (hp, pos, animator, mov));
 
             if let Some(on_hit) = attack.on_hit {
-               on_hit(attack, colliders, mov, animator, &enemies_animations.get(&enemy_name as &str).unwrap());
+               on_hit(attack, colliders, mov, animator);
             }
 
             hit_particles(particles, point, "special_hit", &general_assets);
@@ -160,10 +159,10 @@ pub fn enemy_attack_player(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller_clone, (hp, pos, animator, mov), &enemies_animations.get(&enemy_name as &str).unwrap());
+                &player_controller_clone, (hp, pos, animator, mov));
 
             if let Some(on_hit) = attack.on_hit {
-               on_hit(attack, colliders, mov, animator, &enemies_animations.get(&enemy_name as &str).unwrap());
+               on_hit(attack, colliders, mov, animator);
             }
 
             hit_particles(particles, point, "special_hit", &general_assets);
@@ -206,14 +205,14 @@ pub fn attack(controller: &mut MovementController, animator: &mut Animator, coll
 }
 
 
-pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController, animator: &mut Animator, assets: &EntityAnimations) {
+pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController, animator: &mut Animator) {
     if hp.0 > 0 {
         hp.0 -= damage;
-        mov.set_entity_state(EntityState::Hurt, animator, assets);
+        mov.set_entity_state(EntityState::Hurt, animator);
     }
 
     if hp.0 <= 0 {
-        mov.set_entity_state(EntityState::Dead, animator, assets);
+        mov.set_entity_state(EntityState::Dead, animator);
     }
 }
 
@@ -263,7 +262,7 @@ pub fn update_events(enemy_manager: &mut EnemyManager, player: &mut Player, dt: 
     });
 }
 
-pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut Player, enemy_animations: &HashMap<&str, EntityAnimations>) {
+pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut Player) {
     let zip = enemy_manager.
     behaviour_components.iter()
     .zip(enemy_manager.health_components.iter())
@@ -284,7 +283,7 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
         None
     })
     .for_each(|(behaviour, mov, pos, char, animator): (&Behaviour, &mut MovementController, &Position, &Character, &mut Animator)| {
-        behaviour(player, pos, mov, animator, enemy_animations.get(&char.name as &str).unwrap());
+        behaviour(player, pos, mov, animator);
     });
 }
 
@@ -315,7 +314,7 @@ pub fn update_colliders_enemies(enemy_manager: &mut EnemyManager, enemy_assets: 
         });
 }
 
-pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animations: &HashMap<&str, EntityAnimations>, camera: &Camera, dt: f64) {
+pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, camera: &Camera, dt: f64) {
     let zip = enemy_manager
     .positions_components.iter_mut()
     .zip(enemy_manager.animator_components.iter_mut())
@@ -330,12 +329,11 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, enemy_animation
         return Some((pos.as_mut()?, mov.as_mut()?, animator.as_mut()?, character.as_ref()?, renderable.as_mut()?))
     })
     .for_each(|(pos, mov, animator, character, renderable): (&mut Position, &mut MovementController, &mut Animator, &Character, &mut Renderable)| {
-        mov.state_update(animator, enemy_animations.get(&character.name as &str).unwrap(), false);
+        mov.state_update(animator, false);
         mov.update(
             &mut pos.0,
             character,
             animator,
-            enemy_animations.get(&character.name as &str).unwrap(),
             camera,
             dt,
             100, //TODO fix this
