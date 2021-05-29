@@ -138,13 +138,13 @@ impl MovementController {
                 animator
                     .play_once(character_animation.get("take_damage").unwrap().clone(), 1.0, false);
             }
-            EntityState::Knocked => {
+            EntityState::Knocked | EntityState::Dropped => {
                 if self.is_airborne {
                     animator
                     .play_once(character_animation.get("launched").unwrap().clone(), 1.0, false);
                 }
             }
-            EntityState::KnockedLanding => {
+            EntityState::KnockedLanding | EntityState::DroppedLanding => {
                 let animation = character_animation.get("knock_land");
                 if let Some(animation) = animation {
                     animator.play_once(animation.clone(), 1.0, false);
@@ -161,7 +161,8 @@ impl MovementController {
             self.state == EntityState::Landing ||
             (self.state == EntityState::Dashing && animator.is_finished) || 
             self.state == EntityState::Hurt ||
-            self.state == EntityState::KnockedLanding;
+            self.state == EntityState::KnockedLanding || 
+            self.state == EntityState::DroppedLanding;
 
         let can_walk = 
             self.state == EntityState::Idle ||
@@ -169,7 +170,8 @@ impl MovementController {
             (self.state == EntityState::Landing && animator.is_finished) ||
             (self.state == EntityState::Dashing && animator.is_finished) || 
             (self.state == EntityState::Hurt && animator.is_finished) ||
-            (self.state == EntityState::KnockedLanding && animator.is_finished);
+            (self.state == EntityState::KnockedLanding && animator.is_finished) ||
+            (self.state == EntityState::DroppedLanding && animator.is_finished);
 
         let can_jump = 
             (self.is_attacking && self.has_hit) ||
@@ -190,7 +192,8 @@ impl MovementController {
         (self.state == EntityState::Landing && animator.is_finished) ||
         (self.state == EntityState::Dashing && animator.is_finished) || 
         (self.state == EntityState::Hurt && animator.is_finished) ||
-        (self.state == EntityState::KnockedLanding && animator.is_finished)
+        (self.state == EntityState::KnockedLanding && animator.is_finished) ||
+        (self.state == EntityState::DroppedLanding && animator.is_finished)
         );
         
         
@@ -238,7 +241,7 @@ impl MovementController {
     }
 
     pub fn dropped(&mut self, animator: &mut Animator) {
-        self.set_entity_state(EntityState::Knocked, animator);
+        self.set_entity_state(EntityState::Dropped, animator);
         self.velocity_y = -self.jump_initial_velocity * 2f64;
         self.direction_at_jump_time = 0;
     }
@@ -291,7 +294,7 @@ impl MovementController {
                 }
             }
 
-            if self.state == EntityState::KnockedLanding {
+            if self.state == EntityState::KnockedLanding || self.state == EntityState::DroppedLanding  {
                 if self.walking_dir.x != 0 || self.walking_dir.y != 0  {
                     self.set_entity_state(EntityState::Walking, animator);
                 } else {
@@ -371,6 +374,9 @@ impl MovementController {
                 }
                 if self.state == EntityState::Knocked {
                     self.set_entity_state(EntityState::KnockedLanding, animator);
+                }
+                if self.state == EntityState::Dropped {
+                    self.set_entity_state(EntityState::DroppedLanding, animator);
                 }
                 self.is_airborne = false;
             }

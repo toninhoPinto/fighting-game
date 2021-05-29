@@ -20,6 +20,8 @@ pub enum EntityState {
     Hurt,
     Knocked,
     KnockedLanding,
+    Dropped,
+    DroppedLanding,
     Dead,
 }
 impl fmt::Display for EntityState {
@@ -90,6 +92,7 @@ impl Player {
     }
 
     pub fn attack(&mut self, _character_data: &EntityData, attack_animation: String) {
+
         if self.controller.can_attack() {
             self.controller.is_attacking = true;
             self.controller.combo_counter += 1;
@@ -207,9 +210,7 @@ impl Player {
         inputs_for_current_frame: i32, 
         character_data: &EntityData, 
         action_history: &VecDeque<i32>) {
-
         //println!("run inputs {:?}", GameAction::debug_i32(inputs_for_current_frame));
-
         let x = if inputs_for_current_frame & GameAction::Right as i32 > 0 {
             1i8
         } else if inputs_for_current_frame & GameAction::Left as i32 > 0 {
@@ -341,10 +342,7 @@ impl Player {
             let attack_unlocked = possible_combo.mask & self.character.directional_attacks_mask_curr != 0;
             let is_dashing = !((self.controller.state == EntityState::Dashing) ^ possible_combo.is_dashing);
             let is_airborne = !(self.controller.is_airborne ^ possible_combo.is_airborne);
-            println!("is_dashing {:?} dashing attack {}", (self.controller.state == EntityState::Dashing) , possible_combo.is_dashing);
-            println!("is_airborn {:?} airborne attack {}", self.controller.is_airborne , possible_combo.is_airborne);
-            println!("possible combo {:?} states attack_unlocked {} is_dashing {} is_airborne {}", moves ,attack_unlocked, is_dashing, is_airborne);
-            if attack_unlocked && is_dashing && is_airborne{
+            if attack_unlocked && (is_dashing || is_airborne){
                 if  GameAction::is_pressed(recent_inputs,moves.0) &&
                     GameAction::is_pressed(recent_inputs,moves.1) 
                 {

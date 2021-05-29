@@ -32,7 +32,6 @@ use crate::input::controller_handler::Controller;
 
 
 //TODO features tomorrow
-//change launcher, dropper etc, to be more hardcoded in the way the are saved and detected from the inputs
 //add air dash
 //add double jump
 

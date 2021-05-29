@@ -5,7 +5,7 @@ use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
 use crate::asset_management::asset_holders::DirectionalAttack;
-use crate::game_logic::on_hit::basic_on_hits::{crash, dropper};
+use crate::game_logic::on_hit::basic_on_hits::dropper;
 use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Attack, AttackType, Character, OnHitSpecificAttack, player::Player}, inputs::game_inputs::GameAction, on_hit::basic_on_hits::launch}};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -66,6 +66,9 @@ fn load_foxgirl_directional_inputs() ->   Vec<DirectionalAttack>{
     directional_inputs.push(DirectionalAttack::new(0b1000u32, true, false, (GameAction::Down, GameAction::Punch), "crash".to_string()) );
     directional_inputs.push(DirectionalAttack::new(0b0001u32, false, false, (GameAction::Up, GameAction::Punch), "launcher".to_string()) );
 
+    directional_inputs.push(DirectionalAttack::new(0b0100u32, false, true, (GameAction::Left, GameAction::Punch), "dash_attack".to_string()) );
+    directional_inputs.push(DirectionalAttack::new(0b0100u32, false, true, (GameAction::Right, GameAction::Punch), "dash_attack".to_string()) );
+
     directional_inputs
 }
 
@@ -122,6 +125,9 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     let launcher_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/launcher", "launcher");
 
+    let mut dash_attack_anim = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/dash_attack", "dash_attack");
+
     let mut dash_anim=
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/dash", "dash");
     let neutral_jump_anim =
@@ -140,6 +146,9 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     dash_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(8000.0, 0.0), Vector2::new(5000.0, 0.0), 
     Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0)]);
     character_anims.insert(dash_anim.name.clone(),dash_anim);
+
+    dash_attack_anim.offsets =Some(vec![Vector2::new(3000.0, 0.0), Vector2::new(1000.0, 0.0), Vector2::new(500.0, 0.0), Vector2::new(0.0, 0.0)]);
+    character_anims.insert(dash_attack_anim.name.clone(),dash_attack_anim);
     
     character_anims.insert(walk_anim.name.clone(),walk_anim);
     character_anims.insert(light_punch_anim.name.clone(),light_punch_anim);
@@ -160,7 +169,7 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     character_anims.insert(airborne_light_kick_anim.name.clone(),airborne_light_kick_anim);
     character_anims.insert(airborne_dropper_kick_anim.name.clone(),airborne_dropper_kick_anim);
 
-    airborne_crash_kick_anim.offsets =Some(vec![Vector2::new(0.0, -2000.0), Vector2::new(100.0, -4000.0), Vector2::new(0.0, -2000.0), Vector2::new(0.0, -1000.0)]);
+    airborne_crash_kick_anim.offsets =Some(vec![Vector2::new(0.0, -2000.0), Vector2::new(0.0, -4000.0), Vector2::new(0.0, -2000.0), Vector2::new(0.0, -1000.0)]);
     character_anims.insert(airborne_crash_kick_anim.name.clone(),airborne_crash_kick_anim);
     
     character_anims.insert(crouch_start_anim.name.clone(),crouch_start_anim);
@@ -302,6 +311,18 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 0.0,
+            attack_type: AttackType::Special,
+            on_hit: None,
+        },
+    );
+
+    attacks.insert(
+        "dash".to_string(),
+        Attack {
+            damage: 5,
+            stun_on_hit: 20,
+            stun_on_block: 14,
+            push_back: 100.0,
             attack_type: AttackType::Special,
             on_hit: None,
         },
