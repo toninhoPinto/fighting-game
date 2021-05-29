@@ -141,8 +141,6 @@ impl<'a> Scene for MenuScene<'a> {
                         if !is_pressed {
                             if self.selected_btn == 0 {
                                 //must leave and make main use match scene instead
-                                let mut overworld = OverworldScene::new();
-                                overworld.init(screen_res);
 
                                 game_state_data.enemy_animations.insert("player".to_string(), Rc::new(load_character_animations("foxgirl")));
                                 game_state_data.player = Some(load_character(
@@ -154,6 +152,8 @@ impl<'a> Scene for MenuScene<'a> {
 
                                 game_state_data.enemy_animations.insert("ryu".to_string(), Rc::new(load_enemy_ryu_animations()));
 
+                                let mut overworld = OverworldScene::new();
+                                overworld.init(screen_res, false);
 
                                 return Transition::Change(Box::new(overworld));
                             }

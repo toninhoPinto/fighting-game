@@ -1,4 +1,4 @@
-use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventUpdate}}, movement_controller::MovementController}};
+use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventMap, CharacterEventUpdate}}, movement_controller::MovementController}, scenes::overworld_scene::OverworldScene};
 
 pub fn apply_add_attack_at_level_start(player: &mut Player, effect: &mut Effect){
     player.events.on_start_level.push((add_attack_wrap, effect.clone()));
@@ -98,4 +98,16 @@ pub fn poison(_: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect:
         }
         
     }
+}
+
+
+pub fn apply_map_exploration(player: &mut Player, effect: &mut Effect){
+    player.events.on_overworld_map.push((increase_map_exploration as CharacterEventMap, effect.clone()));
+}
+
+pub fn increase_map_exploration(player: &mut Player, map: &mut OverworldScene, effect: &mut Effect)  {
+
+    map.change_exploration_level(true);
+
+    player.events.on_overworld_map.pop(); //TODO, should actually find itself somehow and pop itself only
 }

@@ -5,15 +5,19 @@ use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::
 use super::match_scene::MatchScene;
 
 pub struct OverworldScene {
+    pub rect: Rect,
+    pub full_conection: bool,
     pub nodes: Vec<WorldNode>,
     pub player_node_pos: usize,
     pub next_node: usize,
     pub connect_to_index: usize,
 }
 
-impl OverworldScene{
+impl OverworldScene {
     pub fn new() -> Self { 
         Self {
+            rect: Rect::new(0,0,0,0),
+            full_conection: false,
             nodes: Vec::new(),
             player_node_pos: 0,
             next_node: 0,
@@ -21,9 +25,18 @@ impl OverworldScene{
         }
     } 
 
-    pub fn init(&mut self, (w, h): (u32, u32)) {
+    pub fn init(&mut self, (w, h): (u32, u32), full_conection: bool) {
         let map_area = Rect::new(400, 100, w-800, h-200);
-        self.nodes = overworld_generation(map_area, (5, 6), false);
+        self.full_conection = full_conection;
+        self.rect = map_area;
+        self.nodes = overworld_generation(map_area, (5, 6), full_conection);
+    }
+
+    pub fn change_exploration_level(&mut self, full_conection: bool) {
+        if self.full_conection != full_conection {
+            self.full_conection = full_conection;
+            self.nodes = overworld_generation(self.rect, (5, 6), full_conection);
+        }
     }
 }
 
@@ -82,6 +95,12 @@ impl<'a> Scene for OverworldScene {
             .iter()
             .map(|&a| {a})
             .collect::<Vec<usize>>()[self.connect_to_index];
+
+        let mut map_events =  game_state_data.player.as_ref().unwrap().events.on_overworld_map.clone();
+        for map_event in map_events.iter_mut() {
+            (map_event.0)(game_state_data.player.as_mut().unwrap(), self, &mut map_event.1);
+        }
+        game_state_data.player.as_mut().unwrap().events.on_overworld_map = map_events;
 
         loop {
             //receive inputs for managing selecting menu options
