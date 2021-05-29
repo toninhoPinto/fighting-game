@@ -14,10 +14,10 @@ pub fn add_attack(player: &mut Player, effect: &mut Effect) {
         "kick" => {player.character.kick_string_curr+=1;},
         "airborne punch" => {player.character.airborne_punch_string_curr+=1;},
         "airborne kick" => {player.character.airborne_kick_string_curr+=1;},
-        "launcher" => {player.character.directional_attacks_mask_curr |=  0b0001u32;},
-        "dropper" => {player.character.directional_attacks_mask_curr |=   0b0010u32;}, 
-        "dashing" => {player.character.directional_attacks_mask_curr |=   0b0100u32;},
-        "crash" => {player.character.directional_attacks_mask_curr |=     0b1000u32;},
+        "launcher" => {player.character.directional_attacks_mask_curr   |=  0b0001u32;},
+        "dropper" => {player.character.directional_attacks_mask_curr    |=  0b0010u32;}, 
+        "dashing" => {player.character.directional_attacks_mask_curr    |=  0b0100u32;},
+        "crash" => {player.character.directional_attacks_mask_curr      |=  0b1000u32;},
         _ => {},
     }
 }

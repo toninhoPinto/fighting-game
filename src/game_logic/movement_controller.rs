@@ -237,6 +237,12 @@ impl MovementController {
         self.direction_at_jump_time = 0;
     }
 
+    pub fn dropped(&mut self, animator: &mut Animator) {
+        self.set_entity_state(EntityState::Knocked, animator);
+        self.velocity_y = -self.jump_initial_velocity * 2f64;
+        self.direction_at_jump_time = 0;
+    }
+
     pub fn knock_back(&mut self, pos: &mut Position, amount: f64, dt: f64) {
         pos.0 += Vector2::new(amount * dt, 0.0);
         self.knock_back_distance = amount - (amount * 10.0 * dt);

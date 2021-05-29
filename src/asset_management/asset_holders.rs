@@ -13,9 +13,29 @@ pub struct EntityAnimations {
     pub projectile_animation: HashMap<String, Animation>,
 }
 
+pub struct DirectionalAttack {
+    pub mask: u32,
+    pub is_airborne: bool,
+    pub is_dashing: bool,
+    pub inputs: (GameAction, GameAction),
+    pub key: String
+}
+
+impl DirectionalAttack {
+    pub fn new(mask: u32, is_airborne: bool, is_dashing: bool, inputs: (GameAction, GameAction),key: String ) -> Self {
+        Self {
+            mask,
+            is_airborne,
+            is_dashing,
+            inputs,
+            key,
+        }
+    }
+}
+
 pub struct EntityData {
     pub auto_combo_strings: HashMap<i32, Vec<&'static str>>,
-    pub directional_variation_anims: Vec<(u32, (GameAction, GameAction), String)>,
+    pub directional_variation_anims: Vec<DirectionalAttack>,    //mask, is_airborne, inputs, name_of_attack 
     pub attacks: HashMap<String, Attack>,
 }
 

@@ -336,13 +336,20 @@ impl Player {
         recent_inputs: i32
     ) -> Option<String> {
         for possible_combo in character_data.directional_variation_anims.iter() {
-            let (mask,moves, name) = possible_combo;
-             
-            if mask & self.character.directional_attacks_mask_curr != 0 {
+            let moves = possible_combo.inputs;
+
+            let attack_unlocked = possible_combo.mask & self.character.directional_attacks_mask_curr != 0;
+            let is_dashing = !((self.controller.state == EntityState::Dashing) ^ possible_combo.is_dashing);
+            let is_airborne = !(self.controller.is_airborne ^ possible_combo.is_airborne);
+            println!("is_dashing {:?} dashing attack {}", (self.controller.state == EntityState::Dashing) , possible_combo.is_dashing);
+            println!("is_airborn {:?} airborne attack {}", self.controller.is_airborne , possible_combo.is_airborne);
+            println!("possible combo {:?} states attack_unlocked {} is_dashing {} is_airborne {}", moves ,attack_unlocked, is_dashing, is_airborne);
+            if attack_unlocked && is_dashing && is_airborne{
                 if  GameAction::is_pressed(recent_inputs,moves.0) &&
                     GameAction::is_pressed(recent_inputs,moves.1) 
                 {
-                    return Some(name.to_string());
+                    println!("directional input {:?}", possible_combo.key);
+                    return Some(possible_combo.key.to_string());
                 }
             }
             
