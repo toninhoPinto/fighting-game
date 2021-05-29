@@ -5,7 +5,7 @@ use sdl2::render::{Texture, TextureCreator};
 use sdl2::video::WindowContext;
 
 use crate::asset_management::asset_holders::DirectionalAttack;
-use crate::game_logic::on_hit::basic_on_hits::crash;
+use crate::game_logic::on_hit::basic_on_hits::{crash, dropper};
 use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets, EntityData}, asset_loader::asset_loader::{self, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::{Attack, AttackType, Character, OnHitSpecificAttack, player::Player}, inputs::game_inputs::GameAction, on_hit::basic_on_hits::launch}};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -104,6 +104,9 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     let airborne_light_kick_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/light_kick", "airborne_light_kick");
 
+    let mut airborne_crash_kick_anim = 
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/crash", "crash");
+
     let airborne_dropper_kick_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/attacks/down_kick", "dropper");
 
@@ -156,6 +159,9 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
 
     character_anims.insert(airborne_light_kick_anim.name.clone(),airborne_light_kick_anim);
     character_anims.insert(airborne_dropper_kick_anim.name.clone(),airborne_dropper_kick_anim);
+
+    airborne_crash_kick_anim.offsets =Some(vec![Vector2::new(0.0, -2000.0), Vector2::new(100.0, -4000.0), Vector2::new(0.0, -2000.0), Vector2::new(0.0, -1000.0)]);
+    character_anims.insert(airborne_crash_kick_anim.name.clone(),airborne_crash_kick_anim);
     
     character_anims.insert(crouch_start_anim.name.clone(),crouch_start_anim);
     character_anims.insert(crouch_idle_anim.name.clone(),crouch_idle_anim);
@@ -285,7 +291,19 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_block: 14,
             push_back: 0.0,
             attack_type: AttackType::Special,
-            on_hit: Some(crash as OnHitSpecificAttack),
+            on_hit: Some(dropper as OnHitSpecificAttack),
+        },
+    );
+
+    attacks.insert(
+        "crash".to_string(),
+        Attack {
+            damage: 5,
+            stun_on_hit: 20,
+            stun_on_block: 14,
+            push_back: 0.0,
+            attack_type: AttackType::Special,
+            on_hit: None,
         },
     );
 
