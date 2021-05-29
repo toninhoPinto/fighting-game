@@ -106,8 +106,7 @@ pub fn apply_map_exploration(player: &mut Player, effect: &mut Effect){
 }
 
 pub fn increase_map_exploration(player: &mut Player, map: &mut OverworldScene, effect: &mut Effect)  {
-
     map.change_exploration_level(true);
-
     player.events.on_overworld_map.pop(); //TODO, should actually find itself somehow and pop itself only
 }
+
