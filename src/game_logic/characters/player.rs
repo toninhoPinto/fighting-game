@@ -168,8 +168,7 @@ impl Player {
 
         let occupied = (self.controller.is_attacking && !self.controller.has_hit) ||
         self.controller.state == EntityState::Hurt ||
-        self.controller.state == EntityState::Landing || 
-        self.controller.state == EntityState::Dashing ;
+        self.controller.state == EntityState::Landing;
         
         if inputs_for_current_frame != 0 && occupied {
             if inputs.input_buffer.len() < 1 {
