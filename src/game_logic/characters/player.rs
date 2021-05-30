@@ -115,10 +115,6 @@ impl Player {
             if GameAction::is_pressed(last_action, GameAction::Left) { //-1
                 self.controller.set_velocity_x(-1, &mut self.animator);
             }
-
-            if GameAction::is_pressed(last_action, GameAction::Jump) { 
-                self.jump();
-            }
         }
 
         let mut occupied = (self.controller.is_attacking && !self.controller.has_hit) ||
