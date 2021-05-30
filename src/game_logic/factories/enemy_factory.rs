@@ -125,6 +125,7 @@ pub fn load_enemy(character_name: &str) -> Character {
             500.0,
             600.0,
             false,
+            false,
             2,
             2,
             0,

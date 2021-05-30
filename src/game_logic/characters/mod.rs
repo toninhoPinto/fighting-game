@@ -24,6 +24,7 @@ pub struct Character {
     pub jump_distance: f64,
 
     pub can_double_jump: bool,
+    pub can_air_dash: bool,
 
     pub punch_string: i8,
     pub kick_string: i8,
@@ -71,6 +72,7 @@ impl Character {
         jump_height: f64,
         jump_distance: f64,
         can_double_jump: bool,
+        can_air_dash: bool,
         punch_string: i8,
         kick_string: i8,
         airborne_punch_string: i8,
@@ -87,6 +89,7 @@ impl Character {
             jump_height,
             jump_distance,
             can_double_jump,
+            can_air_dash,
 
             punch_string,
             kick_string,

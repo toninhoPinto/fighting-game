@@ -18,6 +18,7 @@ pub struct MovementController {
     pub jump_initial_velocity: f64,
     pub can_double_jump: bool,
     pub is_double_jumping: bool,
+    pub can_air_dash: bool,
 
     pub facing_dir: i8,
     pub state: EntityState,
@@ -44,6 +45,7 @@ impl MovementController {
             direction_at_jump_time: 0,
             jump_initial_velocity: 4.0 * character.jump_height,
             can_double_jump: character.can_double_jump,
+            can_air_dash: character.can_air_dash,
         
             facing_dir: (player_pos.x - starting_pos.x).sign() as i8,
             state: EntityState::Idle,
@@ -198,14 +200,17 @@ impl MovementController {
             );
         
         let can_dash = !self.is_airborne && 
-        (self.state == EntityState::Idle ||
-        self.state == EntityState::Walking ||
-        (self.state == EntityState::Landing && animator.is_finished) ||
-        (self.state == EntityState::Dashing && animator.is_finished) || 
-        (self.state == EntityState::Hurt && animator.is_finished) ||
-        (self.state == EntityState::KnockedLanding && animator.is_finished) ||
-        (self.state == EntityState::DroppedLanding && animator.is_finished)
+        (
+            self.state == EntityState::Idle ||
+            self.state == EntityState::Walking ||
+            (self.state == EntityState::Landing && animator.is_finished) ||
+            (self.state == EntityState::Dashing && animator.is_finished) || 
+            (self.state == EntityState::Hurt && animator.is_finished) ||
+            (self.state == EntityState::KnockedLanding && animator.is_finished) ||
+            (self.state == EntityState::DroppedLanding && animator.is_finished)
         );
+
+        let can_air_dash =(self.is_airborne && self.can_air_dash) && self.state != EntityState::Knocked;
         
         
         if (!self.is_attacking || (self.is_attacking && interrupt_attack) || cancel_attack )  && self.state != EntityState::Dead{
@@ -227,7 +232,7 @@ impl MovementController {
                     }
                 },
                 EntityState::Dashing => {
-                    if can_dash {
+                    if can_dash || can_air_dash{
                         self.update_state(new_state, animator);
                     }
                 },
@@ -236,6 +241,10 @@ impl MovementController {
                 }
             }
         }
+    }
+
+    fn should_pause_gravity(&self) -> bool {
+        !self.is_attacking && self.state != EntityState::Hurt && self.state != EntityState::Dashing
     }
 
     pub fn jump(&mut self, animator: &mut Animator) {
@@ -363,7 +372,7 @@ impl MovementController {
                     * character.jump_distance
                     * dt;
     
-                if !self.is_attacking && self.state != EntityState::Hurt {
+                if self.should_pause_gravity() {
                     self.velocity_y += gravity * dt;
                     self.is_falling = self.velocity_y <= 0f64;
                     let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
