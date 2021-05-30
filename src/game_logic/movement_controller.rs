@@ -16,7 +16,8 @@ pub struct MovementController {
 
     pub direction_at_jump_time: i8,
     pub jump_initial_velocity: f64,
-    pub extra_gravity: Option<f64>,
+    pub can_double_jump: bool,
+    pub is_double_jumping: bool,
 
     pub facing_dir: i8,
     pub state: EntityState,
@@ -24,6 +25,7 @@ pub struct MovementController {
     pub is_attacking: bool,
     pub is_blocking: bool,
     pub is_airborne: bool,
+    pub is_falling: bool,
     pub has_hit: bool,
     pub combo_counter: i32,
         
@@ -41,7 +43,7 @@ impl MovementController {
         
             direction_at_jump_time: 0,
             jump_initial_velocity: 4.0 * character.jump_height,
-            extra_gravity: None,
+            can_double_jump: character.can_double_jump,
         
             facing_dir: (player_pos.x - starting_pos.x).sign() as i8,
             state: EntityState::Idle,
@@ -49,6 +51,8 @@ impl MovementController {
             is_attacking: false,
             is_blocking: false,
             is_airborne: false,
+            is_falling: false,
+            is_double_jumping: false,
             combo_counter: 0,
             has_hit: false,
             knock_back_distance: 0f64,
@@ -182,6 +186,7 @@ impl MovementController {
         let can_jump = 
             (self.is_attacking && self.has_hit) ||
             self.state == EntityState::Idle ||
+            self.state == EntityState::Jumping ||
             self.state == EntityState::Walking;
 
         let interrupt_attack = new_state == EntityState::Landing || 
@@ -192,8 +197,8 @@ impl MovementController {
             new_state == EntityState::Dashing 
             );
         
-        let can_dash = !self.is_airborne && (
-            self.state == EntityState::Idle ||
+        let can_dash = !self.is_airborne && 
+        (self.state == EntityState::Idle ||
         self.state == EntityState::Walking ||
         (self.state == EntityState::Landing && animator.is_finished) ||
         (self.state == EntityState::Dashing && animator.is_finished) || 
@@ -234,7 +239,10 @@ impl MovementController {
     }
 
     pub fn jump(&mut self, animator: &mut Animator) {
-        if !self.is_airborne {
+        if !self.is_airborne || (self.is_airborne && self.can_double_jump && !self.is_double_jumping && self.is_falling) {
+            if self.is_airborne && self.can_double_jump {
+                self.is_double_jumping = true;
+            }
             self.set_entity_state(EntityState::Jump, animator);
         }
     }
@@ -321,8 +329,10 @@ impl MovementController {
         character_width: i32,
     ) {
         if self.state == EntityState::Jump {
-            self.ground_height = position.y as i32;
-            self.velocity_y = self.jump_initial_velocity;
+            if !self.is_airborne {
+                self.ground_height = position.y as i32;
+            }
+            self.velocity_y = if !self.is_double_jumping {self.jump_initial_velocity * 0.9f64} else {self.jump_initial_velocity/2f64};
             self.direction_at_jump_time = self.walking_dir.x.sign();
         }
    
@@ -339,17 +349,12 @@ impl MovementController {
         }
      
         if self.is_airborne {
-            let gravity = match self.extra_gravity {
-                Some(extra_g) => extra_g,
-                None => { 
-                    if self.state == EntityState::Knocked {
-                        -1.5 * self.jump_initial_velocity
-                    } else {
-                        -3.0 * self.jump_initial_velocity
-                    } 
-                } 
-            };
-    
+            let gravity = if self.state == EntityState::Knocked {
+                -1.5 * self.jump_initial_velocity
+            } else {
+                -3.0 * self.jump_initial_velocity
+            }; 
+
             let ground = self.ground_height;
             let should_land = position.y < ground as f64;
     
@@ -360,6 +365,7 @@ impl MovementController {
     
                 if !self.is_attacking && self.state != EntityState::Hurt {
                     self.velocity_y += gravity * dt;
+                    self.is_falling = self.velocity_y <= 0f64;
                     let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
 
                     *position += Vector2::new(position_offset_x, position_offset_y);
@@ -384,6 +390,7 @@ impl MovementController {
                 if self.state == EntityState::Dropped {
                     self.set_entity_state(EntityState::DroppedLanding, animator);
                 }
+                self.is_double_jumping = false;
                 self.is_airborne = false;
             }
         }

@@ -33,7 +33,6 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 //add air dash
-//add double jump
 
 //implement more item effects
 

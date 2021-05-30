@@ -27,6 +27,7 @@ pub fn load_character(character_name: &str, spawn_pos: Point, id: i32, animation
             350.0,
             700.0,
             600.0,
+            false,
             2,
             1,
             2,

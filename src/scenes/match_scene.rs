@@ -237,6 +237,7 @@ impl Scene for MatchScene {
                 };
 
                 game.player.animator.update();
+                game.player.state_update(&p1_assets.texture_data);
                 game.player.update(
                     &game.camera,
                     logic_timestep,
