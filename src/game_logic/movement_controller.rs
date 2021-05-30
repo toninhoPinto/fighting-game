@@ -81,6 +81,12 @@ impl MovementController {
         self.walking_dir.x = x;
     }
 
+    pub fn can_dash_attack(&self) -> bool {
+        !((self.is_attacking && !self.has_hit)
+            || self.state == EntityState::Jump
+            || self.state == EntityState::Dead)
+    }
+
     pub fn can_attack(&self) -> bool {
         !((self.is_attacking && !self.has_hit)
             || self.state == EntityState::Jump

@@ -92,21 +92,18 @@ impl Player {
     }
 
     pub fn attack(&mut self, _character_data: &EntityData, attack_animation: String) {
+        self.controller.is_attacking = true;
+        self.controller.combo_counter += 1;
 
-        if self.controller.can_attack() {
-            self.controller.is_attacking = true;
-            self.controller.combo_counter += 1;
+        self.collision_manager.collisions_detected.clear();
+        self.controller.has_hit = false;
 
-            self.collision_manager.collisions_detected.clear();
-            self.controller.has_hit = false;
+        if let Some(attack_anim) = self.controller.animations.animations.get(&attack_animation) { 
+            self.animator.play_animation(attack_anim.clone(),1.0, false, true, true);
+        }
 
-            if let Some(attack_anim) = self.controller.animations.animations.get(&attack_animation) { 
-                self.animator.play_animation(attack_anim.clone(),1.0, false, true, true);
-            }
-
-            if let Some(_) = self.animator.current_animation.as_ref().unwrap().collider_animation {
-                self.collision_manager.init_colliders(&self.animator);
-            }
+        if let Some(_) = self.animator.current_animation.as_ref().unwrap().collider_animation {
+            self.collision_manager.init_colliders(&self.animator);
         }
     }
 
@@ -286,11 +283,9 @@ impl Player {
         animation_name: String,
     ) {
         if action_history.len() > 0  {
-            if let Some(directional_input) = self.check_directional_inputs(
-                character_data,
-                action_history.back().unwrap() | recent_input_as_game_action as i32) {
+            if let Some(directional_input) = self.check_directional_inputs(character_data,action_history.back().unwrap() | recent_input_as_game_action as i32) {
                 self.attack( character_data, directional_input);
-            } else {
+            } else if self.controller.can_attack() {
                 let mut combo_id = 0;
                 let mut current_combo_length = 0;
                 
@@ -338,10 +333,14 @@ impl Player {
         for possible_combo in character_data.directional_variation_anims.iter() {
             let moves = possible_combo.inputs;
 
+            let can_dash_attack = self.controller.can_dash_attack();
+
             let attack_unlocked = possible_combo.mask & self.character.directional_attacks_mask_curr != 0;
             let is_dashing = !((self.controller.state == EntityState::Dashing) ^ possible_combo.is_dashing);
             let is_airborne = !(self.controller.is_airborne ^ possible_combo.is_airborne);
-            if attack_unlocked && (is_dashing || is_airborne){
+
+
+            if can_dash_attack && attack_unlocked && (is_dashing && is_airborne){
                 if  GameAction::is_pressed(recent_inputs,moves.0) &&
                     GameAction::is_pressed(recent_inputs,moves.1) 
                 {
