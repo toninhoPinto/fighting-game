@@ -19,6 +19,7 @@ pub fn add_attack(player: &mut Player, effect: &mut Effect) {
         "dashing" => {player.character.directional_attacks_mask_curr    |=  0b0100u32;},
         "crash" => {player.character.directional_attacks_mask_curr      |=  0b1000u32;},
         "doublejump" => {player.controller.can_double_jump = true;}
+        "airdash" => {player.controller.can_air_dash = true;}
         _ => {},
     }
 }
