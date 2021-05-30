@@ -228,8 +228,6 @@ pub fn load_animation_data(
         sprite_animation.push((time_vec[i], sprites[i].name.replace(".png", "")));
     } 
 
-
-
     let mut sprite_transforms: HashMap<i32, Transform> = HashMap::new();
     // for string - name of collider object -- hold a map of frame animation id and position at that frame
     let mut final_transforms: HashMap<String, HashMap<i32, Transform>> = HashMap::new();

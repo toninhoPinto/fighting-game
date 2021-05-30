@@ -130,6 +130,8 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     let mut dash_attack_anim = 
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/attacks/dash_attack", "dash_attack");
 
+    let mut air_dash_anim=
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/airborne/dash", "air-dash");
     let mut dash_anim=
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/dash", "dash");
     let neutral_jump_anim =
@@ -144,6 +146,10 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
     character_anims.insert(idle_anim.name.clone(),idle_anim);
     character_anims.insert(take_damage_anim.name.clone(),take_damage_anim);
     character_anims.insert(dead_anim.name.clone(),dead_anim);
+
+    
+    air_dash_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(6000.0, 0.0), Vector2::new(4000.0, 0.0), Vector2::new(1000.0, 0.0)]);
+    character_anims.insert(air_dash_anim.name.clone(),air_dash_anim);
 
     dash_anim.offsets = Some(vec![Vector2::new(0.0, 0.0), Vector2::new(8000.0, 0.0), Vector2::new(5000.0, 0.0), 
     Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0), Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0) , Vector2::new(0.0, 0.0)]);

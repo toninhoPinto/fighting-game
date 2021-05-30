@@ -32,8 +32,6 @@ use crate::input::controller_handler::Controller;
 
 
 //TODO features tomorrow
-//add air dash
-
 //implement more item effects
 
 //add to game_state_data

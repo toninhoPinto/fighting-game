@@ -143,8 +143,13 @@ impl MovementController {
             }
 
             EntityState::Dashing => {
-                animator
-                    .play_once(character_animation.get("dash").unwrap().clone(), 1.0, false);
+                if !self.is_airborne {
+                    animator
+                        .play_once(character_animation.get("dash").unwrap().clone(), 1.0, false);
+                } else {
+                    animator
+                        .play_once(character_animation.get("air-dash").unwrap().clone(), 1.0, false);
+                }
             }
             EntityState::Hurt => {
                 animator
