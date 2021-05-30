@@ -41,7 +41,7 @@ pub fn remove_all_extra_attacks(player: &mut Player, _: &mut Effect) {
 }
 
 pub fn remove_all_extra_punches(player: &mut Player, effect: &mut Effect) {
-    let multiplyer = (player.character.punch_string_curr - 1) as i32 * effect.change.unwrap();
+    let multiplier = (player.character.punch_string_curr - 1) as i32 * effect.change.unwrap();
     player.character.punch_string_curr = 1;
     //buff first punch damage, need access to EntityData, maybe put it inside player
 }
