@@ -1,9 +1,12 @@
 use sdl2::pixels::Color;
+use sdl2::rect::Point;
 use sdl2::rect::Rect;
 use sdl2::render::Texture;
 use std::cmp::min;
 
 pub struct SegmentedBar<'a> {
+    pub point: Point,
+    pub dimensions: (u32, u32),
     pub rects: Vec<Rect>,
     pub curr_value: i32,
     pub max_value: i32,
@@ -24,7 +27,7 @@ impl<'a> SegmentedBar<'a> {
         color: Option<Color>,
         sprite: Option<&'a Texture<'a>>,
     ) -> Self {
-        //TODO return an error if both color and sprite are is_some or both are is_none
+
         let step = max_value / value_step;
         let step_width = width / (max_value / value_step) as u32;
         let gap = 5;
@@ -38,6 +41,8 @@ impl<'a> SegmentedBar<'a> {
             ));
         }
         Self {
+            point: Point::new(pos_x, pos_y),
+            dimensions: (width, height),
             rects,
             curr_value: value,
             max_value,
@@ -47,7 +52,30 @@ impl<'a> SegmentedBar<'a> {
         }
     }
 
-    pub fn update(&mut self, curr_value: i32) {
+    fn create_rects(
+        &mut self,
+        max_value: i32,
+    ){
+        let step = max_value / self.step;
+        let step_width = self.dimensions.0 / (max_value / self.step) as u32;
+        let gap = 5;
+        let mut rects = Vec::new();
+        for i in 0..step {
+            rects.push(Rect::new(
+                self.point.x + ((gap + step_width) * i as u32) as i32,
+                self.point.y,
+                step_width,
+                self.dimensions.1,
+            ));
+        }
+        self.rects = rects;
+    }
+
+    pub fn update(&mut self, max_value: i32, curr_value: i32) {
+        if self.max_value != max_value {
+            self.max_value = max_value;
+            self.create_rects(self.max_value);
+        }
         self.curr_value = curr_value;
     }
 

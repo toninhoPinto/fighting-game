@@ -304,7 +304,7 @@ impl Scene for MatchScene {
 
                 game.camera.update(LEVEL_WIDTH, &game.player);
 
-                hp_bars.update(game.player.hp.0);
+                hp_bars.update(game.player.character.hp, game.player.hp.0);
                 if game.player.items.len() != item_list.rects.len() {
                     item_list.update(game.player.items.iter()
                         .map(|_| {Rect::new(0,0,32,32)})

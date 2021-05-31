@@ -24,6 +24,21 @@ pub fn add_attack(player: &mut Player, effect: &mut Effect) {
     }
 }
 
+pub fn change_stats(player: &mut Player, effect: &mut Effect){
+    for stat in effect.stat.as_ref().unwrap().iter() {
+        match &stat as &str {
+            "max_hp" => {
+                player.character.hp += effect.change.unwrap();
+                player.hp.0 += effect.change.unwrap();
+            },
+            "mov_speed" => {},
+            "atck_speed" => {},
+            "atck_dmg" => {},
+            _ => {},
+        }
+    }
+}
+
 pub fn apply_remove_all_extra_attacks_on_hurt(player: &mut Player, effect: &mut Effect){
     player.events.on_hurt.push((remove_all_extra_attacks_wrap, effect.clone()));
 }
