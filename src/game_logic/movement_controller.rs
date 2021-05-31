@@ -157,6 +157,7 @@ impl MovementController {
             }
             EntityState::Knocked | EntityState::Dropped => {
                 if self.is_airborne {
+                    println!("play launched");
                     animator
                     .play_once(character_animation.get("launched").unwrap().clone(), 1.0, false);
                 }
@@ -216,10 +217,9 @@ impl MovementController {
         );
 
         let can_air_dash =(self.is_airborne && self.can_air_dash) && self.state != EntityState::Knocked;
+        let got_hurt = new_state == EntityState::Hurt || new_state == EntityState::Knocked || new_state == EntityState::Dropped || new_state == EntityState::Dead;
         
-        
-        if (!self.is_attacking || (self.is_attacking && interrupt_attack) || cancel_attack )  && self.state != EntityState::Dead{
-
+        if (!self.is_attacking || (self.is_attacking && (interrupt_attack || got_hurt)) || cancel_attack )  && self.state != EntityState::Dead {
             match new_state {
                 EntityState::Idle => {
                     if can_idle {
@@ -263,6 +263,7 @@ impl MovementController {
 
     pub fn launch(&mut self, animator: &mut Animator) {
         self.is_airborne = true;
+        self.is_attacking = false;
         self.set_entity_state(EntityState::Knocked, animator);
         self.velocity_y = self.jump_initial_velocity * 0.75f64;
         self.direction_at_jump_time = 0;

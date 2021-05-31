@@ -186,7 +186,7 @@ pub fn enemy_attack_player(player: &mut Player,
     }
 }
 
-pub fn attack(controller: &mut MovementController, animator: &mut Animator, collision_manager: &mut ColliderManager, character_assets: &EntityAnimations, _character_data: &EntityData, attack_animation: String) {
+pub fn attack(controller: &mut MovementController, animator: &mut Animator, collision_manager: &mut ColliderManager, attack_animation: String) {
     if controller.can_attack() {
         controller.is_attacking = true;
         controller.combo_counter += 1;
@@ -194,7 +194,8 @@ pub fn attack(controller: &mut MovementController, animator: &mut Animator, coll
         collision_manager.collisions_detected.clear();
         controller.has_hit = false;
 
-        if let Some(attack_anim) = character_assets.animations.get(&attack_animation) { 
+       
+        if let Some(attack_anim) =  controller.animations.animations.get(&attack_animation) { 
             animator.play_animation(attack_anim.clone(),1.0, false, true, true);
         }
 
@@ -269,21 +270,21 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
     .zip(enemy_manager.movement_controller_components.iter_mut())
     .zip(enemy_manager.positions_components.iter())
     .zip(enemy_manager.character_components.iter())
-    .zip(enemy_manager.animator_components.iter_mut());
+    .zip(enemy_manager.animator_components.iter_mut())
+    .zip(enemy_manager.collider_components.iter_mut());
 
     zip
-    .filter_map(| (((((behaviour, hp), mov), pos), character), animator): 
-    (((((&Option<Behaviour>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>), &mut Option<Animator>)| {
+    .filter_map(| ((((((behaviour, hp), mov), pos), character), animator), col): 
+    ((((((&Option<Behaviour>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>), &mut Option<Animator>), &mut Option<ColliderManager>)| {
         if let Some(hp) = hp {
-            println!("enemy hp {}", hp.0);
             if hp.0 > 0 {
-                return Some((behaviour.as_ref()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?, animator.as_mut()?))
+                return Some((behaviour.as_ref()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?, animator.as_mut()?, col.as_mut()?))
             }
         }
         None
     })
-    .for_each(|(behaviour, mov, pos, char, animator): (&Behaviour, &mut MovementController, &Position, &Character, &mut Animator)| {
-        behaviour(player, pos, mov, animator);
+    .for_each(|(behaviour, mov, pos, char, animator, col): (&Behaviour, &mut MovementController, &Position, &Character, &mut Animator, &mut ColliderManager)| {
+        behaviour(player, pos, mov, animator, col);
     });
 }
 

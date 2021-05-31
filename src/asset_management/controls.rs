@@ -39,7 +39,7 @@ pub fn load_controls() -> HashMap<String, TranslatedInput> {
 
         controls.insert("U".to_string(), TranslatedInput::Punch);
         controls.insert("I".to_string(), TranslatedInput::Kick);
-        controls.insert("J".to_string(), TranslatedInput::Jump);
+        controls.insert("Space".to_string(), TranslatedInput::Jump);
         controls.insert("K".to_string(), TranslatedInput::Block);
 
         controls.insert("W".to_string(), TranslatedInput::Vertical(1));
