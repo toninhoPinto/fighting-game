@@ -1,4 +1,4 @@
-use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::player::Player, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventMap, CharacterEventUpdate}}, movement_controller::MovementController}, scenes::overworld_scene::OverworldScene};
+use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::{Attack, AttackType, player::Player}, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventAttack, CharacterEventMap, CharacterEventUpdate}}, movement_controller::MovementController}, scenes::overworld_scene::OverworldScene};
 
 pub fn apply_add_attack_at_level_start(player: &mut Player, effect: &mut Effect){
     player.events.on_start_level.push((add_attack_wrap, effect.clone()));
@@ -42,21 +42,34 @@ pub fn remove_all_extra_attacks(player: &mut Player, _: &mut Effect) {
 
 pub fn remove_all_extra_punches(player: &mut Player, effect: &mut Effect) {
     let multiplier = (player.character.punch_string_curr - 1) as i32 * effect.change.unwrap();
+    effect.change = Some(multiplier);
     player.character.punch_string_curr = 1;
     //buff first punch damage, need access to EntityData, maybe put it inside player
+    player.events.on_hit.push((buff_punch_damage, effect.clone()));
+}
+
+pub fn buff_punch_damage(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect, attack: &mut Attack){
+    if attack.attack_type == AttackType::Punch {
+        attack.damage *= effect.change.unwrap();
+    }
 }
 
 pub fn apply_lifesteal(player: &mut Player, effect: &mut Effect){
     player.events.on_hit.push((lifesteal, effect.clone()));
 }
 
-pub fn apply_life_on_kill(player: &mut Player, effect: &mut Effect){
-    player.events.on_hit.push((lifesteal, effect.clone()));
-}
-
-pub fn lifesteal(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
+pub fn lifesteal(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect, attack: &mut Attack){
     heal(&mut player.hp, effect.change.unwrap(), &player.character);
 }
+
+pub fn apply_life_on_kill(player: &mut Player, effect: &mut Effect){
+    player.events.on_kill.push((lifesteal_kill, effect.clone()));
+}
+
+pub fn lifesteal_kill(player: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
+    heal(&mut player.hp, effect.change.unwrap(), &player.character);
+}
+
 
 pub fn apply_anti_grav(player: &mut Player, effect: &mut Effect){
     player.events.on_jump.push((anti_grav as CharacterEvent, effect.clone()));
@@ -78,10 +91,10 @@ pub fn anti_grav(player: &mut Player, enemies: &mut EnemyManager, _: i32, _: &mu
 }
 
 pub fn apply_poison_to_enemies(player: &mut Player, effect: &mut Effect){
-    player.events.on_hit.push((apply_poison as CharacterEvent, effect.clone()));
+    player.events.on_hit.push((apply_poison as CharacterEventAttack, effect.clone()));
 }
 
-pub fn apply_poison(_: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect){
+pub fn apply_poison(_: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect: &mut Effect, attack: &mut Attack){
     if let Some(enemy_events) = &mut enemies.events_components[enemy_id as usize] {
         enemy_events.on_update.push((poison as CharacterEventUpdate, effect.clone()));
     }

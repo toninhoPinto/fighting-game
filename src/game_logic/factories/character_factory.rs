@@ -199,7 +199,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 400.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::Kick,
             on_hit: None,
         },
     );
@@ -211,7 +211,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::AirborneKick,
             on_hit: None,
         },
     );
@@ -223,7 +223,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::AirbornePunch,
             on_hit: None,
         },
     );
@@ -235,7 +235,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::AirbornePunch,
             on_hit: None,
         },
     );
@@ -247,7 +247,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 300.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::AirbornePunch,
             on_hit: None,
         },
     );
@@ -259,7 +259,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 50.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::Punch,
             on_hit: None,
         },
     );
@@ -271,7 +271,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 10,
             stun_on_block: 4,
             push_back: 1250.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::Punch,
             on_hit: None,
         },
     );
@@ -283,7 +283,7 @@ fn load_foxgirl_attacks() -> HashMap<String, Attack> {
             stun_on_hit: 20,
             stun_on_block: 14,
             push_back: 550.0,
-            attack_type: AttackType::Normal,
+            attack_type: AttackType::Punch,
             on_hit: None,
         },
     );

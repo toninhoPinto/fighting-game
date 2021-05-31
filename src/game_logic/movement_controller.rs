@@ -157,7 +157,6 @@ impl MovementController {
             }
             EntityState::Knocked | EntityState::Dropped => {
                 if self.is_airborne {
-                    println!("play launched");
                     animator
                     .play_once(character_animation.get("launched").unwrap().clone(), 1.0, false);
                 }

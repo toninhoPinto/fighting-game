@@ -1,4 +1,4 @@
-use crate::{ecs_system::enemy_manager::EnemyManager, game_logic::characters::player::Player, scenes::overworld_scene::OverworldScene};
+use crate::{ecs_system::enemy_manager::EnemyManager, game_logic::characters::{Attack, player::Player}, scenes::overworld_scene::OverworldScene};
 
 use super::Effect;
 
@@ -6,6 +6,7 @@ use super::Effect;
 pub type CharacterEvent = fn(&mut Player, &mut EnemyManager, i32, &mut Effect) -> ();
 pub type CharacterEventUpdate = fn(&mut Player, &mut EnemyManager, i32, &mut Effect, f64,) -> ();
 pub type CharacterEventMap = fn(&mut Player, &mut OverworldScene, &mut Effect) -> ();
+pub type CharacterEventAttack = fn(&mut Player, &mut EnemyManager, i32, &mut Effect, &mut Attack) -> ();
 
 #[derive(Clone)]
 pub struct EventsPubSub {
@@ -16,7 +17,7 @@ pub struct EventsPubSub {
     pub on_death: Vec<(CharacterEvent, Effect)>,
 
     pub on_attack: Vec<(CharacterEvent, Effect)>,
-    pub on_hit: Vec<(CharacterEvent, Effect)>,
+    pub on_hit: Vec<(CharacterEventAttack, Effect)>,
     pub on_kill: Vec<(CharacterEvent, Effect)>,
 
     pub on_jump: Vec<(CharacterEvent, Effect)>,

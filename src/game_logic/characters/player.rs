@@ -240,7 +240,7 @@ impl Player {
                 "light_kick".to_string(),
             );
         }
-        if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true }
+        if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true } else { self.controller.is_blocking = false }
 
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
             self.controller.set_entity_state(EntityState::Dashing, &mut self.animator);

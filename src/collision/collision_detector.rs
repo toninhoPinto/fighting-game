@@ -115,5 +115,5 @@ pub fn did_sucessfully_block(point: Point2<f32>, blocking_pos: Vector2<f64>, blo
     let facing_correct_dir = (point.x > blocking_pos.x as f32 && blocking_controller.facing_dir > 0) || 
     (point.x < blocking_pos.x as f32 && !blocking_controller.facing_dir > 0);
 
-    blocking_controller.is_blocking && facing_correct_dir
+    blocking_controller.is_blocking 
 }

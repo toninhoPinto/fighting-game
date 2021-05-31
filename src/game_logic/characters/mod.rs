@@ -46,12 +46,15 @@ pub struct Character {
     crash       0b1000u32
 */
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum AttackType {
-    Normal,
+    Punch,
+    AirbornePunch,
+    Kick,
+    AirborneKick,
     Special,
-    Ultra,
 }
+#[derive(Clone)]
 pub struct Attack {
     pub damage: i32,
     pub stun_on_hit: i32,
