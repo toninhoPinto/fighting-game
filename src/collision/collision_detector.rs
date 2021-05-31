@@ -54,7 +54,7 @@ pub fn hit_opponent(
     time: f64, 
     general_assets: &CommonAssets, 
     attacker: &MovementController, 
-    receiver: (&mut Health, &mut Position, &mut Animator, &mut MovementController)){
+    receiver: (&mut Health, &mut Vector2<f64>, &mut Animator, &mut MovementController)){
     
     audio_player::play_sound(general_assets.sound_effects.get("hit").unwrap());
     take_damage(receiver.0, attack.damage, receiver.3, receiver.2);                                               
@@ -72,7 +72,7 @@ pub fn opponent_blocked(attack: &Attack,
     time: f64, 
     general_assets: &CommonAssets, 
     attacker: &MovementController, 
-    receiver: (&mut Position, &mut MovementController)){
+    receiver: (&mut Vector2<f64>, &mut MovementController)){
     
     audio_player::play_sound(general_assets.sound_effects.get("block").unwrap());
     let dir_to_push = if attacker.is_airborne {                          

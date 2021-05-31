@@ -80,7 +80,7 @@ fn load_foxgirl_anims() -> HashMap<String, Animation> {
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/idle", "idle");
 
     let take_damage_anim =
-        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/take_damage/1", "take_damage_anim");
+        asset_loader::load_anim_and_data_from_dir("assets/foxgirl/standing/take_damage/1", "take_damage");
 
     let dead_anim=
         asset_loader::load_anim_and_data_from_dir("assets/foxgirl/dead", "dead");

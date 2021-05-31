@@ -275,8 +275,8 @@ impl MovementController {
         self.direction_at_jump_time = 0;
     }
 
-    pub fn knock_back(&mut self, pos: &mut Position, amount: f64, dt: f64) {
-        pos.0 += Vector2::new(amount * dt, 0.0);
+    pub fn knock_back(&mut self, pos: &mut Vector2<f64>, amount: f64, dt: f64) {
+        *pos += Vector2::new(amount * dt, 0.0);
         self.knock_back_distance = amount - (amount * 10.0 * dt);
     }
 

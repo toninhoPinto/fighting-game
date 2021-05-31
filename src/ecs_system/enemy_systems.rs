@@ -70,7 +70,7 @@ pub fn get_enemy_colliders(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller_clone, (hp, pos, animator, mov));
+                &player_controller_clone, (hp, &mut pos.0, animator, mov));
 
             if let Some(on_hit) = attack.on_hit {
                on_hit(attack, colliders, mov, animator);
@@ -83,7 +83,7 @@ pub fn get_enemy_colliders(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller_clone, (pos, mov));
+                &player_controller_clone, (&mut pos.0, mov));
             hit_particles(particles, point, "block", &general_assets);
             *hit_stop = 5;
         }
@@ -103,11 +103,9 @@ pub fn enemy_attack_player(player: &mut Player,
     hit_stop: &mut i32, 
     logic_timestep: f64, 
     general_assets: &CommonAssets, 
-    player_data: &EntityData, 
-    enemies_animations: &HashMap<&str, EntityAnimations>) {
+    player_data: &EntityData) {
     
-    let player_colliders = &player.collision_manager.colliders;
-    let player_controller_clone = player.controller.clone();
+    let player_colliders = &player.collision_manager.colliders.clone();
     let player_pos = player.position;
     let enemies_names = enemy_manager.character_components.iter()
         .map(|char| {if let Some(char) = char { Some(char.name.clone()) } else {None}  })
@@ -159,7 +157,7 @@ pub fn enemy_attack_player(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller_clone, (hp, pos, animator, mov));
+                &mov, (&mut player.hp, &mut player.position, &mut player.animator, &mut player.controller));
 
             if let Some(on_hit) = attack.on_hit {
                on_hit(attack, colliders, mov, animator);
@@ -172,7 +170,7 @@ pub fn enemy_attack_player(player: &mut Player,
                 attack,
                 logic_timestep,
                 &general_assets, 
-                &player_controller_clone, (pos, mov));
+                &mov, (&mut player.position, &mut player.controller));
             hit_particles(particles, point, "block", &general_assets);
             *hit_stop = 5;
         }
