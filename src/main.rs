@@ -32,6 +32,9 @@ use crate::input::controller_handler::Controller;
 
 
 //TODO features tomorrow
+//make enemies not attack so much, probably need to change the Behaviour component from a function to an actual component to hold timers and states
+// remove different damages by attack, separate between: punches, kicks, directional attacks
+
 //implement more item effects
 
 //add to game_state_data
@@ -47,8 +50,6 @@ use crate::input::controller_handler::Controller;
 
     // make a store Scene
     // make an event UI window appear on top
-
-
 
 //separate json for animation offsets and animation states (startup, active, recovery)
 //Improve AI

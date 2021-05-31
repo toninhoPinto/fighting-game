@@ -261,9 +261,9 @@ pub fn update_events(enemy_manager: &mut EnemyManager, player: &mut Player, dt: 
     });
 }
 
-pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut Player) {
+pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut Player, dt: f64) {
     let zip = enemy_manager.
-    behaviour_components.iter()
+    behaviour_components.iter_mut()
     .zip(enemy_manager.health_components.iter())
     .zip(enemy_manager.movement_controller_components.iter_mut())
     .zip(enemy_manager.positions_components.iter())
@@ -273,16 +273,16 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
 
     zip
     .filter_map(| ((((((behaviour, hp), mov), pos), character), animator), col): 
-    ((((((&Option<Behaviour>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>), &mut Option<Animator>), &mut Option<ColliderManager>)| {
+    ((((((&mut Option<Box<dyn Behaviour>>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>), &mut Option<Animator>), &mut Option<ColliderManager>)| {
         if let Some(hp) = hp {
             if hp.0 > 0 {
-                return Some((behaviour.as_ref()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?, animator.as_mut()?, col.as_mut()?))
+                return Some((behaviour.as_mut()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?, animator.as_mut()?, col.as_mut()?))
             }
         }
         None
     })
-    .for_each(|(behaviour, mov, pos, char, animator, col): (&Behaviour, &mut MovementController, &Position, &Character, &mut Animator, &mut ColliderManager)| {
-        behaviour(player, pos, mov, animator, col);
+    .for_each(|(behaviour, mov, pos, char, animator, col): (&mut Box<dyn Behaviour>, &mut MovementController, &Position, &Character, &mut Animator, &mut ColliderManager)| {
+        behaviour.act(player, pos, mov, animator, col, dt);
     });
 }
 

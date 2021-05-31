@@ -258,7 +258,7 @@ impl Scene for MatchScene {
                 });
                    
                 update_animations_enemies(&mut game.enemies);
-                update_behaviour_enemies(&mut game.enemies, &mut game.player);
+                update_behaviour_enemies(&mut game.enemies, &mut game.player, logic_timestep);
                 update_movement_enemies(&mut game.enemies, &game.camera, logic_timestep);
                 update_events(&mut game.enemies, &mut game.player, logic_timestep);
                 update_colliders_enemies(&mut game.enemies, &enemy_assets);

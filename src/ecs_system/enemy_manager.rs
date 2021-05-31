@@ -3,7 +3,7 @@ use std::rc::Rc;
 use parry2d::na::Vector2;
 use sdl2::rect::Rect;
 
-use crate::{asset_management::asset_holders::EntityAnimations, collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::walk_to_player, engine_types::{animation::Animation, animator::Animator}, game_logic::{characters::Character, effects::events_pub_sub::EventsPubSub, factories::enemy_factory::load_enemy, movement_controller::MovementController}};
+use crate::{asset_management::asset_holders::EntityAnimations, collision::collider_manager::ColliderManager, enemy_behaviour::simple_enemy_behaviour::BasicEnemy, engine_types::{animation::Animation, animator::Animator}, game_logic::{characters::Character, effects::events_pub_sub::EventsPubSub, factories::enemy_factory::load_enemy, movement_controller::MovementController}};
 
 use super::enemy_components::{Behaviour, Health, Position, Renderable};
 
@@ -13,7 +13,7 @@ pub struct EnemyManager {
     pub health_components: Vec<Option<Health>>,
     pub positions_components: Vec<Option<Position>>,
     pub character_components: Vec<Option<Character>>,
-    pub behaviour_components: Vec<Option<Behaviour>>,
+    pub behaviour_components: Vec<Option<Box<dyn Behaviour>>>,
     pub animator_components: Vec<Option<Animator>>,
     pub movement_controller_components: Vec<Option<MovementController>>,
     pub collider_components: Vec<Option<ColliderManager>>,
@@ -38,7 +38,7 @@ impl EnemyManager {
 
     fn new_entity(&mut self, 
         health: Option<Health>, 
-        behaviour: Option<Behaviour>, 
+        behaviour: Option<Box<dyn Behaviour>>, 
         player_pos: Vector2<f64>, 
         pos: Option<Position>, 
         character: Option<Character>, 
@@ -86,7 +86,7 @@ impl EnemyManager {
 
         self.new_entity(
             Some(Health(ryu.hp)),
-            Some(walk_to_player as Behaviour),
+            Some(Box::new(BasicEnemy::new())),
             player_pos,
             Some(Position(player_pos + Vector2::new(500f64, 0f64))),
             Some(ryu),
