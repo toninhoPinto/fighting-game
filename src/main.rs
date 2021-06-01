@@ -32,12 +32,6 @@ use crate::input::controller_handler::Controller;
 
 
 //TODO features tomorrow
-
-//screen shake
-    //duration .2 seconds
-    // 60Hertz frequency
-    // 6 pixels of amplitude
-
 //add sound_effects
     //places that need sound_effects
     //when player misses punches (very light sound)
