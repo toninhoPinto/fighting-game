@@ -16,7 +16,8 @@ pub fn get_enemy_colliders(player: &mut Player,
     hit_stop: &mut i32, 
     logic_timestep: f64, 
     general_assets: &CommonAssets, 
-    player_data: &EntityData) {
+    player_data: &EntityData,
+    camera: &mut Camera) {
     
     let player_collisions = &mut player.collision_manager.collisions_detected; 
     let player_colliders = &player.collision_manager.colliders;
@@ -84,6 +85,9 @@ pub fn get_enemy_colliders(player: &mut Player,
             }
         }).collect::<Vec<HitResult>>();
 
+    
+    
+    
     calculate_hits.iter_mut().for_each(|hit_result: &mut HitResult| {
         match hit_result {
             HitResult::Hit(i, attack) => {
@@ -118,6 +122,7 @@ pub fn get_enemy_colliders(player: &mut Player,
                     on_hit(&attack, colliders, enemy.3, enemy.2);
                 }
 
+                camera.shake();
                 *hit_stop = 10;
             }
             HitResult::Block => {
@@ -238,7 +243,6 @@ pub fn attack(controller: &mut MovementController, animator: &mut Animator, coll
         }
     }
 }
-
 
 pub fn take_damage(hp: &mut Health, damage: i32, mov: &mut MovementController, animator: &mut Animator) {
     if hp.0 > 0 {

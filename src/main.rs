@@ -32,6 +32,29 @@ use crate::input::controller_handler::Controller;
 
 
 //TODO features tomorrow
+
+//screen shake
+    //duration .2 seconds
+    // 60Hertz frequency
+    // 6 pixels of amplitude
+
+//add sound_effects
+    //places that need sound_effects
+    //when player misses punches (very light sound)
+    //when enemy hits the ground when dropped
+    //when player hits the ground when Landing
+    //when player hits the ground when crashing
+    //when selecting a new level
+    //when looping through possible levels
+
+    //add variation to sounds through pitch changing
+
+
+
+//Add to game state data the seed AND the rng object_type
+//make multiple rng objects, one for map generation
+//one for effects
+//improve overworld map generation ->  changing the connection level shouldnt re-generate everything
 //implement more item effects
 
 //add to game_state_data

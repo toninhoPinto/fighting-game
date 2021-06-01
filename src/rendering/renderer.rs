@@ -21,7 +21,7 @@ pub fn pos_world_to_screen(position: Point, screen_size: (u32, u32), camera: Opt
     //and make Y = 0 as the bottom of the screen
     inverted_pos.y = -inverted_pos.y + height as i32;
     if let Some(camera) = camera {
-        inverted_pos.x -= camera.rect.x();
+        inverted_pos.x -= camera.get_camera().x();
     }
      //make camera as its own little space coordinates
 
@@ -69,7 +69,7 @@ pub fn render(
     canvas
         .copy(
             stage.0,
-            game.camera.rect,
+            game.camera.get_camera(),
             Rect::new(0, 0, game.camera.rect.width(), game.camera.rect.height()),
         )
         .unwrap();

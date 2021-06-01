@@ -236,6 +236,12 @@ impl Scene for MatchScene {
                     None => { game.player.character_width },
                 };
 
+                let mut player_update_events = game.player.events.on_update.clone();
+                for event in player_update_events.iter_mut() {
+                    event.0(&mut game.player, &mut game.enemies, -1, &mut event.1, logic_timestep);
+                }
+                game.player.events.on_update = player_update_events;
+
                 game.player.animator.update();
                 game.player.state_update(&p1_assets.texture_data);
                 game.player.update(
@@ -289,7 +295,8 @@ impl Scene for MatchScene {
                     &mut hit_stop, 
                     logic_timestep, 
                     &general_assets, 
-                    &p1_data);
+                    &p1_data, 
+                &mut game.camera);
 
                 enemy_attack_player( &mut game.player, 
                     &mut game.enemies, 
@@ -302,7 +309,7 @@ impl Scene for MatchScene {
                 game.fx(&general_assets);
                 game.update_vfx(&general_assets);
 
-                game.camera.update(LEVEL_WIDTH, &game.player);
+                game.camera.update(LEVEL_WIDTH, &game.player, logic_timestep);
 
                 hp_bars.update(game.player.character.hp, game.player.hp.0);
                 if game.player.items.len() != item_list.rects.len() {

@@ -1,3 +1,5 @@
+use rand::{Rng, SeedableRng, prelude::SmallRng};
+
 use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::{Attack, AttackType, player::Player}, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventAttack, CharacterEventMap, CharacterEventUpdate}}, movement_controller::MovementController}, scenes::overworld_scene::OverworldScene};
 
 pub fn apply_add_attack_at_level_start(player: &mut Player, effect: &mut Effect){
@@ -20,6 +22,22 @@ pub fn add_attack(player: &mut Player, effect: &mut Effect) {
         "crash" => {player.character.directional_attacks_mask_curr      |=  0b1000u32;},
         "doublejump" => {player.controller.can_double_jump = true;}
         "airdash" => {player.controller.can_air_dash = true;}
+        _ => {},
+    }
+}
+
+pub fn remove_attack(player: &mut Player, effect: &mut Effect) {
+    match &effect.add_attack.as_ref().unwrap() as &str {
+        "punch" => {player.character.punch_string_curr-=1;},
+        "kick" => {player.character.kick_string_curr-=1;},
+        "airborne punch" => {player.character.airborne_punch_string_curr-=1;},
+        "airborne kick" => {player.character.airborne_kick_string_curr-=1;},
+        "launcher" => {player.character.directional_attacks_mask_curr   ^=  0b0001u32;},
+        "dropper" => {player.character.directional_attacks_mask_curr    ^=  0b0010u32;}, 
+        "dashing" => {player.character.directional_attacks_mask_curr    ^=  0b0100u32;},
+        "crash" => {player.character.directional_attacks_mask_curr      ^=  0b1000u32;},
+        "doublejump" => {player.controller.can_double_jump = false;}
+        "airdash" => {player.controller.can_air_dash = false;}
         _ => {},
     }
 }
@@ -122,11 +140,50 @@ pub fn poison(_: &mut Player, enemies: &mut EnemyManager, enemy_id: i32, effect:
     {
         effect.time_elapsed += (dt * 1000f64) as i32;
         if let Some(time_threshold) = effect.apply_at_every {
-            if effect.time_elapsed % time_threshold == 0 {
+            if effect.time_elapsed > time_threshold {
                 take_damage_light(hp, effect.change.unwrap(), mov);
+                effect.time_elapsed = 0;
             }
         }
         
+    }
+}
+
+pub fn apply_once_in_awhile_forget_or_remenber_attacks(player: &mut Player, effect: &mut Effect) {
+    player.events.on_update.push((once_in_awhile_forget_or_remenber_attacks as CharacterEventUpdate, effect.clone()));
+}
+
+pub fn once_in_awhile_forget_or_remenber_attacks(player: &mut Player, _: &mut EnemyManager, _: i32, effect: &mut Effect, dt: f64){
+    effect.time_elapsed += (dt * 1000f64) as i32;
+    if let Some(time_threshold) = effect.apply_at_every {
+        if effect.time_elapsed > time_threshold {
+            let mut rng = SmallRng::seed_from_u64(96873523456);
+            let random_n = rng.gen::<f64>();
+            let random_attack = rng.gen::<f64>() * 9f64;
+            let possible_attacks= ["punch", "kick", "airborne punch", "airborne kick", "launcher", "dropper", "dashing", "crash", "doublejump", "airdash"];
+            
+            let mut effect = Effect {
+                //handler for function
+                effect_id: -1,
+            
+                //for overtime effects
+                duration: None,
+                time_elapsed: 0,
+                apply_at_every: None,
+                change: None,
+                stat:  None,
+            
+                //for adding new animations
+                add_attack: Some(possible_attacks[random_attack as usize].to_string()),
+            };
+            println!("attack {}", random_attack);
+            if random_n > 0.5 {
+                add_attack(player, &mut effect);
+            } else {
+                remove_attack(player, &mut effect);
+            }
+            effect.time_elapsed = 0;
+        }
     }
 }
 
