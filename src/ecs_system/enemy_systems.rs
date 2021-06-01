@@ -132,8 +132,6 @@ pub fn get_enemy_colliders(player: &mut Player,
         }
         
     });
-    
-
 
 }
 

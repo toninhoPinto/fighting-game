@@ -25,7 +25,7 @@ mod overworld;
 
 mod debug_console;
 
-use asset_management::{asset_holders::{EntityAnimations, ItemAssets}, sound::{init_sound, music_player}};
+use asset_management::{asset_holders::{EntityAnimations, ItemAssets}, common_assets::CommonAssets, sound::{init_sound, music_player}};
 
 use crate::{asset_management::controls, game_logic::factories::item_factory::load_item_assets, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
@@ -38,8 +38,6 @@ use crate::input::controller_handler::Controller;
     //when enemy hits the ground when dropped
     //when player hits the ground when Landing
     //when player hits the ground when crashing
-    //when selecting a new level
-    //when looping through possible levels
 
     //add variation to sounds through pitch changing
 
@@ -101,6 +99,7 @@ pub struct GameStateData<'a> {
     font: Font<'a, 'a>,
     enemy_animations: HashMap<String, Rc<EntityAnimations>>,
     //loot_tables; HashMap<>
+    general_assets: CommonAssets<'a>,
 }
 
 pub enum Transition {
@@ -161,6 +160,7 @@ fn main() -> Result<(), String> {
         player: None,
         enemy_animations: HashMap::new(),
         font: console_font,
+        general_assets: CommonAssets::load(&texture_creator),
     };
     
     let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();

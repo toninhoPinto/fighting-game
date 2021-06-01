@@ -67,8 +67,6 @@ impl Scene for MatchScene {
             command: "".to_string(),
         };
 
-        let mut general_assets = CommonAssets::load(&texture_creator);
-
         let (p1_assets, p1_data) = load_character_anim_data(texture_creator, &self.character);
 
         let mut enemy_assets = HashMap::new();
@@ -294,7 +292,7 @@ impl Scene for MatchScene {
                     &mut game.hit_vfx, 
                     &mut hit_stop, 
                     logic_timestep, 
-                    &general_assets, 
+                    &game_state_data.general_assets, 
                     &p1_data, 
                 &mut game.camera);
 
@@ -303,11 +301,11 @@ impl Scene for MatchScene {
                     &mut game.hit_vfx, 
                     &mut hit_stop, 
                     logic_timestep, 
-                    &general_assets, 
+                    &game_state_data.general_assets, 
                     &p1_data);
 
-                game.fx(&general_assets);
-                game.update_vfx(&general_assets);
+                game.fx(&game_state_data.general_assets);
+                game.update_vfx(&game_state_data.general_assets);
 
                 game.camera.update(LEVEL_WIDTH, &game.player, logic_timestep);
 
@@ -331,7 +329,7 @@ impl Scene for MatchScene {
                     &mut game,
                     &p1_assets,
                     &enemy_assets,
-                    &mut general_assets,
+                    &mut game_state_data.general_assets,
                     &game_state_data.item_sprites,
                     &item_list,
                     &hp_bars,

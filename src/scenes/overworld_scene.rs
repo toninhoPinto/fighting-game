@@ -1,6 +1,6 @@
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
+use crate::{GameStateData, Transition, asset_management::sound::audio_player::play_sound, engine_traits::scene::Scene, game_logic::factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
 
 use super::match_scene::MatchScene;
 
@@ -123,9 +123,15 @@ impl<'a> Scene for OverworldScene {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
                     if is_pressed {
                         if translated_input == TranslatedInput::Vertical(1) {
+
                             let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
+                            let old_connect_to = self.connect_to_index;
                             self.connect_to_index =  (1 + self.connect_to_index) % connecting_to.len();
 
+                            if old_connect_to != self.connect_to_index {
+                                play_sound(game_state_data.general_assets.sound_effects.get("scroll_level").unwrap());
+                            }
+                            
                             self.next_node = connecting_to
                                 .iter()
                                 .map(|&a| {a})
@@ -134,6 +140,7 @@ impl<'a> Scene for OverworldScene {
                     }
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {
+                            play_sound(game_state_data.general_assets.sound_effects.get("select_level").unwrap());
                             if let WorldNodeType::Level(_) = self.nodes[self.next_node].node_type {
                                 self.player_node_pos = self.next_node;
                                 return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string())));
