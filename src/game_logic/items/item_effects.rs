@@ -87,6 +87,14 @@ pub fn buff_punch_damage(player: &mut Player, enemies: &mut EnemyManager, enemy_
     }
 }
 
+pub fn heal_on_active(player: &mut Player, effect: &mut Effect){
+    player.active_item = Some((heal_player, effect.clone()));
+}
+
+pub fn heal_player(player: &mut Player, effect: &mut Effect){
+    heal(&mut player.hp, effect.change.unwrap(), &player.character);
+}
+
 pub fn apply_lifesteal(player: &mut Player, effect: &mut Effect){
     player.events.on_hit.push((lifesteal, effect.clone()));
 }

@@ -1,25 +1,20 @@
-use parry2d::na::Vector2;
 use sdl2::{rect::Rect};
 use std::{collections::HashMap, rc::Rc, time::Instant};
 
 use sdl2::{
     event::Event,
     keyboard::Keycode,
-    pixels::Color,
-    rect::Point,
     render::{Canvas, TextureCreator},
     video::{Window, WindowContext},
     EventPump,
 };
 
-use crate::{Transition, debug_console::console::Console, ecs_system::enemy_systems::{enemy_attack_player, get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::{load_enemy_ryu_animations, load_enemy_ryu_assets}, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::ItemGround}, input::input_devices::InputDevices};
+use crate::{Transition, debug_console::console::Console, ecs_system::enemy_systems::{enemy_attack_player, get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
 use crate::{
-    asset_management::common_assets::CommonAssets,
     collision::collision_detector::detect_hit,
     engine_traits::scene::Scene,
     input::{self},
     rendering::{self, camera::Camera},
-    ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
     GameStateData,
 };
 

@@ -6,6 +6,7 @@ use std::rc::Rc;
 use std::{collections::{HashMap, VecDeque}, fmt};
 
 use crate::asset_management::common_assets::CommonAssets;
+use crate::game_logic::effects::events_pub_sub::CharacterEventActive;
 use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{effects::{Effect, ItemEffects, events_pub_sub::{CharacterEvent, EventsPubSub}}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::Character;
@@ -47,7 +48,7 @@ pub struct Player {
 
     pub events: EventsPubSub,
     pub items: Vec<String>,
-    pub active_item: Option<(CharacterEvent, Effect)>
+    pub active_item: Option<(CharacterEventActive, Effect)>
 }
 
 impl Player {
@@ -75,20 +76,11 @@ impl Player {
     }
 
     pub fn equip_item(&mut self, item: &mut Item, hash_effects: &HashMap<i32, ItemEffects>){
-
-        //check type of item
-            //if active, replace with active item
-            //if combat, apply effect function
-            //if passive, apply effect function
-        if item.item_type != ItemType::ActivePart {
-            self.items.push(item.asset_id.clone());
-            for effect in item.effects.iter_mut() {
-                if let Some(apply_effect) = hash_effects.get(&effect.effect_id) {
-                    apply_effect(self, effect);
-                }
+        self.items.push(item.asset_id.clone());
+        for effect in item.effects.iter_mut() {
+            if let Some(apply_effect) = hash_effects.get(&effect.effect_id) {
+                apply_effect(self, effect);
             }
-        } else {
-            
         }
     }
 
@@ -225,22 +217,37 @@ impl Player {
         if inputs_for_current_frame & GameAction::Jump as i32 > 0 {
             self.jump();
         }
-        if inputs_for_current_frame & GameAction::Punch as i32 > 0 {
-            self.check_attack_inputs(
-                character_data,
-                action_history,
-                GameAction::Punch,
-                "light_punch".to_string(),
-            );
+
+        let n_prev_actions = action_history.len();
+        let punch_kick_not_pressed = n_prev_actions == 0 || (n_prev_actions > 0 && action_history[n_prev_actions-1] & GameAction::Punch as i32 == 0 && action_history[n_prev_actions-1] & GameAction::Kick as i32 == 0);
+        let punch_kick_simultaneously = inputs_for_current_frame & GameAction::Punch as i32 > 0 && inputs_for_current_frame & GameAction::Kick as i32 > 0;
+        if punch_kick_simultaneously && punch_kick_not_pressed{
+            if let Some(active_item) = &mut self.active_item {
+                let mut item = active_item.clone();
+                item.0(self, &mut item.1);
+                if self.active_item.is_some() {
+                    self.active_item = Some(item);
+                }
+            }
+        } else {
+            if inputs_for_current_frame & GameAction::Punch as i32 > 0 {
+                self.check_attack_inputs(
+                    character_data,
+                    action_history,
+                    GameAction::Punch,
+                    "light_punch".to_string(),
+                );
+            }
+            if inputs_for_current_frame & GameAction::Kick as i32 > 0 {
+                self.check_attack_inputs(
+                    character_data,
+                    action_history,
+                    GameAction::Kick,
+                    "light_kick".to_string(),
+                );
+            }
         }
-        if inputs_for_current_frame & GameAction::Kick as i32 > 0 {
-            self.check_attack_inputs(
-                character_data,
-                action_history,
-                GameAction::Kick,
-                "light_kick".to_string(),
-            );
-        }
+       
         if inputs_for_current_frame & GameAction::Block as i32 > 0 { self.controller.is_blocking = true } else { self.controller.is_blocking = false }
 
         if inputs_for_current_frame & GameAction::Dash as i32 > 0 {
