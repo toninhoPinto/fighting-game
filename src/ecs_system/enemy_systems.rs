@@ -351,7 +351,7 @@ pub fn update_colliders_enemies(enemy_manager: &mut EnemyManager, enemy_assets: 
         });
 }
 
-pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, camera: &Camera, dt: f64) {
+pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, camera: &Camera, dt: f64, general_assets: &CommonAssets) {
     let zip = enemy_manager
     .positions_components.iter_mut()
     .zip(enemy_manager.animator_components.iter_mut())
@@ -373,7 +373,8 @@ pub fn update_movement_enemies(enemy_manager: &mut EnemyManager, camera: &Camera
             animator,
             camera,
             dt,
-            100, //TODO fix this
+            100, //TODO fix this,
+            general_assets
         );
 
         renderable.flipped = mov.facing_dir > 0;

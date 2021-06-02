@@ -2,9 +2,9 @@ use std::rc::Rc;
 
 use parry2d::na::Vector2;
 
-use crate::{asset_management::asset_holders::EntityAnimations, ecs_system::enemy_components::Position, engine_types::animator::Animator, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::EntityAnimations, common_assets::CommonAssets, sound::audio_player}, engine_types::animator::Animator, rendering::camera::Camera};
 
-use super::characters::{Attack, Character, player::EntityState};
+use super::characters::{Character, player::EntityState};
 
 use crate::utils::math_sign::Sign;
 
@@ -252,7 +252,7 @@ impl MovementController {
     }
 
     pub fn jump(&mut self, animator: &mut Animator) {
-        if !self.is_airborne || (self.is_airborne && self.can_double_jump && !self.is_double_jumping && self.is_falling) {
+        if !self.is_airborne || (self.is_airborne && self.can_double_jump && !self.is_double_jumping) {
             if self.is_airborne && self.can_double_jump {
                 self.is_double_jumping = true;
             }
@@ -341,6 +341,7 @@ impl MovementController {
         camera: &Camera,
         dt: f64,
         character_width: i32,
+        common_assets: &CommonAssets,
     ) {
         if self.state == EntityState::Jump {
             if !self.is_airborne {
@@ -351,6 +352,9 @@ impl MovementController {
         }
    
         if self.state == EntityState::Jumping {
+            if !self.is_airborne || (self.is_airborne && self.is_double_jumping && animator.is_starting) {
+                audio_player::play_sound(common_assets.sound_effects.get("jump").unwrap());
+            }
             self.is_airborne = true;
         }
     
@@ -372,6 +376,8 @@ impl MovementController {
             let ground = self.ground_height;
             let should_land = position.y < ground as f64;
     
+            let is_going_up = self.velocity_y > 0f64;
+
             if !should_land {
                 let position_offset_x = self.direction_at_jump_time as f64
                     * character.jump_distance
@@ -379,14 +385,17 @@ impl MovementController {
     
                 if self.should_pause_gravity() {
                     self.velocity_y += gravity * dt;
-                    self.is_falling = self.velocity_y <= 0f64;
                     let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
 
                     *position += Vector2::new(position_offset_x, position_offset_y);
                 } else {
                     self.velocity_y = 0.0;
                 }
-                
+            }
+            self.is_falling = self.velocity_y <= 0f64;
+
+            if is_going_up && self.is_falling && self.is_double_jumping {
+                //TOP OF JUMP
             }
     
             //reset position back to ground height
@@ -397,12 +406,15 @@ impl MovementController {
                     self.set_entity_state(EntityState::Landing, animator);
                     self.is_attacking = false;
                     self.combo_counter = 0;
+                    audio_player::play_sound(common_assets.sound_effects.get("land").unwrap());
                 }
                 if self.state == EntityState::Knocked {
                     self.set_entity_state(EntityState::KnockedLanding, animator);
+                    audio_player::play_sound(common_assets.sound_effects.get("dropped").unwrap());
                 }
                 if self.state == EntityState::Dropped {
                     self.set_entity_state(EntityState::DroppedLanding, animator);
+                    audio_player::play_sound(common_assets.sound_effects.get("dropped").unwrap());
                 }
                 self.is_double_jumping = false;
                 self.is_airborne = false;

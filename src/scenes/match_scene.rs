@@ -246,6 +246,7 @@ impl Scene for MatchScene {
                     &game.camera,
                     logic_timestep,
                     game.player.character_width as i32,
+                    &game_state_data.general_assets
                 );
                 game.player.state_update(&p1_assets.texture_data);
                
@@ -263,7 +264,7 @@ impl Scene for MatchScene {
                    
                 update_animations_enemies(&mut game.enemies);
                 update_behaviour_enemies(&mut game.enemies, &mut game.player, logic_timestep);
-                update_movement_enemies(&mut game.enemies, &game.camera, logic_timestep);
+                update_movement_enemies(&mut game.enemies, &game.camera, logic_timestep, &game_state_data.general_assets);
                 update_events(&mut game.enemies, &mut game.player, logic_timestep);
                 update_colliders_enemies(&mut game.enemies, &enemy_assets);
 

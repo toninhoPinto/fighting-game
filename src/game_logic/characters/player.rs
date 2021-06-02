@@ -5,6 +5,7 @@ use sdl2::render::Texture;
 use std::rc::Rc;
 use std::{collections::{HashMap, VecDeque}, fmt};
 
+use crate::asset_management::common_assets::CommonAssets;
 use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{effects::{Effect, ItemEffects, events_pub_sub::{CharacterEvent, EventsPubSub}}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::Character;
@@ -354,8 +355,9 @@ impl Player {
         camera: &Camera,
         dt: f64,
         character_width: i32,
+        general_assets: &CommonAssets
     ) {
-       self.controller.update(&mut self.position, &self.character, &mut self.animator, camera, dt, character_width);
+       self.controller.update(&mut self.position, &self.character, &mut self.animator, camera, dt, character_width, general_assets);
     }
 
     pub fn state_update(&mut self, sprite_data: &HashMap<String, SpriteData>) {

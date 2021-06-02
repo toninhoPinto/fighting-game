@@ -47,11 +47,15 @@ impl<'a> CommonAssets<'a> {
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
 
+        let mut jump_sound = audio_player::load_from_file(Path::new("assets/sounds/509410__jburunet__jumping-hop-sound.wav"))
+            .map_err(|e| format!("Cannot load sound file: {:?}", e))
+            .unwrap();
+
         let mut land_sound = audio_player::load_from_file(Path::new("assets/sounds/553520__newlocknew__pop-down-impact-1-3-select-4lrs-mltprcssng.wav"))
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
 
-        let mut dropped_sound = audio_player::load_from_file(Path::new("assets/sounds/553520__newlocknew__pop-down-impact-1-3-select-4lrs-mltprcssng.wav"))
+        let mut dropped_sound = audio_player::load_from_file(Path::new("assets/sounds/553521__newlocknew__pop-down-impact-1-2-without-attack-4lrs-mltprcssng.wav"))
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
  
@@ -60,7 +64,8 @@ impl<'a> CommonAssets<'a> {
         block_sound.set_volume(SFX_VOLUME);
         select_level_sound.set_volume(SFX_VOLUME * 10);
         scroll_levels_sound.set_volume(SFX_VOLUME);
-        land_sound.set_volume(SFX_VOLUME);
+        jump_sound.set_volume(100);
+        land_sound.set_volume(50);
         dropped_sound.set_volume(SFX_VOLUME);
         
         let mut sounds = HashMap::new();
@@ -69,6 +74,7 @@ impl<'a> CommonAssets<'a> {
         sounds.insert("block".to_string(), block_sound);
         sounds.insert("select_level".to_string(), select_level_sound);
         sounds.insert("scroll_level".to_string(), scroll_levels_sound);
+        sounds.insert("jump".to_string(), jump_sound);
         sounds.insert("land".to_string(), land_sound);
         sounds.insert("dropped".to_string(), dropped_sound);
 
