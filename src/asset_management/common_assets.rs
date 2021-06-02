@@ -55,7 +55,7 @@ impl<'a> CommonAssets<'a> {
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
 
-        let mut dropped_sound = audio_player::load_from_file(Path::new("assets/sounds/553521__newlocknew__pop-down-impact-1-2-without-attack-4lrs-mltprcssng.wav"))
+        let mut dropped_sound = audio_player::load_from_file(Path::new("assets/sounds/377157__pfranzen__smashing-head-on-wall.wav"))
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
  
@@ -66,7 +66,7 @@ impl<'a> CommonAssets<'a> {
         scroll_levels_sound.set_volume(SFX_VOLUME);
         jump_sound.set_volume(100);
         land_sound.set_volume(50);
-        dropped_sound.set_volume(SFX_VOLUME);
+        dropped_sound.set_volume(100);
         
         let mut sounds = HashMap::new();
         sounds.insert("hit".to_string(), hit_sound);

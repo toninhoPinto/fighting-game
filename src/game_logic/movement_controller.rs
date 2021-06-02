@@ -410,7 +410,7 @@ impl MovementController {
                 }
                 if self.state == EntityState::Knocked {
                     self.set_entity_state(EntityState::KnockedLanding, animator);
-                    audio_player::play_sound(common_assets.sound_effects.get("dropped").unwrap());
+                    audio_player::play_sound(common_assets.sound_effects.get("land").unwrap());
                 }
                 if self.state == EntityState::Dropped {
                     self.set_entity_state(EntityState::DroppedLanding, animator);

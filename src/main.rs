@@ -33,15 +33,9 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 //add sound_effects
-    //places that need sound_effects
     //when player misses punches (very light sound)
-    //when enemy hits the ground when dropped
-    //when player hits the ground when Landing
-    //when player hits the ground when crashing
 
     //add variation to sounds through pitch changing
-
-
 
 //Add to game state data the seed AND the rng object_type
 //make multiple rng objects, one for map generation
