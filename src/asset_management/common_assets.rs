@@ -29,7 +29,7 @@ impl<'a> CommonAssets<'a> {
             audio_player::load_from_file(Path::new("assets/sounds/104183__ekokubza123__punch.wav"))
                 .map_err(|e| format!("Cannot load sound file: {:?}", e))
                 .unwrap();
-        let mut miss_sound =
+        let mut dash_sound =
             audio_player::load_from_file(Path::new("assets/sounds/60009__qubodup__swosh-22.wav"))
                 .map_err(|e| format!("Cannot load sound file: {:?}", e))
                 .unwrap();
@@ -59,24 +59,30 @@ impl<'a> CommonAssets<'a> {
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
  
+        let mut miss_sound = audio_player::load_from_file(Path::new("assets/sounds/521999__kastenfrosch__whoosh-dash.wav"))
+            .map_err(|e| format!("Cannot load sound file: {:?}", e))
+            .unwrap();
+            
         hit_sound.set_volume(SFX_VOLUME);
-        miss_sound.set_volume(SFX_VOLUME * 2);
+        dash_sound.set_volume(SFX_VOLUME * 2);
         block_sound.set_volume(SFX_VOLUME);
         select_level_sound.set_volume(SFX_VOLUME * 10);
         scroll_levels_sound.set_volume(SFX_VOLUME);
-        jump_sound.set_volume(100);
+        jump_sound.set_volume(10);
         land_sound.set_volume(50);
         dropped_sound.set_volume(100);
+        miss_sound.set_volume(10);
         
         let mut sounds = HashMap::new();
         sounds.insert("hit".to_string(), hit_sound);
-        sounds.insert("miss".to_string(), miss_sound);
+        sounds.insert("dash".to_string(), dash_sound);
         sounds.insert("block".to_string(), block_sound);
         sounds.insert("select_level".to_string(), select_level_sound);
         sounds.insert("scroll_level".to_string(), scroll_levels_sound);
         sounds.insert("jump".to_string(), jump_sound);
         sounds.insert("land".to_string(), land_sound);
         sounds.insert("dropped".to_string(), dropped_sound);
+        sounds.insert("miss".to_string(), miss_sound);
 
         let (textures, _) = asset_loader::load_textures_for_character(&texture_creator, "assets/vfx");
 

@@ -435,6 +435,9 @@ impl MovementController {
             match &animator.current_animation.as_ref().unwrap().offsets {
                 Some(offsets) => {
                     let offset = offsets[animator.sprite_shown as usize];
+                    if self.state == EntityState::Dashing && offset.x > 0f64 && animator.sprite_shown > 0 && offsets[animator.sprite_shown as usize - 1].x == 0f64  {
+                        audio_player::play_sound(common_assets.sound_effects.get("miss").unwrap());
+                    }
                     *position += Vector2::new( self.facing_dir as f64 * offset.x, offset.y) * dt
                 }
                 None => { }

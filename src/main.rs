@@ -34,7 +34,6 @@ use crate::input::controller_handler::Controller;
 //TODO features tomorrow
 //add sound_effects
     //when player misses punches (very light sound)
-
     //add variation to sounds through pitch changing
 
 //Add to game state data the seed AND the rng object_type
