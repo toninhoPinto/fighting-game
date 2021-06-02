@@ -56,9 +56,9 @@ impl<'a> CommonAssets<'a> {
             .unwrap();
  
         hit_sound.set_volume(SFX_VOLUME);
-        miss_sound.set_volume(SFX_VOLUME);
+        miss_sound.set_volume(SFX_VOLUME * 2);
         block_sound.set_volume(SFX_VOLUME);
-        select_level_sound.set_volume(100);
+        select_level_sound.set_volume(SFX_VOLUME * 10);
         scroll_levels_sound.set_volume(SFX_VOLUME);
         land_sound.set_volume(SFX_VOLUME);
         dropped_sound.set_volume(SFX_VOLUME);
