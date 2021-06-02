@@ -16,6 +16,10 @@ pub fn play_sound(sound_chunk: &Chunk) {
     }
 }
 
+pub fn play_sound_unsafe(sound_chunk: &Chunk) {
+    Channel::all().play(&sound_chunk, 0).unwrap();
+}
+
 pub fn play_sound_skip(sound_chunk: &Chunk, skip: i32) {
     Channel::all().fade_in(&sound_chunk, 0, skip).unwrap();
 }

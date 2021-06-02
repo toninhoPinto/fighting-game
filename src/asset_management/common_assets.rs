@@ -66,10 +66,10 @@ impl<'a> CommonAssets<'a> {
         hit_sound.set_volume(SFX_VOLUME);
         dash_sound.set_volume(SFX_VOLUME * 2);
         block_sound.set_volume(SFX_VOLUME);
-        select_level_sound.set_volume(SFX_VOLUME * 10);
+        select_level_sound.set_volume(SFX_VOLUME * 2);
         scroll_levels_sound.set_volume(SFX_VOLUME);
-        jump_sound.set_volume(10);
-        land_sound.set_volume(50);
+        jump_sound.set_volume(20);
+        land_sound.set_volume(10);
         dropped_sound.set_volume(100);
         miss_sound.set_volume(10);
         

@@ -5,8 +5,8 @@ use crate::{asset_management::asset_holders::EntityAnimations, collision::collid
 
 use super::{movement_controller::MovementController};
 
-pub mod foxgirl;
 pub mod player;
+pub mod player_input;
 
 pub(crate) type OnHitSpecificAttack = fn(&Attack, &mut ColliderManager, &mut MovementController, &mut Animator)  -> ();
 
