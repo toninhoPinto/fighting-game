@@ -6,6 +6,7 @@ pub(crate) enum HitResult {
     Hit(usize, Attack),
     Block
 }
+
 pub fn get_enemy_colliders(player: &mut Player,
     enemy_manager: &mut EnemyManager,
     particles: &mut Vec<Particle>,
@@ -20,9 +21,6 @@ pub fn get_enemy_colliders(player: &mut Player,
     let player_controller_clone = player.controller.clone();
     let player_controller = &mut player.controller;
     let player_pos = player.position;
-    let enemies_names = enemy_manager.character_components.iter()
-        .map(|char| {if let Some(char) = char { Some(char.name.clone()) } else {None}  })
-        .collect::<Vec<Option<String>>>();
     
     let zip = enemy_manager.
         collider_components.iter_mut().enumerate()
@@ -141,9 +139,6 @@ pub fn enemy_attack_player(player: &mut Player,
     
     let player_colliders = &player.collision_manager.colliders.clone();
     let player_pos = player.position;
-    let enemies_names = enemy_manager.character_components.iter()
-        .map(|char| {if let Some(char) = char { Some(char.name.clone()) } else {None}  })
-        .collect::<Vec<Option<String>>>();
     
     let mut enemies_hit = Vec::new();
     let zip = enemy_manager.
@@ -185,8 +180,6 @@ pub fn enemy_attack_player(player: &mut Player,
                     .unwrap();
         if !did_sucessfully_block(point, player_pos, &player.controller){
             enemies_hit.push(i as i32);
-
-            let enemy_name = &enemies_names[i].as_ref().unwrap();
 
             if let Some(on_hit) = attack.on_hit {
                 on_hit(attack, colliders, mov, animator);
