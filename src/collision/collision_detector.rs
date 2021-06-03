@@ -9,12 +9,12 @@ use crate::ecs_system::enemy_systems::take_damage;
 //TODO, this cant be right, instead of iterating like this, perhaps use a quadtree? i think Parry2d has SimdQuadTree
 //TODO probably smartest is to record the hits, and then have a separate function to handle if there is a trade between characters??
 
-pub fn detect_hit(player_hit_colliders: &Vec<Collider>, enemy_hurt_colliders: &Vec<Collider>) -> Option<(Point<Real>, String)>{
-    for collider in player_hit_colliders
+pub fn detect_hit(hitting_colliders: &Vec<Collider>, hurting_colliders: &Vec<Collider>) -> Option<(Point<Real>, String)>{
+    for collider in hitting_colliders
         .iter()
         .filter(|&c| c.collider_type == ColliderType::Hitbox && c.enabled)
     {
-        for collider_to_take_dmg in enemy_hurt_colliders
+        for collider_to_take_dmg in hurting_colliders
             .iter()
             .filter(|&c| c.collider_type == ColliderType::Hurtbox && c.enabled)
         {

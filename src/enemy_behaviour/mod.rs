@@ -1,6 +1,6 @@
 use parry2d::na::Vector2;
 
-use crate::{ecs_system::{enemy_components::{AIType, Behaviour, Health, Position}, enemy_manager::EnemyManager, enemy_systems::attack}, game_logic::{characters::{player::{EntityState, Player}}, inputs::game_inputs::GameAction, movement_controller::MovementController}, utils::math_sign::Sign};
+use crate::{ecs_system::{enemy_components::{AIType, Behaviour, Health, Position}, enemy_manager::EnemyManager, enemy_systems::attack}, game_logic::{characters::{player::{EntityState, Player}}, inputs::game_inputs::GameAction}, utils::math_sign::Sign};
 
 pub mod simple_enemy_behaviour;
 
@@ -39,7 +39,6 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
         let target_pos = if *ai_type == AIType::Enemy { 
             Some(player.position)
         } else if *ai_type == AIType::Allied {
-
            let nr_enemies = entity_ai_type.iter().enumerate().zip(entity_positions.iter()).filter_map(|((usize, ai), pos)| { 
                 if let Some(AIType::Enemy) = ai {
                     Some((usize, pos.as_ref()?))
@@ -73,7 +72,6 @@ pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut P
 
         if let Some(target_pos) = target_pos {
             let dir_to_target = target_pos - pos.0;
-            println!("dir {:?}", dir_to_target);
 
             let hurt = controller.state == EntityState::Hurt || controller.state == EntityState::Knocked || controller.state == EntityState::Dropped || controller.state == EntityState::Dead;
             let recovering = controller.state == EntityState::KnockedLanding || controller.state == EntityState::DroppedLanding;
