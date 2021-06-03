@@ -48,6 +48,7 @@ pub struct Player {
 
     pub events: EventsPubSub,
     pub items: Vec<String>,
+    pub active_item_key: Option<String>,
     pub active_item: Option<(CharacterEventActive, Effect)>
 }
 
@@ -71,12 +72,17 @@ impl Player {
             events: EventsPubSub::new(),
             items: Vec::new(),
 
+            active_item_key: None,
             active_item: None,
         }
     }
 
     pub fn equip_item(&mut self, item: &mut Item, hash_effects: &HashMap<i32, ItemEffects>){
-        self.items.push(item.asset_id.clone());
+        if item.item_type != ItemType::ActivePart {
+            self.items.push(item.asset_id.clone());
+        } else {
+            self.active_item_key = Some(item.asset_id.clone());
+        }
         for effect in item.effects.iter_mut() {
             if let Some(apply_effect) = hash_effects.get(&effect.effect_id) {
                 apply_effect(self, effect);

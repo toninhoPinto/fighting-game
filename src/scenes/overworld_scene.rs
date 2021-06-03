@@ -40,11 +40,15 @@ impl OverworldScene {
     }
 }
 
+pub fn active_item_ui() -> Rect{
+    Rect::new(10, 0 , 64, 64)
+}
+
 pub fn hp_bar_init<'a>(screen_res: (u32, u32), max_hp: i32, curr_hp: i32) -> SegmentedBar<'a> {
     SegmentedBar::new(
-        10,
+        80,
         20,
-        screen_res.0 / 2 - 50,
+        screen_res.0 / 3 - 50,
         25,
         max_hp,
         curr_hp,
@@ -56,7 +60,7 @@ pub fn hp_bar_init<'a>(screen_res: (u32, u32), max_hp: i32, curr_hp: i32) -> Seg
 
 pub fn item_list_init(game_state_data: &GameStateData) -> WrappingList {
     WrappingList::new(
-        Point::new(10, 50),
+        Point::new(10, 70),
         200,
         game_state_data.player.as_ref().unwrap().items.iter()
             .map(|item| {Rect::new(0,0,32,32)})
@@ -211,6 +215,11 @@ impl<'a> Scene for OverworldScene {
             let rect_screen_pos = world_to_screen(Rect::new(0,0, 300, 480), Point::new(0,0), (w, h), None);
             canvas.copy(&assets.portraits.get("portrait").unwrap(), Rect::new(0,0, 500, 870), rect_screen_pos).unwrap();
       
+            if let Some(active_item) = &game_state_data.player.as_ref().unwrap().active_item_key {
+                let src_rect = item_assets.src_rects.get(active_item).unwrap();
+                canvas.copy(&item_assets.spritesheet, src_rect.clone(), active_item_ui()).unwrap();
+            }
+
             if hp_bars.curr_value > 0 {
                 canvas.set_draw_color(hp_bars.color.unwrap());
                 for hp_rect in hp_bars.render() {
