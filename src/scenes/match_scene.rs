@@ -9,7 +9,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, debug_console::console::Console, ecs_system::enemy_systems::{enemy_attack_player, get_enemy_colliders, update_animations_enemies, update_behaviour_enemies, update_colliders_enemies, update_events, update_movement_enemies}, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
+use crate::{Transition, debug_console::console::Console, ecs_system::enemy_systems::{enemy_attack_player, get_enemy_colliders, update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
 use crate::{
     collision::collision_detector::detect_hit,
     engine_traits::scene::Scene,

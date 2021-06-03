@@ -1,6 +1,6 @@
 use rand::{Rng, SeedableRng, prelude::SmallRng};
 
-use crate::{ecs_system::{enemy_components::Position, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::{Attack, AttackType, player::Player}, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventAttack, CharacterEventMap, CharacterEventUpdate}}, movement_controller::MovementController}, scenes::overworld_scene::OverworldScene};
+use crate::{ecs_system::{enemy_components::{AIType, Position}, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::{Attack, AttackType, player::Player}, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventAttack, CharacterEventMap, CharacterEventUpdate}}, movement_controller::MovementController}, scenes::overworld_scene::OverworldScene};
 
 pub fn apply_add_attack_at_level_start(player: &mut Player, effect: &mut Effect){
     player.events.on_start_level.push((add_attack_wrap, effect.clone()));
@@ -93,6 +93,29 @@ pub fn heal_on_active(player: &mut Player, effect: &mut Effect){
 
 pub fn heal_player(player: &mut Player, enemies: &mut EnemyManager, effect: &mut Effect){
     heal(&mut player.hp, effect.change.unwrap(), &player.character);
+}
+
+pub fn charm_on_active(player: &mut Player, effect: &mut Effect){
+    player.active_item = Some((charm_enemies, effect.clone()));
+}
+
+pub fn charm_enemies(player: &mut Player, enemies: &mut EnemyManager, effect: &mut Effect){
+    let actual_enemies = enemies.ai_type_components.iter().enumerate().filter(|(usize, ai)| { 
+        if let Some(AIType::Enemy) = ai {
+            true
+        } else {
+            false
+        }
+    }).collect::<Vec<_>>();
+    let n_enemies = actual_enemies.len();
+
+    if n_enemies > 0 {
+        let mut rng = rand::thread_rng();
+        let enemy_to_charm = (rng.gen::<f64>() * n_enemies as f64) as usize;
+    
+        let actual_id = actual_enemies[enemy_to_charm].0;
+        enemies.ai_type_components[actual_id] = Some(AIType::Allied);
+    }
 }
 
 pub fn apply_lifesteal(player: &mut Player, effect: &mut Effect){

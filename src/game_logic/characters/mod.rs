@@ -1,7 +1,7 @@
 use sdl2::rect::Rect;
 use std::string::String;
 
-use crate::{asset_management::asset_holders::EntityAnimations, collision::collider_manager::ColliderManager, engine_types::animator::Animator};
+use crate::{collision::collider_manager::ColliderManager, engine_types::animator::Animator};
 
 use super::{movement_controller::MovementController};
 

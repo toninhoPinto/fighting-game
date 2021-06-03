@@ -1,7 +1,9 @@
 use parry2d::na::Vector2;
 use sdl2::rect::Rect;
 
-use crate::{collision::collider_manager::ColliderManager, engine_types::animator::Animator, game_logic::{characters::player::Player,movement_controller::MovementController}};
+use crate::game_logic::inputs::game_inputs::GameAction;
+
+
 
 #[derive(Clone)]
 pub struct Health(pub i32);
@@ -13,7 +15,13 @@ pub struct Renderable {
     pub rect: Rect,
 }
 
-
 pub trait Behaviour {
-    fn act(&mut self, player: &Player, pos: &Position, mov: &mut MovementController, anim: &mut Animator, collision_manager: &mut ColliderManager, delta: f64);
+    fn act(&mut self, delta: f64) -> Option<GameAction>;
+}
+
+#[derive(PartialEq, Debug)]
+pub enum AIType {
+    Allied,
+    Enemy,
+    Neutral
 }

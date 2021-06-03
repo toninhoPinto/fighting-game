@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::Texture};
 
 use crate::{asset_management::{asset_holders::{EntityAssets, EntityData}, common_assets::CommonAssets, vfx::particle::Particle}, collision::{collider_manager::ColliderManager, collision_detector::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}}, engine_types::animator::Animator, game_logic::{characters::{Attack, Character, player::{Player, EntityState}}, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventUpdate, EventsPubSub}}, game::Game, movement_controller::MovementController}, rendering::camera::Camera};
 
-use super::{enemy_components::{Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
+use super::{enemy_components::{AIType, Behaviour, Health, Position, Renderable}, enemy_manager::EnemyManager};
 
 pub(crate) enum HitResult {
     Hit(usize, Attack),
@@ -296,31 +296,6 @@ pub fn update_events(enemy_manager: &mut EnemyManager, player: &mut Player, dt: 
                 events.on_update = to_replace_events;
             }
         }
-    });
-}
-
-pub fn update_behaviour_enemies(enemy_manager: &mut EnemyManager, player: &mut Player, dt: f64) {
-    let zip = enemy_manager.
-    behaviour_components.iter_mut()
-    .zip(enemy_manager.health_components.iter())
-    .zip(enemy_manager.movement_controller_components.iter_mut())
-    .zip(enemy_manager.positions_components.iter())
-    .zip(enemy_manager.character_components.iter())
-    .zip(enemy_manager.animator_components.iter_mut())
-    .zip(enemy_manager.collider_components.iter_mut());
-
-    zip
-    .filter_map(| ((((((behaviour, hp), mov), pos), character), animator), col): 
-    ((((((&mut Option<Box<dyn Behaviour>>, &Option<Health>), &mut Option<MovementController>), &Option<Position>), &Option<Character>), &mut Option<Animator>), &mut Option<ColliderManager>)| {
-        if let Some(hp) = hp {
-            if hp.0 > 0 {
-                return Some((behaviour.as_mut()?, mov.as_mut()?, pos.as_ref()?, character.as_ref()?, animator.as_mut()?, col.as_mut()?))
-            }
-        }
-        None
-    })
-    .for_each(|(behaviour, mov, pos, char, animator, col): (&mut Box<dyn Behaviour>, &mut MovementController, &Position, &Character, &mut Animator, &mut ColliderManager)| {
-        behaviour.act(player, pos, mov, animator, col, dt);
     });
 }
 
