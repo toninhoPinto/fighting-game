@@ -9,7 +9,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{enemy_attack_player, get_enemy_colliders}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -283,16 +283,7 @@ impl Scene for MatchScene {
                     Game::update_player_colliders_position_only(&mut game.player, start_p1_pos);
                 }
 
-                get_enemy_colliders( &mut game.player, 
-                    &mut game.enemies, 
-                    &mut game.hit_vfx, 
-                    &mut hit_stop, 
-                    logic_timestep, 
-                    &game_state_data.general_assets, 
-                    &p1_data, 
-                &mut game.camera);
-
-                enemy_attack_player( &mut game.player, 
+                calculate_hits( &mut game.player, 
                     &mut game.enemies, 
                     &mut game.hit_vfx, 
                     &mut hit_stop, 
