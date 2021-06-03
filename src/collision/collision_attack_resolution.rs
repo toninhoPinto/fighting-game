@@ -1,7 +1,7 @@
 use parry2d::{bounding_volume::BoundingVolume, math::Point, math::Real, na::{Isometry2, Point2, Vector2}, query::{self, Contact}, shape::Cuboid};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{asset_holders::{EntityAnimations}, common_assets::CommonAssets, sound::audio_player, vfx::particle::Particle}, ecs_system::enemy_components::{Health, Position}, engine_types::{animator::Animator, collider::{Collider, ColliderType}}, game_logic::{characters::{Attack, player::Player}, game::Game, movement_controller::MovementController}, utils::math_sign::Sign};
+use crate::{asset_management::{common_assets::CommonAssets, sound::audio_player, vfx::particle::Particle}, ecs_system::enemy_components::{Health}, engine_types::{animator::Animator, collider::{Collider, ColliderType}}, game_logic::{characters::{Attack}, game::Game, movement_controller::MovementController}, utils::math_sign::Sign};
 
 use crate::ecs_system::enemy_systems::take_damage;
 
