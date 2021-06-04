@@ -1,11 +1,6 @@
-use crate::{asset_management::{asset_holders::EntityData, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::{enemy_components::{AIType, Health, Position}, enemy_manager::EnemyManager}, engine_types::animator::Animator, game_logic::{characters::{Attack, player::Player}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::EntityData, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::{enemy_components::{AIType, Health}, enemy_manager::EnemyManager}, engine_types::animator::Animator, game_logic::{characters::{Attack, player::Player}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{collider_manager::ColliderManager, collision_attack_resolution::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}};
-
-pub(crate) enum HitResult {
-    Hit(usize, Attack),
-    Block
-}
 
 // zip enumerate + hp + colliders + AIType -> check if hp > 0
 // for collider A if AIType == Enemy
