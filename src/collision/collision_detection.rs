@@ -61,10 +61,10 @@ pub fn calculate_hits(player: &mut Player,
         let is_player_hitting = collision.0 == enemy_manager.collider_components.len();
         let is_player_hurting = collision.1 == enemy_manager.collider_components.len();
 
-        let hitting_colliders = if !is_player_hitting {
-            enemy_manager.collider_components[collision.0].as_mut().unwrap()
+        let mut hitting_colliders = if !is_player_hitting {
+            enemy_manager.collider_components[collision.0].clone().unwrap()
         } else {
-            &mut player.collision_manager
+            player.collision_manager.clone()
         };
 
         let mut hitting_mov = if !is_player_hitting {
@@ -97,10 +97,10 @@ pub fn calculate_hits(player: &mut Player,
             player.position
         };
 
-        let hurt_hp = if !is_player_hurting {
-            enemy_manager.health_components[collision.1].as_mut().unwrap()
+        let mut hurt_hp = if !is_player_hurting {
+            enemy_manager.health_components[collision.1].clone().unwrap()
         } else {
-            &mut player.hp
+            player.hp.clone()
         };
 
         if !hitting_colliders.collisions_detected.contains(&(collision.1 as i32)) { 
@@ -115,16 +115,21 @@ pub fn calculate_hits(player: &mut Player,
                 
                 enemies_hit.push(collision.1 as i32);
 
-
+                if is_player_hitting {
+                    let mut p_on_hits = player.events.on_hit.clone();
+                    for onhit in p_on_hits.iter_mut() {
+                        onhit.0(player, enemy_manager, collision.1 as i32, &mut onhit.1, &mut attack);
+                    }
+                }
 
                 if let Some(on_hit) = attack.on_hit {
-                    on_hit(&attack, hitting_colliders, &mut hitting_mov, &mut hitting_animator);
+                    on_hit(&attack, &mut hitting_colliders, &mut hitting_mov, &mut hitting_animator);
                 }
                 hit_opponent(
                     &attack,
                     logic_timestep,
                     &general_assets, 
-                    &hitting_mov, (hurt_hp, &mut hurt_pos, &mut hurting_animator, &mut hurting_mov));
+                    &hitting_mov, (&mut hurt_hp, &mut hurt_pos, &mut hurting_animator, &mut hurting_mov));
 
                 if is_player_hitting {
                     camera.shake();
@@ -141,28 +146,49 @@ pub fn calculate_hits(player: &mut Player,
                 *hit_stop = 5;
             }
 
-            if !is_player_hitting {
-                enemy_manager.movement_controller_components[collision.0] = Some(hitting_mov);
-            } else {
-                player.controller = hitting_mov;
-            }
-    
-            if !is_player_hurting {
-                enemy_manager.movement_controller_components[collision.1] = Some(hurting_mov)
-            } else {
-                player.controller = hurting_mov;
-            };
+            //re-save clonned components
+            {
+                if !is_player_hitting {
+                    enemy_manager.collider_components[collision.0] = Some(hitting_colliders)
+                } else {
+                    player.collision_manager = hitting_colliders;
+                };
 
-            if !is_player_hitting {
-                enemy_manager.animator_components[collision.0] = Some(hitting_animator);
-            } else {
-                player.animator = hitting_animator;
-            }
-    
-            if !is_player_hurting {
-                enemy_manager.animator_components[collision.1] = Some(hurting_animator)
-            } else {
-                player.animator = hurting_animator;
+                if !is_player_hitting {
+                    enemy_manager.movement_controller_components[collision.0] = Some(hitting_mov);
+                } else {
+                    player.controller = hitting_mov;
+                }
+        
+                if !is_player_hurting {
+                    enemy_manager.movement_controller_components[collision.1] = Some(hurting_mov)
+                } else {
+                    player.controller = hurting_mov;
+                };
+
+                if !is_player_hitting {
+                    enemy_manager.animator_components[collision.0] = Some(hitting_animator);
+                } else {
+                    player.animator = hitting_animator;
+                }
+        
+                if !is_player_hurting {
+                    enemy_manager.animator_components[collision.1] = Some(hurting_animator)
+                } else {
+                    player.animator = hurting_animator;
+                }
+
+                if !is_player_hurting {
+                    enemy_manager.positions_components[collision.1].as_mut().unwrap().0 = hurt_pos;
+                } else {
+                    player.position = hurt_pos;
+                };
+        
+                if !is_player_hurting {
+                    enemy_manager.health_components[collision.1] = Some(hurt_hp);
+                } else {
+                    player.hp = hurt_hp;
+                };
             }
 
         }
