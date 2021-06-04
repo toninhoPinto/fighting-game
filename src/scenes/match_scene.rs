@@ -289,7 +289,8 @@ impl Scene for MatchScene {
                     &mut hit_stop, 
                     logic_timestep, 
                     &game_state_data.general_assets, 
-                    &p1_data);
+                    &p1_data,
+                    &mut game.camera);
 
                 game.fx(&game_state_data.general_assets);
                 game.update_vfx(&game_state_data.general_assets);

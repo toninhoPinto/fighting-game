@@ -19,7 +19,8 @@ pub fn calculate_hits(player: &mut Player,
     hit_stop: &mut i32, 
     logic_timestep: f64, 
     general_assets: &CommonAssets, 
-    player_data: &EntityData) {
+    player_data: &EntityData,
+    camera: &mut Camera) {
 
     let n_entities = enemy_manager.collider_components.len();
     let zip = enemy_manager.health_components.iter().enumerate()
@@ -106,28 +107,33 @@ pub fn calculate_hits(player: &mut Player,
             hitting_colliders.collisions_detected.insert(collision.1 as i32);
             hitting_mov.has_hit = true;
 
-            let attack = player_data
+            let mut attack = player_data
                 .attacks
                 .get(&collision.3.replace("?", ""))
-                .unwrap();
+                .unwrap().clone();
             if !did_sucessfully_block(collision.2, hurt_pos, &mut hurting_mov){
+                
                 enemies_hit.push(collision.1 as i32);
 
+
+
                 if let Some(on_hit) = attack.on_hit {
-                    on_hit(attack, hitting_colliders, &mut hitting_mov, &mut hitting_animator);
+                    on_hit(&attack, hitting_colliders, &mut hitting_mov, &mut hitting_animator);
                 }
                 hit_opponent(
-                    attack,
+                    &attack,
                     logic_timestep,
                     &general_assets, 
                     &hitting_mov, (hurt_hp, &mut hurt_pos, &mut hurting_animator, &mut hurting_mov));
 
-
+                if is_player_hitting {
+                    camera.shake();
+                }
                 hit_particles(particles, collision.2, "special_hit", &general_assets);
                 *hit_stop = 10;
             } else {
                 opponent_blocked(
-                    attack,
+                    &attack,
                     logic_timestep,
                     &general_assets, 
                     &hitting_mov, (&mut hurt_pos, &mut hurting_mov));
