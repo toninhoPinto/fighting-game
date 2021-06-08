@@ -22,6 +22,7 @@ mod scenes;
 mod ecs_system;
 mod enemy_behaviour;
 mod overworld;
+mod level_generation;
 
 mod debug_console;
 

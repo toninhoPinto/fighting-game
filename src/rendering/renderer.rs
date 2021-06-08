@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, scenes::overworld_scene::active_item_ui, ui::ingame::wrapping_list_ui::WrappingList};
+use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, level_generation::Level, scenes::overworld_scene::active_item_ui, ui::ingame::wrapping_list_ui::WrappingList};
 use crate::{
     ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
 };
@@ -55,7 +55,6 @@ fn debug_rect(canvas: &mut WindowCanvas, screen_position: Point, rect_to_debug: 
 
 pub fn render(
     canvas: &mut WindowCanvas,
-    stage: (&Texture, Rect),
     game: &mut Game,
     p1_assets: &EntityAssets,
     enemy_assets: &HashMap<&str, EntityAssets>,
@@ -66,16 +65,10 @@ pub fn render(
     debug: bool,
 ) -> Result<(), String> {
     
-    canvas
-        .copy(
-            stage.0,
-            game.camera.get_camera(),
-            Rect::new(0, 0, game.camera.rect.width(), game.camera.rect.height()),
-        )
-        .unwrap();
-
+    
     let screen_res = canvas.output_size()?;
 
+    render_level(&game.levels, &game.camera);
 
     render_shadow(common_assets,
         canvas,
@@ -169,6 +162,11 @@ pub fn render(
     }
 
     Ok(())
+}
+
+fn render_level(levels: &Vec<Level>, camera: &Camera) {
+    let camera_pos = camera.rect.x();
+    let camera_width =  camera.rect.width();
 }
 
 fn render_shadow(common_assets: &mut CommonAssets,

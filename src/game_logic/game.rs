@@ -1,7 +1,7 @@
 use parry2d::{bounding_volume::AABB, na::Vector2, partitioning::SimdQuadTree};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
 
 use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, items::ItemGround, projectile::Projectile};
 
@@ -15,11 +15,13 @@ pub struct Game {
     pub projectiles: Vec<Projectile>,
 
     pub hit_vfx: Vec<Particle>,
-    pub items_on_ground: Vec<ItemGround>
+    pub items_on_ground: Vec<ItemGround>,
+
+    pub levels: Vec<Level>
 }
 
 impl Game {
-    pub fn new(player: Player, camera: Camera) -> Self {
+    pub fn new(player: Player, camera: Camera, levels: Vec<Level>) -> Self {
         Self {
             current_frame: 0,
 
@@ -31,6 +33,8 @@ impl Game {
 
             hit_vfx: Vec::new(),
             items_on_ground: Vec::new(),
+            
+            levels,
         }
     }
 

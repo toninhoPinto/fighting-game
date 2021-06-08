@@ -9,7 +9,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -67,8 +67,7 @@ impl Scene for MatchScene {
         let mut enemy_assets = HashMap::new();
         enemy_assets.insert("ryu", load_enemy_ryu_assets(texture_creator));
 
-        let stage = load_stage(texture_creator);
-        let stage_rect = Rect::new(0, 0, LEVEL_WIDTH as u32, LEVEL_HEIGHT as u32);
+        let levels = generate_levels(1);
 
         let camera: Camera = Camera::new(
             //LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2,
@@ -78,7 +77,7 @@ impl Scene for MatchScene {
             SCREEN_HEIGHT,
         );
 
-        let mut game = Game::new(game_state_data.player.as_ref().unwrap().clone(),camera);
+        let mut game = Game::new(game_state_data.player.as_ref().unwrap().clone(), camera, levels);
         let mut items = load_items("assets/items/items.json".to_string());
         let effects = hash_effects();
 
@@ -313,7 +312,6 @@ impl Scene for MatchScene {
                 canvas.clear();
                 rendering::renderer::render(
                     canvas,
-                    (&stage, stage_rect),
                     &mut game,
                     &p1_assets,
                     &enemy_assets,
