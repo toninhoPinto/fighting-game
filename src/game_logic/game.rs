@@ -38,6 +38,10 @@ impl Game {
         }
     }
 
+    pub fn max_level_width(&self) -> i32 {
+        self.levels.iter().map(|lvl| lvl.width * lvl.map.tile_width).sum::<u32>() as i32
+    }
+
     pub fn spawn_vfx(hit_vfx: &mut Vec<Particle>, rect: Rect, flipped: bool, type_of_animation: String, tint: Option<Color>) {
         if hit_vfx.len() < LIMIT_NUMBER_OF_VFX {
             //push with bool as true

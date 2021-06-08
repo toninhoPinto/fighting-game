@@ -22,9 +22,6 @@ use super::overworld_scene::{hp_bar_init, item_list_init};
 
 const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
 
-const LEVEL_WIDTH: i32 = 2560;
-const LEVEL_HEIGHT: i32 = 720;
-
 //Screen dimension constants
 const SCREEN_WIDTH: u32 = 1280;
 const SCREEN_HEIGHT: u32 = 720;
@@ -293,8 +290,8 @@ impl Scene for MatchScene {
 
                 game.fx(&game_state_data.general_assets);
                 game.update_vfx(&game_state_data.general_assets);
-
-                game.camera.update(LEVEL_WIDTH, &game.player, logic_timestep);
+                
+                game.camera.update(game.max_level_width(), &game.player, logic_timestep);
 
                 hp_bars.update(game.player.character.hp, game.player.hp.0);
                 if game.player.items.len() != item_list.rects.len() {
