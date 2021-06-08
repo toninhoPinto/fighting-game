@@ -19,6 +19,7 @@ pub struct CommonAssets<'a> {
 
     //hit effects
     pub hit_effect_textures: HashMap<String, Texture<'a>>,
+    pub level_tiles: HashMap<String,Texture<'a>>,
     pub hit_effect_animations: HashMap<String, Animation>,
     pub shadow: Texture<'a>
 }
@@ -107,10 +108,15 @@ impl<'a> CommonAssets<'a> {
         vfx.insert(jumping_ground_anim.name.clone(),jumping_ground_anim);
         vfx.insert(feet_dust_ground_anim.name.clone(),feet_dust_ground_anim);
 
+        let mut level_tiles = HashMap::new();
+
+        level_tiles.insert("room_tileset".to_string(), asset_loader::load_texture(&texture_creator, "assets/level/hyptosis_tile-art-batch-1.png"));
+
         CommonAssets {
             sound_effects: sounds,
             hit_effect_textures: textures,
             hit_effect_animations: vfx,
+            level_tiles,
             shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png")
         }
     }

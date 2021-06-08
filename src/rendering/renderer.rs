@@ -33,6 +33,12 @@ pub fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), cam
     Rect::new(screen_position.x, screen_position.y - rect.height() as i32, rect.width(), rect.height())
 }
 
+pub fn world_to_screen_rect(rect: Rect, screen_size: (u32, u32), camera: Option<&Camera>) -> Rect {
+    let screen_position = pos_world_to_screen(Point::new(rect.x(), rect.y()), screen_size, camera);
+    Rect::new(screen_position.x, screen_position.y - rect.height() as i32, rect.width(), rect.height())
+}
+
+
 fn debug_point(canvas: &mut WindowCanvas, screen_position: Point, color: Color) {
     canvas.set_draw_color(color);
     let debug_rect = Rect::new(screen_position.x as i32, screen_position.y as i32, 4, 4);
@@ -68,7 +74,7 @@ pub fn render(
     
     let screen_res = canvas.output_size()?;
 
-    render_level(&game.levels, &game.camera);
+    render_level(canvas, &game.levels, common_assets, screen_res, &game.camera);
 
     render_shadow(common_assets,
         canvas,
@@ -164,10 +170,23 @@ pub fn render(
     Ok(())
 }
 
-fn render_level(levels: &Vec<Level>, camera: &Camera) {
+fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &CommonAssets, screen_size: (u32, u32), camera: &Camera) {
     let camera_pos = camera.rect.x();
     let camera_width =  camera.rect.width();
+
+    for level in levels.iter() {
+        for tile in level.tiles.iter().enumerate() {
+            let spritesheet = common_assets.level_tiles.get(&level.map.tilesets[0].name).unwrap();
+            // println!("tile {:?}", tile);
+            let src_rect = level.rect_from_index(tile.0 as u32);
+            let mut dst_rect = world_to_screen_rect(*tile.1, screen_size, Some(camera));
+
+            canvas.copy(spritesheet, src_rect, dst_rect).unwrap();
+        }
+    }
 }
+
+
 
 fn render_shadow(common_assets: &mut CommonAssets,
     canvas: &mut WindowCanvas,

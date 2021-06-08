@@ -1,14 +1,14 @@
 use std::{fs::File, io::BufReader, path::Path};
 
-use tiled::{Map, parse};
+use tiled::{Map, parse_file};
 
 pub fn load_level(path: String) -> Map {
-    let file = File::open(&Path::new(&path)).unwrap();
-    println!("Opened file");
-    let reader = BufReader::new(file);
-    let map = parse(reader).unwrap();
-    println!("{:?}", map);
-    println!("{:?}", map.get_tileset_by_gid(22));
+    let file = &Path::new(&path);
+    let map = parse_file(file).unwrap();
+    //println!("tilesets {:?}", map.tilesets);
+    //println!("layers {:?}", map.layers);
+    //println!("object_groups {:?}", map.object_groups);
+
 
     map
 }
