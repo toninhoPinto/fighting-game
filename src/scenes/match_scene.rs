@@ -9,7 +9,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::{load_character_anim_data, load_stage}, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -75,7 +75,7 @@ impl Scene for MatchScene {
         );
 
         let mut game = Game::new(game_state_data.player.as_ref().unwrap().clone(), camera, levels);
-        let mut items = load_items("assets/items/items.json".to_string());
+        let items = load_items("assets/items/items.json".to_string());
         let effects = hash_effects();
 
         game.player
@@ -176,7 +176,7 @@ impl Scene for MatchScene {
 
                 let raw_input = input::input_handler::rcv_input(&event, &input_devices.controls);
 
-                if let Some((controller_id, translated_input, is_pressed)) = raw_input {
+                if let Some((_controller_id, translated_input, _is_pressed)) = raw_input {
 
                     let inputs_for_current_frame = if let Some(&last_action) = self.p1_inputs.action_history.back() {last_action} else {0};
                     let recent_input_as_game_action = GameAction::from_translated_input(
@@ -267,7 +267,7 @@ impl Scene for MatchScene {
                 for i in 0..game.projectiles.len(){
                     if game.projectiles[i].player_owner == 2 {
                         match detect_hit(&game.projectiles[i].colliders, &game.player.collision_manager.colliders) {
-                            Some((point, name)) => {
+                            Some((_point, _name)) => {
                                 break;
                             }
                             None => {}
@@ -290,7 +290,7 @@ impl Scene for MatchScene {
 
                 game.fx(&game_state_data.general_assets);
                 game.update_vfx(&game_state_data.general_assets);
-                
+
                 game.camera.update(game.max_level_width(), &game.player, logic_timestep);
 
                 hp_bars.update(game.player.character.hp, game.player.hp.0);

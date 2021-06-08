@@ -64,7 +64,7 @@ impl Player {
 
             animator: Animator::new(),
 
-            character_width: 0.0,
+            character_width: 50.0,
             character,
 
             collision_manager: ColliderManager::new(),

@@ -444,15 +444,15 @@ impl MovementController {
             }
         }
     
-        /*
-        if (self.position.x  as i32 - character_width) < camera.rect.x() {
-            self.position.x = (camera.rect.x() + character_width) as f64;
+        
+        if (position.x  as i32 - character_width) < camera.rect.x() {
+            position.x = (camera.rect.x() + character_width) as f64;
         }
     
-        if (self.position.x as i32 + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
-            self.position.x = (camera.rect.x() + camera.rect.width() as i32 - character_width) as f64;
+        if (position.x as i32 + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
+            position.x = (camera.rect.x() + camera.rect.width() as i32 - character_width) as f64;
         }
-        */  
+        
     
     }
 
