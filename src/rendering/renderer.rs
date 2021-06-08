@@ -34,7 +34,13 @@ pub fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), cam
 }
 
 pub fn world_to_screen_rect(rect: Rect, screen_size: (u32, u32), camera: Option<&Camera>) -> Rect {
-    let screen_position = pos_world_to_screen(Point::new(rect.x(), rect.y()), screen_size, camera);
+    let mut inverted_pos = Point::new(rect.x(), rect.y());
+    if let Some(camera) = camera {
+        inverted_pos.x -= camera.get_camera().x();
+    }
+     //make camera as its own little space coordinates
+
+    let screen_position = inverted_pos;
     Rect::new(screen_position.x, screen_position.y - rect.height() as i32, rect.width(), rect.height())
 }
 

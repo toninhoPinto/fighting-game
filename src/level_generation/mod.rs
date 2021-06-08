@@ -49,7 +49,6 @@ impl Level {
 
                 let tex_x = tile_texture_index % texture_columns * self.map.tile_width;
                 let tex_y = tile_texture_index / texture_columns * self.map.tile_width;
-                //println!("{:?} {:?},{:?}", tile_texture_index, tex_x, tex_y);
 
                 Rect::new(tex_x as i32, tex_y as i32, self.map.tile_width, self.map.tile_height)
             },
