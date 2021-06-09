@@ -248,7 +248,7 @@ impl MovementController {
     }
 
     fn should_pause_gravity(&self) -> bool {
-        !self.is_attacking && self.state != EntityState::Hurt && self.state != EntityState::Dashing
+        self.is_attacking || self.state == EntityState::Hurt || self.state == EntityState::Dashing
     }
 
     pub fn jump(&mut self, animator: &mut Animator) {
@@ -338,7 +338,7 @@ impl MovementController {
         position: &mut Vector2<f64>,
         character: &Character,
         animator: &mut Animator,
-        camera: &Camera,
+        camera: &mut Camera,
         dt: f64,
         character_width: i32,
         common_assets: &CommonAssets,
@@ -383,7 +383,7 @@ impl MovementController {
                     * character.jump_distance
                     * dt;
     
-                if self.should_pause_gravity() {
+                if !self.should_pause_gravity() {
                     self.velocity_y += gravity * dt;
                     let position_offset_y = self.velocity_y * dt + 0.5 * gravity * dt * dt; //pos += vel * delta_time + 1/2 gravity * delta time * delta time
 
@@ -413,6 +413,7 @@ impl MovementController {
                     audio_player::play_sound(common_assets.sound_effects.get("land").unwrap());
                 }
                 if self.state == EntityState::Dropped {
+                    camera.shake();
                     self.set_entity_state(EntityState::DroppedLanding, animator);
                     audio_player::play_sound(common_assets.sound_effects.get("dropped").unwrap());
                 }

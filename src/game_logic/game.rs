@@ -31,6 +31,35 @@ impl Game {
 
             hit_vfx: Vec::new(),
             items_on_ground: Vec::new(),
+<<<<<<< Updated upstream
+=======
+            
+            levels,
+        }
+    }
+
+    pub fn max_level_width(&self) -> i32 {
+        self.levels.iter().map(|lvl| lvl.width * lvl.map.tile_width).sum::<u32>() as i32
+    }
+
+    pub fn check_level_tags_and_apply(&mut self, game_state_data: &GameStateData) {
+        for level in self.levels.iter_mut() {
+            if !(self.camera.rect.x > level.start_x + (level.map.width * level.map.tile_width) as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
+                for tag in level.map.object_groups[0].objects.iter_mut() {
+                    if tag.visible {
+                        if self.camera.rect.x < tag.x as i32 && self.camera.rect.x + (self.camera.rect.width() as i32) > tag.x as i32 {
+                            if tag.name == "enemy".to_string() {
+                                println!("tag {},{} camera {}, {}",  tag.x,  tag.y, self.camera.rect.x, self.camera.rect.x + (self.camera.rect.width() as i32));
+                                
+                                println!("{:?}", game_state_data.enemy_animations.get("ryu").unwrap().animations.keys());
+                                self.enemies.add_enemy(Vector2::new(tag.x as f64, ((level.map.height * level.map.tile_height) as f32 - tag.y) as f64), Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
+                                tag.visible = false;
+                            }
+                        }
+                    }
+                }
+            }
+>>>>>>> Stashed changes
         }
     }
 
