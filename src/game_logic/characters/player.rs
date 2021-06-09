@@ -113,7 +113,7 @@ impl Player {
 
     pub fn update(
         &mut self,
-        camera: &Camera,
+        camera: &mut Camera,
         dt: f64,
         character_width: i32,
         general_assets: &CommonAssets

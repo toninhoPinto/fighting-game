@@ -62,6 +62,12 @@ pub fn calculate_hits(player: &mut Player,
             player.collision_manager.clone()
         };
 
+        let mut hurting_colliders = if !is_player_hurting {
+            enemy_manager.collider_components[collision.1].clone().unwrap()
+        } else {
+            player.collision_manager.clone()
+        };
+
         let mut hitting_mov = if !is_player_hitting {
             enemy_manager.movement_controller_components[collision.0].clone().unwrap()
         } else {
@@ -117,14 +123,15 @@ pub fn calculate_hits(player: &mut Player,
                     }
                 }
 
-                if let Some(on_hit) = attack.on_hit {
-                    on_hit(&attack, &mut hitting_colliders, &mut hitting_mov, &mut hitting_animator);
-                }
                 hit_opponent(
                     &attack,
                     logic_timestep,
                     &general_assets, 
                     &hitting_mov, (&mut hurt_hp, &mut hurt_pos, &mut hurting_animator, &mut hurting_mov));
+
+                if let Some(on_hit) = attack.on_hit {
+                    on_hit(&attack, &mut hurting_colliders, &mut hurting_mov, &mut hurting_animator);
+                }
 
                 if is_player_hitting {
                     camera.shake();
@@ -147,6 +154,12 @@ pub fn calculate_hits(player: &mut Player,
                     enemy_manager.collider_components[collision.0] = Some(hitting_colliders)
                 } else {
                     player.collision_manager = hitting_colliders;
+                };
+
+                if !is_player_hurting {
+                    enemy_manager.collider_components[collision.1] = Some(hurting_colliders)
+                } else {
+                    player.collision_manager = hurting_colliders;
                 };
 
                 if !is_player_hitting {
