@@ -6,7 +6,7 @@ use sdl2::{pixels::Color, render::Texture};
 
 use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, level_generation::Level, scenes::overworld_scene::active_item_ui, ui::ingame::wrapping_list_ui::WrappingList};
 use crate::{
-    ui::ingame::{bar_ui::Bar, segmented_bar_ui::SegmentedBar},
+    ui::ingame::{segmented_bar_ui::SegmentedBar},
 };
 use crate::{
     asset_management::{common_assets::CommonAssets, vfx::particle::Particle}
@@ -33,12 +33,11 @@ pub fn world_to_screen(rect: Rect, position: Point, screen_size: (u32, u32), cam
     Rect::new(screen_position.x, screen_position.y - rect.height() as i32, rect.width(), rect.height())
 }
 
-pub fn world_to_screen_rect(rect: Rect, screen_size: (u32, u32), camera: Option<&Camera>) -> Rect {
+pub fn world_to_screen_rect(rect: Rect, camera: Option<&Camera>) -> Rect {
     let mut inverted_pos = Point::new(rect.x(), rect.y());
     if let Some(camera) = camera {
         inverted_pos.x -= camera.get_camera().x();
     }
-     //make camera as its own little space coordinates
 
     let screen_position = inverted_pos;
     Rect::new(screen_position.x, screen_position.y - rect.height() as i32, rect.width(), rect.height())
@@ -185,9 +184,17 @@ fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &
             let spritesheet = common_assets.level_tiles.get(&level.map.tilesets[0].name).unwrap();
             // println!("tile {:?}", tile);
             let src_rect = level.rect_from_index(tile.0 as u32);
-            let mut dst_rect = world_to_screen_rect(*tile.1, screen_size, Some(camera));
+            let mut dst_rect = world_to_screen_rect(*tile.1, Some(camera));
 
             canvas.copy(spritesheet, src_rect, dst_rect).unwrap();
+        }
+
+
+        for tag in level.map.object_groups[0].objects.iter() {
+            let tag = world_to_screen_rect(Rect::new(tag.x as i32, tag.y as i32, 10, 10), Some(camera));
+            canvas.draw_rect(tag).unwrap();
+            canvas.set_draw_color(Color::BLUE);
+            canvas.fill_rect(tag).unwrap();
         }
     }
 }
@@ -250,7 +257,7 @@ fn render_vfx(
 
             let screen_rect = world_to_screen(rect_size, vfx_position, screen_res, Some(camera));
 
-            let (frame, texture_id) = &common_assets
+            let (_frame, texture_id) = &common_assets
                 .hit_effect_animations
                 .get_mut(&vfx.name)
                 .unwrap()
