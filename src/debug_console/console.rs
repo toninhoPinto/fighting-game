@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use parry2d::na::Vector2;
 use sdl2::{keyboard::Keycode, pixels::Color, rect::Rect, render::{Canvas, TextureCreator, TextureQuery}, ttf::Font, video::{Window, WindowContext}};
 
-use crate::game_logic::{game::Game, items::{Item, ItemGround}};
+use crate::{GameStateData, game_logic::{game::Game, items::{Item, ItemGround}}};
 
 pub struct Console{
     pub up: bool,
@@ -24,7 +24,7 @@ impl Console {
         }
     }
 
-    pub fn run(&mut self, game: &mut Game, items: &HashMap<i32, Item>) {
+    pub fn run(&mut self, game: &mut Game, items: &HashMap<i32, Item>, game_state_data: &GameStateData) {
         println!("spawn {}", self.command);
         if self.up {
             let split = self.command.split(" ").collect::<Vec<&str>>();
@@ -32,8 +32,13 @@ impl Console {
             match split[0] {
                 "I" => {
                     println!("spawn {}", self.command);
-                    let item_id = split[1].parse::<i32>().unwrap();;
+                    let item_id = split[1].parse::<i32>().unwrap();
                     game.items_on_ground.push(ItemGround{ position: game.player.position + Vector2::new(200f64, 0f64), item: (*items.get(&item_id).unwrap()).clone() });
+                },
+                "E" => {
+                    println!("spawn {}", self.command);
+                    let enemy_id = split[1].parse::<i32>().unwrap();
+                    game.enemies.add_enemy(game.player.position, Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
                 },
                 _ => {}
             }

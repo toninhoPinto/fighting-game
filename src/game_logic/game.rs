@@ -1,7 +1,9 @@
+use std::rc::Rc;
+
 use parry2d::{bounding_volume::AABB, na::Vector2, partitioning::SimdQuadTree};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
+use crate::{GameStateData, asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
 
 use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, items::ItemGround, projectile::Projectile};
 
@@ -40,6 +42,24 @@ impl Game {
 
     pub fn max_level_width(&self) -> i32 {
         self.levels.iter().map(|lvl| lvl.width * lvl.map.tile_width).sum::<u32>() as i32
+    }
+
+    pub fn check_level_tags_and_apply(&mut self, game_state_data: &GameStateData) {
+        for level in self.levels.iter_mut() {
+            if !(self.camera.rect.x > level.start_x + level.map.width as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
+                for tag in level.map.object_groups[0].objects.iter_mut() {
+                    if tag.visible {
+                        println!("tag {},{} camera {}, {}",  tag.x,  tag.y, self.camera.rect.x, self.camera.rect.x + (self.camera.rect.width() as i32));
+                        if self.camera.rect.x < tag.x as i32 && self.camera.rect.x + (self.camera.rect.width() as i32) > tag.x as i32 {
+                            if tag.name == "enemy".to_string() {
+                                self.enemies.add_enemy(Vector2::new(tag.x as f64, tag.y  as f64), Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
+                                tag.visible = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn spawn_vfx(hit_vfx: &mut Vec<Particle>, rect: Rect, flipped: bool, type_of_animation: String, tint: Option<Color>) {

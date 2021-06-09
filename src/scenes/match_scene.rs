@@ -155,7 +155,7 @@ impl Scene for MatchScene {
                         if input == Keycode::Backslash {
                             console.toggle();
                         } else if input == Keycode::Return{
-                            console.run(&mut game, &items)
+                            console.run(&mut game, &items, game_state_data)
                         } else {
                             console.add(input);
                         }
@@ -292,6 +292,7 @@ impl Scene for MatchScene {
                 game.update_vfx(&game_state_data.general_assets);
 
                 game.camera.update(game.max_level_width(), &game.player, logic_timestep);
+                game.check_level_tags_and_apply(game_state_data);
 
                 hp_bars.update(game.player.character.hp, game.player.hp.0);
                 if game.player.items.len() != item_list.rects.len() {
