@@ -104,6 +104,10 @@ pub fn calculate_hits(player: &mut Player,
             player.hp.clone()
         };
 
+        if (hurting_mov.ground_height - hitting_mov.ground_height).abs() > 50 {
+            continue;
+        }
+
         if !hitting_colliders.collisions_detected.contains(&(collision.1 as i32)) { 
             hitting_colliders.collisions_detected.insert(collision.1 as i32);
             hitting_mov.has_hit = true;
