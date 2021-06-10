@@ -293,7 +293,7 @@ impl Scene for MatchScene {
                 game.update_vfx(&game_state_data.general_assets);
 
                 game.camera.update(game.max_level_width(), &game.player, logic_timestep);
-                game.check_level_tags_and_apply(game_state_data);
+                game.check_level_tags_and_apply(game_state_data, &items);
 
                 hp_bars.update(game.player.character.hp, game.player.hp.0);
                 if game.player.items.len() != item_list.rects.len() {

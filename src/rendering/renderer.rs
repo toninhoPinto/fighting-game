@@ -191,6 +191,7 @@ fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &
 
 
         for tag in level.map.object_groups[0].objects.iter() {
+            //let tag_pos = Vector2::new(tag.x as f64, ((level.map.height * level.map.tile_height) as f32 - tag.y) as f64);
             let tag = world_to_screen_rect(Rect::new(tag.x as i32, tag.y as i32, 10, 10), Some(camera));
             canvas.draw_rect(tag).unwrap();
             canvas.set_draw_color(Color::BLUE);
