@@ -454,8 +454,7 @@ impl MovementController {
             if (position.x as i32 + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
                 position.x = (camera.rect.x() + camera.rect.width() as i32 - character_width) as f64;
             }
-        }
-    
+        }  
     }
 
 }

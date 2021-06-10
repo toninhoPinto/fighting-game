@@ -93,7 +93,7 @@ impl EnemyManager {
             Some(Box::new(BasicEnemy::new())),
             Some(AIType::Enemy),
             player_pos,
-            Some(Position(player_pos + Vector2::new(500f64, 0f64))),
+            Some(Position(player_pos)),
             Some(ryu),
             Some(animator), 
             Some(ColliderManager::new()),

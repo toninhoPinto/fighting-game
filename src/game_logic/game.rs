@@ -51,8 +51,8 @@ impl Game {
                     if tag.visible {
                         if self.camera.rect.x < tag.x as i32 && self.camera.rect.x + (self.camera.rect.width() as i32) > tag.x as i32 {
                             if tag.name == "enemy".to_string() {
-                                println!("tag {},{} camera {}, {}",  tag.x,  tag.y, self.camera.rect.x, self.camera.rect.x + (self.camera.rect.width() as i32));
-                                self.enemies.add_enemy(Vector2::new(tag.x as f64, ((level.map.height * level.map.tile_height) as f32 - tag.y) as f64), Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
+                                let tag_pos = Vector2::new(tag.x as f64, ((level.map.height * level.map.tile_height) as f32 - tag.y) as f64);
+                                self.enemies.add_enemy(tag_pos, Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
                                 tag.visible = false;
                             }
                         }

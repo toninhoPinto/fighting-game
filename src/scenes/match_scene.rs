@@ -1,3 +1,4 @@
+use parry2d::na::Vector2;
 use sdl2::{rect::Rect};
 use std::{collections::HashMap, rc::Rc, time::Instant};
 
@@ -138,7 +139,7 @@ impl Scene for MatchScene {
                         
 
                         if input == Keycode::L {
-                            game.enemies.add_enemy(game.player.position, Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
+                            game.enemies.add_enemy(game.player.position + Vector2::new(500f64, 0f64), Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
                         }
                         if input == Keycode::P {
                             debug_pause ^= true;
