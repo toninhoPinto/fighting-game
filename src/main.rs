@@ -33,6 +33,16 @@ use crate::input::controller_handler::Controller;
 
 
 //TODO features tomorrow
+//Level generation
+    //add extra layer of tiles
+    //make item tables
+    //use item tables to randomize item spawn
+    //tweak placement of objects (both the debug cubes and enemy spawning seem to be slightly off)
+    //render only tiles inside camera
+    //make 2 more rooms
+    //randomize rooms 
+    //create collider from wall
+
 //add sound_effects
     //when player misses punches (very light sound)
     //add variation to sounds through pitch changing
