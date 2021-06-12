@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc};
 
-use parry2d::{bounding_volume::AABB, na::Vector2, partitioning::SimdQuadTree};
+use parry2d::na::Vector2;
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
 use crate::{GameStateData, asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
@@ -41,17 +41,17 @@ impl Game {
     }
 
     pub fn max_level_width(&self) -> i32 {
-        self.levels.iter().map(|lvl| lvl.width * lvl.map.tile_width).sum::<u32>() as i32
+        self.levels.iter().map(|lvl| lvl.width * lvl.level_map.tile_width).sum::<u32>() as i32
     }
 
     pub fn check_level_tags_and_apply(&mut self, game_state_data: &GameStateData, items: &HashMap<i32, Item>) {
         for level in self.levels.iter_mut() {
-            if !(self.camera.rect.x > level.start_x + (level.map.width * level.map.tile_width) as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
-                for tag in level.map.object_groups[0].objects.iter_mut() {
+            if !(self.camera.rect.x > level.start_x + (level.level_map.width * level.level_map.tile_width) as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
+                for tag in level.level_map.object_groups[0].objects.iter_mut() {
                     if tag.visible {
                         if self.camera.rect.x < tag.x as i32 && self.camera.rect.x + (self.camera.rect.width() as i32) > tag.x as i32 {
                             
-                            let tag_pos = Vector2::new(tag.x as f64, ((level.map.height * level.map.tile_height) as f32 - tag.y) as f64);
+                            let tag_pos = Vector2::new(tag.x as f64 + level.start_x as f64, ((level.level_map.height * level.level_map.tile_height) as f32 - tag.y) as f64);
 
                             if tag.name == "enemy".to_string() {
                                 self.enemies.add_enemy(tag_pos, Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));

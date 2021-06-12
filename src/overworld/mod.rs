@@ -7,16 +7,15 @@ use self::node::{WorldNode, WorldNodeType};
 
 pub mod node;
 
-use rand::{Rng, SeedableRng};
+use rand::Rng;
 use rand::rngs::SmallRng;
 
-pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: bool) -> Vec<WorldNode> {
+pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: bool, rng: &mut SmallRng) -> Vec<WorldNode> {
 
     let (graph_width, graph_height) = graph_size;
     let (cell_width, cell_height) = (area.width() as i32 / graph_width, area.height() as i32 / graph_height);
 
     let mut overworld: Vec<WorldNode> = Vec::new();
-    let mut rng = SmallRng::seed_from_u64(96873523456);
 
     let start_cell = (area.x() + area.width() as i32 / graph_width * graph_width / 2, area.y());
     let start_node = WorldNode{

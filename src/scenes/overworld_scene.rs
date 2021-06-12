@@ -1,6 +1,7 @@
+use rand::prelude::SmallRng;
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, asset_management::sound::audio_player::play_sound, engine_traits::scene::Scene, game_logic::factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
+use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
 
 use super::match_scene::MatchScene;
 
@@ -25,17 +26,17 @@ impl OverworldScene {
         }
     } 
 
-    pub fn init(&mut self, (w, h): (u32, u32), full_conection: bool) {
+    pub fn init(&mut self, (w, h): (u32, u32), full_conection: bool, seeded_rng: &mut SmallRng) {
         let map_area = Rect::new(400, 100, w-800, h-200);
         self.full_conection = full_conection;
         self.rect = map_area;
-        self.nodes = overworld_generation(map_area, (5, 6), full_conection);
+        self.nodes = overworld_generation(map_area, (5, 6), full_conection, seeded_rng);
     }
 
     pub fn change_exploration_level(&mut self, full_conection: bool) {
         if self.full_conection != full_conection {
             self.full_conection = full_conection;
-            self.nodes = overworld_generation(self.rect, (5, 6), full_conection);
+            //self.nodes = overworld_generation(self.rect, (5, 6), full_conection, seeded_rng);
         }
     }
 }

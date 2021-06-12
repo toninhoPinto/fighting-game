@@ -65,7 +65,7 @@ impl Scene for MatchScene {
         let mut enemy_assets = HashMap::new();
         enemy_assets.insert("ryu", load_enemy_ryu_assets(texture_creator));
 
-        let levels = generate_levels(1);
+        let levels = generate_levels(&game_state_data.general_assets.level_rooms, &mut game_state_data.general_assets.map_rng.as_mut().unwrap());
 
         let camera: Camera = Camera::new(
             //LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2,

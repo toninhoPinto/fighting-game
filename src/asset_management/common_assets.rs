@@ -1,15 +1,18 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use crate::asset_management::asset_loader::load_tiled_map::load_level;
 use crate::engine_types::animation::Animation;
 
 use super::asset_loader::asset_loader;
 use super::{sound::audio_player};
+use rand::prelude::SmallRng;
 use sdl2::{
     mixer::Chunk,
     render::{Texture, TextureCreator},
     video::WindowContext,
 };
+use tiled::Map;
 
 const SFX_VOLUME: i32 = 10;
 
@@ -17,11 +20,17 @@ pub struct CommonAssets<'a> {
     //sounds
     pub sound_effects: HashMap<String, Chunk>,
 
+    //rooms
+    pub level_tiles: HashMap<String,Texture<'a>>,
+    pub level_rooms: HashMap<i32, Map>,
+    pub shadow: Texture<'a>,
+
     //hit effects
     pub hit_effect_textures: HashMap<String, Texture<'a>>,
-    pub level_tiles: HashMap<String,Texture<'a>>,
     pub hit_effect_animations: HashMap<String, Animation>,
-    pub shadow: Texture<'a>
+
+    //rng
+    pub map_rng: Option<SmallRng>,
 }
 
 impl<'a> CommonAssets<'a> {
@@ -112,12 +121,18 @@ impl<'a> CommonAssets<'a> {
 
         level_tiles.insert("room_tileset".to_string(), asset_loader::load_texture(&texture_creator, "assets/level/hyptosis_tile-art-batch-1.png"));
 
+        let mut level_rooms = HashMap::new();
+        level_rooms.insert(0, load_level("assets/level/level1.tmx".to_string()));
+        level_rooms.insert(1, load_level("assets/level/level2.tmx".to_string()));
+
         CommonAssets {
             sound_effects: sounds,
             hit_effect_textures: textures,
             hit_effect_animations: vfx,
             level_tiles,
-            shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png")
+            level_rooms,
+            shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
+            map_rng: None,
         }
     }
 }

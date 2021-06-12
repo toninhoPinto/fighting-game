@@ -183,7 +183,7 @@ fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &
         
         for (layer_id, layers) in level.tiles.iter().enumerate() {
             for (tile_id, tile) in layers.iter().enumerate() {
-                let spritesheet = common_assets.level_tiles.get(&level.map.tilesets[0].name).unwrap();
+                let spritesheet = common_assets.level_tiles.get(&level.level_map.tilesets[0].name).unwrap();
 
                 let src_rect = level.rect_from_index(tile.texture_id, layer_id);
                 let mut dst_rect = world_to_screen_rect(tile.rect, Some(camera));
@@ -192,7 +192,7 @@ fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &
             }
         }
         
-        for tag in level.map.object_groups[0].objects.iter() {
+        for tag in level.level_map.object_groups[0].objects.iter() {
             let tag = world_to_screen_rect(Rect::new(tag.x as i32, tag.y as i32, 10, 10), Some(camera));
             canvas.draw_rect(tag).unwrap();
             canvas.set_draw_color(Color::BLUE);
