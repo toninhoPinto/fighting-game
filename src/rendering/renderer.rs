@@ -180,18 +180,19 @@ fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &
     let camera_width =  camera.rect.width();
 
     for level in levels.iter() {
-        for tile in level.tiles.iter().enumerate() {
-            let spritesheet = common_assets.level_tiles.get(&level.map.tilesets[0].name).unwrap();
-            // println!("tile {:?}", tile);
-            let src_rect = level.rect_from_index(tile.0 as u32);
-            let mut dst_rect = world_to_screen_rect(*tile.1, Some(camera));
+        
+        for (layer_id, layers) in level.tiles.iter().enumerate() {
+            for (tile_id, tile) in layers.iter().enumerate() {
+                let spritesheet = common_assets.level_tiles.get(&level.map.tilesets[0].name).unwrap();
 
-            canvas.copy(spritesheet, src_rect, dst_rect).unwrap();
+                let src_rect = level.rect_from_index(tile.texture_id, layer_id);
+                let mut dst_rect = world_to_screen_rect(tile.rect, Some(camera));
+                
+                canvas.copy(spritesheet, src_rect, dst_rect).unwrap();
+            }
         }
-
-
+        
         for tag in level.map.object_groups[0].objects.iter() {
-            //let tag_pos = Vector2::new(tag.x as f64, ((level.map.height * level.map.tile_height) as f32 - tag.y) as f64);
             let tag = world_to_screen_rect(Rect::new(tag.x as i32, tag.y as i32, 10, 10), Some(camera));
             canvas.draw_rect(tag).unwrap();
             canvas.set_draw_color(Color::BLUE);
