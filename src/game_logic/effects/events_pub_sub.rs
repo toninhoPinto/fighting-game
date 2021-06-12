@@ -1,3 +1,5 @@
+use rand::prelude::SmallRng;
+
 use crate::{ecs_system::enemy_manager::EnemyManager, game_logic::characters::{Attack, player::Player}, scenes::overworld_scene::OverworldScene};
 
 use super::Effect;
@@ -5,7 +7,7 @@ use super::Effect;
 pub type CharacterEventActive = fn(&mut Player, &mut EnemyManager, &mut Effect) -> ();
 pub type CharacterEvent = fn(&mut Player, &mut EnemyManager, i32, &mut Effect) -> ();
 pub type CharacterEventUpdate = fn(&mut Player, &mut EnemyManager, i32, &mut Effect, f64,) -> ();
-pub type CharacterEventMap = fn(&mut Player, &mut OverworldScene, &mut Effect) -> ();
+pub type CharacterEventMap = fn(&mut Player, &mut OverworldScene, &mut SmallRng, &mut Effect) -> ();
 pub type CharacterEventAttack = fn(&mut Player, &mut EnemyManager, i32, &mut Effect, &mut Attack) -> ();
 
 #[derive(Clone)]

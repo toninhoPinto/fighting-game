@@ -1,7 +1,7 @@
 use rand::prelude::SmallRng;
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
+use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::renderer::{pos_world_to_screen, world_to_screen}, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
 
 use super::match_scene::MatchScene;
 
@@ -33,10 +33,10 @@ impl OverworldScene {
         self.nodes = overworld_generation(map_area, (5, 6), full_conection, seeded_rng);
     }
 
-    pub fn change_exploration_level(&mut self, full_conection: bool) {
+    pub fn change_exploration_level(&mut self, rng: &mut SmallRng, full_conection: bool) {
         if self.full_conection != full_conection {
             self.full_conection = full_conection;
-            //self.nodes = overworld_generation(self.rect, (5, 6), full_conection, seeded_rng);
+            overworld_change_connections(self, rng, full_conection);
         }
     }
 }
@@ -103,7 +103,7 @@ impl<'a> Scene for OverworldScene {
 
         let mut map_events =  game_state_data.player.as_ref().unwrap().events.on_overworld_map.clone();
         for map_event in map_events.iter_mut() {
-            (map_event.0)(game_state_data.player.as_mut().unwrap(), self, &mut map_event.1);
+            (map_event.0)(game_state_data.player.as_mut().unwrap(), self, game_state_data.general_assets.map_rng.as_mut().unwrap(), &mut map_event.1);
         }
         game_state_data.player.as_mut().unwrap().events.on_overworld_map = map_events;
 

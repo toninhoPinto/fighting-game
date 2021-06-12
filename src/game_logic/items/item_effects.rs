@@ -223,8 +223,8 @@ pub fn apply_map_exploration(player: &mut Player, effect: &mut Effect){
     player.events.on_overworld_map.push((increase_map_exploration as CharacterEventMap, effect.clone()));
 }
 
-pub fn increase_map_exploration(player: &mut Player, map: &mut OverworldScene, effect: &mut Effect)  {
-    map.change_exploration_level(true);
+pub fn increase_map_exploration(player: &mut Player, map: &mut OverworldScene, rng: &mut SmallRng, effect: &mut Effect)  {
+    map.change_exploration_level(rng, true);
     player.events.on_overworld_map.pop(); //TODO, should actually find itself somehow and pop itself only
 }
 
