@@ -124,6 +124,7 @@ impl<'a> CommonAssets<'a> {
         let mut level_rooms = HashMap::new();
         level_rooms.insert(0, load_level("assets/level/level1.tmx".to_string()));
         level_rooms.insert(1, load_level("assets/level/level2.tmx".to_string()));
+        level_rooms.insert(2, load_level("assets/level/level3.tmx".to_string()));
 
         CommonAssets {
             sound_effects: sounds,

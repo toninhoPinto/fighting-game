@@ -49,7 +49,8 @@ impl Game {
             if !(self.camera.rect.x > level.start_x + (level.level_map.width * level.level_map.tile_width) as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
                 for tag in level.level_map.object_groups[0].objects.iter_mut() {
                     if tag.visible {
-                        if self.camera.rect.x < tag.x as i32 && self.camera.rect.x + (self.camera.rect.width() as i32) > tag.x as i32 {
+                        
+                        if self.camera.rect.x < tag.x as i32 + level.start_x && self.camera.rect.x + (self.camera.rect.width() as i32) > tag.x as i32 + level.start_x {
                             
                             let tag_pos = Vector2::new(tag.x as f64 + level.start_x as f64, ((level.level_map.height * level.level_map.tile_height) as f32 - tag.y) as f64);
 

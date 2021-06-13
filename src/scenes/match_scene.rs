@@ -79,6 +79,8 @@ impl Scene for MatchScene {
         let items = load_items("assets/items/items.json".to_string());
         let effects = hash_effects();
 
+        game.player.position = Vector2::new(150.0f64, 150f64);
+
         game.player
             .animator
             .play(game.player.controller.animations.animations.get("idle").unwrap().clone(), 1.0,false);
@@ -242,7 +244,12 @@ impl Scene for MatchScene {
                 );
                 game.player.state_update(&p1_assets.texture_data);
                
-                let player_position = game.player.position;
+                let player_position = if !game.player.controller.is_airborne {
+                    game.player.position
+                } else {
+                    Vector2::new(game.player.position.x, game.player.controller.ground_height as f64)
+                };
+                
                 let mut items_spawned = game.items_on_ground.clone();
                 items_spawned.iter_mut().for_each(|item_ground| {
                     if (player_position - item_ground.position).magnitude() <= 50.0 {
