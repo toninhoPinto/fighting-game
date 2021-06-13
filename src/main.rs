@@ -34,11 +34,10 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 
-//change_exploration_level FIX FIX FIX FIX
-
 //Level generation
     //make item tables
     //use item tables to randomize item spawn
+    //make enemy tables
     //tweak placement of objects (both the debug cubes and enemy spawning seem to be slightly off)
     //create collider from wall
 
