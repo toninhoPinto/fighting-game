@@ -42,22 +42,13 @@ use crate::input::controller_handler::Controller;
     //use item tables to randomize item spawn
     //tweak placement of objects (both the debug cubes and enemy spawning seem to be slightly off)
     //render only tiles inside camera
-    //randomize rooms 
     //create collider from wall
 
 //add sound_effects
     //when player misses punches (very light sound)
     //add variation to sounds through pitch changing
 
-//Add to game state data the seed AND the rng object_type
-//make multiple rng objects, one for map generation
-//one for effects
-//improve overworld map generation ->  changing the connection level shouldnt re-generate everything
-//implement more item effects
-
-//add to game_state_data
-    //add seed to game_state_data
-    //make overworld display stuff like: currency ?
+    //implement more item effects
     
 //make overworld proc gen map
     // replace lines with rotated squares with textures
@@ -74,9 +65,9 @@ use crate::input::controller_handler::Controller;
 
 //TODO FEATURES
 //play block animation while standing 
- //add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
+//add hit combos and block combos, these should be displayed while they are happening and not at the end to give faster feedback
 //charge special attacks like makoto where you can hold punch for a stronger attack
-//dash attacks
+//dash attack
 //save sound volume settings on config
 //add menu to change the controllers for each player
 //add menu to change the controller mapping of keys/buttons
@@ -84,6 +75,7 @@ use crate::input::controller_handler::Controller;
 
 //TODO TECH DEBT AND BUGS~
 
+//changing the connection level shouldnt re-generate everything-> level start_x and map to position tags, but maybe pre-compute a new array and ignore/remove the Map inside Level
 //16 Match_scene no inicio faz clone de player para dentro do game, e vice versa no fim, secalhar pode usar directamente apartir do game_state_data.player
 //15 so much duplicated code inside match_scene
 //13 the placement of the particles spawned at the moment of a projectile hit are a bit weird
