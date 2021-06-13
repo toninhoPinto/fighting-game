@@ -62,7 +62,6 @@ impl Level {
             }
         }
         
-        println!("base tiles {} extra tiles {}", layers[0].len(), layers[1].len());
         Self {
             start_x,
             width: map_width,
@@ -75,7 +74,7 @@ impl Level {
 
     pub fn rect_from_index(&self, tile_id: u32, layer_id: usize) -> Rect{
         match &self.level_map.layers[layer_id].tiles {
-            tiled::LayerData::Finite(tiles) => {
+            tiled::LayerData::Finite(_tiles) => {
                 let texture_width = self.level_map.tilesets[0].images[0].width as u32;
                 let texture_columns = texture_width / self.level_map.tile_width;
 

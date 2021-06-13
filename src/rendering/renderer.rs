@@ -79,7 +79,7 @@ pub fn render(
     
     let screen_res = canvas.output_size()?;
 
-    render_level(canvas, &game.levels, common_assets, screen_res, &game.camera);
+    render_level(canvas, &game.levels, common_assets, &game.camera);
 
     render_shadow(common_assets,
         canvas,
@@ -175,28 +175,34 @@ pub fn render(
     Ok(())
 }
 
-fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &CommonAssets, screen_size: (u32, u32), camera: &Camera) {
+fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &CommonAssets, camera: &Camera) {
     let camera_pos = camera.rect.x();
-    let camera_width =  camera.rect.width();
+    let camera_width =  camera.rect.width() as i32;
+    
 
     for level in levels.iter() {
-        
-        for (layer_id, layers) in level.tiles.iter().enumerate() {
-            for (tile_id, tile) in layers.iter().enumerate() {
-                let spritesheet = common_assets.level_tiles.get(&level.level_map.tilesets[0].name).unwrap();
+        if !(camera_pos > level.start_x + (level.level_map.width * level.level_map.tile_width) as i32 || camera_pos + camera_width < level.start_x) {
 
-                let src_rect = level.rect_from_index(tile.texture_id, layer_id);
-                let mut dst_rect = world_to_screen_rect(tile.rect, Some(camera));
-                
-                canvas.copy(spritesheet, src_rect, dst_rect).unwrap();
+            for (layer_id, layers) in level.tiles.iter().enumerate() {
+                for (_tile_id, tile) in layers.iter().enumerate() {
+
+                    let dst_rect = world_to_screen_rect(tile.rect, Some(camera));
+                    
+                    if dst_rect.x + dst_rect.width() as i32 >= 0 {
+                        
+                        let spritesheet = common_assets.level_tiles.get(&level.level_map.tilesets[0].name).unwrap();
+                        let src_rect = level.rect_from_index(tile.texture_id, layer_id);
+                        canvas.copy(spritesheet, src_rect, dst_rect).unwrap();
+                    }
+                }
             }
-        }
-        
-        for tag in level.level_map.object_groups[0].objects.iter() {
-            let tag = world_to_screen_rect(Rect::new(tag.x as i32 + level.start_x, tag.y as i32, 10, 10), Some(camera));
-            canvas.draw_rect(tag).unwrap();
-            canvas.set_draw_color(Color::BLUE);
-            canvas.fill_rect(tag).unwrap();
+            
+            for tag in level.level_map.object_groups[0].objects.iter() {
+                let tag = world_to_screen_rect(Rect::new(tag.x as i32 + level.start_x, tag.y as i32, 10, 10), Some(camera));
+                canvas.draw_rect(tag).unwrap();
+                canvas.set_draw_color(Color::BLUE);
+                canvas.fill_rect(tag).unwrap();
+            }
         }
     }
 }

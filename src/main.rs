@@ -1,7 +1,7 @@
 use engine_traits::scene::Scene;
 use game_logic::characters::player::Player;
 use scenes::menu_scene::MenuScene;
-use sdl2::{image::{self, InitFlag}, rect::Rect, ttf::Font};
+use sdl2::{image::{self, InitFlag}, ttf::Font};
 use sdl2::render::BlendMode;
 
 use std::{collections::HashMap, path::Path, rc::Rc};
@@ -36,12 +36,10 @@ use crate::input::controller_handler::Controller;
 
 //change_exploration_level FIX FIX FIX FIX
 
-
 //Level generation
     //make item tables
     //use item tables to randomize item spawn
     //tweak placement of objects (both the debug cubes and enemy spawning seem to be slightly off)
-    //render only tiles inside camera
     //create collider from wall
 
 //add sound_effects
@@ -73,7 +71,7 @@ use crate::input::controller_handler::Controller;
 //add menu to change the controller mapping of keys/buttons
 //make ui loop only 60fps to avoid the computer doing too many wasted computations
 
-//TODO TECH DEBT AND BUGS~
+//TODO TECH DEBT AND BUGS
 
 //changing the connection level shouldnt re-generate everything-> level start_x and map to position tags, but maybe pre-compute a new array and ignore/remove the Map inside Level
 //16 Match_scene no inicio faz clone de player para dentro do game, e vice versa no fim, secalhar pode usar directamente apartir do game_state_data.player

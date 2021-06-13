@@ -13,7 +13,7 @@ pub fn generate_levels(levels: &HashMap<i32, Map>, rng: &mut SmallRng) -> Vec<Le
 
     let mut levels_spawned: Vec<Level> = Vec::new();
 
-    for i in 0..n_levels {
+    for _ in 0..n_levels {
 
         let level_id = (rng.gen::<f64>() * n_possible_levels as f64) as i32;
 
@@ -23,7 +23,7 @@ pub fn generate_levels(levels: &HashMap<i32, Map>, rng: &mut SmallRng) -> Vec<Le
         } else {
             0
         };
-        
+
         println!("position {}", start_pos);
         let level = Level::new(map, start_pos);
         levels_spawned.push(level)
