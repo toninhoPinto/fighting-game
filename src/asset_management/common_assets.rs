@@ -32,11 +32,6 @@ pub struct CommonAssets<'a> {
     //hit effects
     pub hit_effect_textures: HashMap<String, Texture<'a>>,
     pub hit_effect_animations: HashMap<String, Animation>,
-
-    //rng
-    pub map_rng: Option<SmallRng>,
-    pub item_rng: Option<SmallRng>,
-    pub enemy_rng: Option<SmallRng>,
 }
 
 impl<'a> CommonAssets<'a> {
@@ -142,9 +137,6 @@ impl<'a> CommonAssets<'a> {
             level_rooms,
             loot_tables,
             shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
-            map_rng: None,
-            item_rng: None,
-            enemy_rng: None,
         }
     }
 }

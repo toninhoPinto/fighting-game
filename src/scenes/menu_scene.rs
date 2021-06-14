@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use crate::{GameStateData, Transition, game_logic::factories::{character_factory::{load_character, load_character_animations}, enemy_factory::load_enemy_ryu_animations}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
-use rand::{SeedableRng, prelude::SmallRng};
+use rand::{Rng, SeedableRng, prelude::SmallRng};
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
 
 //character select
@@ -154,11 +154,12 @@ impl<'a> Scene for MenuScene<'a> {
                                 game_state_data.enemy_animations.insert("ryu".to_string(), Rc::new(load_enemy_ryu_animations()));
 
                                 let mut overworld = OverworldScene::new();
+                                
                                 let seed = 1234567654321;
-                                game_state_data.general_assets.map_rng = Some(SmallRng::seed_from_u64(seed));
-                                game_state_data.general_assets.enemy_rng = Some(SmallRng::seed_from_u64(seed));
-                                game_state_data.general_assets.item_rng = Some(SmallRng::seed_from_u64(seed));
-                                overworld.init(screen_res, false, game_state_data.general_assets.map_rng.as_mut().unwrap());
+                                
+                                game_state_data.seed = Some(seed);
+                                game_state_data.map_rng = Some(SmallRng::seed_from_u64(seed));
+                                overworld.init(screen_res, false, game_state_data.map_rng.as_mut().unwrap());
 
                                 return Transition::Change(Box::new(overworld));
                             }

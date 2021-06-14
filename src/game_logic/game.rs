@@ -1,7 +1,7 @@
 use std::{collections::HashMap, rc::Rc};
 
 use parry2d::na::Vector2;
-use rand::{Rng, prelude::SmallRng};
+use rand::{Rng, SeedableRng, prelude::SmallRng};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
 use crate::{GameStateData, asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, rng_tables::LootTable, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
@@ -46,7 +46,7 @@ impl Game {
     }
 
     pub fn check_level_tags_and_apply(&mut self, game_state_data: &mut GameStateData, items: &HashMap<i32, Item>) {
-        for level in self.levels.iter_mut() {
+        for (level_index, level) in self.levels.iter_mut().enumerate() {
             if !(self.camera.rect.x > level.start_x + (level.level_map.width * level.level_map.tile_width) as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
                 for tag in level.level_map.object_groups[0].objects.iter_mut() {
                     if tag.visible {
@@ -61,7 +61,9 @@ impl Game {
                             
                             } else if tag.name == "item".to_string() {
                                 let table = game_state_data.general_assets.loot_tables.get(&tag.obj_type).unwrap();
-                                let item_id = Game::get_random_item(table, &mut game_state_data.general_assets.item_rng.as_mut().unwrap()) as i32;
+
+                                let item_room_seed = game_state_data.seed.unwrap() * (game_state_data.curr_level as u64 + level_index as u64); //+ some id of overworld map level picked + picked tileset level 
+                                let item_id = Game::get_random_item(table, &mut SmallRng::seed_from_u64(item_room_seed)) as i32;
                                 self.items_on_ground.push(ItemGround{ position: tag_pos, item: (*items.get(&item_id).unwrap()).clone() });
                                 tag.visible = false;
                             }

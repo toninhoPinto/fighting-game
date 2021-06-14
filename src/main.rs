@@ -1,5 +1,6 @@
 use engine_traits::scene::Scene;
 use game_logic::characters::player::Player;
+use rand::prelude::SmallRng;
 use scenes::menu_scene::MenuScene;
 use sdl2::{image::{self, InitFlag}, ttf::Font};
 use sdl2::render::BlendMode;
@@ -94,6 +95,12 @@ pub struct GameStateData<'a> {
     font: Font<'a, 'a>,
     enemy_animations: HashMap<String, Rc<EntityAnimations>>,
     general_assets: CommonAssets<'a>,
+
+    curr_level: i32,
+
+    //rng
+    seed: Option<u64>,
+    map_rng: Option<SmallRng>,
 }
 
 pub enum Transition {
@@ -155,6 +162,10 @@ fn main() -> Result<(), String> {
         enemy_animations: HashMap::new(),
         font: console_font,
         general_assets: CommonAssets::load(&texture_creator),
+        seed: None,
+        map_rng: None,
+
+        curr_level: -1
     };
     
     let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();

@@ -103,7 +103,7 @@ impl<'a> Scene for OverworldScene {
 
         let mut map_events =  game_state_data.player.as_ref().unwrap().events.on_overworld_map.clone();
         for map_event in map_events.iter_mut() {
-            (map_event.0)(game_state_data.player.as_mut().unwrap(), self, game_state_data.general_assets.map_rng.as_mut().unwrap(), &mut map_event.1);
+            (map_event.0)(game_state_data.player.as_mut().unwrap(), self, game_state_data.map_rng.as_mut().unwrap(), &mut map_event.1);
         }
         game_state_data.player.as_mut().unwrap().events.on_overworld_map = map_events;
 
@@ -128,7 +128,6 @@ impl<'a> Scene for OverworldScene {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
                     if is_pressed {
                         if translated_input == TranslatedInput::Vertical(1) {
-
                             let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
                             let old_connect_to = self.connect_to_index;
                             self.connect_to_index =  (1 + self.connect_to_index) % connecting_to.len();
@@ -148,6 +147,7 @@ impl<'a> Scene for OverworldScene {
                             play_sound(game_state_data.general_assets.sound_effects.get("select_level").unwrap());
                             if let WorldNodeType::Level(_) = self.nodes[self.next_node].node_type {
                                 self.player_node_pos = self.next_node;
+                                game_state_data.curr_level = self.player_node_pos as i32;
                                 return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string())));
                             }
                         }

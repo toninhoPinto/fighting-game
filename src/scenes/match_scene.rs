@@ -65,7 +65,7 @@ impl Scene for MatchScene {
         let mut enemy_assets = HashMap::new();
         enemy_assets.insert("ryu", load_enemy_ryu_assets(texture_creator));
 
-        let levels = generate_levels(&game_state_data.general_assets.level_rooms, &mut game_state_data.general_assets.map_rng.as_mut().unwrap());
+        let levels = generate_levels(&game_state_data.general_assets.level_rooms, &mut game_state_data.map_rng.as_mut().unwrap());
 
         let camera: Camera = Camera::new(
             //LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2,
@@ -257,6 +257,8 @@ impl Scene for MatchScene {
                         for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
                             val.items.retain(|x| x.item_id as i32 != item_ground.item.id);
                             val.acc = val.items.iter().map(|i|{i.rarity}).sum();
+
+                            //TODO REFACTOR, some items should reaper, some items should influence the chance of other items appearing
                         }
                     }
                 });
