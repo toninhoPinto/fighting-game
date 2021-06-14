@@ -154,7 +154,10 @@ impl<'a> Scene for MenuScene<'a> {
                                 game_state_data.enemy_animations.insert("ryu".to_string(), Rc::new(load_enemy_ryu_animations()));
 
                                 let mut overworld = OverworldScene::new();
-                                game_state_data.general_assets.map_rng = Some(SmallRng::seed_from_u64(1234567654321));
+                                let seed = 1234567654321;
+                                game_state_data.general_assets.map_rng = Some(SmallRng::seed_from_u64(seed));
+                                game_state_data.general_assets.enemy_rng = Some(SmallRng::seed_from_u64(seed));
+                                game_state_data.general_assets.item_rng = Some(SmallRng::seed_from_u64(seed));
                                 overworld.init(screen_res, false, game_state_data.general_assets.map_rng.as_mut().unwrap());
 
                                 return Transition::Change(Box::new(overworld));

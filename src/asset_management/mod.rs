@@ -5,3 +5,4 @@ pub mod controls;
 pub mod sound;
 pub mod vfx;
 pub mod cast_point;
+pub mod rng_tables;

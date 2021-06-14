@@ -254,6 +254,10 @@ impl Scene for MatchScene {
                 items_spawned.iter_mut().for_each(|item_ground| {
                     if (player_position - item_ground.position).magnitude() <= 50.0 {
                         game.player.equip_item(&mut item_ground.item, &effects);
+                        for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
+                            val.items.retain(|x| x.item_id as i32 != item_ground.item.id);
+                            val.acc = val.items.iter().map(|i|{i.rarity}).sum();
+                        }
                     }
                 });
 

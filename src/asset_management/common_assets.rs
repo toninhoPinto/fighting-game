@@ -2,9 +2,11 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::asset_management::asset_loader::load_tiled_map::load_level;
+use crate::asset_management::rng_tables::load_item_table;
 use crate::engine_types::animation::Animation;
 
 use super::asset_loader::asset_loader;
+use super::rng_tables::LootTable;
 use super::{sound::audio_player};
 use rand::prelude::SmallRng;
 use sdl2::{
@@ -25,12 +27,16 @@ pub struct CommonAssets<'a> {
     pub level_rooms: HashMap<i32, Map>,
     pub shadow: Texture<'a>,
 
+    pub loot_tables: HashMap<String, LootTable>,
+
     //hit effects
     pub hit_effect_textures: HashMap<String, Texture<'a>>,
     pub hit_effect_animations: HashMap<String, Animation>,
 
     //rng
     pub map_rng: Option<SmallRng>,
+    pub item_rng: Option<SmallRng>,
+    pub enemy_rng: Option<SmallRng>,
 }
 
 impl<'a> CommonAssets<'a> {
@@ -126,14 +132,19 @@ impl<'a> CommonAssets<'a> {
         level_rooms.insert(1, load_level("assets/level/level2.tmx".to_string()));
         level_rooms.insert(2, load_level("assets/level/level3.tmx".to_string()));
 
+        let loot_tables = load_item_table("assets/items/loot_tables.json".to_string());
+
         CommonAssets {
             sound_effects: sounds,
             hit_effect_textures: textures,
             hit_effect_animations: vfx,
             level_tiles,
             level_rooms,
+            loot_tables,
             shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
             map_rng: None,
+            item_rng: None,
+            enemy_rng: None,
         }
     }
 }

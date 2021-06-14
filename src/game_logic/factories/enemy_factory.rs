@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use parry2d::na::Vector2;
 use sdl2::{render::TextureCreator, video::WindowContext};
 
 use crate::{asset_management::{asset_holders::{EntityAnimations, EntityAssets}, asset_loader::asset_loader::{load_anim_and_data_from_dir, load_anim_from_dir, load_textures_for_character}}, engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::characters::{Attack, Character}};

@@ -93,7 +93,6 @@ pub struct GameStateData<'a> {
     player: Option<Player>,
     font: Font<'a, 'a>,
     enemy_animations: HashMap<String, Rc<EntityAnimations>>,
-    //loot_tables; HashMap<>
     general_assets: CommonAssets<'a>,
 }
 

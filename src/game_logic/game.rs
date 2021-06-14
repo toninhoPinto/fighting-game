@@ -1,9 +1,10 @@
 use std::{collections::HashMap, rc::Rc};
 
 use parry2d::na::Vector2;
+use rand::{Rng, prelude::SmallRng};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{GameStateData, asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
+use crate::{GameStateData, asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, rng_tables::LootTable, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
 
 use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, items::{Item, ItemGround}, projectile::Projectile};
 
@@ -44,7 +45,7 @@ impl Game {
         self.levels.iter().map(|lvl| lvl.width * lvl.level_map.tile_width).sum::<u32>() as i32
     }
 
-    pub fn check_level_tags_and_apply(&mut self, game_state_data: &GameStateData, items: &HashMap<i32, Item>) {
+    pub fn check_level_tags_and_apply(&mut self, game_state_data: &mut GameStateData, items: &HashMap<i32, Item>) {
         for level in self.levels.iter_mut() {
             if !(self.camera.rect.x > level.start_x + (level.level_map.width * level.level_map.tile_width) as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
                 for tag in level.level_map.object_groups[0].objects.iter_mut() {
@@ -57,8 +58,10 @@ impl Game {
                             if tag.name == "enemy".to_string() {
                                 self.enemies.add_enemy(tag_pos, Rc::clone(game_state_data.enemy_animations.get("ryu").unwrap()));
                                 tag.visible = false;
+                            
                             } else if tag.name == "item".to_string() {
-                                let item_id = 12;
+                                let table = game_state_data.general_assets.loot_tables.get(&tag.obj_type).unwrap();
+                                let item_id = Game::get_random_item(table, &mut game_state_data.general_assets.item_rng.as_mut().unwrap()) as i32;
                                 self.items_on_ground.push(ItemGround{ position: tag_pos, item: (*items.get(&item_id).unwrap()).clone() });
                                 tag.visible = false;
                             }
@@ -67,6 +70,19 @@ impl Game {
                 }
             }
         }
+    }
+
+    fn get_random_item(loot_table: &LootTable, rng: &mut SmallRng) -> i64 {
+        let mut random = (rng.gen::<f64>() * loot_table.acc as f64) as u64;
+        
+        for item in loot_table.items.iter() {
+            if random < item.rarity {
+                return item.item_id;
+            } else {
+                random -= item.rarity;
+            }
+        }
+        return loot_table.items[0].item_id;
     }
 
     pub fn spawn_vfx(hit_vfx: &mut Vec<Particle>, rect: Rect, flipped: bool, type_of_animation: String, tint: Option<Color>) {
