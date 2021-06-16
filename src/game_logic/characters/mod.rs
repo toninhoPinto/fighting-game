@@ -37,6 +37,11 @@ pub struct Character {
     pub airborne_punch_string_curr: i8,
     pub airborne_kick_string_curr: i8,
     pub directional_attacks_mask_curr: u32,
+
+    pub punch_string_max: i8,
+    pub kick_string_max: i8,
+    pub airborne_punch_string_max: i8,
+    pub airborne_kick_string_max: i8,
 }
 
 /*
@@ -81,6 +86,10 @@ impl Character {
         airborne_punch_string: i8,
         airborne_kick_string: i8,
         directional_attacks_mask: u32,
+        punch_string_max: i8,
+        kick_string_max: i8,
+        airborne_punch_string_max: i8,
+        airborne_kick_string_max: i8,
     ) -> Self {
         Self {
             name,
@@ -106,6 +115,11 @@ impl Character {
             airborne_punch_string_curr: airborne_punch_string,
             airborne_kick_string_curr: airborne_kick_string,
             directional_attacks_mask_curr: directional_attacks_mask,
+
+            punch_string_max,
+            kick_string_max,
+            airborne_punch_string_max,
+            airborne_kick_string_max,
         }
     }
 }

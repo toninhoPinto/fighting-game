@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{GameStateData, Transition, game_logic::factories::{character_factory::{load_character, load_character_animations}, enemy_factory::load_enemy_ryu_animations}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
+use crate::{GameStateData, Transition, game_logic::{factories::{character_factory::{load_character, load_character_animations}, enemy_factory::load_enemy_ryu_animations}, items::loot_table_effects::stop_attack_spawn}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use rand::{Rng, SeedableRng, prelude::SmallRng};
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
 
@@ -160,7 +160,10 @@ impl<'a> Scene for MenuScene<'a> {
                                 game_state_data.seed = Some(seed);
                                 game_state_data.map_rng = Some(SmallRng::seed_from_u64(seed));
                                 overworld.init(screen_res, false, game_state_data.map_rng.as_mut().unwrap());
+                                
+                                stop_attack_spawn(vec![4,5,6,7,8,9,10,11,12,15], 0, &game_state_data.player.as_ref().unwrap().character, &mut game_state_data.general_assets.loot_tables);
 
+                                println!("loot table {:?}", game_state_data.general_assets.loot_tables.get("normal_table").unwrap().items);
                                 return Transition::Change(Box::new(overworld));
                             }
                         }

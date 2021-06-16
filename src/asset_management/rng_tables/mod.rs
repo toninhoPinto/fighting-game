@@ -20,6 +20,7 @@ pub struct Item {
     pub rarity: u64,
 }
 
+#[derive(Debug)]
 pub struct LootTable {
     pub acc: u64,
     pub items: Vec<Item>,

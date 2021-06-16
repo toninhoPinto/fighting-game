@@ -86,7 +86,11 @@ pub fn load_enemy(character_name: &str) -> Character {
             2,
             0,
             0,
-            0b0000u32
+            0b0000u32,
+            2,
+            2,
+            0,
+            0,
         )),
 
         _ => None,

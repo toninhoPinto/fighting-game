@@ -112,8 +112,6 @@ impl Scene for MatchScene {
 
         let mut debug_pause = false;
 
-        //let end_game_match = EndMatch::new(Rect::new(0, 0, 600, 600), Point::new(0, 0), font);
-
         loop {
             let current_time = Instant::now();
             let delta_time = current_time.duration_since(previous_time);
@@ -253,12 +251,17 @@ impl Scene for MatchScene {
                 let mut items_spawned = game.items_on_ground.clone();
                 items_spawned.iter_mut().for_each(|item_ground| {
                     if (player_position - item_ground.position).magnitude() <= 50.0 {
+                        println!("punch {:?}", game.player.character.punch_string_curr);
                         game.player.equip_item(&mut item_ground.item, &effects);
-                        for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
-                            val.items.retain(|x| x.item_id as i32 != item_ground.item.id);
-                            val.acc = val.items.iter().map(|i|{i.rarity}).sum();
-
-                            //TODO REFACTOR, some items should reaper, some items should influence the chance of other items appearing
+                        
+                        if let Some(chance_mod) = &item_ground.item.chance_mod {
+                            (chance_mod.modifier)(chance_mod.item_ids.clone(), chance_mod.chance_mod, &game.player.character, &mut game_state_data.general_assets.loot_tables);
+                            println!("loot table {:?}", game_state_data.general_assets.loot_tables.get("normal_table").unwrap().items);
+                        } else {
+                            for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
+                                val.items.retain(|x| x.item_id as i32 != item_ground.item.id);
+                                val.acc = val.items.iter().map(|i|{i.rarity}).sum();
+                            }
                         }
                     }
                 });

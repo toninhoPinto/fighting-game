@@ -1,3 +1,5 @@
+use std::cmp;
+
 use rand::{Rng, SeedableRng, prelude::SmallRng};
 
 use crate::{ecs_system::{enemy_components::{AIType, Position}, enemy_manager::EnemyManager, enemy_systems::{heal, take_damage_light}}, engine_types::animator::Animator, game_logic::{characters::{Attack, AttackType, player::Player}, effects::{Effect, events_pub_sub::{CharacterEvent, CharacterEventAttack, CharacterEventMap, CharacterEventUpdate}}, movement_controller::MovementController}, scenes::overworld_scene::OverworldScene};
@@ -12,10 +14,10 @@ pub fn add_attack_wrap(player: &mut Player, _: &mut EnemyManager, _: i32, effect
 
 pub fn add_attack(player: &mut Player, effect: &mut Effect) {
     match &effect.add_attack.as_ref().unwrap() as &str {
-        "punch" => {player.character.punch_string_curr+=1;},
-        "kick" => {player.character.kick_string_curr+=1;},
-        "airborne punch" => {player.character.airborne_punch_string_curr+=1;},
-        "airborne kick" => {player.character.airborne_kick_string_curr+=1;},
+        "punch" => {player.character.punch_string_curr = cmp::min(player.character.punch_string_curr + 1, player.character.punch_string_max)     ;},
+        "kick" => {player.character.kick_string_curr = cmp::min(player.character.kick_string_curr + 1, player.character.kick_string_max);},
+        "airborne punch" => {player.character.airborne_punch_string_curr = cmp::min(player.character.airborne_punch_string_curr + 1, player.character.airborne_punch_string_max);},
+        "airborne kick" => {player.character.airborne_kick_string_curr = cmp::min(player.character.airborne_kick_string_curr + 1, player.character.airborne_kick_string_max);},
         "launcher" => {player.character.directional_attacks_mask_curr   |=  0b0001u32;},
         "dropper" => {player.character.directional_attacks_mask_curr    |=  0b0010u32;}, 
         "dashing" => {player.character.directional_attacks_mask_curr    |=  0b0100u32;},

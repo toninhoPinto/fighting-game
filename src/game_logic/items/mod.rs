@@ -1,11 +1,14 @@
+use std::collections::HashMap;
+
 use parry2d::na::Vector2;
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
-use crate::asset_management::asset_holders::ItemAssets;
+use crate::asset_management::{asset_holders::ItemAssets, rng_tables::LootTable};
 
-use super::effects::Effect;
+use super::{characters::Character, effects::Effect};
 
 pub mod item_effects;
+pub mod loot_table_effects;
 
 #[derive(PartialEq, Clone)]
 pub enum ItemType {
@@ -22,13 +25,21 @@ pub struct Item {
     pub item_type: ItemType,
     pub asset_id: String,
     pub effects: Vec<Effect>,
+    pub chance_mod: Option<Chance>
 }
 
 #[derive(Clone)]
 pub struct ItemGround {
     pub position: Vector2<f64>,
     pub item: Item
-} 
+}
+
+#[derive(Clone)]
+pub struct Chance {
+    pub modifier: fn(Vec<i32>, i32, &Character, &mut HashMap<String, LootTable>),
+    pub item_ids: Vec<i32>,
+    pub chance_mod: i32
+}
 
 impl ItemGround {
     pub fn render<'a>(&'a mut self, assets: &'a ItemAssets<'a>) -> (&'a Texture<'a>, Rect, Point, bool, i32) {
