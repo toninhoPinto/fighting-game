@@ -52,19 +52,6 @@ pub fn stop_attack_spawn(_: Vec<i32>, _: i32, character: &Character, loot_tables
                 item.item_id == 12 || item.item_id == 15;
 
                 let already_mastered = combat_item && all_attacks_mastered;
-
-            println!("max_punches_already {} 
-            max_kicks_already {} 
-            max_air_punches_already {} 
-            max_air_kicks_already {} 
-            special_mask {} 
-            all_attacks_mastered {}", 
-            character.punch_string_curr >= character.punch_string_max,
-            character.kick_string_curr >= character.kick_string_max,
-            character.airborne_punch_string_curr >= character.airborne_punch_string_max, 
-            character.airborne_kick_string_curr >= character.airborne_kick_string_max, 
-            character.directional_attacks_mask_curr, 
-            all_attacks_mastered);
             
             !(max_punches_already || max_kicks_already || max_air_punches_already || max_air_kicks_already || 
                 launch_already || dropper_already || dashing_already || crash_already ||
