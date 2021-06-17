@@ -79,6 +79,7 @@ pub fn remove_all_extra_punches(player: &mut Player, effect: &mut Effect) {
     let multiplier = (player.character.punch_string_curr - 1) as i32 * effect.change.unwrap();
     effect.change = Some(multiplier);
     player.character.punch_string_curr = 1;
+    player.character.punch_string_max = 1;
     //buff first punch damage, need access to EntityData, maybe put it inside player
     player.events.on_hit.push((buff_punch_damage, effect.clone()));
 }

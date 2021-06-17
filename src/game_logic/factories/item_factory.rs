@@ -81,7 +81,7 @@ fn make_chance_modifier(item_id: i32, chance_mod: &ChanceMod) -> Chance {
             Some(0) => {stop_spawn_item},
             Some(1) => {stop_attack_spawn},
             Some(_) => {change_spawn_item},
-            None => {stop_attack_spawn},
+            None => {stop_spawn_item},
         },
         item_ids,
         chance_mod: if let Some(rarity_mod) = chance_mod.rarity_mod {rarity_mod} else {0}
