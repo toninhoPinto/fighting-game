@@ -52,7 +52,10 @@ pub fn overworld_change_connections(overworld: &mut OverworldScene, rng: &mut Sm
             while overworld.nodes[curr_node].node_type != WorldNodeType::Boss  {
                 let outgoing_connections = &graph[curr_node];
                 let prev_node =  curr_node;
-                curr_node = outgoing_connections.iter().map(|&x| x).collect::<Vec<usize>>()[rng.gen_range(0..outgoing_connections.len())];
+                let mut paths = outgoing_connections.iter().map(|&x| x).collect::<Vec<usize>>();
+                paths.sort();
+                let new_random_node = (rng.gen::<f64>() * outgoing_connections.len() as f64) as usize;
+                curr_node = paths[new_random_node];
                 overworld.nodes[prev_node].connect_to.insert(curr_node);
                 visited.insert(curr_node as usize);
             }
@@ -67,10 +70,14 @@ pub fn overworld_change_connections(overworld: &mut OverworldScene, rng: &mut Sm
                     }
                 }
     
-                let node_to_connected_to_unvisited = possible_nodes_that_reach_unvisited[rng.gen_range(0..possible_nodes_that_reach_unvisited.len())];
+                let node_to_connected_to_unvisited = possible_nodes_that_reach_unvisited[(rng.gen::<f64>() * possible_nodes_that_reach_unvisited.len() as f64) as usize];
     
                 overworld.nodes[node_to_connected_to_unvisited].connect_to.insert(i);
-                overworld.nodes[i].connect_to.insert(graph[i].iter().map(|&x| x).collect::<Vec<usize>>()[rng.gen_range(0..graph[i].len())]);
+
+                let mut paths = graph[i].iter().map(|&x| x).collect::<Vec<usize>>();
+                paths.sort();
+                overworld.nodes[i].connect_to.insert(paths[(rng.gen::<f64>() * graph[i].len() as f64) as usize]);
+
                 visited.insert(i);
             }
         }
@@ -161,14 +168,18 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
     } else {
 
         let mut visited: HashSet<usize> = HashSet::new();
-        let main_paths= (rng.gen::<f64>() * (graph[0].len() - 1) as f64) as usize + 1;
-    
+        let main_paths_rng = rng.gen::<f64>();
+        let main_paths= (main_paths_rng * (graph[0].len() - 1) as f64) as usize + 1;
+
         for _ in 0..main_paths {
             let mut curr_node = 0;
             while overworld[curr_node].node_type != WorldNodeType::Boss  {
                 let outgoing_connections = &graph[curr_node];
                 let prev_node =  curr_node;
-                curr_node = outgoing_connections.iter().map(|&x| x).collect::<Vec<usize>>()[rng.gen_range(0..outgoing_connections.len())];
+                let new_random_node = (rng.gen::<f64>() * outgoing_connections.len() as f64) as usize;
+                let mut paths = outgoing_connections.iter().map(|&x| x).collect::<Vec<usize>>();
+                paths.sort();
+                curr_node = paths[new_random_node];
                 overworld[prev_node].connect_to.insert(curr_node);
                 visited.insert(curr_node as usize);
             }
@@ -182,11 +193,13 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
                         possible_nodes_that_reach_unvisited.push(j);
                     }
                 }
-    
-                let node_to_connected_to_unvisited = possible_nodes_that_reach_unvisited[rng.gen_range(0..possible_nodes_that_reach_unvisited.len())];
+                
+                let node_to_connected_to_unvisited = possible_nodes_that_reach_unvisited[(rng.gen::<f64>() * possible_nodes_that_reach_unvisited.len() as f64) as usize];
     
                 overworld[node_to_connected_to_unvisited].connect_to.insert(i);
-                overworld[i].connect_to.insert(graph[i].iter().map(|&x| x).collect::<Vec<usize>>()[rng.gen_range(0..graph[i].len())]);
+                let mut paths = graph[i].iter().map(|&x| x).collect::<Vec<usize>>();
+                paths.sort();
+                overworld[i].connect_to.insert(paths[(rng.gen::<f64>() * graph[i].len() as f64) as usize]);
                 visited.insert(i);
             }
         }
