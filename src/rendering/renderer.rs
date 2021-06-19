@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, level_generation::Level, scenes::overworld_scene::active_item_ui, ui::ingame::wrapping_list_ui::WrappingList};
+use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, level_generation::Level, ui::ingame::wrapping_list_ui::WrappingList};
 use crate::{
     ui::ingame::{segmented_bar_ui::SegmentedBar},
 };
@@ -71,8 +71,6 @@ pub fn render(
     enemy_assets: &HashMap<&str, EntityAssets>,
     common_assets: &mut CommonAssets,
     item_assets: &ItemAssets,
-    item_list: &WrappingList,
-    hp_bars: &SegmentedBar,
     debug: bool,
 ) -> Result<(), String> {
     
@@ -147,29 +145,6 @@ pub fn render(
             render_colliders(canvas, screen_res, &game.camera, &mut game.projectiles[i].colliders);
         }
         render_colliders(canvas, screen_res, &game.camera, &mut game.player.collision_manager.colliders);
-    }
-
-    if let Some(active_item) = &game.player.active_item_key {
-        let src_rect = item_assets.src_rects.get(active_item).unwrap();
-        canvas.copy(&item_assets.spritesheet, src_rect.clone(), active_item_ui()).unwrap();
-    }
-    
-    if hp_bars.curr_value > 0 {
-        canvas.set_draw_color(hp_bars.color.unwrap());
-        for hp_rect in hp_bars.render() {
-            canvas.draw_rect(hp_rect).unwrap();
-            canvas.fill_rect(hp_rect).unwrap();
-        }
-    }
-
-    let item_list = item_list.render();
-    let player = &game.player;
-    if player.items.len() > 0 {
-        for i in 0..player.items.len() {
-            let src_rect = item_assets.src_rects.get(&player.items[i]).unwrap();
-            let dst_rect = item_list[i];
-            canvas.copy(&item_assets.spritesheet, src_rect.clone(), dst_rect).unwrap();
-        }
     }
 
     Ok(())

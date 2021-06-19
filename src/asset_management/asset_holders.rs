@@ -43,6 +43,7 @@ pub struct OverworldAssets<'a>{
     pub spritesheet: Texture<'a>,
     pub src_rects: HashMap<String, Rect>,
     pub portraits: HashMap<String, Texture<'a>>,
+    pub backgrounds: Vec<Texture<'a>>,
 }
 
 pub struct ItemAssets<'a>{
