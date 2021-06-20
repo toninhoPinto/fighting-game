@@ -61,7 +61,7 @@ impl OverworldScene {
     fn iterate_over_store_items(store: &mut StoreUI) {
         if store.items.len() > 0 {
             store.selected_item += 1;
-            store.selected_item %= store.items.len();
+            store.selected_item %= store.items.len() + 1;
         }
     }
 }
@@ -145,33 +145,38 @@ impl<'a> Scene for OverworldScene {
 
                             if in_store {
 
-                                if let Some(ref mut store) = store {
+                                if let Some(ref mut store_ui) = store {
 
-                                    if store.items.len() > 0 {
-                                        let item_selected_id = store.items.remove(store.selected_item);
-                                        store.item_rects.remove(store.selected_item);
-                                        store.prices.remove(store.selected_item);
+                                    if store_ui.selected_item < store_ui.items.len() {
+                                        if store_ui.items.len() > 0 {
+                                            let item_selected_id = store_ui.items.remove(store_ui.selected_item);
+                                            store_ui.item_rects.remove(store_ui.selected_item);
+                                            store_ui.prices.remove(store_ui.selected_item);
 
-                                        store.selected_item = cmp::max(0,cmp::min(store.items.len()-1, store.selected_item));
+                                            store_ui.selected_item = cmp::max(0,cmp::min(store_ui.items.len()-1, store_ui.selected_item));
 
-                                        let mut bought_item = items.get(&(item_selected_id as i32)).unwrap().clone();
-                                        game_state_data.player.as_mut().unwrap().equip_item(&mut bought_item, &effects);
-                                
-                                        if let Some(chance_mod) = &bought_item.chance_mod {
-                                            (chance_mod.modifier)(chance_mod.item_ids.clone(), chance_mod.chance_mod, &game_state_data.player.as_ref().unwrap().character, &mut game_state_data.general_assets.loot_tables);
-                                        } else {
-                                            for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
-                                                val.items.retain(|x| x.item_id as i32 != bought_item.id);
-                                                val.acc = val.items.iter().map(|i|{i.rarity}).sum();
+                                            let mut bought_item = items.get(&(item_selected_id as i32)).unwrap().clone();
+                                            game_state_data.player.as_mut().unwrap().equip_item(&mut bought_item, &effects);
+                                    
+                                            if let Some(chance_mod) = &bought_item.chance_mod {
+                                                (chance_mod.modifier)(chance_mod.item_ids.clone(), chance_mod.chance_mod, &game_state_data.player.as_ref().unwrap().character, &mut game_state_data.general_assets.loot_tables);
+                                            } else {
+                                                for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
+                                                    val.items.retain(|x| x.item_id as i32 != bought_item.id);
+                                                    val.acc = val.items.iter().map(|i|{i.rarity}).sum();
+                                                }
+                                            }
+
+                                            if game_state_data.player.as_ref().unwrap().items.len() != item_list.rects.len() {
+                                                item_list.update(game_state_data.player.as_ref().unwrap().items.iter()
+                                                    .map(|_| {Rect::new(0,0,32,32)})
+                                                    .collect::<Vec<Rect>>()
+                                                );
                                             }
                                         }
-
-                                        if game_state_data.player.as_ref().unwrap().items.len() != item_list.rects.len() {
-                                            item_list.update(game_state_data.player.as_ref().unwrap().items.iter()
-                                                .map(|_| {Rect::new(0,0,32,32)})
-                                                .collect::<Vec<Rect>>()
-                                            );
-                                        }
+                                    } else {
+                                        in_store = false;
+                                        store = None;
                                     }
 
                                 }
@@ -192,6 +197,16 @@ impl<'a> Scene for OverworldScene {
                                     store_struct.items = get_store_item_list(item_room_seed, game_state_data.general_assets.loot_tables.get("store_table").unwrap());
                                     
                                     store = Some(store_struct);
+
+                                    self.player_node_pos = self.next_node;
+                                    game_state_data.curr_level = self.player_node_pos as i32;
+
+                                    self.connect_to_index = 0;
+                                    let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
+                                    self.next_node = connecting_to
+                                        .iter()
+                                        .map(|&a| {a})
+                                        .collect::<Vec<usize>>()[self.connect_to_index];
                                 }
 
                                 if let WorldNodeType::Event(_) = self.nodes[self.next_node].node_type {
