@@ -152,7 +152,7 @@ impl<'a> Scene for OverworldScene {
                                         store.item_rects.remove(store.selected_item);
                                         store.prices.remove(store.selected_item);
 
-                                        store.selected_item = cmp::max(0,cmp::min(store.items.len(), store.selected_item));
+                                        store.selected_item = cmp::max(0,cmp::min(store.items.len()-1, store.selected_item));
 
                                         let mut bought_item = items.get(&(item_selected_id as i32)).unwrap().clone();
                                         game_state_data.player.as_mut().unwrap().equip_item(&mut bought_item, &effects);
