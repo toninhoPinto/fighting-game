@@ -2,8 +2,9 @@ use engine_traits::scene::Scene;
 use game_logic::characters::player::Player;
 use rand::prelude::SmallRng;
 use scenes::menu_scene::MenuScene;
-use sdl2::{image::{self, InitFlag}, ttf::Font};
+use sdl2::{image::{self, InitFlag}, pixels::Color, rect::{Point, Rect}, ttf::Font};
 use sdl2::render::BlendMode;
+use ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList};
 
 use std::{collections::HashMap, path::Path, rc::Rc};
 
@@ -106,6 +107,32 @@ pub enum Transition {
     Push(Box<dyn Scene>),
     Pop,
     Quit,
+}
+
+
+pub fn hp_bar_init<'a>(screen_res: (u32, u32), max_hp: i32, curr_hp: i32) -> SegmentedBar<'a> {
+    SegmentedBar::new(
+        80,
+        20,
+        screen_res.0 / 3 - 50,
+        25,
+        max_hp,
+        curr_hp,
+        20,
+        Some(Color::RGB(255, 100, 100)),
+        None,
+    )
+}
+
+pub fn item_list_init(game_state_data: &GameStateData) -> WrappingList {
+    WrappingList::new(
+        Point::new(10, 70),
+        200,
+        game_state_data.player.as_ref().unwrap().items.iter()
+            .map(|_item| {Rect::new(0,0,32,32)})
+            .collect::<Vec<Rect>>(), 
+        10
+    )
 }
 
 fn main() -> Result<(), String> {

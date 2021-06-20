@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use parry2d::na::Vector2;
+use rand::{Rng, prelude::SmallRng};
 use sdl2::{rect::{Point, Rect}, render::Texture};
 
 use crate::asset_management::{asset_holders::ItemAssets, rng_tables::LootTable};
@@ -56,4 +57,17 @@ impl ItemGround {
 
 pub trait Pickup {
     fn grab(&mut self);
+}
+
+pub fn get_random_item(loot_table: &LootTable, rng: &mut SmallRng) -> i64 {
+    let mut random = (rng.gen::<f64>() * loot_table.acc as f64) as u64;
+    
+    for item in loot_table.items.iter() {
+        if random < item.rarity {
+            return item.item_id;
+        } else {
+            random -= item.rarity;
+        }
+    }
+    return loot_table.items[0].item_id;
 }

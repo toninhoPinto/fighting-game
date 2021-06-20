@@ -6,7 +6,7 @@ use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
 use crate::{GameStateData, asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, rng_tables::LootTable, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
 
-use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, items::{Item, ItemGround}, projectile::Projectile};
+use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, items::{Item, ItemGround, get_random_item}, projectile::Projectile};
 
 const LIMIT_NUMBER_OF_VFX: usize = 20;
 pub struct Game {
@@ -63,7 +63,7 @@ impl Game {
                                 let table = game_state_data.general_assets.loot_tables.get(&tag.obj_type).unwrap();
 
                                 let item_room_seed = game_state_data.seed.unwrap() * (game_state_data.curr_level as u64 + level_index as u64); //+ some id of overworld map level picked + picked tileset level 
-                                let item_id = Game::get_random_item(table, &mut SmallRng::seed_from_u64(item_room_seed)) as i32;
+                                let item_id = get_random_item(table, &mut SmallRng::seed_from_u64(item_room_seed)) as i32;
                                 self.items_on_ground.push(ItemGround{ position: tag_pos, item: (*items.get(&item_id).unwrap()).clone() });
                                 tag.visible = false;
                             }
@@ -72,19 +72,6 @@ impl Game {
                 }
             }
         }
-    }
-
-    fn get_random_item(loot_table: &LootTable, rng: &mut SmallRng) -> i64 {
-        let mut random = (rng.gen::<f64>() * loot_table.acc as f64) as u64;
-        
-        for item in loot_table.items.iter() {
-            if random < item.rarity {
-                return item.item_id;
-            } else {
-                random -= item.rarity;
-            }
-        }
-        return loot_table.items[0].item_id;
     }
 
     pub fn spawn_vfx(hit_vfx: &mut Vec<Particle>, rect: Rect, flipped: bool, type_of_animation: String, tint: Option<Color>) {
