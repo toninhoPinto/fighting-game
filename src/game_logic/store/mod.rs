@@ -52,7 +52,7 @@ impl StoreUI {
             items: Vec::new(),
             prices: price_rects,
             store_keeper: Rect::new(store_x + shoop_keeper_width/2, store_y, shoop_keeper_width as u32, shoop_keeper_height),
-            back_button: Rect::new(store_x + (store_width as f32 * 0.6f32) as i32, store_y + store_height as i32, 128, 64)
+            back_button: Rect::new(store_x + (store_width as f32 * 0.6f32) as i32, store_y + (store_height as f32 * 0.8f32) as i32, 128, 64)
         }
     }
 
