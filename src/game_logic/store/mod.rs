@@ -62,12 +62,26 @@ impl StoreUI {
 pub fn get_store_item_list(seed: u64, loot_table: &LootTable) -> Vec<i64>{
     let mut rng = SmallRng::seed_from_u64(seed);
 
-    let four_random_indexes: Vec<i64> = vec![
-        get_random_item(loot_table, &mut rng),
-        get_random_item(loot_table, &mut rng),
-        get_random_item(loot_table, &mut rng), 
-        get_random_item(loot_table, &mut rng)
-        ];
+    let mut store_clone = (*loot_table).clone();
+
+    let mut four_random_indexes: Vec<i64> = Vec::new();
+
+    let random_item = get_random_item(&store_clone, &mut rng);
+    four_random_indexes.push(random_item);
+    store_clone.items.retain(|i| {i.item_id != random_item});
+
+    let random_item = get_random_item(&store_clone, &mut rng);
+    four_random_indexes.push(random_item);
+    store_clone.items.retain(|i| {i.item_id != random_item});
+
+    let random_item = get_random_item(&store_clone, &mut rng);
+    four_random_indexes.push(random_item);
+    store_clone.items.retain(|i| {i.item_id != random_item});
+
+    let random_item = get_random_item(&store_clone, &mut rng);
+    four_random_indexes.push(random_item);
+    store_clone.items.retain(|i| {i.item_id != random_item});
+
 
     four_random_indexes
 }

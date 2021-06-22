@@ -33,7 +33,7 @@ pub fn render_popup<'a>(texture_creator: &'a TextureCreator<WindowContext>, titl
                 .map_err(|e| e.to_string())
                 .unwrap();
 
-    let TextureQuery { width, height, .. } = title_texture.query();
+    let TextureQuery { width, .. } = title_texture.query();
 
     popup.contents[0].set_width(width);
     popup.contents[0].set_x(popup.popup.x() + (popup.popup.width() as f32 * 0.5f32)  as i32 - (width as i32/2));
@@ -50,7 +50,7 @@ pub fn render_popup<'a>(texture_creator: &'a TextureCreator<WindowContext>, titl
             .unwrap();
 
             
-    let TextureQuery { width, height, .. } = desc_texture.query();
+    let TextureQuery { width, .. } = desc_texture.query();
 
     popup.contents[1].set_width(width);
     popup.alpha = 255f32;
