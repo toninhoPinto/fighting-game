@@ -10,7 +10,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::render_ui, ui::ingame::popup_ui::{PopUp, new_item_popup}};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::render_ui, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -19,7 +19,7 @@ use crate::{
     GameStateData,
 };
 
-const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
+pub const MAX_UPDATES_AVOID_SPIRAL_OF_DEATH: i32 = 4;
 
 //Screen dimension constants
 const SCREEN_WIDTH: u32 = 1280;
@@ -326,18 +326,7 @@ impl Scene for MatchScene {
                     );
                 }
 
-                if popup_item.alpha > 0f32 {
-                    let new_alpha = popup_item.alpha - (logic_timestep as f32 * 100f32);
-                    popup_item.alpha = new_alpha;
-
-
-                    if let Some(ref mut popup_content) = popup_content {
-                        for i in 0..popup_content.len() {
-                            popup_content[i].set_alpha_mod(new_alpha as u8);
-                        }
-                    }
-                    
-                }
+                popup_fade(&mut popup_item, &mut popup_content, logic_timestep);
 
                 logic_time_accumulated -= logic_timestep;
             }

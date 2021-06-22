@@ -57,3 +57,16 @@ pub fn render_popup<'a>(texture_creator: &'a TextureCreator<WindowContext>, titl
 
     vec![title_texture, desc_texture]
 }
+
+pub fn popup_fade<'a>(popup_item: &mut PopUp, popup_content: &mut Option<Vec<Texture<'a>>>, logic_timestep: f64) {
+    if popup_item.alpha > 0f32 {
+        let new_alpha = popup_item.alpha - (logic_timestep * 90f64) as f32;
+        popup_item.alpha = new_alpha;
+
+        if let Some(ref mut popup_content) = popup_content {
+            for i in 0..popup_content.len() {
+                popup_content[i].set_alpha_mod(new_alpha as u8);
+            }
+        } 
+    }
+}

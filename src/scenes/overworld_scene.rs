@@ -1,11 +1,11 @@
-use std::cmp;
+use std::{cmp, time::Instant};
 
 use rand::prelude::SmallRng;
-use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
+use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::PopUp};
+use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 
-use super::match_scene::MatchScene;
+use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
 
 pub struct OverworldScene {
     pub rect: Rect,
@@ -95,6 +95,9 @@ impl<'a> Scene for OverworldScene {
 
         let mut store: Option<StoreUI> = None;
 
+        let mut popup_item = new_item_popup((w,h));
+        let mut popup_content: Option<Vec<Texture>> = None;
+
         let mut item_list = item_list_init(&game_state_data);
 
         self.connect_to_index = 0;
@@ -112,6 +115,11 @@ impl<'a> Scene for OverworldScene {
 
         let mut in_event = false;
         let mut in_store = false;
+
+        let mut previous_time = Instant::now();
+        let logic_timestep: f64 = 0.016;
+        let mut logic_time_accumulated: f64 = 0.0;
+        let mut update_counter = 0;
 
         loop {
             //receive inputs for managing selecting menu options
@@ -153,13 +161,18 @@ impl<'a> Scene for OverworldScene {
                                             store_ui.item_rects.remove(store_ui.selected_item);
                                             store_ui.prices.remove(store_ui.selected_item);
 
-                                            println!("{}", store_ui.selected_item);
                                             let new_selected = if store_ui.selected_item == 0 {store_ui.selected_item} else {store_ui.selected_item-1};
                                             store_ui.selected_item = cmp::max(0,cmp::min(store_ui.items.len(), new_selected));
 
                                             let mut bought_item = items.get(&(item_selected_id as i32)).unwrap().clone();
                                             game_state_data.player.as_mut().unwrap().equip_item(&mut bought_item, &effects);
                                     
+                                            popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
+                                                &bought_item.name, 
+                                                &bought_item.description, 
+                                                &game_state_data.general_assets.font, 
+                                                &mut popup_item));
+
                                             if let Some(chance_mod) = &bought_item.chance_mod {
                                                 (chance_mod.modifier)(chance_mod.item_ids.clone(), chance_mod.chance_mod, &game_state_data.player.as_ref().unwrap().character, &mut game_state_data.general_assets.loot_tables);
                                             } else {
@@ -222,7 +235,26 @@ impl<'a> Scene for OverworldScene {
                 }
                 //end of input management
             }
+
+            let current_time = Instant::now();
+            let delta_time = current_time.duration_since(previous_time);
+            let delta_time_as_nanos =
+                delta_time.as_secs() as f64 + (delta_time.subsec_nanos() as f64 * 1e-9);
+
+            previous_time = current_time;
+                
+            logic_time_accumulated += delta_time_as_nanos;
             //update
+            while logic_time_accumulated >= logic_timestep {
+                update_counter += 1;
+                if update_counter >= MAX_UPDATES_AVOID_SPIRAL_OF_DEATH {
+                    logic_time_accumulated = 0.0;
+                }
+
+                popup_fade(&mut popup_item, &mut popup_content, logic_timestep);
+
+                logic_time_accumulated -= logic_timestep;
+            }
 
             //render
             canvas.set_draw_color(Color::RGB(237, 158, 80));
@@ -250,8 +282,8 @@ impl<'a> Scene for OverworldScene {
                 &hp_bars,
                 &item_list,
                 &item_assets,
-                None,
-                &None
+                Some(&popup_item),
+                &popup_content
                 );
 
             canvas.present();
