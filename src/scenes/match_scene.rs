@@ -1,5 +1,5 @@
 use parry2d::na::Vector2;
-use sdl2::{rect::Rect};
+use sdl2::{rect::Rect, render::Texture};
 use std::{collections::HashMap, rc::Rc, time::Instant};
 
 use sdl2::{
@@ -10,7 +10,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::render_ui};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::render_ui, ui::ingame::popup_ui::{PopUp, new_item_popup}};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -98,6 +98,9 @@ impl Scene for MatchScene {
             game.player.character.hp,
             game.player.hp.0,
         );
+
+        let mut popup_item = new_item_popup(screen_res);
+        let mut popup_content: Option<Vec<Texture>> = None;
 
         let mut item_list = crate::item_list_init(&game_state_data);
         
@@ -248,8 +251,15 @@ impl Scene for MatchScene {
                 
                 let mut items_spawned = game.items_on_ground.clone();
                 items_spawned.iter_mut().for_each(|item_ground| {
+
                     if (player_position - item_ground.position).magnitude() <= 50.0 {
                         game.player.equip_item(&mut item_ground.item, &effects);
+                        
+                        popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
+                            &item_ground.item.name, 
+                            &item_ground.item.description, 
+                            &game_state_data.general_assets.font, 
+                            &mut popup_item));
                         
                         if let Some(chance_mod) = &item_ground.item.chance_mod {
                             (chance_mod.modifier)(chance_mod.item_ids.clone(), chance_mod.chance_mod, &game.player.character, &mut game_state_data.general_assets.loot_tables);
@@ -260,6 +270,7 @@ impl Scene for MatchScene {
                             }
                         }
                     }
+
                 });
 
                 game.items_on_ground.retain(|item_ground| {
@@ -315,6 +326,19 @@ impl Scene for MatchScene {
                     );
                 }
 
+                if popup_item.alpha > 0f32 {
+                    let new_alpha = popup_item.alpha - (logic_timestep as f32 * 100f32);
+                    popup_item.alpha = new_alpha;
+
+
+                    if let Some(ref mut popup_content) = popup_content {
+                        for i in 0..popup_content.len() {
+                            popup_content[i].set_alpha_mod(new_alpha as u8);
+                        }
+                    }
+                    
+                }
+
                 logic_time_accumulated -= logic_timestep;
             }
 
@@ -339,9 +363,11 @@ impl Scene for MatchScene {
                     &hp_bars,
                     &item_list,
                     &game_state_data.item_sprites,
+                    Some(&popup_item),
+                    &popup_content
                     );
                 
-                console.render(texture_creator, canvas, &game_state_data.font);
+                console.render(texture_creator, canvas, &game_state_data.general_assets.font);
                 
                 canvas.present(); 
 

@@ -3,7 +3,7 @@ use std::cmp;
 use rand::prelude::SmallRng;
 use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}};
+use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::PopUp};
 
 use super::match_scene::MatchScene;
 
@@ -250,6 +250,8 @@ impl<'a> Scene for OverworldScene {
                 &hp_bars,
                 &item_list,
                 &item_assets,
+                None,
+                &None
                 );
 
             canvas.present();

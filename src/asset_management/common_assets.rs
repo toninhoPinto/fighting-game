@@ -8,7 +8,7 @@ use crate::engine_types::animation::Animation;
 use super::asset_loader::asset_loader;
 use super::rng_tables::LootTable;
 use super::{sound::audio_player};
-use rand::prelude::SmallRng;
+use sdl2::ttf::{Font, Sdl2TtfContext};
 use sdl2::{
     mixer::Chunk,
     render::{Texture, TextureCreator},
@@ -21,6 +21,7 @@ const SFX_VOLUME: i32 = 10;
 pub struct CommonAssets<'a> {
     //sounds
     pub sound_effects: HashMap<String, Chunk>,
+    pub font: Font<'a, 'a>,
 
     //rooms
     pub level_tiles: HashMap<String,Texture<'a>>,
@@ -35,7 +36,7 @@ pub struct CommonAssets<'a> {
 }
 
 impl<'a> CommonAssets<'a> {
-    pub fn load(texture_creator: &'a TextureCreator<WindowContext>) -> Self {
+    pub fn load(texture_creator: &'a TextureCreator<WindowContext>, ttf_context: &'a Sdl2TtfContext) -> Self {
         let mut hit_sound =
             audio_player::load_from_file(Path::new("assets/sounds/104183__ekokubza123__punch.wav"))
                 .map_err(|e| format!("Cannot load sound file: {:?}", e))
@@ -73,6 +74,7 @@ impl<'a> CommonAssets<'a> {
         let mut miss_sound = audio_player::load_from_file(Path::new("assets/sounds/521999__kastenfrosch__whoosh-dash.wav"))
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
+            
             
         hit_sound.set_volume(SFX_VOLUME);
         dash_sound.set_volume(SFX_VOLUME * 2);
@@ -129,6 +131,8 @@ impl<'a> CommonAssets<'a> {
 
         let loot_tables = load_item_table("assets/items/loot_tables.json".to_string());
 
+        let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 16).unwrap();
+
         CommonAssets {
             sound_effects: sounds,
             hit_effect_textures: textures,
@@ -137,6 +141,7 @@ impl<'a> CommonAssets<'a> {
             level_rooms,
             loot_tables,
             shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
+            font,
         }
     }
 }

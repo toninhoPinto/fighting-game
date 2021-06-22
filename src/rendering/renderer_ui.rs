@@ -1,16 +1,18 @@
-use sdl2::{rect::Rect, render::WindowCanvas};
+use sdl2::{pixels::Color, rect::Rect, render::{Texture, WindowCanvas}};
 
-use crate::{asset_management::asset_holders::ItemAssets, game_logic::characters::player::Player, ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
+use crate::{asset_management::asset_holders::ItemAssets, game_logic::characters::player::Player, ui::ingame::{popup_ui::PopUp, segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
 
 pub fn active_item_ui() -> Rect{
     Rect::new(10, 0 , 64, 64)
 }
 
-pub fn render_ui(canvas: &mut WindowCanvas, 
+pub fn render_ui<'a>(canvas: &mut WindowCanvas, 
     player: &Player,
     hp_bars: &SegmentedBar,
     item_list: &WrappingList,
     item_assets: &ItemAssets,
+    popups: Option<&PopUp>,
+    popup_content: &Option<Vec<Texture<'a>>>
     ) {
 
         if let Some(active_item) = &player.active_item_key {
@@ -35,4 +37,21 @@ pub fn render_ui(canvas: &mut WindowCanvas,
             }
         }
 
+        if let (Some(popups), Some(popup_content)) = (popups, popup_content) {
+            if popups.alpha > 0f32 {
+                canvas.set_draw_color(Color::RGBA(50, 50, 50, popups.alpha as u8));
+
+                canvas.draw_rect(popups.popup).unwrap();
+                canvas.fill_rect(popups.popup).unwrap();
+
+                for i in 0..popup_content.len() {
+                    canvas
+                        .copy(&popup_content[i], None, popups.contents[i])
+                        .unwrap();
+                }
+            }
+
+        }
+
+        
     }

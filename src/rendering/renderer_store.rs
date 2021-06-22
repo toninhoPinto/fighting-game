@@ -31,7 +31,7 @@ pub fn render_store(canvas: &mut WindowCanvas,
 
     canvas.copy(shoop_keeper, Rect::new(0,0, width, height), store.store_keeper).unwrap();
 
-    let src_pointer = assets.src_rects.get("arrow").unwrap();
+    let src_pointer = assets.src_rects.get("square").unwrap();
 
     let mut selected_item: Rect;
     if store.selected_item < store.item_rects.len() {
@@ -39,7 +39,7 @@ pub fn render_store(canvas: &mut WindowCanvas,
     } else {
         selected_item = store.back_button;
     }
-    selected_item.x = selected_item.x - 10;
+    selected_item.x = selected_item.x + 50;
     canvas.copy_ex(&assets.spritesheet, src_pointer.clone(), selected_item, 90f64, Point::new(0,0), false, false).unwrap();
 
     canvas.set_draw_color(Color::RGB(200, 50, 50));

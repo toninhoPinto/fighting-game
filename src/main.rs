@@ -36,6 +36,12 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 
+// picking up items should display name and description
+// tweak overworld gen so levels dont spawn so much on top of each other 
+// improve store UI on the selected item
+// store selected item use left key to go back to the previous selected item
+// show price of items
+
 //Level generation
     //make enemy tables
     //tweak placement of objects (both the debug cubes and enemy spawning seem to be slightly off)
@@ -90,7 +96,7 @@ use crate::input::controller_handler::Controller;
 pub struct GameStateData<'a> {
     item_sprites: ItemAssets<'a>,
     player: Option<Player>,
-    font: Font<'a, 'a>,
+
     enemy_animations: HashMap<String, Rc<EntityAnimations>>,
     general_assets: CommonAssets<'a>,
 
@@ -167,7 +173,6 @@ fn main() -> Result<(), String> {
 
 
     let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 128)?;
-    let console_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 32)?;
 
     let mut controller_data = Controller::new();
     controller_data.add_keyboard();
@@ -184,8 +189,7 @@ fn main() -> Result<(), String> {
         item_sprites: load_item_assets(&texture_creator),
         player: None,
         enemy_animations: HashMap::new(),
-        font: console_font,
-        general_assets: CommonAssets::load(&texture_creator),
+        general_assets: CommonAssets::load(&texture_creator, &ttf_context),
         seed: None,
         map_rng: None,
 
