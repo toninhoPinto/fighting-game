@@ -52,7 +52,7 @@ pub fn render_popup<'a>(texture_creator: &'a TextureCreator<WindowContext>, titl
             
     let TextureQuery { width, .. } = desc_texture.query();
 
-    popup.contents[1].set_width(width);
+    popup.contents[1].set_width(width); 
     popup.alpha = 255f32;
 
     vec![title_texture, desc_texture]

@@ -29,7 +29,9 @@ pub fn render_store(canvas: &mut WindowCanvas,
     let shoop_keeper = &assets.portraits.get("shop_keeper").unwrap();
     let TextureQuery { width, height, .. } = shoop_keeper.query();
 
-    canvas.copy(shoop_keeper, Rect::new(0,0, width, height), store.store_keeper).unwrap();
+    let scaler = 0.9f32;
+    let shop_keeper = Rect::new(store.store_keeper.x(), store.store_keeper.y(), (width as f32 * scaler) as u32, (height as f32 * scaler) as u32);
+    canvas.copy(shoop_keeper, Rect::new(0,0, width, height), shop_keeper).unwrap();
 
     let src_pointer = assets.src_rects.get("square").unwrap();
 

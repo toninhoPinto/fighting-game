@@ -58,9 +58,9 @@ impl OverworldScene {
             .collect::<Vec<usize>>()[self.connect_to_index];
     }
 
-    fn iterate_over_store_items(store: &mut StoreUI) {
+    fn iterate_over_store_items(store: &mut StoreUI, direction: i32) {
         if store.items.len() > 0 {
-            store.selected_item += 1;
+            store.selected_item = (store.selected_item as i32 + (1 * direction)) as usize;
             store.selected_item %= store.items.len() + 1;
         }
     }
@@ -144,8 +144,11 @@ impl<'a> Scene for OverworldScene {
                         if translated_input == TranslatedInput::Vertical(1) && !in_event && !in_store {
                             self.iterate_over_levels(game_state_data);
                         }
-                        if translated_input == TranslatedInput::Horizontal(1) && !in_event && in_store {
-                           OverworldScene::iterate_over_store_items(&mut store.as_mut().unwrap());
+                        if !in_event && in_store {
+
+                            if let TranslatedInput::Horizontal(x) = translated_input {
+                                OverworldScene::iterate_over_store_items(&mut store.as_mut().unwrap(), x)
+                            }
                         }
                     }
                     if !is_pressed {

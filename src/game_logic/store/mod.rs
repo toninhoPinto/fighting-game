@@ -28,30 +28,32 @@ impl StoreUI {
 
         let item_between_space = 70;
 
+        let item_y_start = 100;
+
         let item_rects: Vec<Rect> = (0..4)
             .map(|i| { 
                 Rect::new(store_x + (store_width as f32 * 0.6f32) as i32 + ((item_width + item_between_space) * (i % 2)) as i32, 
-                store_y + 50 + item_height as i32 + ((item_width + item_between_space) * (i / 2)) as i32, 
+                store_y + item_y_start + item_height as i32 + ((item_width + item_between_space) * (i / 2)) as i32, 
                 item_width, 
                 item_height)})
             .collect();
 
         let price_rects: Vec<Rect> = (0..4)
             .map(|i| { Rect::new(store_x + (store_width as f32 * 0.6f32) as i32 + ((item_width + item_between_space) * (i % 2)) as i32, 
-                store_y + 50 + item_height as i32 + ((item_width + item_between_space) * (i / 2)) as i32 + 10, 
+                store_y + item_y_start + item_height as i32 + ((item_width + item_between_space) * (i / 2)) as i32 + 10, 
                 item_width, 
                 item_height)})
             .collect();
 
-        let shoop_keeper_width = 325;
-        let shoop_keeper_height = 620;
+        let shoop_keeper_width = 500;
+        let shoop_keeper_height = 650;
         Self {
             background: Rect::new(store_x, store_y, store_width, store_height),
             selected_item: 0,
             item_rects,
             items: Vec::new(),
             prices: price_rects,
-            store_keeper: Rect::new(store_x + shoop_keeper_width/2, store_y, shoop_keeper_width as u32, shoop_keeper_height),
+            store_keeper: Rect::new(store_x - 120, store_y, shoop_keeper_width as u32, shoop_keeper_height),
             back_button: Rect::new(store_x + (store_width as f32 * 0.6f32) as i32, store_y + (store_height as f32 * 0.8f32) as i32, 128, 64)
         }
     }
