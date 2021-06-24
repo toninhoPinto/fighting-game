@@ -1,9 +1,9 @@
 use std::{cmp, time::Instant};
 
 use rand::prelude::SmallRng;
-use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
+use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, ttf::Font, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 
 use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
 
@@ -64,6 +64,26 @@ impl OverworldScene {
             store.selected_item %= store.items.len() + 1;
         }
     }
+
+    pub fn create_price_textures<'a>(texture_creator: &'a TextureCreator<WindowContext>, font: &Font, store: &StoreUI, items: &std::collections::HashMap<i32, Item>) -> Vec<Texture<'a>>{
+        store.items.iter().map(|item_id| {
+           
+            let mut price_text = items.get(&(*item_id as i32)).unwrap().price.to_string();
+            price_text.push_str("$");
+
+            let title_surface = font
+                .render(&price_text)
+                .blended(Color::WHITE)
+                .map_err(|e| e.to_string())
+                .unwrap();
+
+            texture_creator
+                        .create_texture_from_surface(&title_surface)
+                        .map_err(|e| e.to_string())
+                        .unwrap()
+                })
+        .collect::<Vec<Texture<'a>>>()
+    }
 }
 
 impl<'a> Scene for OverworldScene {
@@ -97,6 +117,7 @@ impl<'a> Scene for OverworldScene {
 
         let mut popup_item = new_item_popup((w,h));
         let mut popup_content: Option<Vec<Texture>> = None;
+        let mut store_item_prices: Option<Vec<Texture>> = None;
 
         let mut item_list = item_list_init(&game_state_data);
 
@@ -213,7 +234,13 @@ impl<'a> Scene for OverworldScene {
                                     let mut store_struct = StoreUI::new((w, h));
                                     let item_room_seed = game_state_data.seed.unwrap() + (game_state_data.curr_level as u64);
                                     store_struct.items = get_store_item_list(item_room_seed, game_state_data.general_assets.loot_tables.get("store_table").unwrap());
-                                    
+
+                                    store_item_prices = Some(OverworldScene::create_price_textures(texture_creator, 
+                                        &game_state_data.general_assets.font, 
+                                        &store_struct, 
+                                        &items)
+                                    );
+
                                     store = Some(store_struct);
 
                                     self.player_node_pos = self.next_node;
@@ -270,7 +297,8 @@ impl<'a> Scene for OverworldScene {
                     &assets, 
                     &store.as_ref().unwrap(), 
                     &item_assets,
-                    &items);
+                    &items, 
+                    &store_item_prices);
             } else {
                 render_overworld(canvas, 
                     &assets,

@@ -14,6 +14,7 @@ pub struct Root {
     pub item_type: String,
     #[serde(rename = "asset_id")]
     pub asset_id: String,
+    pub price: u32,
     pub effects: Vec<JsonEffect>,
     #[serde(rename = "chance_mod")]
     pub chance_mod: Option<ChanceMod>,
@@ -65,6 +66,7 @@ pub fn load_items(dir: String) -> HashMap<i32, Item>{
                 _ => {ItemType::PassivePart}
             },
             asset_id: item.asset_id,
+            price: item.price,
             effects: item.effects.iter().map(|ef| {make_effect(ef)}).collect::<Vec<Effect>>(),
             chance_mod: if let Some(chance_mod) = item.chance_mod{ Some(make_chance_modifier(item.id, &chance_mod)) } else {None}
         };

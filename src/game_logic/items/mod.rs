@@ -25,6 +25,7 @@ pub struct Item {
     pub description: String,
     pub item_type: ItemType,
     pub asset_id: String,
+    pub price: u32,
     pub effects: Vec<Effect>,
     pub chance_mod: Option<Chance>
 }

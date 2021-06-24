@@ -38,11 +38,13 @@ impl StoreUI {
                 item_height)})
             .collect();
 
+        let price_offset_x = item_width / 2 - 8;
+        let price_offset_y = 70;
         let price_rects: Vec<Rect> = (0..4)
-            .map(|i| { Rect::new(store_x + (store_width as f32 * 0.6f32) as i32 + ((item_width + item_between_space) * (i % 2)) as i32, 
-                store_y + item_y_start + item_height as i32 + ((item_width + item_between_space) * (i / 2)) as i32 + 10, 
-                item_width, 
-                item_height)})
+            .map(|i| { Rect::new(store_x + (store_width as f32 * 0.6f32) as i32 + ((item_width + item_between_space) * (i % 2)) as i32 + price_offset_x as i32, 
+                store_y + item_y_start + item_height as i32 + ((item_width + item_between_space) * (i / 2)) as i32 + price_offset_y, 
+                16, 
+                16)})
             .collect();
 
         let shoop_keeper_width = 500;
@@ -87,3 +89,4 @@ pub fn get_store_item_list(seed: u64, loot_table: &LootTable) -> Vec<i64>{
 
     four_random_indexes
 }
+

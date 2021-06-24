@@ -54,4 +54,6 @@ pub struct ItemAssets<'a>{
 pub struct UIAssets<'a>{
     pub store_ui_sheet: Texture<'a>,
     pub store_ui_src_rects: HashMap<String, Rect>,
+    
+    pub ui_text: HashMap<String, Texture<'a>>,
 }

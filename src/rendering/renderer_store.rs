@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use sdl2::{pixels::Color, rect::{Point, Rect}, render::{TextureQuery, WindowCanvas}};
+use sdl2::{pixels::Color, rect::{Point, Rect}, render::{Texture, TextureQuery, WindowCanvas}};
 
 use crate::{asset_management::asset_holders::{ItemAssets, OverworldAssets, UIAssets}, game_logic::{items::Item, store::StoreUI}};
 
@@ -9,12 +9,21 @@ pub fn render_store(canvas: &mut WindowCanvas,
     assets: &OverworldAssets, 
     store: &StoreUI,
     item_assets: &ItemAssets,
-    items: &HashMap<i32, Item>) {
+    items: &HashMap<i32, Item>,
+    store_item_prices: &Option<Vec<Texture>>) {
 
     canvas.copy(&assets.backgrounds[0], Rect::new(0,0,store.background.width(), store.background.height()), store.background).unwrap();
 
-    let items_ui = store.items.iter().zip(store.item_rects.iter());
+    let items_ui = store.items.iter()
+        .zip(store.item_rects.iter());
     let bought_item = Rect::new(352, 0, 32, 32);
+
+    if let Some(store_item_prices) = store_item_prices {
+        let prices_render = store_item_prices.iter().zip(store.prices.iter());
+        for (text, rect) in prices_render {
+            canvas.copy(text, None, rect.clone()).unwrap();
+        }
+    }
 
     for (item_id, item_rect) in items_ui {
         let src_rect = if *item_id >= 0 {
@@ -43,6 +52,12 @@ pub fn render_store(canvas: &mut WindowCanvas,
     }
     selected_item.x = selected_item.x + 50;
     canvas.copy_ex(&assets.spritesheet, src_pointer.clone(), selected_item, 90f64, Point::new(0,0), false, false).unwrap();
+
+    if let Some(store_item_prices) = store_item_prices {
+        for price in store_item_prices {
+            canvas.copy_ex(&assets.spritesheet, src_pointer.clone(), selected_item, 90f64, Point::new(0,0), false, false).unwrap();
+        }
+    }
 
     canvas.set_draw_color(Color::RGB(200, 50, 50));
     canvas.draw_rect(store.back_button).unwrap();

@@ -36,6 +36,9 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 
+// add a font cache hashmap to GameStateData ???
+
+
 // tweak overworld gen so levels dont spawn so much on top of each other 
 // improve store UI on the selected item
 // store selected item use left key to go back to the previous selected item
