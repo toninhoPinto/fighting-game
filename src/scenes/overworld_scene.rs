@@ -187,6 +187,9 @@ impl<'a> Scene for OverworldScene {
                                                 store_ui.items.remove(store_ui.selected_item);
                                                 store_ui.item_rects.remove(store_ui.selected_item);
                                                 store_ui.prices.remove(store_ui.selected_item);
+                                                if let Some(ref mut store_item_prices) = store_item_prices {
+                                                    store_item_prices.remove(store_ui.selected_item);
+                                                }
     
                                                 let new_selected = if store_ui.selected_item == 0 {store_ui.selected_item} else {store_ui.selected_item-1};
                                                 store_ui.selected_item = cmp::max(0,cmp::min(store_ui.items.len(), new_selected));
@@ -299,7 +302,8 @@ impl<'a> Scene for OverworldScene {
             
             if in_store {
                 render_store(canvas, 
-                    &assets, 
+                    &assets,
+                    &game_state_data.ui_assets.ui_text,
                     &store.as_ref().unwrap(), 
                     &item_assets,
                     &game_state_data.items, 

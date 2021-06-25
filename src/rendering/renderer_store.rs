@@ -2,11 +2,12 @@ use std::collections::HashMap;
 
 use sdl2::{pixels::Color, rect::{Point, Rect}, render::{Texture, TextureQuery, WindowCanvas}};
 
-use crate::{asset_management::asset_holders::{ItemAssets, OverworldAssets, UIAssets}, game_logic::{items::Item, store::StoreUI}};
+use crate::{asset_management::asset_holders::{ItemAssets, OverworldAssets}, game_logic::{items::Item, store::StoreUI}};
 
 
-pub fn render_store(canvas: &mut WindowCanvas, 
+pub fn render_store<'a>(canvas: &mut WindowCanvas, 
     assets: &OverworldAssets, 
+    ui_assets: &HashMap<String, Texture<'a>>,
     store: &StoreUI,
     item_assets: &ItemAssets,
     items: &HashMap<i32, Item>,
@@ -54,7 +55,7 @@ pub fn render_store(canvas: &mut WindowCanvas,
     canvas.copy_ex(&assets.spritesheet, src_pointer.clone(), selected_item, 90f64, Point::new(0,0), false, false).unwrap();
 
     if let Some(store_item_prices) = store_item_prices {
-        for price in store_item_prices {
+        for _ in store_item_prices {
             canvas.copy_ex(&assets.spritesheet, src_pointer.clone(), selected_item, 90f64, Point::new(0,0), false, false).unwrap();
         }
     }
@@ -62,5 +63,7 @@ pub fn render_store(canvas: &mut WindowCanvas,
     canvas.set_draw_color(Color::RGB(200, 50, 50));
     canvas.draw_rect(store.back_button).unwrap();
     canvas.fill_rect(store.back_button).unwrap();
-    //canvas.copy(shoop_keeper, Rect::new(0,0, width, height), store.back_button).unwrap();
+
+    let rect = Rect::new(store.back_button.x() + (store.back_button.width() / 4) as i32, store.back_button.y() + (store.back_button.height() / 4) as i32, store.back_button.width() / 2,store.back_button.height() / 2);
+    canvas.copy(ui_assets.get("back").unwrap(), None, rect).unwrap();
 }

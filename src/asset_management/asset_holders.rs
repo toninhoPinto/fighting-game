@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use sdl2::{rect::Rect, render::{Texture, TextureCreator}, ttf::Sdl2TtfContext, video::WindowContext};
+use sdl2::{pixels::Color, rect::Rect, render::{Texture, TextureCreator}, ttf::Sdl2TtfContext, video::WindowContext};
 use tiled::Map;
 
 use crate::{engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::Attack, inputs::game_inputs::GameAction}};
@@ -63,10 +63,27 @@ pub struct UIAssets<'a>{
 
 impl<'a> UIAssets<'a> {
     pub fn load(texture_creator: &'a TextureCreator<WindowContext>, ttf_context: &'a Sdl2TtfContext) -> Self {
+
+        let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 32).unwrap();
+
+        let surface = font
+            .render("back")
+            .blended(Color::WHITE)
+            .map_err(|e| e.to_string())
+            .unwrap();
+
+        let back_tex = texture_creator
+            .create_texture_from_surface(&surface)
+            .map_err(|e| e.to_string())
+            .unwrap();
+
+        let mut text_hash = HashMap::new();
+        text_hash.insert("back".to_string(), back_tex);
+
         Self {
             store_ui_sheet: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
             store_ui_src_rects: HashMap::new(),
-            ui_text: HashMap::new(),
+            ui_text: text_hash,
         }
     }
 }
@@ -116,10 +133,6 @@ impl<'a> LevelAssets<'a> {
         level_rooms.insert(0, load_level("assets/level/level1.tmx".to_string()));
         level_rooms.insert(1, load_level("assets/level/level2.tmx".to_string()));
         level_rooms.insert(2, load_level("assets/level/level3.tmx".to_string()));
-
-        let loot_tables = load_item_table("assets/items/loot_tables.json".to_string());
-
-        let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 16).unwrap();
 
         LevelAssets {
             hit_effect_textures: textures,
