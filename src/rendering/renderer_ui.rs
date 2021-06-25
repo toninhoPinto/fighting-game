@@ -1,9 +1,22 @@
-use sdl2::{pixels::Color, rect::Rect, render::{Texture, WindowCanvas}};
+use sdl2::{pixels::Color, rect::Rect, render::{Texture, TextureCreator, WindowCanvas}, ttf::Font, video::WindowContext};
 
 use crate::{asset_management::asset_holders::ItemAssets, game_logic::characters::player::Player, ui::ingame::{popup_ui::PopUp, segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}};
 
 pub fn active_item_ui() -> Rect{
     Rect::new(10, 0 , 64, 64)
+}
+
+pub fn currency_text_gen<'a>(player: &Player, texture_creator: &'a TextureCreator<WindowContext>, font: &Font) -> Texture<'a> {
+    let title_surface = font
+                .render(&player.currency.to_string())
+                .blended(Color::WHITE)
+                .map_err(|e| e.to_string())
+                .unwrap();
+
+    texture_creator
+                .create_texture_from_surface(&title_surface)
+                .map_err(|e| e.to_string())
+                .unwrap()
 }
 
 pub fn render_ui<'a>(canvas: &mut WindowCanvas, 
@@ -36,6 +49,8 @@ pub fn render_ui<'a>(canvas: &mut WindowCanvas,
                 canvas.copy(&item_assets.spritesheet, src_rect.clone(), dst_rect).unwrap();
             }
         }
+
+        //canvas.copy(texture, None, Rect)
 
         if let (Some(popups), Some(popup_content)) = (popups, popup_content) {
             if popups.alpha > 0f32 {

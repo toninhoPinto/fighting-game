@@ -45,7 +45,7 @@ impl Game {
         self.levels.iter().map(|lvl| lvl.width * lvl.level_map.tile_width).sum::<u32>() as i32
     }
 
-    pub fn check_level_tags_and_apply(&mut self, game_state_data: &mut GameStateData, items: &HashMap<i32, Item>) {
+    pub fn check_level_tags_and_apply(&mut self, game_state_data: &mut GameStateData) {
         for (level_index, level) in self.levels.iter_mut().enumerate() {
             if !(self.camera.rect.x > level.start_x + (level.level_map.width * level.level_map.tile_width) as i32 || self.camera.rect.x + (self.camera.rect.width() as i32) < level.start_x) {
                 for tag in level.level_map.object_groups[0].objects.iter_mut() {
@@ -64,7 +64,7 @@ impl Game {
 
                                 let item_room_seed = game_state_data.seed.unwrap() * (game_state_data.curr_level as u64 + level_index as u64); //+ some id of overworld map level picked + picked tileset level 
                                 let item_id = get_random_item(table, &mut SmallRng::seed_from_u64(item_room_seed)) as i32;
-                                self.items_on_ground.push(ItemGround{ position: tag_pos, item: (*items.get(&item_id).unwrap()).clone() });
+                                self.items_on_ground.push(ItemGround{ position: tag_pos, item: (*game_state_data.items.get(&item_id).unwrap()).clone() });
                                 tag.visible = false;
                             }
                         }

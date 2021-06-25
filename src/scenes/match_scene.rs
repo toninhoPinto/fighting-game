@@ -74,8 +74,6 @@ impl Scene for MatchScene {
         );
 
         let mut game = Game::new(game_state_data.player.as_ref().unwrap().clone(), camera, levels);
-        let items = load_items("assets/items/items.json".to_string());
-        let effects = hash_effects();
 
         game.player.position = Vector2::new(150.0f64, 150f64);
 
@@ -157,7 +155,7 @@ impl Scene for MatchScene {
                         if input == Keycode::Backslash {
                             console.toggle();
                         } else if input == Keycode::Return{
-                            console.run(&mut game, &items, game_state_data)
+                            console.run(&mut game, &game_state_data.items, game_state_data)
                         } else {
                             console.add(input);
                         }
@@ -253,7 +251,7 @@ impl Scene for MatchScene {
                 items_spawned.iter_mut().for_each(|item_ground| {
 
                     if (player_position - item_ground.position).magnitude() <= 50.0 {
-                        game.player.equip_item(&mut item_ground.item, &effects);
+                        game.player.equip_item(&mut item_ground.item, &game_state_data.effects);
                         
                         popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
                             &item_ground.item.name, 
@@ -316,7 +314,7 @@ impl Scene for MatchScene {
                 game.update_vfx(&game_state_data.general_assets);
 
                 game.camera.update(game.max_level_width(), &game.player, logic_timestep);
-                game.check_level_tags_and_apply(game_state_data, &items);
+                game.check_level_tags_and_apply(game_state_data);
 
                 hp_bars.update(game.player.character.hp, game.player.hp.0);
                 if game.player.items.len() != item_list.rects.len() {

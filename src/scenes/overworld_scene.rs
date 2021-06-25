@@ -3,7 +3,7 @@ use std::{cmp, time::Instant};
 use rand::prelude::SmallRng;
 use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, ttf::Font, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{currency_text_gen, render_ui}}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 
 use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
 
@@ -109,9 +109,7 @@ impl<'a> Scene for OverworldScene {
             game_state_data.player.as_ref().unwrap().hp.0,
         );
 
-        //TODO MOVE THIS ITEMS HASHMAP TO GAME STATE DATA AND SHARE WITH MATCH SCENE
-        let items = load_items("assets/items/items.json".to_string());
-        let effects = hash_effects();
+        //game_state_data.text_cache.insert("currency".to_string(), currency_text_gen(game_state_data.player.as_ref().unwrap(), texture_creator, &game_state_data.general_assets.font));
 
         let mut store: Option<StoreUI> = None;
 
@@ -181,36 +179,43 @@ impl<'a> Scene for OverworldScene {
 
                                     if store_ui.selected_item < store_ui.items.len() {
                                         if store_ui.items.len() > 0 {
-                                            let item_selected_id = store_ui.items.remove(store_ui.selected_item);
-                                            store_ui.item_rects.remove(store_ui.selected_item);
-                                            store_ui.prices.remove(store_ui.selected_item);
 
-                                            let new_selected = if store_ui.selected_item == 0 {store_ui.selected_item} else {store_ui.selected_item-1};
-                                            store_ui.selected_item = cmp::max(0,cmp::min(store_ui.items.len(), new_selected));
+                                            let mut bought_item = game_state_data.items.get(&(store_ui.items[store_ui.selected_item] as i32)).unwrap().clone();
 
-                                            let mut bought_item = items.get(&(item_selected_id as i32)).unwrap().clone();
-                                            game_state_data.player.as_mut().unwrap().equip_item(&mut bought_item, &effects);
-                                    
-                                            popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
-                                                &bought_item.name, 
-                                                &bought_item.description, 
-                                                &game_state_data.general_assets.font, 
-                                                &mut popup_item));
+                                            if game_state_data.player.as_ref().unwrap().currency >= bought_item.price {
 
-                                            if let Some(chance_mod) = &bought_item.chance_mod {
-                                                (chance_mod.modifier)(chance_mod.item_ids.clone(), chance_mod.chance_mod, &game_state_data.player.as_ref().unwrap().character, &mut game_state_data.general_assets.loot_tables);
-                                            } else {
-                                                for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
-                                                    val.items.retain(|x| x.item_id as i32 != bought_item.id);
-                                                    val.acc = val.items.iter().map(|i|{i.rarity}).sum();
+                                                store_ui.items.remove(store_ui.selected_item);
+                                                store_ui.item_rects.remove(store_ui.selected_item);
+                                                store_ui.prices.remove(store_ui.selected_item);
+    
+                                                let new_selected = if store_ui.selected_item == 0 {store_ui.selected_item} else {store_ui.selected_item-1};
+                                                store_ui.selected_item = cmp::max(0,cmp::min(store_ui.items.len(), new_selected));
+    
+                                                let player = game_state_data.player.as_mut().unwrap();
+                                                player.currency = cmp::max(0, player.currency - bought_item.price);
+                                                player.equip_item(&mut bought_item, &game_state_data.effects);
+                                        
+                                                popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
+                                                    &bought_item.name, 
+                                                    &bought_item.description, 
+                                                    &game_state_data.general_assets.font, 
+                                                    &mut popup_item));
+    
+                                                if let Some(chance_mod) = &bought_item.chance_mod {
+                                                    (chance_mod.modifier)(chance_mod.item_ids.clone(), chance_mod.chance_mod, &game_state_data.player.as_ref().unwrap().character, &mut game_state_data.general_assets.loot_tables);
+                                                } else {
+                                                    for (_key, val) in game_state_data.general_assets.loot_tables.iter_mut() {
+                                                        val.items.retain(|x| x.item_id as i32 != bought_item.id);
+                                                        val.acc = val.items.iter().map(|i|{i.rarity}).sum();
+                                                    }
                                                 }
-                                            }
-
-                                            if game_state_data.player.as_ref().unwrap().items.len() != item_list.rects.len() {
-                                                item_list.update(game_state_data.player.as_ref().unwrap().items.iter()
-                                                    .map(|_| {Rect::new(0,0,32,32)})
-                                                    .collect::<Vec<Rect>>()
-                                                );
+    
+                                                if game_state_data.player.as_ref().unwrap().items.len() != item_list.rects.len() {
+                                                    item_list.update(game_state_data.player.as_ref().unwrap().items.iter()
+                                                        .map(|_| {Rect::new(0,0,32,32)})
+                                                        .collect::<Vec<Rect>>()
+                                                    );
+                                                }
                                             }
                                         }
                                     } else {
@@ -238,7 +243,7 @@ impl<'a> Scene for OverworldScene {
                                     store_item_prices = Some(OverworldScene::create_price_textures(texture_creator, 
                                         &game_state_data.general_assets.font, 
                                         &store_struct, 
-                                        &items)
+                                        &game_state_data.items)
                                     );
 
                                     store = Some(store_struct);
@@ -297,7 +302,7 @@ impl<'a> Scene for OverworldScene {
                     &assets, 
                     &store.as_ref().unwrap(), 
                     &item_assets,
-                    &items, 
+                    &game_state_data.items, 
                     &store_item_prices);
             } else {
                 render_overworld(canvas, 

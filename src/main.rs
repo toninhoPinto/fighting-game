@@ -1,8 +1,8 @@
 use engine_traits::scene::Scene;
-use game_logic::characters::player::Player;
+use game_logic::{characters::player::Player, effects::ItemEffects, items::Item};
 use rand::prelude::SmallRng;
 use scenes::menu_scene::MenuScene;
-use sdl2::{image::{self, InitFlag}, pixels::Color, rect::{Point, Rect}, ttf::Font};
+use sdl2::{image::{self, InitFlag}, pixels::Color, rect::{Point, Rect}, render::Texture, ttf::Font};
 use sdl2::render::BlendMode;
 use ui::ingame::{segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList};
 
@@ -30,7 +30,7 @@ mod debug_console;
 
 use asset_management::{asset_holders::{EntityAnimations, ItemAssets}, common_assets::CommonAssets, sound::{init_sound, music_player}};
 
-use crate::{asset_management::controls, game_logic::factories::item_factory::load_item_assets, input::input_devices::InputDevices};
+use crate::{asset_management::controls, game_logic::{effects::hash_effects, factories::item_factory::{load_item_assets, load_items}}, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
 
 
@@ -38,9 +38,11 @@ use crate::input::controller_handler::Controller;
 
 // add a font cache hashmap to GameStateData ???
 
-// improve store UI on the selected item
-// tweak overworld gen so levels dont spawn so much on top of each other 
+// improve store UI on the selected item -make better sprite and center it better
+// tweak overworld gen so levels dont spawn so much on top of each other
+//add sounds in store for - moving cursor between items, purchasing item
 
+//OpenGL rendering??
 
 //Level generation
     //make enemy tables
@@ -48,19 +50,15 @@ use crate::input::controller_handler::Controller;
     //create collider from wall
 
 //add sound_effects
-    //when player misses punches (very light sound)
+    //everytime punch happens (very light sound)
     //add variation to sounds through pitch changing
-    //implement more item effects
+
+//implement more item effects
     
 //make overworld proc gen map
     // replace lines with rotated squares with textures
     // decision making on the type of node (level, event, store)
-    // add sounds when moving the arrow through the possible next levels
-    // add confimation sound when selecting a level
     // add small up/down animation on the "character" icon
-
-    // make a store Scene
-    // make an event UI window appear on top
 
 //separate json for animation offsets and animation states (startup, active, recovery)
 //Improve AI
@@ -96,6 +94,10 @@ use crate::input::controller_handler::Controller;
 pub struct GameStateData<'a> {
     item_sprites: ItemAssets<'a>,
     player: Option<Player>,
+
+    items: HashMap<i32, Item>,
+    effects: HashMap<i32, ItemEffects>,
+    text_cache: HashMap<String, Texture<'a>>,
 
     enemy_animations: HashMap<String, Rc<EntityAnimations>>,
     general_assets: CommonAssets<'a>,
@@ -185,9 +187,12 @@ fn main() -> Result<(), String> {
 
     let menu = MenuScene::new_main_menu(&font);
 
-    let mut game_state_data = GameStateData {  
+    let mut game_state_data = GameStateData {
+        text_cache: HashMap::new(),
         item_sprites: load_item_assets(&texture_creator),
         player: None,
+        items: load_items("assets/items/items.json".to_string()),
+        effects: hash_effects(),
         enemy_animations: HashMap::new(),
         general_assets: CommonAssets::load(&texture_creator, &ttf_context),
         seed: None,

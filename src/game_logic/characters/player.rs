@@ -49,7 +49,8 @@ pub struct Player {
     pub events: EventsPubSub,
     pub items: Vec<String>,
     pub active_item_key: Option<String>,
-    pub active_item: Option<(CharacterEventActive, Effect)>
+    pub active_item: Option<(CharacterEventActive, Effect)>,
+    pub currency: u32,
 }
 
 impl Player {
@@ -74,6 +75,7 @@ impl Player {
 
             active_item_key: None,
             active_item: None,
+            currency: 10,
         }
     }
 
