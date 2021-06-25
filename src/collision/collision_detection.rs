@@ -1,4 +1,4 @@
-use crate::{asset_management::{asset_holders::EntityData, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::{enemy_components::{AIType, Health}, enemy_manager::EnemyManager}, engine_types::animator::Animator, game_logic::{characters::{Attack, player::Player}, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::{EntityData, LevelAssets}, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::{enemy_components::{AIType, Health}, enemy_manager::EnemyManager}, engine_types::animator::Animator, game_logic::{characters::{Attack, player::Player}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{collider_manager::ColliderManager, collision_attack_resolution::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}};
 
@@ -14,6 +14,7 @@ pub fn calculate_hits(player: &mut Player,
     hit_stop: &mut i32, 
     logic_timestep: f64, 
     general_assets: &CommonAssets, 
+    level_assets: &LevelAssets, 
     player_data: &EntityData,
     camera: &mut Camera) {
 
@@ -140,7 +141,7 @@ pub fn calculate_hits(player: &mut Player,
                 if is_player_hitting {
                     camera.shake();
                 }
-                hit_particles(particles, collision.2, "special_hit", &general_assets);
+                hit_particles(particles, collision.2, "special_hit", &level_assets);
                 *hit_stop = 10;
             } else {
                 opponent_blocked(
@@ -148,7 +149,7 @@ pub fn calculate_hits(player: &mut Player,
                     logic_timestep,
                     &general_assets, 
                     &hitting_mov, (&mut hurt_pos, &mut hurting_mov));
-                hit_particles(particles, collision.2, "block", &general_assets);
+                hit_particles(particles, collision.2, "block", &level_assets);
                 *hit_stop = 5;
             }
 

@@ -3,7 +3,6 @@ use std::path::Path;
 
 use crate::asset_management::asset_loader::load_tiled_map::load_level;
 use crate::asset_management::rng_tables::load_item_table;
-use crate::engine_types::animation::Animation;
 
 use super::asset_loader::asset_loader;
 use super::rng_tables::LootTable;
@@ -11,10 +10,10 @@ use super::{sound::audio_player};
 use sdl2::ttf::{Font, Sdl2TtfContext};
 use sdl2::{
     mixer::Chunk,
-    render::{Texture, TextureCreator},
+    render::TextureCreator,
     video::WindowContext,
 };
-use tiled::Map;
+
 
 const SFX_VOLUME: i32 = 10;
 
@@ -23,16 +22,7 @@ pub struct CommonAssets<'a> {
     pub sound_effects: HashMap<String, Chunk>,
     pub font: Font<'a, 'a>,
 
-    //rooms
-    pub level_tiles: HashMap<String,Texture<'a>>,
-    pub level_rooms: HashMap<i32, Map>,
-    pub shadow: Texture<'a>,
-
     pub loot_tables: HashMap<String, LootTable>,
-
-    //hit effects
-    pub hit_effect_textures: HashMap<String, Texture<'a>>,
-    pub hit_effect_animations: HashMap<String, Animation>,
 }
 
 impl<'a> CommonAssets<'a> {
@@ -41,7 +31,7 @@ impl<'a> CommonAssets<'a> {
             audio_player::load_from_file(Path::new("assets/sounds/104183__ekokubza123__punch.wav"))
                 .map_err(|e| format!("Cannot load sound file: {:?}", e))
                 .unwrap();
-        let mut dash_sound =
+        let mut miss_sound =
             audio_player::load_from_file(Path::new("assets/sounds/60009__qubodup__swosh-22.wav"))
                 .map_err(|e| format!("Cannot load sound file: {:?}", e))
                 .unwrap();
@@ -71,20 +61,20 @@ impl<'a> CommonAssets<'a> {
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
  
-        let mut miss_sound = audio_player::load_from_file(Path::new("assets/sounds/521999__kastenfrosch__whoosh-dash.wav"))
+        let mut dash_sound = audio_player::load_from_file(Path::new("assets/sounds/521999__kastenfrosch__whoosh-dash.wav"))
             .map_err(|e| format!("Cannot load sound file: {:?}", e))
             .unwrap();
             
             
         hit_sound.set_volume(SFX_VOLUME);
-        dash_sound.set_volume(SFX_VOLUME * 2);
+        miss_sound.set_volume(SFX_VOLUME * 2);
         block_sound.set_volume(SFX_VOLUME);
         select_level_sound.set_volume(SFX_VOLUME * 2);
         scroll_levels_sound.set_volume(SFX_VOLUME);
         jump_sound.set_volume(20);
         land_sound.set_volume(10);
         dropped_sound.set_volume(100);
-        miss_sound.set_volume(10);
+        dash_sound.set_volume(10);
         
         let mut sounds = HashMap::new();
         sounds.insert("hit".to_string(), hit_sound);
@@ -135,12 +125,7 @@ impl<'a> CommonAssets<'a> {
 
         CommonAssets {
             sound_effects: sounds,
-            hit_effect_textures: textures,
-            hit_effect_animations: vfx,
-            level_tiles,
-            level_rooms,
             loot_tables,
-            shadow: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
             font,
         }
     }

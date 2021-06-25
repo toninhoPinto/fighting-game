@@ -4,7 +4,7 @@ use parry2d::na::Vector2;
 use rand::{Rng, SeedableRng, prelude::SmallRng};
 use sdl2::{pixels::Color, rect::Rect, render::TextureQuery};
 
-use crate::{GameStateData, asset_management::{asset_holders::EntityAnimations, cast_point::CastPoint, common_assets::CommonAssets, rng_tables::LootTable, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
+use crate::{GameStateData, asset_management::{asset_holders::{EntityAnimations, LevelAssets}, cast_point::CastPoint, common_assets::CommonAssets, rng_tables::LootTable, vfx::particle::Particle}, ecs_system::enemy_manager::EnemyManager, level_generation::Level, rendering::camera::Camera};
 
 use super::{characters::player::Player, inputs::input_cycle::AllInputManagement, items::{Item, ItemGround, get_random_item}, projectile::Projectile};
 
@@ -106,7 +106,7 @@ impl Game {
         }
     }
 
-    pub fn update_vfx(&mut self, assets: &CommonAssets) {
+    pub fn update_vfx(&mut self, assets: &LevelAssets) {
         for i in 0..self.hit_vfx.len() {
             let vfx = &mut self.hit_vfx[i];
 
@@ -177,7 +177,7 @@ impl Game {
         }
     }
 
-    pub fn fx(&mut self, general_assets: &CommonAssets) {
+    pub fn fx(&mut self, assets: &LevelAssets) {
 
         let process_point_offset = |player: &Player, point: &CastPoint| -> Vector2<f64> {
             let mut final_pos = player.position;
@@ -207,8 +207,8 @@ impl Game {
         }
 
         for point in &mut points {
-            let texture_id = &general_assets.hit_effect_animations.get(&point.0.name.replace("?", "")).unwrap().sprites[0].1;
-            let TextureQuery { width, height, .. } = general_assets
+            let texture_id = &assets.hit_effect_animations.get(&point.0.name.replace("?", "")).unwrap().sprites[0].1;
+            let TextureQuery { width, height, .. } = assets
                                     .hit_effect_textures
                                     .get(texture_id)
                                     .unwrap()

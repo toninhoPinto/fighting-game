@@ -4,7 +4,7 @@ use sdl2::{rect::{Point, Rect}, render::TextureQuery};
 use sdl2::render::WindowCanvas;
 use sdl2::{pixels::Color, render::Texture};
 
-use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, level_generation::Level, ui::ingame::wrapping_list_ui::WrappingList};
+use crate::{asset_management::asset_holders::{EntityAssets, ItemAssets, LevelAssets}, ecs_system::{enemy_systems::get_ground_pos_enemies}, engine_types::collider::{Collider, ColliderType}, game_logic::game::Game, level_generation::Level, ui::ingame::wrapping_list_ui::WrappingList};
 use crate::{
     ui::ingame::{segmented_bar_ui::SegmentedBar},
 };
@@ -69,7 +69,7 @@ pub fn render(
     game: &mut Game,
     p1_assets: &EntityAssets,
     enemy_assets: &HashMap<&str, EntityAssets>,
-    common_assets: &mut CommonAssets,
+    level_assets: &mut LevelAssets,
     item_assets: &ItemAssets,
     debug: bool,
 ) -> Result<(), String> {
@@ -77,9 +77,9 @@ pub fn render(
     
     let screen_res = canvas.output_size()?;
 
-    render_level(canvas, &game.levels, common_assets, &game.camera);
+    render_level(canvas, &game.levels, level_assets, &game.camera);
 
-    render_shadow(common_assets,
+    render_shadow(level_assets,
         canvas,
         Point::new(game.player.position.x as i32 , game.player.controller.ground_height as i32),  
         screen_res,
@@ -88,7 +88,7 @@ pub fn render(
     let shadow_positions = get_ground_pos_enemies(&mut game.enemies);
 
     for pos in shadow_positions {
-        render_shadow(common_assets,
+        render_shadow(level_assets,
             canvas,
             pos,  
             screen_res,
@@ -138,7 +138,7 @@ pub fn render(
 
     }
 
-    render_vfx(canvas, screen_res, &game.camera, &mut game.hit_vfx, common_assets, debug);
+    render_vfx(canvas, screen_res, &game.camera, &mut game.hit_vfx, level_assets, debug);
 
     if debug {
         for i in 0..game.projectiles.len() {
@@ -150,7 +150,7 @@ pub fn render(
     Ok(())
 }
 
-fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &CommonAssets, camera: &Camera) {
+fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, level_assets: &LevelAssets, camera: &Camera) {
     let camera_pos = camera.rect.x();
     let camera_width =  camera.rect.width() as i32;
     
@@ -165,7 +165,7 @@ fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &
                     
                     if dst_rect.x + dst_rect.width() as i32 >= 0 {
                         
-                        let spritesheet = common_assets.level_tiles.get(&level.level_map.tilesets[0].name).unwrap();
+                        let spritesheet = level_assets.level_tiles.get(&level.level_map.tilesets[0].name).unwrap();
                         let src_rect = level.rect_from_index(tile.texture_id, layer_id);
                         canvas.copy(spritesheet, src_rect, dst_rect).unwrap();
                     }
@@ -184,13 +184,13 @@ fn render_level(canvas: &mut WindowCanvas, levels: &Vec<Level>, common_assets: &
 
 
 
-fn render_shadow(common_assets: &mut CommonAssets,
+fn render_shadow(level_assets: &mut LevelAssets,
     canvas: &mut WindowCanvas,
     point: Point,  
     screen_res: (u32, u32),
     camera: &Camera) {
 
-    let TextureQuery { width, height, .. } = common_assets.shadow.query();
+    let TextureQuery { width, height, .. } = level_assets.shadow.query();
     let shadow_rect = Rect::new(0, 0, width, (height as f64 * 1.5) as u32);
 
     let shadow_height = point.y - (shadow_rect.height() / 2) as i32;
@@ -199,7 +199,7 @@ fn render_shadow(common_assets: &mut CommonAssets,
         point.x as i32 - (shadow_rect.width() / 2) as i32, 
         shadow_height), screen_res, Some(camera));
     
-    canvas.copy(&common_assets.shadow, shadow_rect, screen_rect)
+    canvas.copy(&level_assets.shadow, shadow_rect, screen_rect)
         .unwrap();
 }
 
@@ -227,7 +227,7 @@ fn render_vfx(
     screen_res: (u32, u32),
     camera: &Camera,
     hit_vfx: &mut Vec<Particle>,
-    common_assets: &mut CommonAssets,
+    level_assets: &mut LevelAssets,
     debug: bool,
 ) {
     for vfx in hit_vfx.iter() {
@@ -240,14 +240,14 @@ fn render_vfx(
 
             let screen_rect = world_to_screen(rect_size, vfx_position, screen_res, Some(camera));
 
-            let (_frame, texture_id) = &common_assets
+            let (_frame, texture_id) = &level_assets
                 .hit_effect_animations
                 .get_mut(&vfx.name)
                 .unwrap()
                 .sprites[vfx.sprite_shown as usize];
 
             canvas
-                .copy_ex(common_assets.hit_effect_textures.get(texture_id).unwrap(), rect_size, screen_rect, 0.0, None, vfx.flipped, false)
+                .copy_ex(level_assets.hit_effect_textures.get(texture_id).unwrap(), rect_size, screen_rect, 0.0, None, vfx.flipped, false)
                 .unwrap();
 
             if debug {

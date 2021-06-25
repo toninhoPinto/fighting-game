@@ -28,7 +28,7 @@ mod level_generation;
 
 mod debug_console;
 
-use asset_management::{asset_holders::{EntityAnimations, ItemAssets}, common_assets::CommonAssets, sound::{init_sound, music_player}};
+use asset_management::{asset_holders::{EntityAnimations, ItemAssets, LevelAssets, UIAssets}, common_assets::CommonAssets, sound::{init_sound, music_player}};
 
 use crate::{asset_management::controls, game_logic::{effects::hash_effects, factories::item_factory::{load_item_assets, load_items}}, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
@@ -40,7 +40,7 @@ use crate::input::controller_handler::Controller;
 
 // improve store UI on the selected item -make better sprite and center it better
 // tweak overworld gen so levels dont spawn so much on top of each other
-//add sounds in store for - moving cursor between items, purchasing item
+// add sounds in store for - moving cursor between items, purchasing item
 
 //OpenGL rendering??
 
@@ -92,15 +92,19 @@ use crate::input::controller_handler::Controller;
 
 
 pub struct GameStateData<'a> {
-    item_sprites: ItemAssets<'a>,
+
     player: Option<Player>,
 
     items: HashMap<i32, Item>,
     effects: HashMap<i32, ItemEffects>,
-    text_cache: HashMap<String, Texture<'a>>,
 
     enemy_animations: HashMap<String, Rc<EntityAnimations>>,
+    
     general_assets: CommonAssets<'a>,
+    item_assets: ItemAssets<'a>,
+    level_assets: LevelAssets<'a>, 
+    ui_assets: UIAssets<'a>,
+
 
     curr_level: i32,
 
@@ -188,17 +192,20 @@ fn main() -> Result<(), String> {
     let menu = MenuScene::new_main_menu(&font);
 
     let mut game_state_data = GameStateData {
-        text_cache: HashMap::new(),
-        item_sprites: load_item_assets(&texture_creator),
         player: None,
         items: load_items("assets/items/items.json".to_string()),
         effects: hash_effects(),
         enemy_animations: HashMap::new(),
-        general_assets: CommonAssets::load(&texture_creator, &ttf_context),
+        
         seed: None,
         map_rng: None,
 
-        curr_level: -1
+        curr_level: -1,
+
+        general_assets: CommonAssets::load(&texture_creator, &ttf_context),
+        item_assets: load_item_assets(&texture_creator),
+        level_assets: LevelAssets::load(&texture_creator, &ttf_context),
+        ui_assets: UIAssets::load(&texture_creator, &ttf_context),
     };
     
     let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();

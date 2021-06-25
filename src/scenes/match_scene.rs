@@ -63,7 +63,7 @@ impl Scene for MatchScene {
         let mut enemy_assets = HashMap::new();
         enemy_assets.insert("ryu", load_enemy_ryu_assets(texture_creator));
 
-        let levels = generate_levels(&game_state_data.general_assets.level_rooms, &mut game_state_data.map_rng.as_mut().unwrap());
+        let levels = generate_levels(&game_state_data.level_assets.level_rooms, &mut game_state_data.map_rng.as_mut().unwrap());
 
         let camera: Camera = Camera::new(
             //LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2,
@@ -307,11 +307,12 @@ impl Scene for MatchScene {
                     &mut hit_stop, 
                     logic_timestep, 
                     &game_state_data.general_assets, 
+                    &game_state_data.level_assets, 
                     &p1_data,
                     &mut game.camera);
 
-                game.fx(&game_state_data.general_assets);
-                game.update_vfx(&game_state_data.general_assets);
+                game.fx(&game_state_data.level_assets);
+                game.update_vfx(&game_state_data.level_assets);
 
                 game.camera.update(game.max_level_width(), &game.player, logic_timestep);
                 game.check_level_tags_and_apply(game_state_data);
@@ -338,8 +339,8 @@ impl Scene for MatchScene {
                     &mut game,
                     &p1_assets,
                     &enemy_assets,
-                    &mut game_state_data.general_assets,
-                    &game_state_data.item_sprites,
+                    &mut game_state_data.level_assets,
+                    &game_state_data.item_assets,
                    // &end_game_match,
                     false,
                 )
@@ -349,7 +350,7 @@ impl Scene for MatchScene {
                     &game.player,
                     &hp_bars,
                     &item_list,
-                    &game_state_data.item_sprites,
+                    &game_state_data.item_assets,
                     Some(&popup_item),
                     &popup_content
                     );
