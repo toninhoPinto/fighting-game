@@ -38,7 +38,7 @@ use crate::input::controller_handler::Controller;
 
 // add a font cache hashmap to GameStateData ???
 
-// improve store UI on the selected item -make better sprite and center it better
+// improve store UI on the selected item - make better sprite and center it better
 // tweak overworld gen so levels dont spawn so much on top of each other
 // add sounds in store for - moving cursor between items, purchasing item
 

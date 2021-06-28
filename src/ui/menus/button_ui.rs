@@ -1,24 +1,45 @@
-use sdl2::{pixels::Color, rect::{Point, Rect}, render::Texture, surface::Surface, ttf::Font};
+use sdl2::{pixels::Color, rect::{Point, Rect}, render::{Texture, TextureCreator}, ttf::Font, video::WindowContext};
 
 pub struct Button<'a> {
     pub rect: Rect,
+    pub is_pressed: bool,
     pub position: Point,
-    pub text: Surface<'a>,
-    pub sprite: Option<&'a Texture<'a>>,
+    pub text: Texture<'a>,
+    pub sprite: String,
+    pub pressed_sprite: Option<String>,
+    pub on_press: fn() -> (),
 }
 
 impl<'a> Button<'a> {
-    pub fn new(rect: Rect, position: Point, text: &'a str, text_color: Color, font: &Font) -> Self {
+    pub fn new(rect: Rect, 
+        position: Point, 
+        texture_creator: &'a TextureCreator<WindowContext>, 
+        button_tex: String, 
+        text: &'a str, 
+        text_color: Color, 
+        font: &Font,
+        on_press: fn() -> (),
+    ) -> Self {
+
         let text_surface = font
-            .render("Campaign")
+            .render(text)
             .blended(text_color)
             .map_err(|e| e.to_string())
             .unwrap();
+
+        let text_texture = texture_creator
+            .create_texture_from_surface(&text_surface)
+            .map_err(|e| e.to_string())
+            .unwrap();
+
         Self {
             rect,
+            is_pressed: false,
             position,
-            text: text_surface,
-            sprite: None,
+            text: text_texture,
+            sprite: button_tex,
+            pressed_sprite: None,
+            on_press,
         }
     }
 }
