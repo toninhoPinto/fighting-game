@@ -4,10 +4,10 @@ pub struct Button<'a> {
     pub rect: Rect,
     pub is_pressed: bool,
     pub position: Point,
-    pub text: Texture<'a>,
+    pub text: Option<Texture<'a>>, //Option this
     pub sprite: String,
     pub pressed_sprite: Option<String>,
-    pub on_press: fn() -> (),
+    pub on_press: Box<dyn Fn() -> ()>,
 }
 
 impl<'a> Button<'a> {
@@ -15,22 +15,26 @@ impl<'a> Button<'a> {
         position: Point, 
         texture_creator: &'a TextureCreator<WindowContext>, 
         button_tex: String, 
-        text: &'a str, 
+        text: Option<&'a str>, 
         text_color: Color, 
         font: &Font,
-        on_press: fn() -> (),
+        on_press: Box<dyn Fn() -> ()>,
     ) -> Self {
 
-        let text_surface = font
-            .render(text)
-            .blended(text_color)
-            .map_err(|e| e.to_string())
-            .unwrap();
+        let text_texture = if let Some(text) = text {
+            let text_surface = font
+                .render(text)
+                .blended(text_color)
+                .map_err(|e| e.to_string())
+                .unwrap();
 
-        let text_texture = texture_creator
-            .create_texture_from_surface(&text_surface)
-            .map_err(|e| e.to_string())
-            .unwrap();
+            Some(texture_creator
+                .create_texture_from_surface(&text_surface)
+                .map_err(|e| e.to_string())
+                .unwrap())
+        } else {
+            None
+        };
 
         Self {
             rect,

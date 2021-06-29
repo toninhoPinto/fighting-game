@@ -97,6 +97,12 @@ impl Scene for MatchScene {
             game.player.hp.0,
         );
 
+        let mut energy_bars = crate::energy_bar_init(
+            screen_res,
+            0,
+            0,
+        );
+
         let mut popup_item = new_item_popup(screen_res);
         let mut popup_content: Option<Vec<Texture>> = None;
 

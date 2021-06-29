@@ -22,7 +22,10 @@ pub fn currency_text_gen<'a>(player: &Player, texture_creator: &'a TextureCreato
 pub fn render_button<'a> (canvas: &mut WindowCanvas, button: &Button, assets: &UIAssets) {
     canvas.copy(&assets.store_ui_sheet, assets.store_ui_src_rects.get(&button.sprite).unwrap().clone(), button.rect).unwrap();
 
-    canvas.copy(&button.text, None, button.rect.clone()).unwrap();
+    if let Some(text) = &button.text {
+        canvas.copy(text, None, button.rect.clone()).unwrap();
+    }
+    
 }
 
 pub fn render_ui<'a>(canvas: &mut WindowCanvas, 

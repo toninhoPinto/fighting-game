@@ -36,6 +36,13 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 
+//Buttons
+// change items to buttons in the store
+// change the back into a button 
+// change the main menu into a bunch of proper buttons 
+
+// ACTIVE ITEMS AND CURRENCY ARE SHARED
+
 // add a font cache hashmap to GameStateData ???
 
 // improve store UI on the selected item - make better sprite and center it better
@@ -130,6 +137,20 @@ pub fn hp_bar_init<'a>(screen_res: (u32, u32), max_hp: i32, curr_hp: i32) -> Seg
         25,
         max_hp,
         curr_hp,
+        20,
+        Some(Color::RGB(255, 100, 100)),
+        None,
+    )
+}
+
+pub fn energy_bar_init<'a>(screen_res: (u32, u32), max_energy: i32, curr_energy: i32) -> SegmentedBar<'a> {
+    SegmentedBar::new(
+        80,
+        60,
+        screen_res.0 / 3 - 50,
+        10,
+        max_energy,
+        curr_energy,
         20,
         Some(Color::RGB(255, 100, 100)),
         None,
