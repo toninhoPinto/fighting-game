@@ -101,6 +101,8 @@ use crate::input::controller_handler::Controller;
 pub struct GameStateData<'a> {
 
     player: Option<Player>,
+    hp_bar: Option<SegmentedBar<'a>>,
+    energy_bar: Option<SegmentedBar<'a>>,
 
     items: HashMap<i32, Item>,
     effects: HashMap<i32, ItemEffects>,
@@ -151,8 +153,8 @@ pub fn energy_bar_init<'a>(screen_res: (u32, u32), max_energy: i32, curr_energy:
         10,
         max_energy,
         curr_energy,
-        20,
-        Some(Color::RGB(255, 100, 100)),
+        1,
+        Some(Color::RGB(100, 100, 255)),
         None,
     )
 }
@@ -214,6 +216,10 @@ fn main() -> Result<(), String> {
 
     let mut game_state_data = GameStateData {
         player: None,
+        hp_bar: None,
+        energy_bar: None,
+
+
         items: load_items("assets/items/items.json".to_string()),
         effects: hash_effects(),
         enemy_animations: HashMap::new(),

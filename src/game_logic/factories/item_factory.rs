@@ -12,6 +12,7 @@ pub struct Root {
     pub description: String,
     #[serde(rename = "item_type")]
     pub item_type: String,
+    pub cost: Option<i8>,
     #[serde(rename = "asset_id")]
     pub asset_id: String,
     pub price: u32,
@@ -60,7 +61,7 @@ pub fn load_items(dir: String) -> HashMap<i32, Item>{
             name: item.name,
             description: item.description,
             item_type: match &item.item_type as &str {
-                "Active" => {ItemType::ActivePart}
+                "Active" => {ItemType::ActivePart(item.cost.unwrap())}
                 "Combat" => {ItemType::CombatPart}
                 "Passive" => {ItemType::PassivePart}
                 _ => {ItemType::PassivePart}

@@ -13,7 +13,7 @@ pub mod loot_table_effects;
 
 #[derive(PartialEq, Clone)]
 pub enum ItemType {
-    ActivePart,
+    ActivePart(i8),
     CombatPart,
     PassivePart,
 }

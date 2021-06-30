@@ -68,12 +68,6 @@ impl<'a> Scene for StoreScene {
         let assets = load_overworld_assets(&texture_creator);
         let item_assets = load_item_assets(&texture_creator);
 
-        let hp_bars = hp_bar_init(
-            (w, h),
-            game_state_data.player.as_ref().unwrap().character.hp,
-            game_state_data.player.as_ref().unwrap().hp.0,
-        );
-
         let mut popup_item = new_item_popup((w,h));
         let mut popup_content: Option<Vec<Texture>> = None;
 
@@ -132,7 +126,7 @@ impl<'a> Scene for StoreScene {
 
                                             let player = game_state_data.player.as_mut().unwrap();
                                             player.currency = cmp::max(0, player.currency - bought_item.price);
-                                            player.equip_item(&mut bought_item, &game_state_data.effects);
+                                            player.equip_item(&mut bought_item, &game_state_data.effects, &mut game_state_data.energy_bar.as_mut().unwrap());
                                     
                                             popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
                                                 &bought_item.name, 
@@ -205,7 +199,8 @@ impl<'a> Scene for StoreScene {
 
             render_ui(canvas, 
                 &game_state_data.player.as_ref().unwrap(),
-                &hp_bars,
+                &game_state_data.hp_bar.as_ref().unwrap(),
+                &game_state_data.energy_bar.as_ref().unwrap(),
                 &item_list,
                 &item_assets,
                 Some(&popup_item),

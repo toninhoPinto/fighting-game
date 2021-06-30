@@ -76,13 +76,7 @@ impl<'a> Scene for OverworldScene {
 
         let assets = load_overworld_assets(&texture_creator);
         let item_assets = load_item_assets(&texture_creator);
-
-        let hp_bars = hp_bar_init(
-            (w, h),
-            game_state_data.player.as_ref().unwrap().character.hp,
-            game_state_data.player.as_ref().unwrap().hp.0,
-        );
-
+        
         //game_state_data.text_cache.insert("currency".to_string(), currency_text_gen(game_state_data.player.as_ref().unwrap(), texture_creator, &game_state_data.general_assets.font));
 
         let mut popup_item = new_item_popup((w,h));
@@ -192,7 +186,8 @@ impl<'a> Scene for OverworldScene {
 
             render_ui(canvas, 
                 &game_state_data.player.as_ref().unwrap(),
-                &hp_bars,
+                &game_state_data.hp_bar.as_ref().unwrap(),
+                &game_state_data.energy_bar.as_ref().unwrap(),
                 &item_list,
                 &item_assets,
                 Some(&popup_item),

@@ -31,6 +31,7 @@ pub fn render_button<'a> (canvas: &mut WindowCanvas, button: &Button, assets: &U
 pub fn render_ui<'a>(canvas: &mut WindowCanvas, 
     player: &Player,
     hp_bars: &SegmentedBar,
+    energy_bars: &SegmentedBar,
     item_list: &WrappingList,
     item_assets: &ItemAssets,
     popups: Option<&PopUp>,
@@ -47,6 +48,17 @@ pub fn render_ui<'a>(canvas: &mut WindowCanvas,
             for hp_rect in hp_bars.render() {
                 canvas.draw_rect(hp_rect).unwrap();
                 canvas.fill_rect(hp_rect).unwrap();
+            }
+        }
+
+        println!("energy_bars max {} curr {}", energy_bars.max_value ,energy_bars.curr_value);
+        if energy_bars.curr_value > 0 {
+            canvas.set_draw_color(energy_bars.color.unwrap());
+            println!("energy_bars {:?} ", energy_bars.render());
+            for energy_rect in energy_bars.render() {
+                println!("energy_bar {:?} ", energy_rect);
+                canvas.draw_rect(energy_rect).unwrap();
+                canvas.fill_rect(energy_rect).unwrap();
             }
         }
     

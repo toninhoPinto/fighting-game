@@ -151,6 +151,21 @@ impl<'a> Scene for MenuScene<'a> {
                                     Rc::clone(game_state_data.enemy_animations.get("player").unwrap())
                                 ));
 
+                                let hp_bars = crate::hp_bar_init(
+                                    screen_res,
+                                    game_state_data.player.as_ref().unwrap().character.hp,
+                                    game_state_data.player.as_ref().unwrap().hp.0,
+                                );
+                        
+                                let energy_bars = crate::energy_bar_init(
+                                    screen_res,
+                                    0,
+                                    0,
+                                );
+
+                                game_state_data.hp_bar = Some(hp_bars);
+                                game_state_data.energy_bar = Some(energy_bars);
+
                                 game_state_data.enemy_animations.insert("ryu".to_string(), Rc::new(load_enemy_ryu_animations()));
 
                                 let mut overworld = OverworldScene::new();

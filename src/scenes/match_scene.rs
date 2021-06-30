@@ -91,17 +91,6 @@ impl Scene for MatchScene {
         player.events.on_start_level = start_level_events;
 
         let screen_res = canvas.output_size().unwrap();
-        let mut hp_bars = crate::hp_bar_init(
-            screen_res,
-            game.player.character.hp,
-            game.player.hp.0,
-        );
-
-        let mut energy_bars = crate::energy_bar_init(
-            screen_res,
-            0,
-            0,
-        );
 
         let mut popup_item = new_item_popup(screen_res);
         let mut popup_content: Option<Vec<Texture>> = None;
@@ -150,6 +139,9 @@ impl Scene for MatchScene {
                             debug_pause ^= true;
                             logic_time_accumulated = 0.0;
                             update_counter = 0;
+                        }
+                        if input == Keycode::M {
+                            game.player.currency += 1;
                         }
                         if input == Keycode::Right && debug_pause {
                             logic_time_accumulated += logic_timestep;
@@ -257,7 +249,7 @@ impl Scene for MatchScene {
                 items_spawned.iter_mut().for_each(|item_ground| {
 
                     if (player_position - item_ground.position).magnitude() <= 50.0 {
-                        game.player.equip_item(&mut item_ground.item, &game_state_data.effects);
+                        game.player.equip_item(&mut item_ground.item, &game_state_data.effects, &mut game_state_data.energy_bar.as_mut().unwrap());
                         
                         popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
                             &item_ground.item.name, 
@@ -323,7 +315,7 @@ impl Scene for MatchScene {
                 game.camera.update(game.max_level_width(), &game.player, logic_timestep);
                 game.check_level_tags_and_apply(game_state_data);
 
-                hp_bars.update(game.player.character.hp, game.player.hp.0);
+                game_state_data.hp_bar.as_mut().unwrap().update(game.player.character.hp, game.player.hp.0);
                 if game.player.items.len() != item_list.rects.len() {
                     item_list.update(game.player.items.iter()
                         .map(|_| {Rect::new(0,0,32,32)})
@@ -354,7 +346,8 @@ impl Scene for MatchScene {
 
                 render_ui(canvas, 
                     &game.player,
-                    &hp_bars,
+                    &game_state_data.hp_bar.as_ref().unwrap(),
+                    &game_state_data.energy_bar.as_ref().unwrap(),
                     &item_list,
                     &game_state_data.item_assets,
                     Some(&popup_item),

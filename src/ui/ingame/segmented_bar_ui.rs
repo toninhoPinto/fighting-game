@@ -29,7 +29,7 @@ impl<'a> SegmentedBar<'a> {
     ) -> Self {
 
         let step = max_value / value_step;
-        let step_width = width / (max_value / value_step) as u32;
+        let step_width = if max_value == 0 {0} else {width / (max_value / value_step) as u32};
         let gap = 5;
         let mut rects = Vec::new();
         for i in 0..step {
@@ -52,15 +52,11 @@ impl<'a> SegmentedBar<'a> {
         }
     }
 
-    fn create_rects(
-        &mut self,
-        max_value: i32,
-    ){
-        let step = max_value / self.step;
-        let step_width = self.dimensions.0 / (max_value / self.step) as u32;
+    fn create_rects(&mut self,  step_n: i32, step_width: u32){
+
         let gap = 5;
         let mut rects = Vec::new();
-        for i in 0..step {
+        for i in 0..step_n {
             rects.push(Rect::new(
                 self.point.x + ((gap + step_width) * i as u32) as i32,
                 self.point.y,
@@ -72,14 +68,28 @@ impl<'a> SegmentedBar<'a> {
     }
 
     pub fn update(&mut self, max_value: i32, curr_value: i32) {
+        self.curr_value = curr_value;
         if self.max_value != max_value {
             self.max_value = max_value;
-            self.create_rects(self.max_value);
+
+            let step = max_value / self.step;
+            let step_width = self.dimensions.0 / (max_value / self.step) as u32;
+            self.create_rects(step, step_width);
         }
+    }
+
+    pub fn update_width(&mut self, max_value: i32, curr_value: i32) {
         self.curr_value = curr_value;
+        if self.max_value != max_value {
+            self.max_value = max_value;
+
+            let step = max_value / self.step;
+            self.create_rects(step, 20);
+        }
     }
 
     pub fn render(&self) -> Vec<Rect> {
+        println!("render {} {} {}", self.curr_value , self.max_value, self.step);
         let index = min((self.curr_value / self.step) as usize, (self.max_value / self.step) as usize);
         self.rects[0..index].to_vec()
     }

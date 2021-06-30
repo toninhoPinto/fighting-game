@@ -7,6 +7,7 @@ use std::{collections::{HashMap, VecDeque}, fmt};
 
 use crate::asset_management::common_assets::CommonAssets;
 use crate::game_logic::effects::events_pub_sub::CharacterEventActive;
+use crate::ui::ingame::segmented_bar_ui::SegmentedBar;
 use crate::{asset_management::asset_holders::{EntityAnimations, EntityAssets, EntityData}, collision::collider_manager::ColliderManager, ecs_system::enemy_components::Health, engine_types::{animator::Animator, sprite_data::SpriteData}, game_logic::{effects::{Effect, ItemEffects, events_pub_sub::{CharacterEvent, EventsPubSub}}, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}, items::{Item, ItemType}, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::Character;
@@ -79,12 +80,17 @@ impl Player {
         }
     }
 
-    pub fn equip_item(&mut self, item: &mut Item, hash_effects: &HashMap<i32, ItemEffects>){
-        if item.item_type != ItemType::ActivePart {
-            self.items.push(item.asset_id.clone());
-        } else {
-            self.active_item_key = Some(item.asset_id.clone());
+    pub fn equip_item(&mut self, item: &mut Item, hash_effects: &HashMap<i32, ItemEffects>, energy_bars: &mut SegmentedBar){
+        match item.item_type {
+            ItemType::ActivePart(cost) => {
+                self.active_item_key = Some(item.asset_id.clone());
+                energy_bars.update_width(cost as i32, self.currency as i32);
+            },
+            _ => {
+                self.items.push(item.asset_id.clone())
+            }
         }
+
         for effect in item.effects.iter_mut() {
             if let Some(apply_effect) = hash_effects.get(&effect.effect_id) {
                 apply_effect(self, effect);
