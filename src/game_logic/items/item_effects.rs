@@ -94,15 +94,19 @@ pub fn heal_on_active(player: &mut Player, effect: &mut Effect){
     player.active_item = Some((heal_player, effect.clone()));
 }
 
-pub fn heal_player(player: &mut Player, enemies: &mut EnemyManager, effect: &mut Effect){
-    heal(&mut player.hp, effect.change.unwrap(), &player.character);
+pub fn heal_player(player: &mut Player, enemies: &mut EnemyManager, effect: &mut Effect) -> bool {
+    let is_full_hp = player.hp.0 < player.character.hp;
+    if is_full_hp {
+        heal(&mut player.hp, effect.change.unwrap(), &player.character);
+    }
+    return is_full_hp;
 }
 
 pub fn charm_on_active(player: &mut Player, effect: &mut Effect){
     player.active_item = Some((charm_enemies, effect.clone()));
 }
 
-pub fn charm_enemies(player: &mut Player, enemies: &mut EnemyManager, effect: &mut Effect){
+pub fn charm_enemies(player: &mut Player, enemies: &mut EnemyManager, effect: &mut Effect) -> bool{
     let actual_enemies = enemies.ai_type_components.iter().enumerate().filter(|(usize, ai)| { 
         if let Some(AIType::Enemy) = ai {
             true
@@ -119,6 +123,8 @@ pub fn charm_enemies(player: &mut Player, enemies: &mut EnemyManager, effect: &m
         let actual_id = actual_enemies[enemy_to_charm].0;
         enemies.ai_type_components[actual_id] = Some(AIType::Allied);
     }
+
+    return n_enemies > 0;
 }
 
 pub fn apply_lifesteal(player: &mut Player, effect: &mut Effect){

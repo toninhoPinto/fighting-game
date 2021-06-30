@@ -323,6 +323,7 @@ impl Scene for MatchScene {
                     );
                 }
 
+                game_state_data.energy_bar.as_mut().unwrap().update_width(game.player.active_item_cost as i32, game.player.currency as i32);
                 popup_fade(&mut popup_item, &mut popup_content, logic_timestep);
 
                 logic_time_accumulated -= logic_timestep;

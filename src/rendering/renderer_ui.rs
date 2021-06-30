@@ -56,7 +56,6 @@ pub fn render_ui<'a>(canvas: &mut WindowCanvas,
             canvas.set_draw_color(energy_bars.color.unwrap());
             println!("energy_bars {:?} ", energy_bars.render());
             for energy_rect in energy_bars.render() {
-                println!("energy_bar {:?} ", energy_rect);
                 canvas.draw_rect(energy_rect).unwrap();
                 canvas.fill_rect(energy_rect).unwrap();
             }

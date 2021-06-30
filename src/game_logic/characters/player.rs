@@ -49,8 +49,10 @@ pub struct Player {
 
     pub events: EventsPubSub,
     pub items: Vec<String>,
+
     pub active_item_key: Option<String>,
     pub active_item: Option<(CharacterEventActive, Effect)>,
+    pub active_item_cost: i8,
     pub currency: u32,
 }
 
@@ -76,6 +78,7 @@ impl Player {
 
             active_item_key: None,
             active_item: None,
+            active_item_cost: 0,
             currency: 10,
         }
     }
@@ -83,6 +86,7 @@ impl Player {
     pub fn equip_item(&mut self, item: &mut Item, hash_effects: &HashMap<i32, ItemEffects>, energy_bars: &mut SegmentedBar){
         match item.item_type {
             ItemType::ActivePart(cost) => {
+                self.active_item_cost = cost;
                 self.active_item_key = Some(item.asset_id.clone());
                 energy_bars.update_width(cost as i32, self.currency as i32);
             },

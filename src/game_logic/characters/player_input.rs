@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{cmp, collections::VecDeque};
 
 use parry2d::na::Vector2;
 
@@ -126,14 +126,18 @@ fn apply_input(player: &mut Player,
     let n_prev_actions = action_history.len();
     let punch_kick_not_pressed = n_prev_actions == 0 || (n_prev_actions > 0 && action_history[n_prev_actions-1] & GameAction::Punch as i32 == 0 && action_history[n_prev_actions-1] & GameAction::Kick as i32 == 0);
     let punch_kick_simultaneously = inputs_for_current_frame & GameAction::Punch as i32 > 0 && inputs_for_current_frame & GameAction::Kick as i32 > 0;
-    
-    if punch_kick_simultaneously && punch_kick_not_pressed && player.active_item.is_some() {
+    let has_currency_to_activate = player.currency >= player.active_item_cost as u32;
+
+    if punch_kick_simultaneously && punch_kick_not_pressed && has_currency_to_activate {
         if let Some(active_item) = &mut player.active_item {
+            
             let mut item = active_item.clone();
-            item.0(player, enemies, &mut item.1);
-            if player.active_item.is_some() {
-                player.active_item = Some(item);
+            
+            if item.0(player, enemies, &mut item.1) {
+                player.currency = cmp::max(0, player.currency - player.active_item_cost as u32);
             }
+
+            player.active_item = Some(item);
         }
     } else {
         if inputs_for_current_frame & GameAction::Punch as i32 > 0 {
