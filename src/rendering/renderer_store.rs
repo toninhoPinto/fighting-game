@@ -15,6 +15,7 @@ pub fn render_store<'a>(canvas: &mut WindowCanvas,
 
     canvas.copy(&assets.backgrounds[0], Rect::new(0,0,store.background.width(), store.background.height()), store.background).unwrap();
 
+    /* 
     let items_ui = store.items.iter()
         .zip(store.item_rects.iter());
     let bought_item = Rect::new(352, 0, 32, 32);
@@ -66,4 +67,5 @@ pub fn render_store<'a>(canvas: &mut WindowCanvas,
 
     let rect = Rect::new(store.back_button.x() + (store.back_button.width() / 4) as i32, store.back_button.y() + (store.back_button.height() / 4) as i32, store.back_button.width() / 2,store.back_button.height() / 2);
     canvas.copy(ui_assets.get("back").unwrap(), None, rect).unwrap();
+    */
 }

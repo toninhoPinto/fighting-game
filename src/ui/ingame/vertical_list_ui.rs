@@ -1,15 +1,15 @@
 use sdl2::rect::Point;
 
-use crate::ui::menus::button_ui::Button;
-pub struct VerticalList<'a> {
+use crate::ui::menus::nav_button::NavButton;
+pub struct VerticalList {
     pub position: Point,
-    pub buttons: Vec<Button<'a>>,
+    pub buttons: Vec<NavButton>,
 }
 
 
-impl<'a> VerticalList<'a> {
+impl<'a> VerticalList {
 
-    pub fn new(position: Point, mut buttons: Vec<Button<'a>>, offset: i32) -> Self {
+    pub fn new(position: Point, mut buttons: Vec<NavButton>, offset: i32) -> Self {
         VerticalList::init(offset, &mut buttons);
         Self {
             position,
@@ -17,9 +17,9 @@ impl<'a> VerticalList<'a> {
         } 
     }
 
-    fn init(offset: i32, buttons: &mut Vec<Button<'a>>) {
+    fn init(offset: i32, buttons: &mut Vec<NavButton>) {
         for i in 0..buttons.len() {
-            buttons[i].position.y += offset + buttons[i].rect.height() as i32;
+            buttons[i].ui.rect.y += offset + buttons[i].ui.rect.height() as i32;
         }
     }
 }

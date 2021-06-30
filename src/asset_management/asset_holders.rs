@@ -5,7 +5,7 @@ use tiled::Map;
 
 use crate::{engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::Attack, inputs::game_inputs::GameAction}};
 
-use super::{asset_loader::{asset_loader, load_tiled_map::load_level}, rng_tables::load_item_table};
+use super::{asset_loader::{asset_loader, load_tiled_map::load_level}};
 
 pub struct EntityAssets<'a> {
     pub textures: HashMap<String, Texture<'a>>,

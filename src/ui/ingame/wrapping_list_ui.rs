@@ -12,7 +12,7 @@ impl WrappingList {
 
     pub fn new(position: Point, width: u32, mut rects: Vec<Rect>, offset: i32) -> Self {
         WrappingList::init(position, width, offset, &mut rects);
-        println!("result {:?}", rects);
+
         Self {
             position,
             width,

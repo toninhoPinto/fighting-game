@@ -1,6 +1,6 @@
 use sdl2::{pixels::Color, rect::Rect, render::{Texture, TextureCreator, WindowCanvas}, ttf::Font, video::WindowContext};
 
-use crate::{asset_management::asset_holders::{ItemAssets, UIAssets}, game_logic::characters::player::Player, ui::{ingame::{popup_ui::PopUp, segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}, menus::button_ui::Button}};
+use crate::{asset_management::asset_holders::{ItemAssets, UIAssets}, game_logic::characters::player::Player, ui::{ingame::{popup_ui::PopUp, segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}, menus::button_trait::Button}};
 
 pub fn active_item_ui() -> Rect{
     Rect::new(10, 0 , 64, 64)
@@ -20,12 +20,7 @@ pub fn currency_text_gen<'a>(player: &Player, texture_creator: &'a TextureCreato
 }
 
 pub fn render_button<'a> (canvas: &mut WindowCanvas, button: &Button, assets: &UIAssets) {
-    canvas.copy(&assets.store_ui_sheet, assets.store_ui_src_rects.get(&button.sprite).unwrap().clone(), button.rect).unwrap();
 
-    if let Some(text) = &button.text {
-        canvas.copy(text, None, button.rect.clone()).unwrap();
-    }
-    
 }
 
 pub fn render_ui<'a>(canvas: &mut WindowCanvas, 

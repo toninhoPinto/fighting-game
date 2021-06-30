@@ -105,8 +105,8 @@ impl<'a> Scene for StoreScene {
 
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {
+                           
                             if let Some(ref mut store_ui) = store {
-
                                 if store_ui.selected_item < store_ui.items.len() {
                                     if store_ui.items.len() > 0 {
 
@@ -115,7 +115,7 @@ impl<'a> Scene for StoreScene {
                                         if game_state_data.player.as_ref().unwrap().currency >= bought_item.price {
 
                                             store_ui.items.remove(store_ui.selected_item);
-                                            store_ui.item_rects.remove(store_ui.selected_item);
+                                            store_ui.item_buttons.remove(store_ui.selected_item);
                                             store_ui.prices.remove(store_ui.selected_item);
                                             if let Some(ref mut store_item_prices) = store_item_prices {
                                                 store_item_prices.remove(store_ui.selected_item);
