@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{GameStateData, Transition, game_logic::{factories::{character_factory::{load_character, load_character_animations}, enemy_factory::load_enemy_ryu_animations}, items::loot_table_effects::stop_attack_spawn}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, rendering::renderer_ui::currency_text_gen};
+use crate::{GameStateData, Transition, game_logic::{factories::{character_factory::{load_character, load_character_animations}, enemy_factory::load_enemy_ryu_animations}, items::loot_table_effects::stop_attack_spawn}, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}};
 use rand::{Rng, SeedableRng, prelude::SmallRng};
 use sdl2::{EventPump, event::Event, pixels::Color, rect::{Point, Rect}, render::{Canvas, TextureCreator, TextureQuery}, surface::Surface, ttf::Font, video::{Window, WindowContext}};
 

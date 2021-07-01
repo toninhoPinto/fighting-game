@@ -7,7 +7,7 @@ use crate::{asset_management::asset_holders::EntityData, ecs_system::enemy_manag
 use super::player::{EntityState, Player};
 
 
-pub fn apply_input_state(player: &mut Player, inputs: &mut AllInputManagement, character_data: &EntityData,enemies: &mut EnemyManager) {
+pub fn apply_input_state(player: &mut Player, inputs: &mut AllInputManagement, character_data: &EntityData, enemies: &mut EnemyManager) {
     if let Some(&last_action) = inputs.action_history.back() {
         if GameAction::is_pressed(last_action, GameAction::Right) { //1
             player.controller.set_velocity_x(1, &mut player.animator);

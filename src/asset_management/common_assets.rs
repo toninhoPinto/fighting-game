@@ -20,7 +20,7 @@ const SFX_VOLUME: i32 = 10;
 pub struct CommonAssets<'a> {
     //sounds
     pub sound_effects: HashMap<String, Chunk>,
-    pub font: Font<'a, 'a>,
+    pub fonts : HashMap<String, Font<'a, 'a>>,
 
     pub loot_tables: HashMap<String, LootTable>,
 }
@@ -121,12 +121,16 @@ impl<'a> CommonAssets<'a> {
 
         let loot_tables = load_item_table("assets/items/loot_tables.json".to_string());
 
-        let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 16).unwrap();
+        let basic_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 16).unwrap();
+        let combo_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 100).unwrap();
+        let mut fonts = HashMap::new();
+        fonts.insert("basic_font".to_string(), basic_font);
+        fonts.insert("combo_font".to_string(), combo_font);
 
         CommonAssets {
             sound_effects: sounds,
             loot_tables,
-            font,
+            fonts,
         }
     }
 }

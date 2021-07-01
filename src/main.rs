@@ -65,6 +65,7 @@ use crate::input::controller_handler::Controller;
     // add small up/down animation on the "character" icon
 
 //separate json for animation offsets and animation states (startup, active, recovery)
+
 //Improve AI
 
 //TODO FEATURES

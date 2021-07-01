@@ -2,7 +2,7 @@ use std::{cmp, time::Instant};
 
 use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, ttf::Font, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{currency_text_gen, render_ui}}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 
 use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH};
 
@@ -58,7 +58,7 @@ impl<'a> Scene for StoreScene {
         store_struct.items = get_store_item_list(item_room_seed, game_state_data.general_assets.loot_tables.get("store_table").unwrap());
 
         let mut store_item_prices = Some(StoreScene::create_price_textures(texture_creator, 
-            &game_state_data.general_assets.font, 
+            &game_state_data.general_assets.fonts.get("basic_font").unwrap(), 
             &store_struct, 
             &game_state_data.items)
         );
@@ -131,7 +131,7 @@ impl<'a> Scene for StoreScene {
                                             popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
                                                 &bought_item.name, 
                                                 &bought_item.description, 
-                                                &game_state_data.general_assets.font, 
+                                                &game_state_data.general_assets.fonts.get("basic_font").unwrap(), 
                                                 &mut popup_item));
 
                                             if let Some(chance_mod) = &bought_item.chance_mod {

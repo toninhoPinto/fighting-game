@@ -111,10 +111,8 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
         cells_to_spawn_level.sort_by(|a, b| a.partial_cmp(b).unwrap());
         cells_to_spawn_level.dedup();
 
-        println!("cells to spawn {:?}", cells_to_spawn_level);
         for cell_pos in cells_to_spawn_level {
 
-            println!("cell_pos {:?}", cell_pos);
             let cell_offset_x = (cell_width as f64 / 2f64 * rng.gen::<f64>()) as i32;
             let cell_offset_y = (cell_height as f64 / 2f64 * rng.gen::<f64>()) as i32;
 
@@ -122,8 +120,6 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
                 area.x() + cell_width * cell_pos + cell_width / 2 + cell_offset_x, 
                 area.y() + cell_height * row_level as i32 - cell_height / 2 + cell_offset_y
             );
-
-            println!("position_cell {:?}", position_cell);
 
             overworld.push(WorldNode{
                 node_type: WorldNodeType::Level(0),
