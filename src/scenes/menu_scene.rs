@@ -170,7 +170,7 @@ impl<'a> Scene for MenuScene<'a> {
 
                                 let mut overworld = OverworldScene::new();
                                 
-                                let seed = 12345678981761;
+                                let seed = 1234567281761;
                                 
                                 game_state_data.seed = Some(seed);
                                 game_state_data.map_rng = Some(SmallRng::seed_from_u64(seed));

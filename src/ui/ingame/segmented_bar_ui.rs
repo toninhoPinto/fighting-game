@@ -89,7 +89,6 @@ impl<'a> SegmentedBar<'a> {
     }
 
     pub fn render(&self) -> Vec<Rect> {
-        println!("render {} {} {}", self.curr_value , self.max_value, self.step);
         let index = min((self.curr_value / self.step) as usize, (self.max_value / self.step) as usize);
         self.rects[0..index].to_vec()
     }

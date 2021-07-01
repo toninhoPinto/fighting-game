@@ -36,12 +36,10 @@ use crate::input::controller_handler::Controller;
 
 //TODO features tomorrow
 
-//Buttons
-// change items to buttons in the store
+//Buttons (failed to do this, its hard)
+// change items to buttons in the store 
 // change the back into a button 
 // change the main menu into a bunch of proper buttons 
-
-// ACTIVE ITEMS AND CURRENCY ARE SHARED
 
 // add a font cache hashmap to GameStateData ???
 

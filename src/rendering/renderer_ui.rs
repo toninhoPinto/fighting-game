@@ -51,10 +51,8 @@ pub fn render_ui<'a>(canvas: &mut WindowCanvas,
             }
         }
 
-        println!("energy_bars max {} curr {}", energy_bars.max_value ,energy_bars.curr_value);
         if energy_bars.curr_value > 0 {
             canvas.set_draw_color(energy_bars.color.unwrap());
-            println!("energy_bars {:?} ", energy_bars.render());
             for energy_rect in energy_bars.render() {
                 canvas.draw_rect(energy_rect).unwrap();
                 canvas.fill_rect(energy_rect).unwrap();
