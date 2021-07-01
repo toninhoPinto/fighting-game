@@ -60,6 +60,7 @@ pub fn render_overworld(canvas: &mut WindowCanvas,
     let pointer_screen = world_to_screen(Rect::new(0,0, 40, 40), nodes[player_node_pos as usize].position - Point::new(20,0), (w, h), None);
     canvas.copy(&assets.spritesheet, src_pointer.clone(), pointer_screen).unwrap();
     
-    let rect_screen_pos = world_to_screen(Rect::new(0,0, 300, 480), Point::new(0,0), (w, h), None);
-    canvas.copy(&assets.portraits.get("portrait").unwrap(), Rect::new(0,0, 500, 870), rect_screen_pos).unwrap();
+    let rect_screen_pos = world_to_screen(Rect::new(0,0, 450, 582), Point::new(0,0), (w, h), None);
+    let texture = &assets.portraits.get("portrait").unwrap();
+    canvas.copy(texture, Rect::new(0,0, 900, 1165), rect_screen_pos).unwrap();
 }
