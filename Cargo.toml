@@ -16,6 +16,7 @@ directories = "3.0.1"
 rand = { version = "0.8.3", default-features = true, features = ["small_rng"] }
 delaunator = "0.2.0"
 tiled = "0.9.5"
+splines = "4.0.0"
 
 #When you're shipping your game make sure to copy SDL2.dll to the same directory that your compiled exe is in, otherwise the game won't launch.
 [dependencies.sdl2]

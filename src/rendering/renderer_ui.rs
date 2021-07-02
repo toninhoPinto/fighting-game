@@ -7,11 +7,14 @@ pub fn active_item_ui() -> Rect{
 }
 
 pub fn text_gen<'a>(value: String, texture_creator: &'a TextureCreator<WindowContext>, font: &Font) -> Texture<'a> {
+
     let title_surface = font
                 .render(&value)
                 .blended(Color::WHITE)
                 .map_err(|e| e.to_string())
                 .unwrap();
+
+               
 
     texture_creator
                 .create_texture_from_surface(&title_surface)

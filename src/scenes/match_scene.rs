@@ -10,7 +10,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::collider::ColliderType, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::Combo, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::{render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::{collider::ColliderType, simple_animator::init_combo_animation}, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::Combo, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::{render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -92,6 +92,8 @@ impl Scene for MatchScene {
 
         let mut combo = Combo::new(1.35f64);
         let mut curr_combo_texture: Option<(u32, Texture)> = None;
+        let mut combo_rect = Rect::new(20, 200, 50, 50);
+        let mut combo_animator = init_combo_animation(combo_rect);
 
         let screen_res = canvas.output_size().unwrap();
 
@@ -336,14 +338,23 @@ impl Scene for MatchScene {
                     if let Some((val, _)) = &mut curr_combo_texture {
                         if *val != combo_val {
                             curr_combo_texture = Some((combo_val, text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap())));
+                            combo_animator.reset();
+                            combo_animator.play_once(9.0);
                         }
                     } else {
                         curr_combo_texture = Some((combo_val, text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap())));
+                        combo_animator.reset();
+                        combo_animator.play_once(9.0);
                     }
                 } else {
                     curr_combo_texture = None;
+                    combo_animator.reset();
                 }
 
+                combo_animator.update(&mut combo_rect, logic_timestep);
+
+
+                
                 logic_time_accumulated -= logic_timestep;
             }
 
@@ -364,7 +375,7 @@ impl Scene for MatchScene {
                 .unwrap();
 
                 if let Some((_, tex)) = &curr_combo_texture {
-                    canvas.copy(tex, None, Rect::new(20, 200, 50, 50)).unwrap();
+                    canvas.copy(tex, None, combo_rect).unwrap();
                 }
 
                 render_ui(canvas, 
