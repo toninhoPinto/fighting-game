@@ -6,11 +6,11 @@ pub fn active_item_ui() -> Rect{
     Rect::new(10, 0 , 64, 64)
 }
 
-pub fn text_gen<'a>(value: String, texture_creator: &'a TextureCreator<WindowContext>, font: &Font) -> Texture<'a> {
+pub fn text_gen<'a>(value: String, texture_creator: &'a TextureCreator<WindowContext>, font: &Font, color: Color) -> Texture<'a> {
 
     let title_surface = font
                 .render(&value)
-                .blended(Color::WHITE)
+                .blended(color)
                 .map_err(|e| e.to_string())
                 .unwrap();
 
