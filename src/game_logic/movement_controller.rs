@@ -87,6 +87,15 @@ impl MovementController {
         self.walking_dir.x = x;
     }
 
+    pub fn set_velocity_y(&mut self, y: i8, animator: &mut Animator) {
+        if y != 0 {
+            self.set_entity_state(EntityState::Walking, animator);
+        } else {
+            self.set_entity_state(EntityState::Idle, animator);
+        }
+        self.walking_dir.y = y;
+    }
+
     pub fn can_dash_attack(&self) -> bool {
         !((self.is_attacking && !self.has_hit)
             || self.state == EntityState::Jump

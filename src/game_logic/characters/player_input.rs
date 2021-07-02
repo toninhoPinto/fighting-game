@@ -15,6 +15,12 @@ pub fn apply_input_state(player: &mut Player, inputs: &mut AllInputManagement, c
         if GameAction::is_pressed(last_action, GameAction::Left) { //-1
             player.controller.set_velocity_x(-1, &mut player.animator);
         }
+        if GameAction::is_pressed(last_action, GameAction::Up) { //1
+            player.controller.set_velocity_y(1, &mut player.animator);
+        }
+        if GameAction::is_pressed(last_action, GameAction::Down) { //-1
+            player.controller.set_velocity_y(-1, &mut player.animator);
+        }
     }
 
     let mut occupied = (player.controller.is_attacking && !player.controller.has_hit) ||
