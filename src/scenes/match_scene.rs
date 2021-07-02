@@ -352,23 +352,26 @@ impl Scene for MatchScene {
                                     curr_combo_level = i;
                                 }
                             }
-                            let changed_color = prev_color != curr_color;
+                            let changed_color = prev_color.r != curr_color.r || prev_color.g != curr_color.g || prev_color.b != curr_color.b;
+                            println!("changed_color {:?}",changed_color);
+                            combo_animator.reset();
+
+                            if changed_color {
+
+                                combo_animator.reset_full(&mut combo_rect);
+                                combo_rect.set_width(combo_rect.width()+10);
+                                combo_rect.set_height(combo_rect.height()+10);
+                                println!("CHANGE SIZE {:?} -> {:?} from {:?} to {:?}", prev_color, curr_color, *val, combo_val);
+                                prev_color = curr_color;
+                                
+                                combo_animator = init_combo_animation(combo_rect);
+                            }
 
                             curr_combo_texture = Some((
                                 combo_val, 
                                 text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap(), curr_color),
                                 text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap(), Color::BLACK),
                             ));
-                            combo_animator.reset();
-
-                            if changed_color {
-                                prev_color = curr_color;
-                                combo_animator.reset_full(&mut combo_rect);
-                                combo_rect.set_width(combo_rect.width()+10);
-                                combo_rect.set_height(combo_rect.height()+10);
-                                
-                                combo_animator = init_combo_animation(combo_rect);
-                            }
 
                             combo_animator.play_once(9.0 + curr_combo_level as f64);
                         }
@@ -385,6 +388,7 @@ impl Scene for MatchScene {
                     }
                 } else if !curr_combo_texture.is_none() {
                     curr_combo_texture = None;
+                    prev_color = combo_colors[0].1;
                     combo_animator.reset();
                     combo_rect = Rect::new(20, 200, 50, 50);
                     combo_animator = init_combo_animation(combo_rect);
