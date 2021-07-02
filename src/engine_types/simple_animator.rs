@@ -36,6 +36,13 @@ impl SimpleAnimator {
         self.animation_index = 0f64;
     }
 
+    pub fn reset_full(&mut self, rect: &mut Rect) {
+        self.animation_index = 0f64;
+        for transformation in self.transformations.iter() {
+            transformation.transform(rect, self.animation_index);
+        }
+    }
+
     pub fn play_animation(&mut self, speed: f64, play_once: bool) {
             self.play_once = play_once;
             self.is_starting = true;
@@ -62,7 +69,6 @@ impl SimpleAnimator {
     }
 
 }
-
 
 pub trait AnimationTransformation {
     fn transform(&self, rect: &mut Rect, time: f64) -> bool;
@@ -114,8 +120,8 @@ pub fn init_combo_animation(original_rect: Rect) -> SimpleAnimator{
 
     transformations.push(Box::new(MoveAnim {
         original_pos: (original_rect.x(), original_rect.y()),
-        offset_x: 20,
-        offset_y: -30,
+        offset_x: original_rect.width() as i32 / 4,
+        offset_y: -(original_rect.height() as i32) / 2,
         spline: spline.clone(),
     }));
 
