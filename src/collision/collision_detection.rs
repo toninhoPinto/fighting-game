@@ -1,4 +1,4 @@
-use crate::{asset_management::{asset_holders::{EntityData, LevelAssets}, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::{enemy_components::{AIType, Health}, enemy_manager::EnemyManager}, engine_types::animator::Animator, game_logic::{characters::{Attack, player::Player}, combo_string::Combo, movement_controller::MovementController}, rendering::camera::Camera};
+use crate::{asset_management::{asset_holders::{EntityData, LevelAssets}, common_assets::CommonAssets, vfx::particle::Particle}, ecs_system::{enemy_components::{AIType, Health}, enemy_manager::EnemyManager}, engine_types::animator::Animator, game_logic::{characters::{Attack, player::Player}, combo_string::ComboCounter, movement_controller::MovementController}, rendering::camera::Camera};
 
 use super::{collider_manager::ColliderManager, collision_attack_resolution::{detect_hit, did_sucessfully_block, hit_opponent, hit_particles, opponent_blocked}};
 
@@ -16,7 +16,7 @@ pub fn calculate_hits(player: &mut Player,
     general_assets: &CommonAssets, 
     level_assets: &LevelAssets, 
     player_data: &EntityData,
-    combo: &mut Combo,
+    combo: &mut ComboCounter,
     camera: &mut Camera) {
 
     let n_entities = enemy_manager.collider_components.len();

@@ -212,6 +212,7 @@ fn main() -> Result<(), String> {
 
     let menu = MenuScene::new_main_menu(&font);
 
+    let general_assets = CommonAssets::load(&texture_creator, &ttf_context);
     let mut game_state_data = GameStateData {
         player: None,
         hp_bar: None,
@@ -227,10 +228,10 @@ fn main() -> Result<(), String> {
 
         curr_level: -1,
 
-        general_assets: CommonAssets::load(&texture_creator, &ttf_context),
+        ui_assets: UIAssets::load(&texture_creator, &general_assets.fonts),
+        general_assets,
         item_assets: load_item_assets(&texture_creator),
         level_assets: LevelAssets::load(&texture_creator, &ttf_context),
-        ui_assets: UIAssets::load(&texture_creator, &ttf_context),
     };
     
     let mut state_stack: Vec<Box<dyn Scene>> = Vec::new();

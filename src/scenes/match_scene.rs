@@ -10,7 +10,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::{collider::ColliderType, simple_animator::init_combo_animation}, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::Combo, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::{render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::{collider::ColliderType, simple_animator::init_combo_animation}, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::{ComboCounter, manage_combo_resources::{Combo, update_and_manage}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::{render_combo, render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -90,12 +90,7 @@ impl Scene for MatchScene {
         }
         player.events.on_start_level = start_level_events;
 
-        let mut combo = Combo::new(1.35f64);
-        let mut curr_combo_texture: Option<(u32, Texture, Texture)> = None;
-        let mut combo_rect = Rect::new(20, 200, 50, 50);
-        let mut combo_animator = init_combo_animation(combo_rect);
-        let combo_colors: Vec<(i32, Color)> = vec![(2, Color::RGB(237, 222, 17)), (8, Color::RGB(237, 156, 17)), (15, Color::RGB(209, 10, 10))];
-        let mut prev_color = combo_colors[0].1;
+        let mut combo = Combo::new();
 
         let screen_res = canvas.output_size().unwrap();
 
@@ -314,7 +309,7 @@ impl Scene for MatchScene {
                     &game_state_data.general_assets, 
                     &game_state_data.level_assets, 
                     &p1_data,
-                    &mut combo,
+                    &mut combo.combo_counter,
                     &mut game.camera);
 
                 game.fx(&game_state_data.level_assets);
@@ -334,68 +329,8 @@ impl Scene for MatchScene {
                 game_state_data.energy_bar.as_mut().unwrap().update_width(game.player.active_item_cost as i32, game.player.currency as i32);
                 popup_fade(&mut popup_item, &mut popup_content, logic_timestep);
 
-                combo.manage_combo(logic_timestep);
-                let combo_val = combo.render();
-                
 
-                if let Some(combo_val) = combo_val {
-                    if let Some((val, _, _)) = &mut curr_combo_texture {
-                        if *val != combo_val {
-
-                            let mut curr_color = combo_colors[0].1;
-                            let mut curr_combo_level = 0;
-                            for (i, &(target, color)) in combo_colors.iter().enumerate() {
-                                if target > *val as i32 {
-                                    break;
-                                } else {
-                                    curr_color = color;
-                                    curr_combo_level = i;
-                                }
-                            }
-                            let changed_color = prev_color.r != curr_color.r || prev_color.g != curr_color.g || prev_color.b != curr_color.b;
-                            println!("changed_color {:?}",changed_color);
-                            combo_animator.reset();
-
-                            if changed_color {
-
-                                combo_animator.reset_full(&mut combo_rect);
-                                combo_rect.set_width(combo_rect.width()+10);
-                                combo_rect.set_height(combo_rect.height()+10);
-                                println!("CHANGE SIZE {:?} -> {:?} from {:?} to {:?}", prev_color, curr_color, *val, combo_val);
-                                prev_color = curr_color;
-                                
-                                combo_animator = init_combo_animation(combo_rect);
-                            }
-
-                            curr_combo_texture = Some((
-                                combo_val, 
-                                text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap(), curr_color),
-                                text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap(), Color::BLACK),
-                            ));
-
-                            combo_animator.play_once(9.0 + curr_combo_level as f64);
-                        }
-                    } else {
-                        curr_combo_texture = Some((
-                            combo_val, 
-                            text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap(), combo_colors[0].1),
-                            text_gen(combo_val.to_string(), texture_creator, game_state_data.general_assets.fonts.get(&"combo_font".to_string()).unwrap(), Color::BLACK),
-                        ));
-                        combo_animator.reset();
-                        combo_rect = Rect::new(20, 200, 50, 50);
-                        combo_animator = init_combo_animation(combo_rect);
-                        combo_animator.play_once(9.0);
-                    }
-                } else if !curr_combo_texture.is_none() {
-                    curr_combo_texture = None;
-                    prev_color = combo_colors[0].1;
-                    combo_animator.reset();
-                    combo_rect = Rect::new(20, 200, 50, 50);
-                    combo_animator = init_combo_animation(combo_rect);
-                }
-
-                combo_animator.update(&mut combo_rect, logic_timestep);
-
+                update_and_manage(logic_timestep, &mut combo, &texture_creator,&game_state_data);
 
                 logic_time_accumulated -= logic_timestep;
             }
@@ -416,14 +351,7 @@ impl Scene for MatchScene {
                 )
                 .unwrap();
 
-                if let Some((_, tex, outline)) = &curr_combo_texture {
-                    canvas.copy(outline, None, Rect::new(combo_rect.x()-2, combo_rect.y()-5, combo_rect.width()+2, combo_rect.height()+2)).unwrap();
-                    canvas.copy(outline, None, Rect::new(combo_rect.x()-2, combo_rect.y()+5, combo_rect.width()+2, combo_rect.height()+2)).unwrap();
-                    canvas.copy(outline, None, Rect::new(combo_rect.x()+9, combo_rect.y()-5, combo_rect.width()+2, combo_rect.height()+2)).unwrap();
-                    canvas.copy(outline, None, Rect::new(combo_rect.x()+9, combo_rect.y()+5, combo_rect.width()+2, combo_rect.height()+2)).unwrap();
-
-                    canvas.copy(tex, None, combo_rect).unwrap();
-                }
+                render_combo(canvas, &combo);
 
                 render_ui(canvas, 
                     &game.player,

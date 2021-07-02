@@ -1,6 +1,6 @@
 use sdl2::{pixels::Color, rect::Rect, render::{Texture, TextureCreator, WindowCanvas}, ttf::Font, video::WindowContext};
 
-use crate::{asset_management::asset_holders::{ItemAssets, UIAssets}, game_logic::characters::player::Player, ui::{ingame::{popup_ui::PopUp, segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}, menus::button_ui::Button}};
+use crate::{asset_management::asset_holders::{ItemAssets, UIAssets}, game_logic::{characters::player::Player, combo_string::manage_combo_resources::Combo}, ui::{ingame::{popup_ui::PopUp, segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}, menus::button_ui::Button}};
 
 pub fn active_item_ui() -> Rect{
     Rect::new(10, 0 , 64, 64)
@@ -29,6 +29,17 @@ pub fn render_button<'a> (canvas: &mut WindowCanvas, button: &Button, assets: &U
         canvas.copy(text, None, button.rect.clone()).unwrap();
     }
     
+}
+
+pub fn render_combo(canvas: &mut WindowCanvas, combo: &Combo) {
+    if let Some((_, tex, outline)) = &combo.curr_combo_texture {
+        canvas.copy(outline, None, Rect::new(combo.combo_rect.x()-2, combo.combo_rect.y()-5, combo.combo_rect.width()+2, combo.combo_rect.height()+2)).unwrap();
+        canvas.copy(outline, None, Rect::new(combo.combo_rect.x()-2, combo.combo_rect.y()+5, combo.combo_rect.width()+2, combo.combo_rect.height()+2)).unwrap();
+        canvas.copy(outline, None, Rect::new(combo.combo_rect.x()+9, combo.combo_rect.y()-5, combo.combo_rect.width()+2, combo.combo_rect.height()+2)).unwrap();
+        canvas.copy(outline, None, Rect::new(combo.combo_rect.x()+9, combo.combo_rect.y()+5, combo.combo_rect.width()+2, combo.combo_rect.height()+2)).unwrap();
+
+        canvas.copy(tex, None, combo.combo_rect).unwrap();
+    }
 }
 
 pub fn render_ui<'a>(canvas: &mut WindowCanvas, 

@@ -122,9 +122,7 @@ impl<'a> CommonAssets<'a> {
         let loot_tables = load_item_table("assets/items/loot_tables.json".to_string());
 
         let basic_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 16).unwrap();
-
-        let mut combo_font = ttf_context.load_font("assets/fonts/ApeMount-WyPM9.ttf", 100).unwrap();
-        //combo_font.set_outline_width(4);
+        let combo_font = ttf_context.load_font("assets/fonts/ApeMount-WyPM9.ttf", 100).unwrap();
 
         let mut fonts = HashMap::new();
         fonts.insert("basic_font".to_string(), basic_font);

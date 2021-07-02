@@ -127,11 +127,3 @@ pub fn init_combo_animation(original_rect: Rect) -> SimpleAnimator{
 
     SimpleAnimator::new(transformations)
 }
-
-
-
-
-
-pub fn move_sideways(rect: &mut Rect, spline: Spline<f64, f64>, original_pos: i32, time: f64) {
-
-}

@@ -1,11 +1,13 @@
 
-pub struct Combo {
+pub mod manage_combo_resources;
+
+pub struct ComboCounter {
     pub counter: u32,
     pub time_limit: f64,
     pub time_since_last: f64,
 }
 
-impl Combo {
+impl ComboCounter {
     pub fn new(time_limit: f64) -> Self {
         Self {
             counter: 0,

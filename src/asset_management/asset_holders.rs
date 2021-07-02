@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use sdl2::{pixels::Color, rect::Rect, render::{Texture, TextureCreator}, ttf::Sdl2TtfContext, video::WindowContext};
+use sdl2::{pixels::Color, rect::Rect, render::{Texture, TextureCreator}, ttf::{Font, Sdl2TtfContext}, video::WindowContext};
 use tiled::Map;
 
-use crate::{engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::Attack, inputs::game_inputs::GameAction}};
+use crate::{engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::Attack, inputs::game_inputs::GameAction}, rendering::renderer_ui::text_gen};
 
 use super::{asset_loader::{asset_loader, load_tiled_map::load_level}, rng_tables::load_item_table};
 
@@ -62,9 +62,9 @@ pub struct UIAssets<'a>{
 }
 
 impl<'a> UIAssets<'a> {
-    pub fn load(texture_creator: &'a TextureCreator<WindowContext>, ttf_context: &'a Sdl2TtfContext) -> Self {
+    pub fn load(texture_creator: &'a TextureCreator<WindowContext>, fonts: &HashMap<String, Font<'a, 'a>>) -> Self {
 
-        let font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 32).unwrap();
+        let font = fonts.get("basic_font").unwrap();
 
         let surface = font
             .render("back")
@@ -77,8 +77,16 @@ impl<'a> UIAssets<'a> {
             .map_err(|e| e.to_string())
             .unwrap();
 
+        let combo_font =  fonts.get("combo_font").unwrap();
+        
+
+
         let mut text_hash = HashMap::new();
         text_hash.insert("back".to_string(), back_tex);
+        text_hash.insert("Nice".to_string(), text_gen("Nice".to_string(), texture_creator, combo_font, Color::RGB(237, 222, 17)));
+        text_hash.insert("Great".to_string(), text_gen("Great".to_string(), texture_creator, combo_font, Color::RGB(237, 156, 17)));
+        text_hash.insert("Amazing".to_string(), text_gen("Amazing".to_string(), texture_creator, combo_font, Color::RGB(209, 10, 10)));
+        text_hash.insert("Godlike".to_string(), text_gen("Godlike".to_string(), texture_creator, combo_font, Color::RGB(209, 10, 10)));
 
         Self {
             store_ui_sheet: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
