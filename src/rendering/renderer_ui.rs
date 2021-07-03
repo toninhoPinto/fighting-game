@@ -32,6 +32,16 @@ pub fn render_button<'a> (canvas: &mut WindowCanvas, button: &Button, assets: &U
 }
 
 pub fn render_combo(canvas: &mut WindowCanvas, combo: &Combo) {
+    if let Some((tex, outline)) = &combo.compliment_text {
+        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()-2, combo.compliment_rect.y()-5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
+        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()-2, combo.compliment_rect.y()+5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
+        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()+9, combo.compliment_rect.y()-5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
+        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()+9, combo.compliment_rect.y()+5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
+
+        canvas.copy(tex, None, combo.compliment_rect).unwrap();
+    }
+
+
     if let Some((_, tex, outline)) = &combo.curr_combo_texture {
         canvas.copy(outline, None, Rect::new(combo.combo_rect.x()-2, combo.combo_rect.y()-5, combo.combo_rect.width()+2, combo.combo_rect.height()+2)).unwrap();
         canvas.copy(outline, None, Rect::new(combo.combo_rect.x()-2, combo.combo_rect.y()+5, combo.combo_rect.width()+2, combo.combo_rect.height()+2)).unwrap();
