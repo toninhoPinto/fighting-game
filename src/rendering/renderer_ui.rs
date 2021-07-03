@@ -1,4 +1,4 @@
-use sdl2::{pixels::Color, rect::Rect, render::{Texture, TextureCreator, WindowCanvas}, ttf::Font, video::WindowContext};
+use sdl2::{pixels::Color, rect::{Point, Rect}, render::{Texture, TextureCreator, WindowCanvas}, ttf::Font, video::WindowContext};
 
 use crate::{asset_management::asset_holders::{ItemAssets, UIAssets}, game_logic::{characters::player::Player, combo_string::manage_combo_resources::Combo}, ui::{ingame::{popup_ui::PopUp, segmented_bar_ui::SegmentedBar, wrapping_list_ui::WrappingList}, menus::button_ui::Button}};
 
@@ -33,12 +33,14 @@ pub fn render_button<'a> (canvas: &mut WindowCanvas, button: &Button, assets: &U
 
 pub fn render_combo(canvas: &mut WindowCanvas, combo: &Combo) {
     if let Some((tex, outline)) = &combo.compliment_text {
-        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()-2, combo.compliment_rect.y()-5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
-        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()-2, combo.compliment_rect.y()+5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
-        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()+9, combo.compliment_rect.y()-5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
-        canvas.copy(outline, None, Rect::new(combo.compliment_rect.x()+9, combo.compliment_rect.y()+5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2)).unwrap();
+        let rot_point = Point::new(combo.compliment_rect.x(), combo.compliment_rect.y());
+        let angle = -20.0;
+        canvas.copy_ex(outline, None, Rect::new(combo.compliment_rect.x()-2, combo.compliment_rect.y()-5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2), angle, rot_point,false, false).unwrap();
+        canvas.copy_ex(outline, None, Rect::new(combo.compliment_rect.x()-2, combo.compliment_rect.y()+5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2), angle, rot_point,false, false).unwrap();
+        canvas.copy_ex(outline, None, Rect::new(combo.compliment_rect.x()+9, combo.compliment_rect.y()-5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2), angle, rot_point,false, false).unwrap();
+        canvas.copy_ex(outline, None, Rect::new(combo.compliment_rect.x()+9, combo.compliment_rect.y()+5, combo.compliment_rect.width()+2, combo.compliment_rect.height()+2), angle, rot_point,false, false).unwrap();
 
-        canvas.copy(tex, None, combo.compliment_rect).unwrap();
+        canvas.copy_ex(tex, None, combo.compliment_rect, angle, rot_point,false, false).unwrap();
     }
 
 

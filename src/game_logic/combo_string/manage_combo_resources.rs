@@ -25,7 +25,7 @@ pub struct Combo<'a> {
 impl<'a> Combo<'a> {
     pub fn new() -> Self {
         let combo_rect = Rect::new(40, 200, 50, 50);
-        let compliment_rect = Rect::new(20, 180, 250, 90);
+        let compliment_rect = Rect::new(60, 180, 250, 90);
 
         Self{
             combo_counter: ComboCounter::new(1.8f64),
