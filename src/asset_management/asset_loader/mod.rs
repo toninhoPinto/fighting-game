@@ -4,3 +4,5 @@ pub mod asset_loader;
 pub mod my_spritesheet_format;
 
 pub mod load_tiled_map;
+
+pub mod events_loader;

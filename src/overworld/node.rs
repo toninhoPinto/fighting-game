@@ -7,7 +7,7 @@ pub enum WorldNodeType {
     Start,
     Boss,
     Level(i32),  //Level(difficulty)
-    Event(i32),  //Event(id)
+    Event(u32),  //Event(id)
     Store,
 }
 

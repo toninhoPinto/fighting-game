@@ -40,6 +40,9 @@ pub fn render_overworld(canvas: &mut WindowCanvas,
         } else if nodes[i].node_type == WorldNodeType::Store {
             src_rect = assets.src_rects.get("store").unwrap();
             canvas.set_draw_color(Color::RGB(255, 255, 50));
+        } else if let WorldNodeType::Event(_) = nodes[i].node_type  {
+            src_rect = assets.src_rects.get("event").unwrap();
+            canvas.set_draw_color(Color::RGB(255, 255, 50));
         } else {
             src_rect = assets.src_rects.get("boss_skull").unwrap();
             canvas.set_draw_color(Color::RGB(200, 70, 70));

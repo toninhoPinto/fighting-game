@@ -1,5 +1,5 @@
 use engine_traits::scene::Scene;
-use game_logic::{characters::player::Player, effects::ItemEffects, items::Item};
+use game_logic::{characters::player::Player, effects::ItemEffects, events::Event, items::Item};
 use rand::prelude::SmallRng;
 use scenes::menu_scene::MenuScene;
 use sdl2::{image::{self, InitFlag}, pixels::Color, rect::{Point, Rect}, render::Texture, ttf::Font};
@@ -30,7 +30,7 @@ mod debug_console;
 
 use asset_management::{asset_holders::{EntityAnimations, ItemAssets, LevelAssets, UIAssets}, common_assets::CommonAssets, sound::{init_sound, music_player}};
 
-use crate::{asset_management::controls, game_logic::{effects::hash_effects, factories::item_factory::{load_item_assets, load_items}}, input::input_devices::InputDevices};
+use crate::{asset_management::{asset_loader::events_loader::load_events, controls}, game_logic::{effects::hash_effects, factories::item_factory::{load_item_assets, load_items}}, input::input_devices::InputDevices};
 use crate::input::controller_handler::Controller;
 
 
@@ -104,6 +104,7 @@ pub struct GameStateData<'a> {
 
     items: HashMap<i32, Item>,
     effects: HashMap<i32, ItemEffects>,
+    events: HashMap<u32, Event>,
 
     enemy_animations: HashMap<String, Rc<EntityAnimations>>,
     
@@ -219,6 +220,7 @@ fn main() -> Result<(), String> {
         energy_bar: None,
 
 
+        events: load_events("assets/events/events.json".to_string()),
         items: load_items("assets/items/items.json".to_string()),
         effects: hash_effects(),
         enemy_animations: HashMap::new(),

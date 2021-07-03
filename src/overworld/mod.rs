@@ -211,14 +211,26 @@ pub fn overworld_generation(area: Rect, graph_size: (i32, i32), full_conection: 
         }
     }
 
-    populate_levels(&mut overworld);
+    populate_levels(&mut overworld, rng);
 
     overworld
 }
 
 
-fn populate_levels(overworld: &mut Vec<WorldNode>){
+fn populate_levels(overworld: &mut Vec<WorldNode>, rng: &mut SmallRng){
     let n_nodes = overworld.len();
 
     overworld[n_nodes/2].node_type = WorldNodeType::Store;
+
+    let level_size_without_start_boss_store = overworld.len() - 3;
+
+    let event_rng = rng.gen::<f64>();
+    let events = (event_rng * (level_size_without_start_boss_store as f64 / 2.) as f64) as u32;
+
+    for _ in 0..events {
+        let event_location = (rng.gen::<f64>() * level_size_without_start_boss_store as f64) as u32;
+        let event_id = (rng.gen::<f64>() * 4 as f64) as u32;
+
+        overworld[event_location as usize].node_type = WorldNodeType::Event(event_id);
+    }
 }

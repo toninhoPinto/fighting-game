@@ -6,7 +6,7 @@ use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, 
 use crate::{GameStateData, Transition, asset_management::{sound::audio_player::play_sound}, engine_traits::scene::Scene, game_logic::{effects::hash_effects, factories::{item_factory::load_item_assets, world_factory::load_overworld_assets}, items::Item, store::{StoreUI}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 
 
-use super::{match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene}, store_scene::StoreScene};
+use super::{event_scene::EventScene, match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene}, store_scene::StoreScene};
 
 pub struct OverworldScene {
     pub rect: Rect,
@@ -75,14 +75,13 @@ impl<'a> Scene for OverworldScene {
         let map_area = Rect::new(400, 100, w-800, h-200);
 
         let assets = load_overworld_assets(&texture_creator);
-        let item_assets = load_item_assets(&texture_creator);
         
         //game_state_data.text_cache.insert("currency".to_string(), currency_text_gen(game_state_data.player.as_ref().unwrap(), texture_creator, &game_state_data.general_assets.font));
 
         let mut popup_item = new_item_popup((w,h));
         let mut popup_content: Option<Vec<Texture>> = None;
 
-        let mut item_list = item_list_init(&game_state_data);
+        let item_list = item_list_init(&game_state_data);
 
         self.connect_to_index = 0;
         let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;
@@ -141,7 +140,8 @@ impl<'a> Scene for OverworldScene {
                                 return Transition::Push(Box::new(StoreScene{}));
                             }
 
-                            if let WorldNodeType::Event(_) = self.nodes[self.next_node].node_type {
+                            if let WorldNodeType::Event(id) = self.nodes[self.next_node].node_type {
+                                return Transition::Push(Box::new(EventScene{event_id: id}));
                             }
                         }
 
@@ -189,7 +189,7 @@ impl<'a> Scene for OverworldScene {
                 &game_state_data.hp_bar.as_ref().unwrap(),
                 &game_state_data.energy_bar.as_ref().unwrap(),
                 &item_list,
-                &item_assets,
+                &game_state_data.item_assets,
                 Some(&popup_item),
                 &popup_content
                 );

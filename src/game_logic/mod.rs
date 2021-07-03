@@ -9,3 +9,5 @@ pub mod inputs;
 pub mod projectile;
 pub mod store;
 pub mod combo_string;
+
+pub mod events;
