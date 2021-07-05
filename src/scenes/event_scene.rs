@@ -8,6 +8,35 @@ use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
 
 pub struct EventScene {
     pub event_id: u32,
+
+    pub has_refused: bool,
+    pub has_succeeded: bool,
+    pub has_failed: bool,
+}
+
+impl EventScene {
+
+    pub fn new(id: u32) -> Self {
+        Self {
+            event_id: id,
+
+            has_refused: false,
+            has_succeeded: false,
+            has_failed: false,
+        }
+    }
+
+    pub fn accept_btn() -> Transition{
+        return Transition::Pop;
+    }
+
+    pub fn refuse_btn(&self) -> Transition {
+        return Transition::Pop;
+    }
+
+    pub fn continue_btn() -> Transition{
+        return Transition::Pop;
+    }
 }
 
 impl<'a> Scene for EventScene {
@@ -72,7 +101,7 @@ impl<'a> Scene for EventScene {
                     }
 
                     if !is_pressed {
-                        if translated_input == TranslatedInput::Punch {
+                        if translated_input == TranslatedInput::Punch {  
                             if selected_button == 0 {
                                 return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string())))
                             } else if selected_button == 1 {
