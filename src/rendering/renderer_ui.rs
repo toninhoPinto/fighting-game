@@ -22,6 +22,26 @@ pub fn text_gen<'a>(value: String, texture_creator: &'a TextureCreator<WindowCon
                 .unwrap()
 }
 
+pub fn render_cursor_ui(canvas: &mut WindowCanvas, assets: &UIAssets, selected_rect: &Rect) {
+    canvas.copy_ex(&assets.store_ui_sheet, 
+        assets.store_ui_src_rects.get("grey_arrow").unwrap().clone(),
+        Rect::new(selected_rect.x() - 30, selected_rect.y() - 11 + selected_rect.height() as i32 / 2, 22, 22),
+        0.,
+        Point::new(0,0),
+        true, false
+    ).unwrap();
+
+    canvas.copy_ex(&assets.store_ui_sheet, 
+        assets.store_ui_src_rects.get("grey_arrow").unwrap().clone(),
+        Rect::new(selected_rect.x() + selected_rect.width() as i32 + 10, selected_rect.y() - 11 + selected_rect.height() as i32 / 2, 22, 22),
+        0.,
+        Point::new(0,0),
+        false,
+        false
+    ).unwrap();
+
+}
+
 pub fn render_button<'a> (canvas: &mut WindowCanvas, button: &Button, assets: &UIAssets) {
     canvas.copy(&assets.store_ui_sheet, assets.store_ui_src_rects.get(&button.sprite).unwrap().clone(), button.rect).unwrap();
 

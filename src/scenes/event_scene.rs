@@ -2,9 +2,9 @@ use std::{cmp, time::Instant};
 
 use sdl2::{EventPump, event::Event, pixels::Color, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::render_ui}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{render_ui, text_gen}}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 
-use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH};
+use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
 
 pub struct EventScene {
     pub event_id: u32,
@@ -28,9 +28,16 @@ impl<'a> Scene for EventScene {
 
         let item_list = item_list_init(&game_state_data);
 
+        self.event_id = 1;
         let event = game_state_data.events.get(&self.event_id).unwrap();
 
         let assets = load_overworld_assets(&texture_creator);
+
+        let text =  text_gen(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE);
+        let options = event.options.iter().map(|option| {
+            text_gen(option.to_string(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE)
+        }).collect::<Vec<Texture<'_>>>();
+        let mut selected_button: usize = 0;
 
         let mut previous_time = Instant::now();
         let logic_timestep: f64 = 0.016;
@@ -58,12 +65,19 @@ impl<'a> Scene for EventScene {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
                     if is_pressed {
                         if let TranslatedInput::Horizontal(x) = translated_input {
+                            selected_button = ((selected_button as i32 + (1 * x))  % 2).abs() as usize;
+                        } else if let TranslatedInput::Vertical(y) = translated_input {
+                            selected_button = ((selected_button as i32 + (1 * y))  % 2).abs() as usize;
                         }
                     }
 
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {
-    
+                            if selected_button == 0 {
+                                return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string())))
+                            } else if selected_button == 1 {
+                                return Transition::Pop;
+                            }
                         }
                     }
                 }
@@ -96,7 +110,15 @@ impl<'a> Scene for EventScene {
             canvas.clear();
             canvas.set_draw_color(Color::RGB(255, 255, 50));
             
-            render_event(canvas, &assets, &event);
+            render_event(
+                canvas, 
+                &assets, 
+                &game_state_data.ui_assets,
+                &event,
+                &text,
+                &options,
+                selected_button
+            );
 
             render_ui(canvas, 
                 &game_state_data.player.as_ref().unwrap(),

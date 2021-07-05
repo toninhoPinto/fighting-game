@@ -13,7 +13,7 @@ pub fn render_store<'a>(canvas: &mut WindowCanvas,
     items: &HashMap<i32, Item>,
     store_item_prices: &Option<Vec<Texture>>) {
 
-    canvas.copy(&assets.backgrounds[0], Rect::new(0,0,store.background.width(), store.background.height()), store.background).unwrap();
+    canvas.copy(&assets.backgrounds[0], Rect::new(0,0, store.background.width(), store.background.height()), store.background).unwrap();
 
     let items_ui = store.items.iter()
         .zip(store.item_rects.iter());

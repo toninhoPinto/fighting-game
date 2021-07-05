@@ -5,7 +5,7 @@ use tiled::Map;
 
 use crate::{engine_types::{animation::Animation, sprite_data::SpriteData}, game_logic::{characters::Attack, inputs::game_inputs::GameAction}, rendering::renderer_ui::text_gen};
 
-use super::{asset_loader::{asset_loader, load_tiled_map::load_level}, rng_tables::load_item_table};
+use super::{asset_loader::{asset_loader, load_tiled_map::load_level, my_spritesheet_format::load_spritesheet}, rng_tables::load_item_table};
 
 pub struct EntityAssets<'a> {
     pub textures: HashMap<String, Texture<'a>>,
@@ -89,8 +89,8 @@ impl<'a> UIAssets<'a> {
         text_hash.insert("Godlike".to_string(), text_gen("Godlike".to_string(), texture_creator, combo_font, Color::RGB(209, 10, 10)));
 
         Self {
-            store_ui_sheet: asset_loader::load_texture(&texture_creator, "assets/vfx/shadow/29492.png"),
-            store_ui_src_rects: HashMap::new(),
+            store_ui_sheet: asset_loader::load_texture(&texture_creator, "assets/ui/uipack_rpg_sheet.png"),
+            store_ui_src_rects: load_spritesheet("assets/ui/spritesheet_mapping.json".to_string()),
             ui_text: text_hash,
         }
     }

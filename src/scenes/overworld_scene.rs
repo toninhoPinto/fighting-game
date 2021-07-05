@@ -141,6 +141,8 @@ impl<'a> Scene for OverworldScene {
                             }
 
                             if let WorldNodeType::Event(id) = self.nodes[self.next_node].node_type {
+                                self.player_node_pos = self.next_node;
+                                game_state_data.curr_level = self.player_node_pos as i32;
                                 return Transition::Push(Box::new(EventScene{event_id: id}));
                             }
                         }

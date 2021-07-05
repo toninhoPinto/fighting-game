@@ -1,0 +1,17 @@
+Events: size
+
+
+Challenge Levels 
+    Predefined levels with some Challenge assigned, 
+    and get the reward only if at the end of the level, 
+    you fullfill the challenge
+
+Trade Offer
+    Give some resource, and get something else 
+
+Apply modifier to a level ahead 
+    Adds a modifier that makes the level harder and drop extra resources
+
+
+Apply modifier to overworld 
+    Change the overworld
