@@ -15,6 +15,7 @@ impl<'a> Button<'a> {
     pub fn new(rect: Rect,
         texture_creator: &'a TextureCreator<WindowContext>, 
         button_tex: String, 
+        button_pressed_tex: Option<String>, 
         text: Option<&'a str>, 
         text_color: Color, 
         font: &Font,
@@ -31,7 +32,7 @@ impl<'a> Button<'a> {
             is_pressed: false,
             text: text_texture,
             sprite: button_tex,
-            pressed_sprite: None,
+            pressed_sprite: button_pressed_tex,
             time_elapsed: 0.,
         }
     }
@@ -41,11 +42,14 @@ impl<'a> Button<'a> {
     }
 
     pub fn update_btn_state(&mut self, time_elapsed: f64) {
-        self.time_elapsed += time_elapsed;
-        if self.time_elapsed >= 0.5 {
-            self.is_pressed = false;
-            self.time_elapsed = 0f64;
+        if self.is_pressed {
+            self.time_elapsed += time_elapsed;
+            if self.time_elapsed >= 0.1 {
+                self.is_pressed = false;
+                self.time_elapsed = 0f64;
+            }
         }
+        
     }
 
     pub fn get_curr_sprite(&self) -> String{

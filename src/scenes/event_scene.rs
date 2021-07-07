@@ -2,7 +2,7 @@ use std::{cmp, time::Instant};
 
 use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{events::EventType, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{render_ui, text_gen}}, ui::{ingame::popup_ui::{PopUp, new_item_popup, popup_fade}, menus::button_ui::Button}};
+use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{events::EventType, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{render_ui, text_gen, text_gen_wrapped}}, ui::{ingame::popup_ui::{PopUp, new_item_popup, popup_fade}, menus::button_ui::Button}};
 
 use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
 
@@ -32,6 +32,7 @@ impl EventScene {
         let event =  game_state_data.events.get(&event_id).unwrap();
         game_state_data.player.as_mut().unwrap().hp.0 -= event.cost.as_ref().unwrap().health;
         game_state_data.player.as_mut().unwrap().currency -= event.cost.as_ref().unwrap().currency as u32;
+        self.has_succeeded = true;
         return None;
     }
 
@@ -49,19 +50,19 @@ impl EventScene {
         return Some(Transition::Pop);
     }
 
-    
     pub fn init_btn_callbacks(&self,
             event: &Level_Event) 
             -> Vec<fn(&mut EventScene, u32, &mut GameStateData) -> Option<Transition>>  {
         
+        println!("type {:?}", event.event_type);
         if event.event_type == EventType::Challenge {
-            if self.has_failed || self.has_refused || self.has_refused {
+            if self.has_failed || self.has_refused || self.has_succeeded {
                 vec![EventScene::continue_btn]
             } else {
                 vec![EventScene::accept_btn, EventScene::refuse_btn]
             }
         } else if event.event_type == EventType::TradeOffer {
-            if self.has_failed || self.has_refused || self.has_refused {
+            if self.has_failed || self.has_refused || self.has_succeeded {
                 vec![EventScene::continue_btn]
             } else {
                 vec![EventScene::accept_btn_trade, EventScene::refuse_btn]
@@ -81,13 +82,13 @@ impl EventScene {
          game_state_data: &GameStateData) -> Vec<Button<'a>> {
         
         return if event.event_type == EventType::Challenge {
-            if self.has_failed || self.has_refused || self.has_refused {
+            if self.has_failed || self.has_refused || self.has_succeeded {
                 vec!["Continue"]
             } else {
                 vec!["Accept", "Refuse"]
             }
         } else if event.event_type == EventType::TradeOffer {
-            if self.has_failed || self.has_refused || self.has_refused {
+            if self.has_failed || self.has_refused || self.has_succeeded {
                 vec!["Continue"]
             } else {
                 vec!["Accept", "Refuse"]
@@ -104,7 +105,8 @@ impl EventScene {
 
             Button::new(button_rect,
                 texture_creator, 
-                "grey_button".to_string(), 
+                "grey_button".to_string(),
+                Some("pressed_grey_button".to_string()),
                 Some(option), 
                 Color::WHITE, 
                 game_state_data.general_assets.fonts.get("event_font").unwrap()
@@ -133,16 +135,15 @@ impl<'a> Scene for EventScene {
 
         let item_list = item_list_init(&game_state_data);
 
-        self.event_id = 1;
+        self.event_id = 2;
         let event = game_state_data.events.get(&self.event_id).unwrap();
 
         let assets = load_overworld_assets(&texture_creator);
 
-        let event_text =  text_gen(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE);
+        let event_text =  text_gen_wrapped(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE, 450);
        
         let mut buttons = self.init_buttons(&event, texture_creator, game_state_data);
         let mut button_callbacks = self.init_btn_callbacks(&event);
-
         
         let mut selected_button: usize = 0;
 
@@ -168,19 +169,23 @@ impl<'a> Scene for EventScene {
                 //needs also to return which controller/ which player
                 let raw_input = input::input_handler::rcv_input(&input_event, &input_devices.controls);
 
-                let mouse_data = input::handle_mouse_click::rcv_mouse_input(&input_event);
+                let mouse_pos = input::handle_mouse_click::rcv_mouse_pos(&input_event);
+                let mouse_click = input::handle_mouse_click::rcv_mouse_input(&input_event);
 
-                if let Some((click, mouse_pos)) = mouse_data {
-                    for (i, btn) in buttons.iter().enumerate(){
+                if let Some(mouse_pos) = mouse_pos {
+                    for (i, btn) in buttons.iter_mut().enumerate(){
                         if input::handle_mouse_click::check_mouse_within_rect(mouse_pos, &btn.rect) {
-                            if click {
-                                if let Some(transition) = (button_callbacks[i])(self, self.event_id, game_state_data) {
-                                    return transition;
-                                }
-                            } else {
-                                selected_button = i;
-                            }
-                            
+                            selected_button = i;
+                        }
+                    }
+                }
+
+                if let Some((is_click_down, mouse_pos)) = mouse_click {
+                    if is_click_down {
+                        buttons[selected_button].press();
+                    } else {
+                        if let Some(transition) = (button_callbacks[selected_button])(self, self.event_id, game_state_data) {
+                            return transition;
                         }
                     }
                 }
@@ -196,8 +201,14 @@ impl<'a> Scene for EventScene {
                         }
                     }
 
+                    if is_pressed {
+                        if translated_input == TranslatedInput::Punch {
+                            buttons[selected_button].press();
+                        }
+                    }
+
                     if !is_pressed {
-                        if translated_input == TranslatedInput::Punch {  
+                        if translated_input == TranslatedInput::Punch {
                             if let Some(transition) = (button_callbacks[selected_button])(self, self.event_id, game_state_data) {
                                 return transition;
                             }
@@ -208,7 +219,6 @@ impl<'a> Scene for EventScene {
             }
 
             if (self.has_failed || self.has_refused || self.has_succeeded) && buttons.len() > 1 {
-                println!("recalculate buttons");
                 buttons = self.init_buttons(&game_state_data.events.get(&self.event_id).unwrap(), texture_creator, game_state_data);
                 button_callbacks = self.init_btn_callbacks(&game_state_data.events.get(&self.event_id).unwrap());
             }
@@ -228,6 +238,9 @@ impl<'a> Scene for EventScene {
                     logic_time_accumulated = 0.0;
                 }
 
+                for btn in buttons.iter_mut() {
+                    btn.update_btn_state(logic_timestep);
+                }
                 popup_fade(&mut popup_item, &mut popup_content, logic_timestep);
 
                 logic_time_accumulated -= logic_timestep;

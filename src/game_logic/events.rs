@@ -8,7 +8,7 @@ pub struct Event {
     pub cost: Option<Cost>,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum EventType {
     Challenge,
     TradeOffer,

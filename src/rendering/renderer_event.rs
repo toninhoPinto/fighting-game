@@ -28,7 +28,12 @@ pub fn render_event(canvas: &mut WindowCanvas,
 
     canvas.copy(text, None, Rect::new(350 + 50,150, 400, 30)).unwrap();
 
+    
     for (i, btn) in options.iter().enumerate() {
+        if btn.is_pressed{
+            println!("curr butn sprite {}", &btn.get_curr_sprite());
+        }
+        
         canvas.copy(&ui_assets.store_ui_sheet, 
             ui_assets.store_ui_src_rects.get(&btn.get_curr_sprite()).unwrap().clone(), 
             btn.rect).unwrap();
@@ -39,8 +44,10 @@ pub fn render_event(canvas: &mut WindowCanvas,
 
         if let Some(text) = &btn.text {
 
+            let btn_pressed_displacement = if btn.is_pressed {3} else {0};
+
             let button_text_rect = Rect::new(btn.rect.x() + btn.rect.width() as i32 / 4, 
-            btn.rect.y() + btn.rect.height() as i32 / 4, 
+            btn.rect.y() + btn.rect.height() as i32 / 4 + btn_pressed_displacement, 
             btn.rect.width() / 2, 
             btn.rect.height() / 2);
     

@@ -1,6 +1,13 @@
 use sdl2::{event::Event, mouse::MouseButton, rect::Rect};
 
-
+pub fn rcv_mouse_pos(event: &Event) -> Option<(i32, i32)>{
+    return match *event {
+        Event::MouseMotion { x, y, ..} => {
+            Some((x, y))
+        },
+        _ => None,
+    };
+}
 
 pub fn rcv_mouse_input(event: &Event) -> Option<(bool, (i32, i32))>{
     return match *event {
@@ -12,9 +19,13 @@ pub fn rcv_mouse_input(event: &Event) -> Option<(bool, (i32, i32))>{
                 None
             }
         },
-        Event::MouseMotion { x, y, ..} => {
-            Some((false,(x, y)))
-        }
+        Event::MouseButtonUp { mouse_btn, x, y, ..} => {
+            if mouse_btn == MouseButton::Left {
+                Some((true, (x, y)))
+            } else {
+                None
+            }
+        },
         _ => None,
     };
 }
