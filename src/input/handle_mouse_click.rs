@@ -21,7 +21,7 @@ pub fn rcv_mouse_input(event: &Event) -> Option<(bool, (i32, i32))>{
         },
         Event::MouseButtonUp { mouse_btn, x, y, ..} => {
             if mouse_btn == MouseButton::Left {
-                Some((true, (x, y)))
+                Some((false, (x, y)))
             } else {
                 None
             }

@@ -135,7 +135,7 @@ impl<'a> Scene for EventScene {
 
         let item_list = item_list_init(&game_state_data);
 
-        self.event_id = 2;
+        self.event_id = 1;
         let event = game_state_data.events.get(&self.event_id).unwrap();
 
         let assets = load_overworld_assets(&texture_creator);
@@ -221,6 +221,7 @@ impl<'a> Scene for EventScene {
             if (self.has_failed || self.has_refused || self.has_succeeded) && buttons.len() > 1 {
                 buttons = self.init_buttons(&game_state_data.events.get(&self.event_id).unwrap(), texture_creator, game_state_data);
                 button_callbacks = self.init_btn_callbacks(&game_state_data.events.get(&self.event_id).unwrap());
+                selected_button = 0;
             }
 
             let current_time = Instant::now();
