@@ -24,10 +24,16 @@ pub fn generate_levels(levels: &HashMap<i32, Map>, rng: &mut SmallRng) -> Vec<Le
             0
         };
 
-        println!("position {}", start_pos);
         let level = Level::new(map, start_pos);
         levels_spawned.push(level)
     }
     
     levels_spawned
+}
+
+pub fn get_levels(levels: &HashMap<i32, Map>, level_ids: &Vec<i32>) -> Vec<Level> {
+    level_ids.iter().map(|id| {
+        Level::new(levels.get(id).unwrap(), 400)
+    }).collect::<Vec<Level>>()
+
 }

@@ -1,17 +1,20 @@
 use std::{collections::HashMap, fs};
 
-use crate::game_logic::events::{Cost, Details, Event, Rewards};
+use serde_json::to_string;
+
+use crate::game_logic::events::{Challenge, Cost, Event, EventType, Rewards};
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EventJson {
     pub id: u32,
     pub text: String,
+    #[serde(rename = "type")]
+    pub event_type: String,
     #[serde(rename = "portrait_id")]
     pub portrait_id: String,
-    pub options: Vec<String>,
     pub rewards: Option<RewardsJson>,
-    pub details: Option<DetailsJson>,
+    pub details: Option<ChallengeJson>,
     pub cost: Option<CostJson>,
 }
 
@@ -26,7 +29,7 @@ pub struct RewardsJson {
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DetailsJson {
+pub struct ChallengeJson {
     pub target: i32,
 }
 
@@ -48,9 +51,15 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
     for event_json in v.iter() {
         map.insert(event_json.id, Event{
             id: event_json.id as i32,
+            event_type: match event_json.event_type.clone().as_str() {
+                "Challenge" => EventType::Challenge,
+                "TradeOffer" => EventType::TradeOffer,
+                "LevelMod" => EventType::LevelMod,
+                "WorldMod" => EventType::WorldMod,
+                _ => EventType::Challenge,
+            },
             text: handle_text_and_details(event_json.text.clone(), &event_json.details),
             portrait_id: event_json.portrait_id.clone(),
-            options: event_json.options.clone(),
             rewards: if let Some(rewards) = &event_json.rewards { 
                 Some(Rewards {
                     currency: option_or_0 (rewards.currency),
@@ -60,7 +69,7 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
                 None
             },
             details: if let Some(details) = &event_json.details { 
-                Some(Details {
+                Some(Challenge {
                     target: details.target,
                 })
             } else {
@@ -69,7 +78,6 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
             cost: if let Some(cost) = &event_json.cost { 
                 Some(Cost {
                         health: option_or_0(cost.health),
-                        energy: option_or_0(cost.energy),
                         currency: option_or_0(cost.currency),
                         items: if let Some(items) = &cost.items {
                             items.clone()
@@ -90,7 +98,7 @@ fn option_or_0(val: Option<i32>) -> i32 {
     if let Some(val) = val {val as i32} else {0}
 }
 
-fn handle_text_and_details(mut desc: String, details: &Option<DetailsJson>) -> String {
+fn handle_text_and_details(mut desc: String, details: &Option<ChallengeJson>) -> String {
     if let Some(details) =  details {
 
         let replace_index = desc.find('*').unwrap_or(desc.len());

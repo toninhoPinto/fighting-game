@@ -19,7 +19,7 @@ impl<'a> VerticalList<'a> {
 
     fn init(offset: i32, buttons: &mut Vec<Button<'a>>) {
         for i in 0..buttons.len() {
-            buttons[i].position.y += offset + buttons[i].rect.height() as i32;
+            buttons[i].rect.y += offset + buttons[i].rect.height() as i32;
         }
     }
 }

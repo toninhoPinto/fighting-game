@@ -1,10 +1,12 @@
 use std::{cmp, time::Instant};
 
-use sdl2::{EventPump, event::Event, pixels::Color, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
+use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{render_ui, text_gen}}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{events::EventType, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{render_ui, text_gen}}, ui::{ingame::popup_ui::{PopUp, new_item_popup, popup_fade}, menus::button_ui::Button}};
 
 use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
+
+use crate::game_logic::events::Event as Level_Event;
 
 pub struct EventScene {
     pub event_id: u32,
@@ -26,16 +28,90 @@ impl EventScene {
         }
     }
 
-    pub fn accept_btn() -> Transition{
-        return Transition::Pop;
+    pub fn accept_btn_trade(&mut self, event_id: u32, game_state_data: &mut GameStateData) -> Option<Transition>{
+        let event =  game_state_data.events.get(&event_id).unwrap();
+        game_state_data.player.as_mut().unwrap().hp.0 -= event.cost.as_ref().unwrap().health;
+        game_state_data.player.as_mut().unwrap().currency -= event.cost.as_ref().unwrap().currency as u32;
+        return None;
     }
 
-    pub fn refuse_btn(&self) -> Transition {
-        return Transition::Pop;
+    pub fn accept_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
+        let scene = Box::new(MatchScene::new("foxgirl".to_string()));
+        return Some(Transition::Push(scene));
     }
 
-    pub fn continue_btn() -> Transition{
-        return Transition::Pop;
+    pub fn refuse_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
+        self.has_refused;
+        return None;
+    }
+
+    pub fn continue_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
+        return Some(Transition::Pop);
+    }
+
+    
+    pub fn init_btn_callbacks(&self,
+            event: &Level_Event) 
+            -> Vec<fn(&mut EventScene, u32, &mut GameStateData) -> Option<Transition>>  {
+        
+        if event.event_type == EventType::Challenge {
+            if self.has_failed || self.has_refused || self.has_refused {
+                vec![EventScene::continue_btn]
+            } else {
+                vec![EventScene::accept_btn, EventScene::refuse_btn]
+            }
+        } else if event.event_type == EventType::TradeOffer {
+            if self.has_failed || self.has_refused || self.has_refused {
+                vec![EventScene::continue_btn]
+            } else {
+                vec![EventScene::accept_btn_trade, EventScene::refuse_btn]
+            }
+        } else if event.event_type == EventType::LevelMod {
+            vec![EventScene::continue_btn]
+        } else {
+            vec![EventScene::continue_btn]
+        }
+        
+    }
+
+
+    pub fn init_buttons<'a>(&self,
+        event: &Level_Event,
+         texture_creator: &'a TextureCreator<WindowContext>,
+         game_state_data: &GameStateData) -> Vec<Button<'a>> {
+        
+        return if event.event_type == EventType::Challenge {
+            if self.has_failed || self.has_refused || self.has_refused {
+                vec!["Continue"]
+            } else {
+                vec!["Accept", "Refuse"]
+            }
+        } else if event.event_type == EventType::TradeOffer {
+            if self.has_failed || self.has_refused || self.has_refused {
+                vec!["Continue"]
+            } else {
+                vec!["Accept", "Refuse"]
+            }
+        } else if event.event_type == EventType::LevelMod {
+            vec!["Continue"]
+        } else {
+            vec!["Continue"]
+        }.iter().enumerate().map(|(i, option)| {
+            let button_rect = Rect::new(
+                350 - 100 + 600 as i32/ 2, 
+                400 + 100 * i as i32, 
+            200, 50);
+
+            Button::new(button_rect,
+                texture_creator, 
+                "grey_button".to_string(), 
+                Some(option), 
+                Color::WHITE, 
+                game_state_data.general_assets.fonts.get("event_font").unwrap()
+            )
+
+        }).collect::<Vec<Button<'_>>>()
+
     }
 }
 
@@ -62,10 +138,12 @@ impl<'a> Scene for EventScene {
 
         let assets = load_overworld_assets(&texture_creator);
 
-        let text =  text_gen(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE);
-        let options = event.options.iter().map(|option| {
-            text_gen(option.to_string(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE)
-        }).collect::<Vec<Texture<'_>>>();
+        let event_text =  text_gen(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE);
+       
+        let buttons = self.init_buttons(&event, texture_creator, game_state_data);
+        let button_callbacks = self.init_btn_callbacks(&event);
+
+        
         let mut selected_button: usize = 0;
 
         let mut previous_time = Instant::now();
@@ -75,20 +153,39 @@ impl<'a> Scene for EventScene {
 
         loop {
             //receive inputs for managing selecting menu options
-            for event in event_pump.poll_iter() {
-                match event {
+            for input_event in event_pump.poll_iter() {
+                match input_event {
                     Event::Quit { .. } => return Transition::Quit,
                     _ => {}
                 };
                 input::controller_handler::handle_new_controller(
                     &input_devices.controller,
                     &input_devices.joystick,
-                    &event,
+                    &input_event,
                     &mut input_devices.joys,
                 );
 
                 //needs also to return which controller/ which player
-                let raw_input = input::input_handler::rcv_input(&event, &input_devices.controls);
+                let raw_input = input::input_handler::rcv_input(&input_event, &input_devices.controls);
+
+                let mouse_data = input::handle_mouse_click::rcv_mouse_input(&input_event);
+
+                if let Some((click, mouse_pos)) = mouse_data {
+                    for (i, btn) in buttons.iter().enumerate(){
+                        if input::handle_mouse_click::check_mouse_within_rect(mouse_pos, &btn.rect) {
+                            if click {
+                                println!("click on button {}", i);
+                                if let Some(transition) = (button_callbacks[i])(self, self.event_id, game_state_data) {
+                                    return transition;
+                                }
+                            } else {
+                                selected_button = i;
+                            }
+                            
+                        }
+                    }
+                }
+
 
                 if raw_input.is_some() {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
@@ -143,9 +240,9 @@ impl<'a> Scene for EventScene {
                 canvas, 
                 &assets, 
                 &game_state_data.ui_assets,
-                &event,
-                &text,
-                &options,
+                &game_state_data.events.get(&self.event_id).unwrap(),
+                &event_text,
+                &buttons,
                 selected_button
             );
 
