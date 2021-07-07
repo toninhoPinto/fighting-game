@@ -36,10 +36,89 @@ impl EventScene {
         has_hp && has_currency
     }
 
+    pub fn gen_trade_offer_text<'a>(event_id: u32, texture_creator: &'a TextureCreator<WindowContext>, game_state_data: &GameStateData) 
+    ->  Vec<(Texture<'a>, String)> {
+        
+        
+        let event =  game_state_data.events.get(&event_id).unwrap();
+
+        let mut bullet_points: Vec<(Texture, String)> = Vec::new();
+        if let Some(cost) =  event.cost.as_ref() {
+            if cost.health > 0 {
+                let text = format!("-{}", cost.health);
+                bullet_points.push(
+                    (
+                    text_gen_wrapped(text, 
+                        texture_creator, 
+                        game_state_data.general_assets.fonts.get("event_font").unwrap(), 
+                        Color::RGB(209, 10, 10), 450),
+                    "hp".to_string(),
+                    )
+                );
+            }
+
+            if cost.currency > 0 {
+                let text = format!("-{}", cost.currency);
+                bullet_points.push(
+                    (
+                    text_gen_wrapped(text, 
+                        texture_creator, 
+                        game_state_data.general_assets.fonts.get("event_font").unwrap(), 
+                        Color::RGB(209, 10, 10), 450),
+                    "currency".to_string(),
+                    )
+                );
+            }
+        }
+
+        if let Some(rewards) = event.rewards.as_ref() {
+            if rewards.currency > 0 {
+                let text = format!("+{}", rewards.currency);
+                bullet_points.push(
+                    (
+                    text_gen_wrapped(text, 
+                        texture_creator, 
+                        game_state_data.general_assets.fonts.get("event_font").unwrap(), 
+                        Color::RGB(10, 209, 10), 450),
+                    "currency".to_string(),
+                    )
+                );
+            }
+    
+            for item in rewards.item_ids.iter() {
+                let text = "+".to_string();
+                bullet_points.push(
+                    (
+                    text_gen_wrapped(text, 
+                        texture_creator, 
+                        game_state_data.general_assets.fonts.get("event_font").unwrap(), 
+                        Color::RGB(10, 209, 10), 450),
+                        format!("item_{}", item)
+                    )
+                );
+            }
+        }
+        
+        bullet_points
+    }
+
     pub fn accept_btn_trade(&mut self, event_id: u32, game_state_data: &mut GameStateData) -> Option<Transition>{
         let event =  game_state_data.events.get(&event_id).unwrap();
         game_state_data.player.as_mut().unwrap().hp.0 -= event.cost.as_ref().unwrap().health;
         game_state_data.player.as_mut().unwrap().currency -= event.cost.as_ref().unwrap().currency as u32;
+
+        game_state_data.player.as_mut().unwrap().currency -= event.rewards.as_ref().unwrap().currency as u32;
+
+        for item_id in event.rewards.as_ref().unwrap().item_ids.iter() {
+            let mut item = game_state_data.items.get(item_id).unwrap().clone();
+
+            game_state_data.player.as_mut().unwrap().equip_item(
+                &mut item, 
+                &game_state_data.effects, 
+                &mut game_state_data.energy_bar.as_mut().unwrap())
+        }
+
+        println!("PRESS");
         self.has_succeeded = true;
         return None;
     }
@@ -140,15 +219,21 @@ impl<'a> Scene for EventScene {
         let mut popup_item = new_item_popup((w,h));
         let mut popup_content: Option<Vec<Texture>> = None;
 
-        let item_list = item_list_init(&game_state_data);
+        let mut item_list = item_list_init(&game_state_data);
 
-        self.event_id = 1;
+        self.event_id = 2;
         let event = game_state_data.events.get(&self.event_id).unwrap();
 
         let assets = load_overworld_assets(&texture_creator);
 
         let mut event_text =  text_gen_wrapped(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE, 450);
-       
+        let req_event_text = if event.event_type == EventType::TradeOffer {
+            Some(EventScene::gen_trade_offer_text(self.event_id, texture_creator, game_state_data))
+        } else {
+            None
+        };
+
+
         let mut buttons = self.init_buttons(&event, texture_creator, game_state_data);
         let mut button_callbacks = self.init_btn_callbacks(&event);
 
@@ -198,6 +283,23 @@ impl<'a> Scene for EventScene {
                         if let Some(transition) = (button_callbacks[selected_button])(self, self.event_id, game_state_data) {
                             return transition;
                         }
+                        if game_state_data.player.as_ref().unwrap().items.len() != item_list.rects.len() {
+                            
+                            item_list.update(game_state_data.player.as_ref().unwrap().items.iter()
+                                .map(|_| {Rect::new(0,0,32,32)})
+                                .collect::<Vec<Rect>>()
+                            );
+                            let event = game_state_data.events.get(&self.event_id).unwrap();
+                            for item_id in event.rewards.as_ref().unwrap().item_ids.iter() {
+                                let item = game_state_data.items.get(item_id).unwrap();
+                                popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
+                                    &item.name, 
+                                    &item.description, 
+                                    &game_state_data.general_assets.fonts.get("basic_font").unwrap(), 
+                                    &mut popup_item));
+                            }
+                            
+                        }
                     }
                 }
 
@@ -222,6 +324,23 @@ impl<'a> Scene for EventScene {
                         if translated_input == TranslatedInput::Punch {
                             if let Some(transition) = (button_callbacks[selected_button])(self, self.event_id, game_state_data) {
                                 return transition;
+                            }
+                            if game_state_data.player.as_ref().unwrap().items.len() != item_list.rects.len() {
+                            
+                                item_list.update(game_state_data.player.as_ref().unwrap().items.iter()
+                                    .map(|_| {Rect::new(0,0,32,32)})
+                                    .collect::<Vec<Rect>>()
+                                );
+                                let event = game_state_data.events.get(&self.event_id).unwrap();
+                                for item_id in event.rewards.as_ref().unwrap().item_ids.iter() {
+                                    let item = game_state_data.items.get(item_id).unwrap();
+                                    popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
+                                        &item.name, 
+                                        &item.description, 
+                                        &game_state_data.general_assets.fonts.get("basic_font").unwrap(), 
+                                        &mut popup_item));
+                                }
+                                
                             }
                         }
                     }
@@ -270,34 +389,38 @@ impl<'a> Scene for EventScene {
 
                 logic_time_accumulated -= logic_timestep;
             }
+            if update_counter > 0 {
+                //render
+                canvas.set_draw_color(Color::RGB(237, 158, 80));
 
-            //render
-            canvas.set_draw_color(Color::RGB(237, 158, 80));
-
-            canvas.clear();
-            canvas.set_draw_color(Color::RGB(255, 255, 50));
-            
-            render_event(
-                canvas, 
-                &assets, 
-                &game_state_data.ui_assets,
-                &game_state_data.events.get(&self.event_id).unwrap(),
-                &event_text,
-                &buttons,
-                selected_button
-            );
-
-            render_ui(canvas, 
-                &game_state_data.player.as_ref().unwrap(),
-                &game_state_data.hp_bar.as_ref().unwrap(),
-                &game_state_data.energy_bar.as_ref().unwrap(),
-                &item_list,
-                &game_state_data.item_assets,
-                Some(&popup_item),
-                &popup_content
+                canvas.clear();
+                canvas.set_draw_color(Color::RGB(255, 255, 50));
+                
+                render_event(
+                    canvas, 
+                    &assets, 
+                    &game_state_data.ui_assets,
+                    &game_state_data.item_assets,
+                    &game_state_data.items,
+                    &game_state_data.events.get(&self.event_id).unwrap(),
+                    &event_text,
+                    &req_event_text,
+                    &buttons,
+                    selected_button
                 );
 
-            canvas.present();
+                render_ui(canvas, 
+                    &game_state_data.player.as_ref().unwrap(),
+                    &game_state_data.hp_bar.as_ref().unwrap(),
+                    &game_state_data.energy_bar.as_ref().unwrap(),
+                    &item_list,
+                    &game_state_data.item_assets,
+                    Some(&popup_item),
+                    &popup_content
+                    );
+
+                canvas.present();
+            }
         }
     }
 

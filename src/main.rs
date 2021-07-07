@@ -94,8 +94,6 @@ use crate::input::controller_handler::Controller;
 //1 Since Animator now holds Option<Animation> and Animation has a Vec, it doesnt implement Copy trait, so there are lots of clone()
 //^^^^^possibly bad, and its a bit ugly, maybe have Animator only hold a handle to the animation just like the Textures?
 
-
-
 pub struct GameStateData<'a> {
 
     player: Option<Player>,

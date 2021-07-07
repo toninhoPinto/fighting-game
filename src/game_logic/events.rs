@@ -26,7 +26,8 @@ pub struct Rewards {
 }
 
 pub struct Challenge {
-    pub target: i32,
+    pub id: i32,
+    pub target: Option<i32>,
 }
 
 pub struct Cost {

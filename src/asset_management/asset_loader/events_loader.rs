@@ -36,7 +36,8 @@ pub struct RewardsJson {
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChallengeJson {
-    pub target: i32,
+    pub id: i32,
+    pub target: Option<i32>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -78,6 +79,7 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
             details: if let Some(details) = &event_json.challenge { 
                 Some(Challenge {
                     target: details.target,
+                    id: details.id,
                 })
             } else {
                 None
@@ -110,11 +112,12 @@ fn option_or_0(val: Option<i32>) -> i32 {
 
 fn handle_text_and_details(mut desc: String, details: &Option<ChallengeJson>) -> String {
     if let Some(details) =  details {
+        if let Some(target) =  details.target{
+            let replace_index = desc.find('*').unwrap_or(desc.len());
 
-        let replace_index = desc.find('*').unwrap_or(desc.len());
-
-        // Replace the range up until the β from the string
-        desc.replace_range(replace_index..replace_index+1, &details.target.to_string());
+            // Replace the range up until the β from the string
+            desc.replace_range(replace_index..replace_index+1, &target.to_string());
+        }
     }
 
     return desc;
