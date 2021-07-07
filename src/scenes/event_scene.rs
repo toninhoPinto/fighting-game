@@ -41,7 +41,7 @@ impl EventScene {
     }
 
     pub fn refuse_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
-        self.has_refused;
+        self.has_refused = true;
         return None;
     }
 
@@ -140,8 +140,8 @@ impl<'a> Scene for EventScene {
 
         let event_text =  text_gen(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE);
        
-        let buttons = self.init_buttons(&event, texture_creator, game_state_data);
-        let button_callbacks = self.init_btn_callbacks(&event);
+        let mut buttons = self.init_buttons(&event, texture_creator, game_state_data);
+        let mut button_callbacks = self.init_btn_callbacks(&event);
 
         
         let mut selected_button: usize = 0;
@@ -174,7 +174,6 @@ impl<'a> Scene for EventScene {
                     for (i, btn) in buttons.iter().enumerate(){
                         if input::handle_mouse_click::check_mouse_within_rect(mouse_pos, &btn.rect) {
                             if click {
-                                println!("click on button {}", i);
                                 if let Some(transition) = (button_callbacks[i])(self, self.event_id, game_state_data) {
                                     return transition;
                                 }
@@ -199,15 +198,19 @@ impl<'a> Scene for EventScene {
 
                     if !is_pressed {
                         if translated_input == TranslatedInput::Punch {  
-                            if selected_button == 0 {
-                                return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string())))
-                            } else if selected_button == 1 {
-                                return Transition::Pop;
+                            if let Some(transition) = (button_callbacks[selected_button])(self, self.event_id, game_state_data) {
+                                return transition;
                             }
                         }
                     }
                 }
                 //end of input management
+            }
+
+            if (self.has_failed || self.has_refused || self.has_succeeded) && buttons.len() > 1 {
+                println!("recalculate buttons");
+                buttons = self.init_buttons(&game_state_data.events.get(&self.event_id).unwrap(), texture_creator, game_state_data);
+                button_callbacks = self.init_btn_callbacks(&game_state_data.events.get(&self.event_id).unwrap());
             }
 
             let current_time = Instant::now();
