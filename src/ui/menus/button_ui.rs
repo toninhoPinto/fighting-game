@@ -5,6 +5,7 @@ use crate::rendering::renderer_ui::text_gen;
 pub struct Button<'a> {
     pub rect: Rect,
     pub is_pressed: bool,
+    pub is_disabled: bool,
     pub text: Option<Texture<'a>>, //Option this
     pub sprite: String,
     pub pressed_sprite: Option<String>,
@@ -30,6 +31,7 @@ impl<'a> Button<'a> {
         Self {
             rect,
             is_pressed: false,
+            is_disabled: false,
             text: text_texture,
             sprite: button_tex,
             pressed_sprite: button_pressed_tex,
@@ -38,7 +40,9 @@ impl<'a> Button<'a> {
     }
 
     pub fn press(&mut self) {
-        self.is_pressed = true;
+        if !self.is_disabled {
+            self.is_pressed = true;
+        }
     }
 
     pub fn update_btn_state(&mut self, time_elapsed: f64) {

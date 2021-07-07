@@ -9,12 +9,18 @@ use crate::game_logic::events::{Challenge, Cost, Event, EventType, Rewards};
 pub struct EventJson {
     pub id: u32,
     pub text: String,
+    #[serde(rename = "on_completion_text")]
+    pub on_completion_text: Option<String>,
+    #[serde(rename = "on_failure_text")]
+    pub on_failure_text: Option<String>,
+    #[serde(rename = "on_refusal_text")]
+    pub on_refusal_text: Option<String>,
     #[serde(rename = "type")]
     pub event_type: String,
     #[serde(rename = "portrait_id")]
     pub portrait_id: String,
     pub rewards: Option<RewardsJson>,
-    pub details: Option<ChallengeJson>,
+    pub challenge: Option<ChallengeJson>,
     pub cost: Option<CostJson>,
 }
 
@@ -49,6 +55,7 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
     let mut map = HashMap::new();
 
     for event_json in v.iter() {
+
         map.insert(event_json.id, Event{
             id: event_json.id as i32,
             event_type: match event_json.event_type.clone().as_str() {
@@ -58,7 +65,7 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
                 "WorldMod" => EventType::WorldMod,
                 _ => EventType::Challenge,
             },
-            text: handle_text_and_details(event_json.text.clone(), &event_json.details),
+            text: handle_text_and_details(event_json.text.clone(), &event_json.challenge),
             portrait_id: event_json.portrait_id.clone(),
             rewards: if let Some(rewards) = &event_json.rewards { 
                 Some(Rewards {
@@ -68,7 +75,7 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
             } else {
                 None
             },
-            details: if let Some(details) = &event_json.details { 
+            details: if let Some(details) = &event_json.challenge { 
                 Some(Challenge {
                     target: details.target,
                 })
@@ -88,6 +95,9 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
             } else {
                 None
             },
+            on_completion_text: event_json.on_completion_text.clone(),
+            on_failure_text: event_json.on_failure_text.clone(),
+            on_refusal_text: event_json.on_refusal_text.clone(),
         });
     }   
 

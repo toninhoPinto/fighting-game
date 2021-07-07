@@ -28,6 +28,14 @@ impl EventScene {
         }
     }
 
+    pub fn requirements_trade_offer(event_id: u32, game_state_data: &mut GameStateData) -> bool{
+        let event =  game_state_data.events.get(&event_id).unwrap();
+        let has_hp = game_state_data.player.as_mut().unwrap().hp.0 >= event.cost.as_ref().unwrap().health;
+        let has_currency = game_state_data.player.as_mut().unwrap().currency >= event.cost.as_ref().unwrap().currency as u32;
+    
+        has_hp && has_currency
+    }
+
     pub fn accept_btn_trade(&mut self, event_id: u32, game_state_data: &mut GameStateData) -> Option<Transition>{
         let event =  game_state_data.events.get(&event_id).unwrap();
         game_state_data.player.as_mut().unwrap().hp.0 -= event.cost.as_ref().unwrap().health;
@@ -54,7 +62,6 @@ impl EventScene {
             event: &Level_Event) 
             -> Vec<fn(&mut EventScene, u32, &mut GameStateData) -> Option<Transition>>  {
         
-        println!("type {:?}", event.event_type);
         if event.event_type == EventType::Challenge {
             if self.has_failed || self.has_refused || self.has_succeeded {
                 vec![EventScene::continue_btn]
@@ -140,10 +147,14 @@ impl<'a> Scene for EventScene {
 
         let assets = load_overworld_assets(&texture_creator);
 
-        let event_text =  text_gen_wrapped(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE, 450);
+        let mut event_text =  text_gen_wrapped(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE, 450);
        
         let mut buttons = self.init_buttons(&event, texture_creator, game_state_data);
         let mut button_callbacks = self.init_btn_callbacks(&event);
+
+        if event.event_type == EventType::TradeOffer && !EventScene::requirements_trade_offer(self.event_id, game_state_data) {
+            buttons[0].is_disabled = true;
+        }
         
         let mut selected_button: usize = 0;
 
@@ -183,7 +194,7 @@ impl<'a> Scene for EventScene {
                 if let Some((is_click_down, mouse_pos)) = mouse_click {
                     if is_click_down {
                         buttons[selected_button].press();
-                    } else {
+                    } else if !buttons[selected_button].is_disabled {
                         if let Some(transition) = (button_callbacks[selected_button])(self, self.event_id, game_state_data) {
                             return transition;
                         }
@@ -207,7 +218,7 @@ impl<'a> Scene for EventScene {
                         }
                     }
 
-                    if !is_pressed {
+                    if !is_pressed && !buttons[selected_button].is_disabled {
                         if translated_input == TranslatedInput::Punch {
                             if let Some(transition) = (button_callbacks[selected_button])(self, self.event_id, game_state_data) {
                                 return transition;
@@ -222,6 +233,19 @@ impl<'a> Scene for EventScene {
                 buttons = self.init_buttons(&game_state_data.events.get(&self.event_id).unwrap(), texture_creator, game_state_data);
                 button_callbacks = self.init_btn_callbacks(&game_state_data.events.get(&self.event_id).unwrap());
                 selected_button = 0;
+
+                let event = game_state_data.events.get(&self.event_id).unwrap();
+                let new_text = if self.has_failed {
+                    event.on_failure_text.as_ref()
+                } else if self.has_succeeded {
+                    event.on_completion_text.as_ref()
+                } else {
+                    event.on_refusal_text.as_ref()
+                };
+
+                if let Some(new_text) = new_text {
+                    event_text =  text_gen_wrapped(new_text.to_string(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE, 450);
+                }
             }
 
             let current_time = Instant::now();

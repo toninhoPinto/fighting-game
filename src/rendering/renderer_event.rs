@@ -26,7 +26,7 @@ pub fn render_event(canvas: &mut WindowCanvas,
     let texture = &assets.portraits.get(&event.portrait_id).unwrap();
     canvas.copy(texture, Rect::new(0,0, 900, 1000), rect_screen_pos).unwrap();
 
-    canvas.copy(text, None, Rect::new(350 + 50,150, 400, 30)).unwrap();
+    canvas.copy(text, None, Rect::new(350 + 50,150, 500, 80)).unwrap();
 
     
     for (i, btn) in options.iter().enumerate() {

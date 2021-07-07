@@ -2,6 +2,10 @@ pub struct Event {
     pub id: i32,
     pub event_type: EventType,
     pub text: String,
+    
+    pub on_completion_text: Option<String>,
+    pub on_failure_text: Option<String>,
+    pub on_refusal_text: Option<String>,
     pub portrait_id: String,
     pub rewards: Option<Rewards>,
     pub details: Option<Challenge>,
