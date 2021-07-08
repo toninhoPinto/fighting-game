@@ -243,6 +243,7 @@ impl Scene for MatchScene {
                 game.player.update(
                     &mut game.camera,
                     logic_timestep,
+                    game.is_finished,
                     game.player.character_width as i32,
                     &game_state_data.general_assets
                 );
@@ -337,6 +338,26 @@ impl Scene for MatchScene {
                 popup_fade(&mut popup_item, &mut popup_content, logic_timestep);
 
                 update_and_manage(logic_timestep, &mut combo, &texture_creator,&game_state_data);
+
+                game.is_finished = game.check_finished_level();
+
+                if game.player.controller.state != EntityState::Dead {
+                    if (game.player.position.x  as i32 - game.player.character_width as i32) < game.camera.rect.x() {
+                        game.player.position.x = (game.camera.rect.x() + game.player.character_width as i32) as f64;
+                    }
+                
+      
+                        if (game.player.position.x as i32 + game.player.character_width as i32) > (game.camera.rect.x() + game.camera.rect.width() as i32) {
+                            if !game.is_finished {
+                                game.player.position.x = (game.camera.rect.x() + game.camera.rect.width() as i32 - game.player.character_width as i32) as f64;
+                            } else {
+                                if (game.player.position.x as i32 - (game.player.character_width as f32 * 1.5) as i32 ) > (game.camera.rect.x() + game.camera.rect.width() as i32) {
+                                    return Transition::Pop;
+                                }
+                            }
+                        }
+                    
+                }
 
                 logic_time_accumulated -= logic_timestep;
             }

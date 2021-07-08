@@ -127,6 +127,7 @@ impl Player {
         &mut self,
         camera: &mut Camera,
         dt: f64,
+        finished: bool,
         character_width: i32,
         general_assets: &CommonAssets
     ) {

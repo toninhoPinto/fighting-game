@@ -454,16 +454,7 @@ impl MovementController {
                 None => { }
             }
         }
-    
-        if self.state != EntityState::Dead {
-            if (position.x  as i32 - character_width) < camera.rect.x() {
-                position.x = (camera.rect.x() + character_width) as f64;
-            }
-        
-            if (position.x as i32 + character_width) > (camera.rect.x() + camera.rect.width() as i32) {
-                position.x = (camera.rect.x() + camera.rect.width() as i32 - character_width) as f64;
-            }
-        }  
+
     }
 
 }

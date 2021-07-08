@@ -10,6 +10,7 @@ use super::{characters::player::Player, inputs::input_cycle::AllInputManagement,
 
 const LIMIT_NUMBER_OF_VFX: usize = 20;
 pub struct Game {
+    pub is_finished: bool,
     pub current_frame: i32,
     pub player: Player,
     pub enemies: EnemyManager,
@@ -26,6 +27,7 @@ pub struct Game {
 impl Game {
     pub fn new(player: Player, camera: Camera, levels: Vec<Level>) -> Self {
         Self {
+            is_finished: false,
             current_frame: 0,
 
             player,
@@ -43,6 +45,29 @@ impl Game {
 
     pub fn max_level_width(&self) -> i32 {
         self.levels.iter().map(|lvl| lvl.width * lvl.level_map.tile_width).sum::<u32>() as i32
+    }
+
+    pub fn check_finished_level(&mut self) -> bool {
+
+        let n_enemies_per_slice = self.levels.iter().map(|lvl| {
+            lvl.level_map.object_groups[0].objects.iter().filter(|tag| {tag.name == "enemy".to_string() && tag.visible}).count() as i32
+        }).collect::<Vec<i32>>();
+
+
+        let n_enemy_spawners = n_enemies_per_slice.iter().sum::<i32>();
+        let n_enemies_alive = self.enemies.health_components.iter().filter_map(|hp|
+            if let Some(hp) = hp {
+                if hp.0 > 0 {
+                    Some(1)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        ).sum::<i32>();
+
+        n_enemy_spawners + n_enemies_alive == 0
     }
 
     pub fn check_level_tags_and_apply(&mut self, game_state_data: &mut GameStateData) {
