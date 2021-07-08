@@ -76,8 +76,6 @@ impl<'a> Scene for OverworldScene {
 
         let assets = load_overworld_assets(&texture_creator);
         
-        //game_state_data.text_cache.insert("currency".to_string(), currency_text_gen(game_state_data.player.as_ref().unwrap(), texture_creator, &game_state_data.general_assets.font));
-
         let mut popup_item = new_item_popup((w,h));
         let mut popup_content: Option<Vec<Texture>> = None;
 
@@ -131,7 +129,7 @@ impl<'a> Scene for OverworldScene {
                             if let WorldNodeType::Level(_) = self.nodes[self.next_node].node_type {
                                 self.player_node_pos = self.next_node;
                                 game_state_data.curr_level = self.player_node_pos as i32;
-                                return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string())));
+                                return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string(), None)));
                             }
 
                             if let WorldNodeType::Store = self.nodes[self.next_node].node_type {

@@ -141,6 +141,7 @@ impl<'a> LevelAssets<'a> {
         level_rooms.insert(0, load_level("assets/level/level1.tmx".to_string()));
         level_rooms.insert(1, load_level("assets/level/level2.tmx".to_string()));
         level_rooms.insert(2, load_level("assets/level/level3.tmx".to_string()));
+        level_rooms.insert(3, load_level("assets/level/level4.tmx".to_string()));
 
         LevelAssets {
             hit_effect_textures: textures,

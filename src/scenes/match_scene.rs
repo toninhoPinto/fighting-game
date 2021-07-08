@@ -10,7 +10,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::{collider::ColliderType, simple_animator::init_combo_animation}, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::{ComboCounter, manage_combo_resources::{Combo, update_and_manage}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::generate_levels, rendering::renderer_ui::{render_combo, render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::{collider::ColliderType, simple_animator::init_combo_animation}, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::{ComboCounter, manage_combo_resources::{Combo, update_and_manage}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::{generate_levels, get_levels}, rendering::renderer_ui::{render_combo, render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -27,16 +27,18 @@ const SCREEN_HEIGHT: u32 = 720;
 
 pub struct MatchScene {
     pub character: String,
+    pub level_ids: Option<Vec<i32>>,
     p1_inputs: AllInputManagement,
 }
 
 impl MatchScene {
     pub fn new(
-
         character: String,
+        level_ids: Option<Vec<i32>>,
     ) -> Self {
         Self {
             character,
+            level_ids,
             p1_inputs: AllInputManagement::new(),
         }
     }
@@ -63,7 +65,12 @@ impl Scene for MatchScene {
         let mut enemy_assets = HashMap::new();
         enemy_assets.insert("ryu", load_enemy_ryu_assets(texture_creator));
 
-        let levels = generate_levels(&game_state_data.level_assets.level_rooms, &mut game_state_data.map_rng.as_mut().unwrap());
+        let levels = if let Some(levels) = &self.level_ids {
+            get_levels(&game_state_data.level_assets.level_rooms, levels)
+        } else {
+            generate_levels(&game_state_data.level_assets.level_rooms, &mut game_state_data.map_rng.as_mut().unwrap())
+        };
+        
 
         let camera: Camera = Camera::new(
             //LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2,

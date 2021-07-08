@@ -118,14 +118,16 @@ impl EventScene {
                 &mut game_state_data.energy_bar.as_mut().unwrap())
         }
 
-        println!("PRESS");
         self.has_succeeded = true;
         return None;
     }
 
     pub fn accept_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
-        let scene = Box::new(MatchScene::new("foxgirl".to_string()));
-        return Some(Transition::Push(scene));
+        let level = MatchScene::new(
+            "foxgirl".to_string(), 
+            Some(vec![3])
+        );
+        return Some(Transition::Push(Box::new(level)));
     }
 
     pub fn refuse_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
@@ -221,7 +223,7 @@ impl<'a> Scene for EventScene {
 
         let mut item_list = item_list_init(&game_state_data);
 
-        self.event_id = 2;
+        self.event_id = 1;
         let event = game_state_data.events.get(&self.event_id).unwrap();
 
         let assets = load_overworld_assets(&texture_creator);
