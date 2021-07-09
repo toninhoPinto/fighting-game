@@ -2,18 +2,25 @@ use std::{cmp, time::Instant};
 
 use sdl2::{EventPump, event::Event, pixels::Color, rect::Rect, render::{Canvas, Texture, TextureCreator}, video::{Window, WindowContext}};
 
-use crate::{GameStateData, Transition, engine_traits::scene::Scene, game_logic::{events::EventType, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{render_ui, text_gen, text_gen_wrapped}}, ui::{ingame::popup_ui::{PopUp, new_item_popup, popup_fade}, menus::button_ui::Button}};
+use crate::{GameStateData, Transition, challenges::challenge::Challenge, engine_traits::scene::Scene, game_logic::{events::EventType, factories::{item_factory::{load_item_assets, load_items}, world_factory::load_overworld_assets}, items::Item, store::{StoreUI, get_store_item_list}}, hp_bar_init, input::{self, input_devices::InputDevices, translated_inputs::TranslatedInput}, item_list_init, overworld::{node::{WorldNode, WorldNodeType}, overworld_generation, overworld_change_connections}, rendering::{renderer_event::render_event, renderer_overworld::render_overworld, renderer_store::render_store, renderer_ui::{render_ui, text_gen, text_gen_wrapped}}, ui::{ingame::popup_ui::{PopUp, new_item_popup, popup_fade}, menus::button_ui::Button}};
 
 use super::match_scene::{MAX_UPDATES_AVOID_SPIRAL_OF_DEATH, MatchScene};
 
 use crate::game_logic::events::Event as Level_Event;
 
+#[derive(PartialEq)]
+pub enum EventStatus {
+    Start,
+    Accepted,
+    Refused,
+    Succeeded,
+    Failed
+}
+
 pub struct EventScene {
     pub event_id: u32,
 
-    pub has_refused: bool,
-    pub has_succeeded: bool,
-    pub has_failed: bool,
+    pub status: EventStatus
 }
 
 impl EventScene {
@@ -22,9 +29,7 @@ impl EventScene {
         Self {
             event_id: id,
 
-            has_refused: false,
-            has_succeeded: false,
-            has_failed: false,
+            status: EventStatus::Start,
         }
     }
 
@@ -118,20 +123,35 @@ impl EventScene {
                 &mut game_state_data.energy_bar.as_mut().unwrap())
         }
 
-        self.has_succeeded = true;
+        self.status = EventStatus::Succeeded;
         return None;
     }
 
-    pub fn accept_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
+    pub fn accept_btn(&mut self, event_id: u32, game_state_data: &mut GameStateData) -> Option<Transition> {
+        let event =  game_state_data.events.get(&event_id).unwrap();
+
+        let challenge = if let Some(challenge) = event.challenge .as_ref() {
+            if let Some(target) = challenge.target {
+                Some(target as f32)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+
+        self.status = EventStatus::Accepted;
         let level = MatchScene::new(
             "foxgirl".to_string(), 
-            Some(vec![3])
+            Some(vec![3]),
+            Some(vec![(event.id, Challenge::new(challenge))])
         );
         return Some(Transition::Push(Box::new(level)));
     }
 
     pub fn refuse_btn(&mut self, _: u32, _: &mut GameStateData) -> Option<Transition> {
-        self.has_refused = true;
+        self.status = EventStatus::Refused;
         return None;
     }
 
@@ -144,13 +164,13 @@ impl EventScene {
             -> Vec<fn(&mut EventScene, u32, &mut GameStateData) -> Option<Transition>>  {
         
         if event.event_type == EventType::Challenge {
-            if self.has_failed || self.has_refused || self.has_succeeded {
+            if self.status != EventStatus::Start {
                 vec![EventScene::continue_btn]
             } else {
                 vec![EventScene::accept_btn, EventScene::refuse_btn]
             }
         } else if event.event_type == EventType::TradeOffer {
-            if self.has_failed || self.has_refused || self.has_succeeded {
+            if self.status != EventStatus::Start {
                 vec![EventScene::continue_btn]
             } else {
                 vec![EventScene::accept_btn_trade, EventScene::refuse_btn]
@@ -170,13 +190,13 @@ impl EventScene {
          game_state_data: &GameStateData) -> Vec<Button<'a>> {
         
         return if event.event_type == EventType::Challenge {
-            if self.has_failed || self.has_refused || self.has_succeeded {
+            if self.status != EventStatus::Start {
                 vec!["Continue"]
             } else {
                 vec!["Accept", "Refuse"]
             }
         } else if event.event_type == EventType::TradeOffer {
-            if self.has_failed || self.has_refused || self.has_succeeded {
+            if self.status != EventStatus::Start {
                 vec!["Continue"]
             } else {
                 vec!["Accept", "Refuse"]
@@ -218,23 +238,64 @@ impl<'a> Scene for EventScene {
 
         let (w, h) = canvas.output_size().unwrap();
 
+        if self.status != EventStatus::Start {
+            if game_state_data.event_success {
+                self.status = EventStatus::Succeeded;
+            } else {
+                self.status = EventStatus::Failed;
+            }
+        }
+
         let mut popup_item = new_item_popup((w,h));
         let mut popup_content: Option<Vec<Texture>> = None;
 
-        let mut item_list = item_list_init(&game_state_data);
+
 
         self.event_id = 1;
         let event = game_state_data.events.get(&self.event_id).unwrap();
 
+        if self.status == EventStatus::Succeeded {
+            
+            for item_id in event.rewards.as_ref().unwrap().item_ids.iter() {
+                let mut item = game_state_data.items.get(item_id).unwrap().clone();
+
+                game_state_data.player.as_mut().unwrap().equip_item(
+                    &mut item, 
+                    &game_state_data.effects, 
+                    &mut game_state_data.energy_bar.as_mut().unwrap());
+
+                popup_content = Some(crate::ui::ingame::popup_ui::render_popup(texture_creator, 
+                    &item.name, 
+                    &item.description, 
+                    &game_state_data.general_assets.fonts.get("basic_font").unwrap(), 
+                    &mut popup_item));
+            }
+
+            
+        }
+
+        let mut item_list = item_list_init(&game_state_data);
+
         let assets = load_overworld_assets(&texture_creator);
 
-        let mut event_text =  text_gen_wrapped(event.text.clone(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE, 450);
+        let text =  if self.status == EventStatus::Start {
+            Some(&event.text)
+        } else if self.status == EventStatus::Failed {
+            event.on_failure_text.as_ref()
+        } else if self.status == EventStatus::Succeeded {
+            event.on_completion_text.as_ref()
+        } else {
+            event.on_refusal_text.as_ref()
+        };
+
+        let mut event_text =  text_gen_wrapped(text.unwrap().to_string(), texture_creator, game_state_data.general_assets.fonts.get("event_font").unwrap(), Color::WHITE, 450);
+    
+
         let req_event_text = if event.event_type == EventType::TradeOffer {
             Some(EventScene::gen_trade_offer_text(self.event_id, texture_creator, game_state_data))
         } else {
             None
         };
-
 
         let mut buttons = self.init_buttons(&event, texture_creator, game_state_data);
         let mut button_callbacks = self.init_btn_callbacks(&event);
@@ -310,9 +371,9 @@ impl<'a> Scene for EventScene {
                     let (_id, translated_input, is_pressed) = raw_input.unwrap();
                     if is_pressed {
                         if let TranslatedInput::Horizontal(x) = translated_input {
-                            selected_button = ((selected_button as i32 + (1 * x))  % 2).abs() as usize;
+                            selected_button = ((selected_button as i32 + (1 * x))  % buttons.len() as i32).abs() as usize;
                         } else if let TranslatedInput::Vertical(y) = translated_input {
-                            selected_button = ((selected_button as i32 + (1 * y))  % 2).abs() as usize;
+                            selected_button = ((selected_button as i32 + (1 * y))  % buttons.len() as i32).abs() as usize;
                         }
                     }
 
@@ -350,18 +411,20 @@ impl<'a> Scene for EventScene {
                 //end of input management
             }
 
-            if (self.has_failed || self.has_refused || self.has_succeeded) && buttons.len() > 1 {
+            if self.status != EventStatus::Start && buttons.len() > 1 {
                 buttons = self.init_buttons(&game_state_data.events.get(&self.event_id).unwrap(), texture_creator, game_state_data);
                 button_callbacks = self.init_btn_callbacks(&game_state_data.events.get(&self.event_id).unwrap());
                 selected_button = 0;
 
                 let event = game_state_data.events.get(&self.event_id).unwrap();
-                let new_text = if self.has_failed {
+                let new_text = if self.status == EventStatus::Failed {
                     event.on_failure_text.as_ref()
-                } else if self.has_succeeded {
+                } else if self.status == EventStatus::Succeeded {
                     event.on_completion_text.as_ref()
-                } else {
+                } else if self.status == EventStatus::Refused {
                     event.on_refusal_text.as_ref()
+                } else {
+                    None
                 };
 
                 if let Some(new_text) = new_text {

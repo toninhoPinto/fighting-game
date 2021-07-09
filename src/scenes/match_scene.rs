@@ -10,7 +10,7 @@ use sdl2::{
     EventPump,
 };
 
-use crate::{Transition, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::{collider::ColliderType, simple_animator::init_combo_animation}, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::{ComboCounter, manage_combo_resources::{Combo, update_and_manage}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::{generate_levels, get_levels}, rendering::renderer_ui::{render_combo, render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
+use crate::{Transition, challenges::{ChallengeManager, challenge::Challenge}, collision::collision_detection::{calculate_hits}, debug_console::console::Console, ecs_system::enemy_systems::{update_animations_enemies, update_colliders_enemies, update_events, update_movement_enemies}, enemy_behaviour::update_behaviour_enemies, engine_types::{collider::ColliderType, simple_animator::init_combo_animation}, game_logic::{characters::{player::{EntityState}, player_input::{apply_input_state, process_input}}, combo_string::{ComboCounter, manage_combo_resources::{Combo, update_and_manage}}, effects::hash_effects, factories::{character_factory::load_character_anim_data, enemy_factory::load_enemy_ryu_assets, item_factory::load_items}, game::Game, inputs::{game_inputs::GameAction, input_cycle::AllInputManagement}}, input::input_devices::InputDevices, level_generation::generate::{generate_levels, get_levels}, rendering::renderer_ui::{render_combo, render_ui, text_gen}, ui::ingame::popup_ui::{PopUp, new_item_popup, popup_fade}};
 use crate::{
     collision::collision_attack_resolution::detect_hit,
     engine_traits::scene::Scene,
@@ -28,6 +28,7 @@ const SCREEN_HEIGHT: u32 = 720;
 pub struct MatchScene {
     pub character: String,
     pub level_ids: Option<Vec<i32>>,
+    pub challenges: Option<Vec<(i32, Challenge)>>,
     p1_inputs: AllInputManagement,
 }
 
@@ -35,10 +36,12 @@ impl MatchScene {
     pub fn new(
         character: String,
         level_ids: Option<Vec<i32>>,
+        challenges: Option<Vec<(i32, Challenge)>>,
     ) -> Self {
         Self {
             character,
             level_ids,
+            challenges,
             p1_inputs: AllInputManagement::new(),
         }
     }
@@ -71,6 +74,10 @@ impl Scene for MatchScene {
             generate_levels(&game_state_data.level_assets.level_rooms, &mut game_state_data.map_rng.as_mut().unwrap())
         };
         
+        let mut challenges = ChallengeManager::new();
+        if let Some(challenge_ids) = &self.challenges {
+            challenges.register(challenge_ids[0].0, challenge_ids[0].1.clone());
+        } 
 
         let camera: Camera = Camera::new(
             //LEVEL_WIDTH as i32 / 2 - SCREEN_WIDTH as i32 / 2,
@@ -318,6 +325,7 @@ impl Scene for MatchScene {
                     &game_state_data.level_assets, 
                     &p1_data,
                     &mut combo.combo_counter,
+                    &mut challenges,
                     &mut game.camera);
 
                 game.fx(&game_state_data.level_assets);
@@ -352,6 +360,7 @@ impl Scene for MatchScene {
                                 game.player.position.x = (game.camera.rect.x() + game.camera.rect.width() as i32 - game.player.character_width as i32) as f64;
                             } else {
                                 if (game.player.position.x as i32 - (game.player.character_width as f32 * 1.5) as i32 ) > (game.camera.rect.x() + game.camera.rect.width() as i32) {
+                                    game_state_data.event_success = challenges.get_result();
                                     return Transition::Pop;
                                 }
                             }

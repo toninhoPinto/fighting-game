@@ -76,7 +76,7 @@ pub fn load_events(dir: String) -> HashMap<u32, Event>{
             } else {
                 None
             },
-            details: if let Some(details) = &event_json.challenge { 
+            challenge: if let Some(details) = &event_json.challenge { 
                 Some(Challenge {
                     target: details.target,
                     id: details.id,

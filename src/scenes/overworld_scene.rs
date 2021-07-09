@@ -129,7 +129,7 @@ impl<'a> Scene for OverworldScene {
                             if let WorldNodeType::Level(_) = self.nodes[self.next_node].node_type {
                                 self.player_node_pos = self.next_node;
                                 game_state_data.curr_level = self.player_node_pos as i32;
-                                return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string(), None)));
+                                return Transition::Push(Box::new(MatchScene::new("foxgirl".to_string(), None, None)));
                             }
 
                             if let WorldNodeType::Store = self.nodes[self.next_node].node_type {

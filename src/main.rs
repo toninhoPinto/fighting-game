@@ -25,6 +25,7 @@ mod ecs_system;
 mod enemy_behaviour;
 mod overworld;
 mod level_generation;
+mod challenges;
 
 mod debug_console;
 
@@ -96,6 +97,7 @@ use crate::input::controller_handler::Controller;
 
 pub struct GameStateData<'a> {
 
+    event_success: bool,
     player: Option<Player>,
     hp_bar: Option<SegmentedBar<'a>>,
     energy_bar: Option<SegmentedBar<'a>>,
@@ -213,6 +215,7 @@ fn main() -> Result<(), String> {
 
     let general_assets = CommonAssets::load(&texture_creator, &ttf_context);
     let mut game_state_data = GameStateData {
+        event_success: false,
         player: None,
         hp_bar: None,
         energy_bar: None,

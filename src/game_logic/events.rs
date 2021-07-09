@@ -8,7 +8,7 @@ pub struct Event {
     pub on_refusal_text: Option<String>,
     pub portrait_id: String,
     pub rewards: Option<Rewards>,
-    pub details: Option<Challenge>,
+    pub challenge: Option<Challenge>,
     pub cost: Option<Cost>,
 }
 
