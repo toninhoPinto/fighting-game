@@ -211,7 +211,7 @@ fn main() -> Result<(), String> {
         joys: controller_data,
     };
 
-    let menu = MenuScene::new_main_menu(&font);
+    let menu = MenuScene::new_main_menu();
 
     let general_assets = CommonAssets::load(&texture_creator, &ttf_context);
     let mut game_state_data = GameStateData {

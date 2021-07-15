@@ -234,3 +234,28 @@ fn populate_levels(overworld: &mut Vec<WorldNode>, rng: &mut SmallRng){
         overworld[event_location as usize].node_type = WorldNodeType::Event(event_id);
     }
 }
+
+pub fn remove_special_levels(overworld: &mut Vec<WorldNode>) {
+    for node in overworld.iter_mut(){
+        if node.node_type != WorldNodeType::Boss || node.node_type != WorldNodeType::Start {
+            node.node_type = WorldNodeType::Level(1);
+        }
+    }
+}
+
+pub fn increase_difficulty(overworld: &mut Vec<WorldNode>) {
+    for node in overworld.iter_mut(){
+        if let WorldNodeType::Level(n) = node.node_type {
+            node.node_type = WorldNodeType::Level(n+1);
+        }
+    }
+}
+
+pub fn all_events(overworld: &mut Vec<WorldNode>, rng: &mut SmallRng){
+    for node in overworld.iter_mut(){
+        if node.node_type != WorldNodeType::Boss || node.node_type != WorldNodeType::Start {
+            let event_id = (rng.gen::<f64>() * 4 as f64) as u32;
+            node.node_type = WorldNodeType::Event(event_id);
+        }
+    }
+} 

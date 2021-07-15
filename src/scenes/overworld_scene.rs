@@ -43,6 +43,11 @@ impl OverworldScene {
         }
     }
 
+    pub fn regenerate_overworld(&mut self, seeded_rng: &mut SmallRng) {
+        self.nodes = overworld_generation(self.rect, (5, 6), self.full_conection, seeded_rng);
+    }
+    
+
         
     fn iterate_over_levels(&mut self, game_state_data: &mut GameStateData) {
         let connecting_to = &self.nodes[self.player_node_pos as usize].connect_to;

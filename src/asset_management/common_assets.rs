@@ -122,10 +122,12 @@ impl<'a> CommonAssets<'a> {
         let loot_tables = load_item_table("assets/items/loot_tables.json".to_string());
 
         let basic_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 16).unwrap();
+        let main_menu_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 32).unwrap();
         let event_font = ttf_context.load_font("assets/fonts/No_Virus.ttf", 32).unwrap();
         let combo_font = ttf_context.load_font("assets/fonts/ApeMount-WyPM9.ttf", 100).unwrap();
 
         let mut fonts = HashMap::new();
+        fonts.insert("main_menu_font".to_string(), main_menu_font);
         fonts.insert("basic_font".to_string(), basic_font);
         fonts.insert("event_font".to_string(), event_font);
         fonts.insert("combo_font".to_string(), combo_font);

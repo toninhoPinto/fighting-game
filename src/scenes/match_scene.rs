@@ -361,6 +361,7 @@ impl Scene for MatchScene {
                             } else {
                                 if (game.player.position.x as i32 - (game.player.character_width as f32 * 1.5) as i32 ) > (game.camera.rect.x() + game.camera.rect.width() as i32) {
                                     game_state_data.event_success = challenges.get_result();
+                                    game_state_data.player = Some(game.player.clone());
                                     return Transition::Pop;
                                 }
                             }
