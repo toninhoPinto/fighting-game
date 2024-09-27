@@ -24,8 +24,10 @@ Each scene has its own loop where input is captured (this could be capture in th
 # Difficulties
 
 So Rust gamedev from what I gathered strives to be more component oriented than objected oriented, with a data oriented design approach, which was new to me.
+
 My biggest difficulty was dealing with loops + objects with lifetimes inside of the loops + objects with lifetimes outside of the loops, in the end in many places i ended up replacing with clone or using Rc.
 
+I would love to try Rust again, but for now this is shelved.
 
 
 # Game in Action
