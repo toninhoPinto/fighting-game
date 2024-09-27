@@ -12,6 +12,7 @@ Each scene has its own loop where input is captured (this could be capture in th
 
 ```mermaid
   graph TD;
+      Menu-->ExitGame
       Menu-->Overworld;
       Overworld-->Level;
       Overworld-->ChallengeLevel;
