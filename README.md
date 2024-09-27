@@ -17,6 +17,9 @@ Each scene has its own loop where input is captured (this could be capture in th
       Overworld-->ChallengeLevel;
       Overworld-->Store;
       Overworld-->Menu;
+      ChallengeLevel-->Overworld;
+      Store-->Overworld;
+      Level-->Overworld;
 ```
 
 
